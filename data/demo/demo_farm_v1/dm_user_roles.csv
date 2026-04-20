@@ -1,0 +1,6 @@
+tenant_id,user_id,role_id
+default,USR_ADMIN_DEMO,R_ADMIN
+default,USR_DIRECTOR_DEMO,R_DIRECTOR
+default,USR_OPERATOR_DEMO,R_OPERATOR
+default,USR_ZOOTECH_DEMO,R_ZOOTECH
+default,USR_VET_DEMO,R_VET

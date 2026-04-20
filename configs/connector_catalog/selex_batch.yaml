@@ -1,0 +1,36 @@
+adapter_id: selex_batch
+label: СЕЛЭКС batch export
+source_system: СЕЛЭКС
+system_family: herd_management
+connector_kind: file
+export_mode: scheduled_xlsx_csv_batch
+default_schedule: "30 5 * * *"
+description: Reusable connector profile for typical СЕЛЭКС daily/shift exports into canonical datasets.
+supported_datasets:
+  - animals
+  - lactations
+  - health_events
+  - treatments
+data_contracts:
+  - dm_animals
+  - dm_lactations
+  - dm_health_events
+  - dm_treatments
+reusable_mapping_templates:
+  - configs/mappings/connectors/selex_basic/animals.yaml
+  - configs/mappings/connectors/selex_basic/lactations.yaml
+  - configs/mappings/connectors/selex_basic/health_events.yaml
+  - configs/mappings/connectors/selex_basic/treatments.yaml
+representative_config_path: configs/connector_catalog/examples/selex_batch.yaml
+diagnostics:
+  common_issues:
+    - XLSX sheet names changed by operator.
+    - Status export delivered but treatments file missing.
+    - Farm/site identifiers inconsistent across files.
+  action_hints:
+    missing_source: Загрузите обязательные выгрузки СЕЛЭКС и проверьте sheet/file naming.
+    mapping_issue: Исправьте mapping template или приведите названия колонок к согласованному шаблону.
+limitations:
+  - Batch exports can only support scheduled refresh, not live HMS state.
+  - Some health/repro semantics still need reconciliation before read-write trust.
+staged_adoption_note: Good for phased rollout with daily exports and visible trust boundaries.

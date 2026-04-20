@@ -1,0 +1,12 @@
+'use client';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { MetricCard, Card } from '@/components/ui/card';
+import { FilterBar } from '@/components/ui/filter-bar';
+import { ExplainabilityBlock } from '@/components/ui/explainability-block';
+import { WorklistList } from '@/components/ui/worklist-list';
+import { apiFetch } from '@/lib/api/client';
+import type { WorklistItem, ListResponse } from '@/lib/api/contracts';
+import { normalizeListResponse } from '@/lib/api/contracts';
+
+export function WorklistsSurface(){const [data,setData]=useState<ListResponse<WorklistItem>|null>(null);const [query,setQuery]=useState('');const [error,setError]=useState<string|null>(null);useEffect(()=>{void apiFetch<ListResponse<WorklistItem>>('/worklists').then(res=>setData(normalizeListResponse(res))).catch(err=>setError(err instanceof Error?err.message:'Failed to load worklists'))},[]); const items=useMemo(()=>{const rows=data?.items||[]; if(!query)return rows; return rows.filter(item=>JSON.stringify(item).toLowerCase().includes(query.toLowerCase()))},[data,query]); const open=items.filter(item=>item.status!=='done'&&item.status!=='cancelled').length; const overdue=items.filter(item=>item.is_overdue&&item.status!=='done'&&item.status!=='cancelled').length; return <div className="grid"><div className="topbar"><div><h1 className="page-title">Worklists</h1><p className="page-subtitle">Daily execution surface for operational queues, linked actions and explainability entry points.</p></div></div><FilterBar placeholder="Filter worklists by farm, task, owner or alert…" onChange={setQuery} /><div className="grid grid-3"><MetricCard title="Visible tasks" value={items.length} /><MetricCard title="Open tasks" value={open} /><MetricCard title="Overdue" value={overdue} /></div><ExplainabilityBlock reasons={['Worklists remain server-owned and auditable.','React only renders canonical DTOs and linked action hooks.','Single-farm and multi-site contexts are surfaced through entity farm references.']} />{error?<div className="card error-text">{error}</div>:null}{!data?<div className="card">Loading worklists…</div>:null}{data?<><WorklistList items={items.slice(0,10)} /><Card><h3 className="card-title">Linked action hooks</h3><div className="linked-inline-actions"><Link href="/planner">Open planner</Link><Link href="/decisions">Decision trail</Link><Link href="/support">Feedback / support</Link></div></Card></>:null}</div>}

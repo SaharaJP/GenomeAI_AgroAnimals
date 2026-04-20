@@ -1,0 +1,516 @@
+currency: RUB
+kpis:
+- kpi_id: milk_total_kg_1d
+  name: Total milk, 1d
+  domain: milk
+  unit: kg
+  period_days: 1
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - milk_kg
+    - date
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: milk_total_kg_7d
+  name: Total milk, 7d
+  domain: milk
+  unit: kg
+  period_days: 7
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - milk_kg
+    - date
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: milk_total_kg_30d
+  name: Total milk, 30d
+  domain: milk
+  unit: kg
+  period_days: 30
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - milk_kg
+    - date
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: milk_avg_kg_per_cow_1d
+  name: Avg milk per cow, 1d
+  domain: milk
+  unit: kg/cow/day
+  period_days: 1
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - milk_kg
+    - date
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+    - status
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: fat_pct_avg_7d
+  name: Average fat %, 7d
+  domain: milk
+  unit: '%'
+  period_days: 7
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - fat_pct
+    - milk_kg
+    - date
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: protein_pct_avg_7d
+  name: Average protein %, 7d
+  domain: milk
+  unit: '%'
+  period_days: 7
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - protein_pct
+    - milk_kg
+    - date
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: scc_avg_7d
+  name: Average SCC, 7d
+  domain: milk
+  unit: cells/ml
+  period_days: 7
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - scc_cells_ml
+    - date
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: health_events_30d
+  name: Health events count, 30d
+  domain: health
+  unit: count
+  period_days: 30
+  sources:
+  - table: dm_health_events
+    fields:
+    - event_date
+    - event_type
+    - severity
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: mastitis_events_30d
+  name: Mastitis events, 30d
+  domain: health
+  unit: count
+  period_days: 30
+  sources:
+  - table: dm_health_events
+    fields:
+    - event_date
+    - event_type
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: severe_health_events_30d
+  name: Severe health events, 30d
+  domain: health
+  unit: count
+  period_days: 30
+  sources:
+  - table: dm_health_events
+    fields:
+    - event_date
+    - severity
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: activity_avg_7d
+  name: Average activity, 7d
+  domain: sensors
+  unit: count/day
+  period_days: 7
+  sources:
+  - table: dm_sensors_daily
+    fields:
+    - date
+    - activity_count
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: rumination_avg_7d
+  name: Average rumination, 7d
+  domain: sensors
+  unit: min/day
+  period_days: 7
+  sources:
+  - table: dm_sensors_daily
+    fields:
+    - date
+    - rumination_min
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: temperature_avg_7d
+  name: Average temperature, 7d
+  domain: sensors
+  unit: C
+  period_days: 7
+  sources:
+  - table: dm_sensors_daily
+    fields:
+    - date
+    - temperature_c
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: inseminations_30d
+  name: Inseminations, 30d
+  domain: repro
+  unit: count
+  period_days: 30
+  sources:
+  - table: dm_repro_events
+    fields:
+    - event_date
+    - event_type
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: pregnancy_positive_90d
+  name: Pregnancy positive, 90d
+  domain: repro
+  unit: count
+  period_days: 90
+  sources:
+  - table: dm_repro_events
+    fields:
+    - event_date
+    - result
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: calvings_90d
+  name: Calvings, 90d
+  domain: repro
+  unit: count
+  period_days: 90
+  sources:
+  - table: dm_lactations
+    fields:
+    - calving_date
+    - animal_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: feed_as_fed_kg_7d
+  name: Feed delivered as-fed, 7d
+  domain: feeding
+  unit: kg
+  period_days: 7
+  sources:
+  - table: dm_feed_deliveries
+    fields:
+    - delivery_date
+    - feed_kg_as_fed
+    - pen_id
+    - ration_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: feed_dm_kg_7d
+  name: Feed delivered dry matter, 7d
+  domain: feeding
+  unit: kg DM
+  period_days: 7
+  sources:
+  - table: dm_feed_deliveries
+    fields:
+    - feed_kg_as_fed
+    - delivery_date
+    - ration_id
+  - table: dm_feed_rations
+    fields:
+    - dm_pct
+    - ration_id
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: feed_dm_kg_per_cow_7d
+  name: Feed DM per cow, 7d
+  domain: feeding
+  unit: kg DM/cow/day
+  period_days: 7
+  sources:
+  - table: dm_feed_deliveries
+    fields:
+    - feed_kg_as_fed
+    - delivery_date
+    - ration_id
+  - table: dm_feed_rations
+    fields:
+    - dm_pct
+    - ration_id
+  - table: dm_animals
+    fields:
+    - farm_id
+    - animal_id
+    - status
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: milk_revenue_rub_7d
+  name: Milk revenue, 7d
+  domain: economics
+  unit: RUB
+  period_days: 7
+  sources:
+  - table: dm_milkings_daily
+    fields:
+    - milk_kg
+    - date
+    - animal_id
+  - table: dm_economics_daily
+    fields:
+    - milk_price_per_kg
+    - date
+    - farm_id
+  - table: fx_rates
+    fields:
+    - EUR_RUB
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: feed_cost_rub_7d
+  name: Feed cost, 7d
+  domain: economics
+  unit: RUB
+  period_days: 7
+  sources:
+  - table: dm_feed_deliveries
+    fields:
+    - feed_kg_as_fed
+    - delivery_date
+    - ration_id
+  - table: dm_feed_rations
+    fields:
+    - dm_pct
+    - ration_id
+  - table: dm_economics_daily
+    fields:
+    - feed_cost_per_kg_dm
+    - date
+    - farm_id
+  - table: fx_rates
+    fields:
+    - EUR_RUB
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: other_cost_rub_7d
+  name: Other costs, 7d
+  domain: economics
+  unit: RUB
+  period_days: 7
+  sources:
+  - table: dm_economics_daily
+    fields:
+    - other_cost_eur
+    - date
+    - farm_id
+  - table: fx_rates
+    fields:
+    - EUR_RUB
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: margin_rub_7d
+  name: Margin, 7d
+  domain: economics
+  unit: RUB
+  period_days: 7
+  sources:
+  - table: derived
+    fields:
+    - milk_revenue_rub_7d
+    - feed_cost_rub_7d
+    - other_cost_rub_7d
+  update_freq: daily
+  missing_policy: ignore
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: alerts_open_count
+  name: Open alerts count
+  domain: alerts
+  unit: count
+  period_days: 0
+  sources:
+  - table: dm_alerts
+    fields:
+    - status
+    - created_at
+    - farm_id
+  update_freq: daily
+  missing_policy: treat_missing_as_zero
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)
+- kpi_id: decisions_accept_rate_90d
+  name: Decision accept rate, 90d
+  domain: decisions
+  unit: '%'
+  period_days: 90
+  sources:
+  - table: dm_decisions
+    fields:
+    - decision
+    - decision_date
+    - farm_id
+  update_freq: daily
+  missing_policy: n/a_if_no_decisions
+  slices:
+  - tenant_id
+  - farm_id
+  - site_id(optional)
+  - pen_id(optional)

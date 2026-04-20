@@ -1,0 +1,31 @@
+name: backup_restore_drill
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 2 * * *'
+
+jobs:
+  restore-drill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+      - name: Prepare synthetic smoke state
+        run: |
+          PYTHONPATH=src python -m web_cabinet.smoke --workdir _tmp/backup_restore_drill_seed --clean
+      - name: Run backup/restore drill
+        run: |
+          bash scripts/run_backup_restore_drill.sh artifacts/restore_drills_ci
+      - name: Upload restore drill reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-restore-drill-reports
+          path: artifacts/restore_drills_ci

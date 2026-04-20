@@ -1,0 +1,717 @@
+# QC Rules Catalog v2 (Target)
+#
+# Notes:
+# - Engine is additive: если датасет отсутствует, правило пропускается.
+# - Severity: BLOCKER/MAJOR/MINOR
+# - Если rule.alert.create == true и issue.severity in {BLOCKER, MAJOR}, то создаётся alert.
+
+version: 2
+currency: RUB
+rules:
+  # --- CORE / REFERENTIAL ---
+  - id: core_farms_pk_unique
+    domain: core
+    dataset: dm_farms
+    type: pk_unique
+    severity: BLOCKER
+    pk: [farm_id]
+    message: "Дубликаты farm_id в dm_farms"
+    remediation: "Удалить/исправить дубликаты farm_id в источнике"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: core_animals_pk_unique
+    domain: core
+    dataset: dm_animals
+    type: pk_unique
+    severity: BLOCKER
+    pk: [farm_id, animal_id]
+    message: "Дубликаты ключа farm_id+animal_id в dm_animals"
+    remediation: "Объединить/удалить дубликаты животных или исправить идентификаторы"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: core_lactations_pk_unique
+    domain: productivity
+    dataset: dm_lactations
+    type: pk_unique
+    severity: BLOCKER
+    pk: [farm_id, animal_id, lactation_id]
+    message: "Дубликаты ключа farm_id+animal_id+lactation_id в dm_lactations"
+    remediation: "Проверить генерацию lactation_id/порядок лактации в источнике"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: core_animals_farm_fk
+    domain: core
+    dataset: dm_animals
+    type: fk_exists
+    severity: BLOCKER
+    child_col: farm_id
+    parent_dataset: dm_farms
+    parent_col: farm_id
+    message: "В dm_animals есть farm_id, отсутствующие в dm_farms"
+    remediation: "Добавить ферму в справочник или исправить farm_id у животных"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: core_lactations_animal_fk
+    domain: productivity
+    dataset: dm_lactations
+    type: fk_exists
+    severity: BLOCKER
+    child_col: animal_id
+    parent_dataset: dm_animals
+    parent_col: animal_id
+    message: "В dm_lactations есть animal_id, отсутствующие в dm_animals"
+    remediation: "Добавить животное в справочник или исправить animal_id у лактаций"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  # --- PRODUCTIVITY ---
+  - id: prod_lactations_required_columns
+    domain: productivity
+    dataset: dm_lactations
+    type: required_columns
+    severity: BLOCKER
+    columns: [farm_id, animal_id, lactation_id, parity, calving_date, milk_305_kg]
+    message: "В dm_lactations отсутствуют обязательные колонки для расчётов"
+    remediation: "Проверить мэппинг при импорте/выгрузку из учётной системы"
+    alert:
+      create: true
+      alert_type: DATA_SCHEMA
+
+  - id: prod_milk_305_non_null
+    domain: productivity
+    dataset: dm_lactations
+    type: non_null
+    severity: MAJOR
+    column: milk_305_kg
+    message: "Пустой milk_305_kg (305-дневный надой)"
+    remediation: "Заполнить milk_305_kg или подключить dm_testday для расчёта 305d"
+    alert:
+      create: true
+      alert_type: DATA_MISSING
+
+  - id: prod_milk_305_range
+    domain: productivity
+    dataset: dm_lactations
+    type: numeric_range
+    severity: MAJOR
+    column: milk_305_kg
+    min: 2000
+    max: 20000
+    message: "milk_305_kg вне допустимого диапазона (2 000..20 000)"
+    remediation: "Проверить единицы измерения и корректность расчёта 305d"
+    alert:
+      create: true
+      alert_type: OUTLIER
+
+  - id: prod_parity_range
+    domain: productivity
+    dataset: dm_lactations
+    type: numeric_range
+    severity: MAJOR
+    column: parity
+    min: 1
+    max: 10
+    message: "parity вне диапазона 1..10"
+    remediation: "Исправить порядок лактации или источник"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: prod_calving_not_future
+    domain: productivity
+    dataset: dm_lactations
+    type: date_not_future
+    severity: MAJOR
+    column: calving_date
+    message: "calving_date в будущем"
+    remediation: "Проверить дату отёла в учётной системе"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: prod_animals_birth_not_future
+    domain: productivity
+    dataset: dm_animals
+    type: date_not_future
+    severity: MINOR
+    column: birth_date
+    message: "birth_date в будущем"
+    remediation: "Проверить дату рождения"
+
+  - id: prod_birth_before_calving
+    domain: productivity
+    dataset: dm_lactations
+    type: join_date_order
+    severity: BLOCKER
+    left_on: [farm_id, animal_id]
+    right_dataset: dm_animals
+    right_on: [farm_id, animal_id]
+    left_date: calving_date
+    right_date: birth_date
+    message: "calving_date раньше birth_date"
+    remediation: "Исправить даты рождения/отёла; без этого расчёты некорректны"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: prod_fat_pct_range
+    domain: productivity
+    dataset: dm_lactations
+    type: numeric_range
+    severity: MINOR
+    column: fat_pct
+    min: 1.5
+    max: 8.0
+    message: "fat_pct вне диапазона 1.5..8.0"
+    remediation: "Проверить лабораторные значения/единицы"
+
+  - id: prod_protein_pct_range
+    domain: productivity
+    dataset: dm_lactations
+    type: numeric_range
+    severity: MINOR
+    column: protein_pct
+    min: 1.5
+    max: 6.0
+    message: "protein_pct вне диапазона 1.5..6.0"
+    remediation: "Проверить лабораторные значения/единицы"
+
+  - id: prod_scc_range
+    domain: productivity
+    dataset: dm_lactations
+    type: numeric_range
+    severity: MAJOR
+    column: scc_cells_ml
+    min: 0
+    max: 5000000
+    message: "scc_cells_ml вне диапазона 0..5 000 000"
+    remediation: "Проверить SCC и единицы измерения"
+    alert:
+      create: true
+      alert_type: OUTLIER
+
+  # --- TESTDAY / DAILY MILKINGS ---
+  - id: td_testday_pk_unique
+    domain: productivity
+    dataset: dm_testday
+    type: pk_unique
+    severity: MAJOR
+    pk: [farm_id, animal_id, test_date]
+    message: "Дубликаты farm_id+animal_id+test_date в dm_testday"
+    remediation: "Удалить дубли контрольных доек"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: td_test_date_not_future
+    domain: productivity
+    dataset: dm_testday
+    type: date_not_future
+    severity: MINOR
+    column: test_date
+    message: "test_date в будущем"
+    remediation: "Проверить дату контрольной дойки"
+
+  - id: td_milk_kg_range
+    domain: productivity
+    dataset: dm_testday
+    type: numeric_range
+    severity: MAJOR
+    column: milk_kg
+    min: 0
+    max: 120
+    message: "milk_kg в dm_testday вне диапазона 0..120"
+    remediation: "Проверить надой на контрольной дойке"
+    alert:
+      create: true
+      alert_type: OUTLIER
+
+  - id: daily_milk_kg_range
+    domain: productivity
+    dataset: dm_milkings_daily
+    type: numeric_range
+    severity: MAJOR
+    column: milk_kg
+    min: 0
+    max: 120
+    message: "milk_kg в dm_milkings_daily вне диапазона 0..120"
+    remediation: "Проверить ежедневные надои/суммирование"
+    alert:
+      create: true
+      alert_type: OUTLIER
+
+  - id: daily_date_not_future
+    domain: productivity
+    dataset: dm_milkings_daily
+    type: date_not_future
+    severity: MINOR
+    column: date
+    message: "date в dm_milkings_daily в будущем"
+    remediation: "Проверить дату ежедневных надоев"
+
+  # --- SENSORS ---
+  - id: sensors_pk_unique
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: pk_unique
+    severity: MAJOR
+    pk: [farm_id, animal_id, date]
+    message: "Дубликаты farm_id+animal_id+date в dm_sensors_daily"
+    remediation: "Удалить/объединить дубликаты по датчику"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: sensors_date_not_future
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: date_not_future
+    severity: MINOR
+    column: date
+    message: "date в dm_sensors_daily в будущем"
+    remediation: "Проверить дату сенсоров"
+
+  - id: sensors_activity_non_negative
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: numeric_range
+    severity: MINOR
+    column: activity_steps
+    min: 0
+    max: 200000
+    message: "activity_steps вне диапазона 0..200000"
+    remediation: "Проверить шаги/единицы"
+
+  - id: sensors_rumination_range
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: numeric_range
+    severity: MINOR
+    column: rumination_min
+    min: 0
+    max: 1440
+    message: "rumination_min вне диапазона 0..1440"
+    remediation: "Проверить минуту руминации"
+
+  - id: sensors_body_temp_range
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: numeric_range
+    severity: MAJOR
+    column: body_temp_c
+    min: 34.0
+    max: 42.0
+    message: "body_temp_c вне диапазона 34..42"
+    remediation: "Проверить датчик температуры/калибровку"
+    alert:
+      create: true
+      alert_type: HEALTH_RISK
+
+  - id: sensors_vendor_non_null
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: non_null
+    severity: MINOR
+    column: device_vendor
+    message: "Не указан device_vendor"
+    remediation: "Указать в мэппинге/интеграции производителя датчика"
+
+  - id: sensors_group_min_size
+    domain: sensors
+    dataset: dm_sensors_daily
+    type: group_size_min
+    severity: MINOR
+    group_by: [farm_id, date]
+    min_size: 10
+    message: "Слишком мало сенсорных записей на ферму в день (<10)"
+    remediation: "Проверить доставку данных сенсоров (частичный день/ошибка выгрузки)"
+
+  # --- HEALTH ---
+  - id: health_events_pk_unique
+    domain: health
+    dataset: dm_health_events
+    type: pk_unique
+    severity: MAJOR
+    pk: [farm_id, animal_id, event_id]
+    message: "Дубликаты событий здоровья"
+    remediation: "Удалить/объединить дубликаты по event_id"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: health_event_date_not_future
+    domain: health
+    dataset: dm_health_events
+    type: date_not_future
+    severity: MAJOR
+    column: event_date
+    message: "event_date в будущем (dm_health_events)"
+    remediation: "Исправить дату события здоровья"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: health_treatment_cost_non_negative
+    domain: health
+    dataset: dm_health_events
+    type: numeric_range
+    severity: MINOR
+    column: treatment_cost_rub
+    min: 0
+    max: 1000000
+    message: "treatment_cost_rub отрицательный/аномальный"
+    remediation: "Проверить стоимость лечения (RUB)"
+
+  - id: treatments_date_order
+    domain: health
+    dataset: dm_treatments
+    type: date_order
+    severity: MAJOR
+    left_date: end_date
+    right_date: start_date
+    message: "end_date раньше start_date (dm_treatments)"
+    remediation: "Исправить даты лечения"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: treatments_estimated_cost_non_negative
+    domain: health
+    dataset: dm_treatments
+    type: numeric_range
+    severity: MINOR
+    column: estimated_cost_rub
+    min: 0
+    max: 1000000
+    message: "estimated_cost_rub отрицательный/аномальный"
+    remediation: "Проверить стоимость лечения (RUB)"
+
+  # --- REPRO ---
+  - id: repro_events_pk_unique
+    domain: repro
+    dataset: dm_repro_events
+    type: pk_unique
+    severity: MAJOR
+    pk: [farm_id, animal_id, event_id]
+    message: "Дубликаты событий воспроизводства"
+    remediation: "Удалить/объединить дубликаты по event_id"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: repro_event_date_not_future
+    domain: repro
+    dataset: dm_repro_events
+    type: date_not_future
+    severity: MAJOR
+    column: event_date
+    message: "event_date в будущем (dm_repro_events)"
+    remediation: "Исправить дату события воспроизводства"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: repro_services_count_range
+    domain: repro
+    dataset: dm_repro
+    type: numeric_range
+    severity: MINOR
+    column: services_count
+    min: 0
+    max: 20
+    message: "services_count вне диапазона 0..20"
+    remediation: "Проверить число осеменений"
+
+  - id: repro_days_open_range
+    domain: repro
+    dataset: dm_repro
+    type: numeric_range
+    severity: MAJOR
+    column: days_open
+    min: 0
+    max: 400
+    message: "days_open вне диапазона 0..400"
+    remediation: "Проверить расчёт days_open"
+    alert:
+      create: true
+      alert_type: REPRO_RISK
+
+  # --- FEEDING ---
+  - id: feed_deliveries_pk_unique
+    domain: feeding
+    dataset: dm_feed_deliveries_daily
+    type: pk_unique
+    severity: MAJOR
+    pk: [farm_id, pen_id, date, delivery_id]
+    message: "Дубликаты раздачи кормов"
+    remediation: "Исправить ключи delivery_id или удалить дубликаты"
+
+  - id: feed_delivery_date_not_future
+    domain: feeding
+    dataset: dm_feed_deliveries_daily
+    type: date_not_future
+    severity: MINOR
+    column: date
+    message: "date в dm_feed_deliveries_daily в будущем"
+    remediation: "Проверить дату раздачи"
+
+  - id: feed_headcount_positive
+    domain: feeding
+    dataset: dm_feed_deliveries_daily
+    type: numeric_range
+    severity: MAJOR
+    column: headcount
+    min: 1
+    max: 2000
+    message: "headcount <= 0 или аномально большой"
+    remediation: "Проверить поголовье в группе"
+    alert:
+      create: true
+      alert_type: DATA_INTEGRITY
+
+  - id: feed_waste_pct_range
+    domain: feeding
+    dataset: dm_feed_deliveries_daily
+    type: numeric_range
+    severity: MAJOR
+    column: waste_pct
+    min: 0
+    max: 50
+    message: "waste_pct вне диапазона 0..50"
+    remediation: "Проверить расчёт отходов кормления"
+    alert:
+      create: true
+      alert_type: FEED_WASTE
+
+  - id: rations_period_order
+    domain: feeding
+    dataset: dm_feed_rations
+    type: date_order
+    severity: MAJOR
+    left_date: period_end
+    right_date: period_start
+    message: "period_end раньше period_start (dm_feed_rations)"
+    remediation: "Исправить период действия рациона"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: rations_dmi_range
+    domain: feeding
+    dataset: dm_feed_rations
+    type: numeric_range
+    severity: MINOR
+    column: dmi_kg
+    min: 0
+    max: 40
+    message: "dmi_kg вне диапазона 0..40"
+    remediation: "Проверить потребление сухого вещества (kg)"
+
+  # --- ECONOMICS ---
+  - id: econ_milk_price_range
+    domain: economics
+    dataset: dm_economics_prices
+    type: numeric_range
+    severity: MAJOR
+    column: milk_price_rub_per_kg
+    min: 10
+    max: 80
+    message: "milk_price_rub_per_kg вне диапазона 10..80"
+    remediation: "Проверить цену молока (RUB/кг)"
+    alert:
+      create: true
+      alert_type: ECONOMICS
+
+  - id: econ_feed_cost_non_negative
+    domain: economics
+    dataset: dm_economics_daily
+    type: numeric_range
+    severity: MINOR
+    column: feed_cost_rub
+    min: 0
+    max: 100000000
+    message: "feed_cost_rub отрицательный/аномальный"
+    remediation: "Проверить затраты на корма (RUB)"
+
+  - id: econ_other_cost_non_negative
+    domain: economics
+    dataset: dm_economics_daily
+    type: numeric_range
+    severity: MINOR
+    column: other_cost_rub
+    min: 0
+    max: 100000000
+    message: "other_cost_rub отрицательный/аномальный"
+    remediation: "Проверить прочие затраты (RUB)"
+
+  # --- HEALTH (T4) ---
+  - id: health_events_required_columns
+    domain: health
+    dataset: dm_health_events
+    type: required_columns
+    severity: BLOCKER
+    columns: [tenant_id, event_id, animal_id, event_date, event_type]
+    message: "dm_health_events: missing required columns"
+    remediation: "Проверить загрузку health events..."
+    alert:
+      create: true
+      alert_type: DATA_SCHEMA
+
+  - id: health_events_pk_unique_health
+    domain: health
+    dataset: dm_health_events
+    type: pk_unique
+    severity: MAJOR
+    pk: [tenant_id, event_id]
+    message: "dm_health_events: duplicate event_id"
+    remediation: "Устранить дубликаты событий"
+    alert:
+      create: true
+      alert_type: DATA_DUPLICATE
+
+  - id: health_events_animal_fk
+    domain: health
+    dataset: dm_health_events
+    type: fk_exists
+    severity: MAJOR
+    child_col: animal_id
+    parent_ds: dm_animals
+    parent_col: animal_id
+    message: "dm_health_events: animal_id не найден в dm_animals"
+    remediation: "Проверить master_animal_id и справочник животных"
+    alert:
+      create: true
+      alert_type: DATA_FK
+
+  - id: health_events_date_not_future
+    domain: health
+    dataset: dm_health_events
+    type: date_not_future
+    severity: MAJOR
+    column: event_date
+    message: "dm_health_events: event_date из будущего"
+    remediation: "Проверить даты события"
+
+  - id: health_events_type_allowed
+    domain: health
+    dataset: dm_health_events
+    type: allowed_values
+    severity: MINOR
+    column: event_type
+    allowed_values: [mastitis, lameness, ketosis, metritis, injury, other]
+    message: "dm_health_events: неизвестный event_type"
+    remediation: "Сверить с configs/health/dictionaries/health_event_types.csv"
+
+  - id: treatments_required_columns
+    domain: health
+    dataset: dm_treatments
+    type: required_columns
+    severity: BLOCKER
+    columns: [tenant_id, treatment_id, animal_id, start_date, treatment_type]
+    message: "dm_treatments: missing required columns"
+    remediation: "Проверить загрузку treatments"
+    alert:
+      create: true
+      alert_type: DATA_SCHEMA
+
+  - id: treatments_pk_unique
+    domain: health
+    dataset: dm_treatments
+    type: pk_unique
+    severity: MAJOR
+    pk: [tenant_id, treatment_id]
+    message: "dm_treatments: duplicate treatment_id"
+    remediation: "Устранить дубликаты лечений"
+    alert:
+      create: true
+      alert_type: DATA_DUPLICATE
+
+  - id: treatments_animal_fk
+    domain: health
+    dataset: dm_treatments
+    type: fk_exists
+    severity: MAJOR
+    child_col: animal_id
+    parent_ds: dm_animals
+    parent_col: animal_id
+    message: "dm_treatments: animal_id не найден в dm_animals"
+    remediation: "Проверить master_animal_id и справочник животных"
+    alert:
+      create: true
+      alert_type: DATA_FK
+
+  - id: treatments_reason_event_fk
+    domain: health
+    dataset: dm_treatments
+    type: fk_exists
+    severity: MINOR
+    child_col: reason_event_id
+    parent_ds: dm_health_events
+    parent_col: event_id
+    message: "dm_treatments: reason_event_id не найден в dm_health_events"
+    remediation: "Если возможно, привязать лечение к событию здоровья"
+
+  - id: treatments_start_not_future
+    domain: health
+    dataset: dm_treatments
+    type: date_not_future
+    severity: MAJOR
+    column: start_date
+    message: "dm_treatments: start_date из будущего"
+    remediation: "Проверить даты лечения"
+
+  - id: treatments_end_not_future
+    domain: health
+    dataset: dm_treatments
+    type: date_not_future
+    severity: MINOR
+    column: end_date
+    message: "dm_treatments: end_date из будущего"
+    remediation: "Проверить даты лечения"
+
+  - id: treatments_date_order_health
+    domain: health
+    dataset: dm_treatments
+    type: date_order
+    severity: MAJOR
+    left_date: start_date
+    right_date: end_date
+    message: "dm_treatments: start_date позже end_date"
+    remediation: "Исправить даты лечения"
+    alert:
+      create: true
+      alert_type: DATA_DATE
+
+  - id: treatments_type_allowed
+    domain: health
+    dataset: dm_treatments
+    type: allowed_values
+    severity: MINOR
+    column: treatment_type
+    allowed_values: [antibiotic, anti-inflammatory, antiparasitic, vitamin, other]
+    message: "dm_treatments: неизвестный treatment_type"
+    remediation: "Сверить с configs/health/dictionaries/treatment_types.csv"
+
+  - id: treatments_overlap
+    domain: health
+    dataset: dm_treatments
+    type: interval_overlap
+    severity: MAJOR
+    group_cols: [tenant_id, animal_id]
+    start: start_date
+    end: end_date
+    row_id_cols: [tenant_id, treatment_id]
+    message: "Пересечение интервалов лечений для одного животного"
+    remediation: "Проверить курсы лечений (возможны дубликаты/ошибки дат)"
+    alert:
+      create: true
+      alert_type: HEALTH_TREATMENT_OVERLAP

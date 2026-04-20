@@ -1,0 +1,4 @@
+tenant_id,bull_id,bull_name,breed
+default,BULL_9001,North Signal,Holstein
+default,BULL_9002,South Index,Holstein
+default,BULL_9003,Balanced Merit,Holstein

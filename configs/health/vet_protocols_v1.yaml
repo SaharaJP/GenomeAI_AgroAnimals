@@ -1,0 +1,90 @@
+version: 1
+catalog_version: 2026-04-01
+protocols:
+  - protocol_key: mastitis_follow_up
+    protocol_version: 1
+    title: Протокол контроля мастита
+    description: Повторяемый workflow наблюдения, лечения и follow-up без постановки диагноза.
+    owner_role: Vet
+    assignee_team: team-health
+    applicable_event_types: [mastitis, treatment]
+    default_worklist_type: vet
+    steps:
+      - step_key: udder_observation
+        label: Осмотр вымени и запись наблюдения
+        kind: observation
+        required: true
+        due_offset_days: 0
+      - step_key: link_treatment
+        label: Привязать лечение / назначение
+        kind: treatment
+        required: false
+        due_offset_days: 0
+      - step_key: withdrawal_check
+        label: Контроль withdrawal / ограничений по молоку
+        kind: follow_up
+        required: true
+        due_offset_days: 3
+      - step_key: recheck_milk
+        label: Повторная оценка молока / состояния
+        kind: follow_up
+        required: true
+        due_offset_days: 7
+  - protocol_key: metritis_follow_up
+    protocol_version: 1
+    title: Протокол follow-up по метриту
+    description: Единый follow-up после health event без автоматизации клинических решений.
+    owner_role: Vet
+    assignee_team: team-health
+    applicable_event_types: [metritis, treatment]
+    default_worklist_type: vet
+    steps:
+      - step_key: initial_observation
+        label: Стартовое наблюдение и комментарий
+        kind: observation
+        required: true
+        due_offset_days: 0
+      - step_key: link_treatment
+        label: Привязать лечение / назначение
+        kind: treatment
+        required: false
+        due_offset_days: 0
+      - step_key: recheck_3d
+        label: Recheck через 3 дня
+        kind: follow_up
+        required: true
+        due_offset_days: 3
+      - step_key: recheck_7d
+        label: Recheck через 7 дней
+        kind: follow_up
+        required: true
+        due_offset_days: 7
+  - protocol_key: lameness_follow_up
+    protocol_version: 1
+    title: Протокол контроля хромоты
+    description: Стандартизированный осмотр и повторный контроль состояния.
+    owner_role: Vet
+    assignee_team: team-health
+    applicable_event_types: [lameness, treatment]
+    default_worklist_type: vet
+    steps:
+      - step_key: locomotion_observation
+        label: Осмотр походки / запись наблюдения
+        kind: observation
+        required: true
+        due_offset_days: 0
+      - step_key: link_treatment
+        label: Привязать лечение / обработку
+        kind: treatment
+        required: false
+        due_offset_days: 0
+      - step_key: pen_follow_up
+        label: Follow-up по группе/загону
+        kind: follow_up
+        required: false
+        due_offset_days: 2
+      - step_key: recheck_7d
+        label: Повторный контроль через 7 дней
+        kind: follow_up
+        required: true
+        due_offset_days: 7

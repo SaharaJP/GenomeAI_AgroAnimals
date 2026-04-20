@@ -1,0 +1,3 @@
+tenant_id,animal_id,farm_id,site_id,current_pen_id,master_animal_id,external_id,sex,birth_date,breed,status
+default,A1001,FARM_001,SITE_001,PEN_01,MA_A1001,EXT_A1001,F,2021-03-12,Holstein,active
+default,A1002,FARM_001,SITE_001,PEN_01,MA_A1002,EXT_A1002,F,2021-06-01,Holstein,active

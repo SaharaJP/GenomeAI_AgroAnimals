@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>Weekly Plans</h2>
+
+{% if error %}
+  <div class="card" style="border-color:#ffccc7; background:#fff1f0;">Ошибка: {{ error }}</div>
+{% endif %}
+{% if notice %}
+  <div class="card" style="border-color:#b7eb8f; background:#f6ffed;">{{ notice }}</div>
+{% endif %}
+
+<div class="card">
+  <form method="get" action="/weekly_plans">
+    <div class="row">
+      <div>
+        <label>Статус</label>
+        <select name="status">
+          <option value="" {% if filters.status=='' %}selected{% endif %}>Все</option>
+          <option value="draft" {% if filters.status=='draft' %}selected{% endif %}>draft</option>
+          <option value="approved" {% if filters.status=='approved' %}selected{% endif %}>approved</option>
+          <option value="archived" {% if filters.status=='archived' %}selected{% endif %}>archived</option>
+        </select>
+      </div>
+      <div>
+        <label>Поиск</label>
+        <input type="text" name="q" value="{{ filters.q }}" placeholder="name/summary" />
+      </div>
+      <div style="align-self:end;">
+        <button class="primary" type="submit">Фильтр</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% if can_write %}
+<div class="card">
+  <h3>Сгенерировать AI-план на неделю</h3>
+  <form method="post" action="/weekly_plans/generate">
+    <div class="row">
+      <div>
+        <label>Неделя (week_start, YYYY-MM-DD)</label>
+        <input type="text" name="week_start" value="{{ default_week_start }}" />
+      </div>
+      <div>
+        <label>data_version</label>
+        <input type="text" name="data_version" value="" placeholder="dv_demo" />
+      </div>
+      <div>
+        <label>farm_id (опц.)</label>
+        <input type="text" name="farm_id" value="" />
+      </div>
+    </div>
+    <div class="row">
+      <div style="flex:1; min-width: 640px;">
+        <label>Вопрос Copilot</label>
+        <input type="text" name="question" value="{{ default_generate_question }}" />
+        <div class="muted">Будет создан draft weekly plan только по фактам из fact-pack. Approval и создание задач используют уже существующий workflow.</div>
+      </div>
+    </div>
+    <button class="primary" type="submit">Сгенерировать draft</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Создать план (draft)</h3>
+  <form method="post" action="/weekly_plans/create">
+    <div class="row">
+      <div>
+        <label>Неделя (week_start, YYYY-MM-DD)</label>
+        <input type="text" name="week_start" value="{{ default_week_start }}" />
+      </div>
+      <div>
+        <label>Название</label>
+        <input type="text" name="name" value="" placeholder="План на неделю" />
+      </div>
+      <div>
+        <label>farm_id (опц.)</label>
+        <input type="text" name="farm_id" value="" />
+      </div>
+      <div>
+        <label>data_version (опц.)</label>
+        <input type="text" name="data_version" value="" />
+      </div>
+    </div>
+    <div class="row">
+      <div style="flex:1; min-width: 420px;">
+        <label>Краткое описание</label>
+        <textarea name="summary" placeholder="Коротко: приоритеты недели, KPI, риски"></textarea>
+      </div>
+      <div style="flex:1; min-width: 420px;">
+        <label>Пункты действий (по строкам, 1 строка = 1 задача)</label>
+        <textarea name="actions" placeholder="Например: Проверить группу сухостоя (рацион)\nСверить осеменения за 7 дней и закрыть пропуски\nРазобрать QC ошибки по файлу milk_2026-03.csv"></textarea>
+        <div class="muted">При approval директором по каждому пункту автоматически создаётся задача в Workflow.</div>
+      </div>
+    </div>
+    <button class="primary" type="submit">Создать</button>
+  </form>
+</div>
+{% endif %}
+
+{% if can_approve %}
+<div class="card">
+  <h3>Планы на approval</h3>
+  <div class="muted">Ожидают решения директора: {{ pending_total }}</div>
+  {% if pending_weekly_plans %}
+  <table>
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Name</th>
+        <th>Запросил</th>
+        <th>Пунктов</th>
+        <th>Цитат</th>
+        <th>Источники</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in pending_weekly_plans %}
+      <tr>
+        <td>{{ p.week_start }}</td>
+        <td><a href="/weekly_plans/{{ p.plan_id }}">{{ p.name }}</a></td>
+        <td>{{ p.approval_requested_by_username or '—' }}<br/><span class="muted">{{ p.approval_requested_at or '' }}</span></td>
+        <td>{{ p.item_count }}</td>
+        <td>{{ p.citation_count }}</td>
+        <td class="muted">{{ (p.source_run_ids or [])|join(', ') if p.source_run_ids else '—' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <div class="muted">Сейчас нет планов, ожидающих approval.</div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="muted">Всего: {{ total }}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Week</th>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Updated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for p in weekly_plans %}
+      <tr>
+        <td>{{ p.week_start }}</td>
+        <td><a href="/weekly_plans/{{ p.plan_id }}">{{ p.name }}</a></td>
+        <td><span class="pill">{{ p.status }}</span></td>
+        <td>{{ p.updated_at }}</td>
+        <td>
+          <a href="/weekly_plans/{{ p.plan_id }}">Открыть</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

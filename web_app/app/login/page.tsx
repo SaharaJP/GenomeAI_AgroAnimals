@@ -1,0 +1,2 @@
+import { LoginForm } from '@/components/auth/login-form'; import { Card } from '@/components/ui/card';
+export default function LoginPage(){return <div className="login-shell"><Card><div className="login-card"><h1 className="page-title">GenomeAI AgroAnimals</h1><p className="page-subtitle">New React / Next.js cabinet foundation. Authentication stays server-backed via backend API.</p><div style={{marginTop:18}}><LoginForm /></div></div></Card></div>}

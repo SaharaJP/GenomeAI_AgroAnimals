@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: genomeai-backend
+    metrics_path: /metrics/prometheus
+    static_configs:
+      - targets: ['backend-api:8000']
+  - job_name: genomeai-proxy-health
+    metrics_path: /healthz
+    static_configs:
+      - targets: ['reverse-proxy:80']

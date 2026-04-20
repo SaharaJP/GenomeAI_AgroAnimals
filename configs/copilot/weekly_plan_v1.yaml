@@ -1,0 +1,38 @@
+weekly_plan_copilot_v1:
+  enabled: true
+  intent_keywords:
+    - "сформируй план на неделю"
+    - "план на неделю"
+    - "сформируй недельный план"
+    - "план действий на неделю"
+    - "weekly plan"
+  min_items: 5
+  max_items: 15
+  max_candidates_per_section: 5
+  max_table_rows_per_candidate_scan: 8
+  include_sections:
+    - "modules.alerts_v2"
+    - "modules.health"
+    - "modules.repro"
+    - "modules.kpi"
+    - "modules.economics"
+    - "assistant_knowledge.tasks_v1"
+  section_weights:
+    modules.alerts_v2: 100
+    modules.health: 95
+    modules.repro: 90
+    assistant_knowledge.tasks_v1: 85
+    modules.kpi: 80
+    modules.economics: 75
+  severity_priority:
+    critical: 1
+    high: 2
+    medium: 3
+    low: 4
+  default_priority: 3
+  default_domain: "data"
+  default_assignee_team_by_domain:
+    health: "team-health"
+    repro: "team-repro"
+    econ: "team-econ"
+    data: "team-data"

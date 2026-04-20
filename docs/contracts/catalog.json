@@ -1,0 +1,969 @@
+{
+  "schema": "genomeai.data_contract_catalog.v1",
+  "generated_at_utc": "2026-03-08T07:06:20+00:00",
+  "contracts_dir": "/mnt/data/t13_03_step2/configs/contracts",
+  "project_root": "/mnt/data/t13_03_step2",
+  "datasets": [
+    {
+      "dataset": "dm_animals",
+      "contract_version": "1.0.0",
+      "status": "active",
+      "domain": "master_data",
+      "required_for_mvp": true,
+      "description": "Справочник животных (P0). 1 строка = 1 животное.",
+      "primary_key": [
+        "animal_id"
+      ],
+      "foreign_keys": [
+        {
+          "fields": [
+            "farm_id"
+          ],
+          "ref_dataset": "dm_farms",
+          "ref_fields": [
+            "farm_id"
+          ],
+          "enforced": false
+        }
+      ],
+      "field_count": 8,
+      "required_field_count": 2,
+      "required_fields": [
+        "animal_id",
+        "farm_id"
+      ],
+      "notes": [
+        "FK на dm_farms не проверяется в A0 (будет в QC)."
+      ],
+      "source_systems": [
+        "СЕЛЭКС",
+        "excel",
+        "1c",
+        "selex"
+      ],
+      "mapping_templates": [
+        "/mnt/data/t13_03_step2/configs/mappings/animals_example.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/1c/animals.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/excel/animals.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/selex/animals.yaml"
+      ],
+      "mapping_template_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/animals_example.yaml",
+          "relative_path": "configs/mappings/animals_example.yaml",
+          "template_name": "animals_example",
+          "source_system": "example",
+          "dataset_key": "animals",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/1c/animals.yaml",
+          "relative_path": "configs/mappings/templates/1c/animals.yaml",
+          "template_name": "animals",
+          "source_system": "1c",
+          "dataset_key": "animals",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": true,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/excel/animals.yaml",
+          "relative_path": "configs/mappings/templates/excel/animals.yaml",
+          "template_name": "animals",
+          "source_system": "excel",
+          "dataset_key": "animals",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/selex/animals.yaml",
+          "relative_path": "configs/mappings/templates/selex/animals.yaml",
+          "template_name": "animals",
+          "source_system": "selex",
+          "dataset_key": "animals",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": true,
+          "exists": true
+        }
+      ],
+      "mapping_template_count": 4,
+      "example_files": [
+        "/mnt/data/t13_03_step2/data/examples/dm_animals.csv",
+        "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_animals.csv"
+      ],
+      "example_file_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/data/examples/dm_animals.csv",
+          "relative_path": "data/examples/dm_animals.csv",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_animals.csv",
+          "relative_path": "data/fixtures/target_v2/dm_animals.csv",
+          "exists": true
+        }
+      ],
+      "example_file_count": 2,
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "covered",
+        "qc.primary_key": "covered",
+        "qc.cross_dataset_links": "covered"
+      },
+      "qc_status_counts": {
+        "covered": 5
+      },
+      "fields": [
+        {
+          "name": "animal_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Уникальный идентификатор животного"
+        },
+        {
+          "name": "farm_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Ссылка на dm_farms"
+        },
+        {
+          "name": "ear_tag",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Бирка/номер"
+        },
+        {
+          "name": "breed",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Порода"
+        },
+        {
+          "name": "sex",
+          "type": "string",
+          "required": false,
+          "allowed_values": [
+            "F",
+            "M"
+          ],
+          "description": "Пол (F/M)"
+        },
+        {
+          "name": "birth_date",
+          "type": "date",
+          "required": false,
+          "allowed_values": [],
+          "description": "Дата рождения"
+        },
+        {
+          "name": "is_alive",
+          "type": "bool",
+          "required": false,
+          "allowed_values": [],
+          "description": "Животное живо"
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Статус"
+        }
+      ]
+    },
+    {
+      "dataset": "dm_farms",
+      "contract_version": "1.0.0",
+      "status": "active",
+      "domain": "reference",
+      "required_for_mvp": true,
+      "description": "Справочник ферм/площадок (P0). 1 строка = 1 ферма.",
+      "primary_key": [
+        "farm_id"
+      ],
+      "foreign_keys": [],
+      "field_count": 8,
+      "required_field_count": 2,
+      "required_fields": [
+        "farm_id",
+        "farm_name"
+      ],
+      "notes": [
+        "farm_id — ключ для ссылок из других датасетов."
+      ],
+      "source_systems": [
+        "excel",
+        "1c",
+        "manual",
+        "selex"
+      ],
+      "mapping_templates": [
+        "/mnt/data/t13_03_step2/configs/mappings/farms_example.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/1c/farms.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/excel/farms.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/selex/farms.yaml"
+      ],
+      "mapping_template_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/farms_example.yaml",
+          "relative_path": "configs/mappings/farms_example.yaml",
+          "template_name": "farms_example",
+          "source_system": "example",
+          "dataset_key": "farms",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/1c/farms.yaml",
+          "relative_path": "configs/mappings/templates/1c/farms.yaml",
+          "template_name": "farms",
+          "source_system": "1c",
+          "dataset_key": "farms",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": true,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/excel/farms.yaml",
+          "relative_path": "configs/mappings/templates/excel/farms.yaml",
+          "template_name": "farms",
+          "source_system": "excel",
+          "dataset_key": "farms",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/selex/farms.yaml",
+          "relative_path": "configs/mappings/templates/selex/farms.yaml",
+          "template_name": "farms",
+          "source_system": "selex",
+          "dataset_key": "farms",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        }
+      ],
+      "mapping_template_count": 4,
+      "example_files": [
+        "/mnt/data/t13_03_step2/data/examples/dm_farms.csv",
+        "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_farms.csv"
+      ],
+      "example_file_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/data/examples/dm_farms.csv",
+          "relative_path": "data/examples/dm_farms.csv",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_farms.csv",
+          "relative_path": "data/fixtures/target_v2/dm_farms.csv",
+          "exists": true
+        }
+      ],
+      "example_file_count": 2,
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "covered",
+        "qc.cross_dataset_links": "n/a"
+      },
+      "qc_status_counts": {
+        "covered": 3,
+        "n/a": 2
+      },
+      "fields": [
+        {
+          "name": "farm_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Уникальный идентификатор фермы"
+        },
+        {
+          "name": "farm_name",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Название фермы"
+        },
+        {
+          "name": "region",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Регион/область"
+        },
+        {
+          "name": "country",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Страна"
+        },
+        {
+          "name": "lat",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Широта"
+        },
+        {
+          "name": "lon",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Долгота"
+        },
+        {
+          "name": "created_at",
+          "type": "date",
+          "required": false,
+          "allowed_values": [],
+          "description": "Дата (YYYY-MM-DD)"
+        },
+        {
+          "name": "is_active",
+          "type": "bool",
+          "required": false,
+          "allowed_values": [],
+          "description": "Активна ли ферма"
+        }
+      ]
+    },
+    {
+      "dataset": "dm_health_events",
+      "contract_version": "1.0.0",
+      "status": "active",
+      "domain": "health",
+      "required_for_mvp": false,
+      "description": "Фактические события здоровья (учёт). 1 строка = 1 событие (осмотр/симптом/факт).",
+      "primary_key": [
+        "tenant_id",
+        "event_id"
+      ],
+      "foreign_keys": [
+        {
+          "fields": [
+            "animal_id"
+          ],
+          "ref_dataset": "dm_animals",
+          "ref_fields": [
+            "animal_id"
+          ],
+          "enforced": false
+        }
+      ],
+      "field_count": 7,
+      "required_field_count": 5,
+      "required_fields": [
+        "tenant_id",
+        "event_id",
+        "animal_id",
+        "event_date",
+        "event_type"
+      ],
+      "notes": [
+        "Это учёт фактов. Никаких диагнозов от ИИ."
+      ],
+      "source_systems": [
+        "1c",
+        "excel",
+        "manual"
+      ],
+      "mapping_templates": [
+        "/mnt/data/t13_03_step2/configs/mappings/health_events_example.yaml"
+      ],
+      "mapping_template_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/health_events_example.yaml",
+          "relative_path": "configs/mappings/health_events_example.yaml",
+          "template_name": "health_events_example",
+          "source_system": "example",
+          "dataset_key": "health_events",
+          "column_count": 6,
+          "constants_count": 1,
+          "dayfirst": false,
+          "exists": true
+        }
+      ],
+      "mapping_template_count": 1,
+      "example_files": [
+        "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_health_events.csv"
+      ],
+      "example_file_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_health_events.csv",
+          "relative_path": "data/fixtures/target_v2/dm_health_events.csv",
+          "exists": true
+        }
+      ],
+      "example_file_count": 1,
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "covered",
+        "qc.primary_key": "planned",
+        "qc.cross_dataset_links": "planned"
+      },
+      "qc_status_counts": {
+        "covered": 3,
+        "planned": 2
+      },
+      "fields": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Идентификатор тенанта/фермы (логический)"
+        },
+        {
+          "name": "event_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Уникальный идентификатор события"
+        },
+        {
+          "name": "animal_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Идентификатор животного"
+        },
+        {
+          "name": "event_date",
+          "type": "date",
+          "required": true,
+          "allowed_values": [],
+          "description": "Дата события"
+        },
+        {
+          "name": "event_type",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Код типа события (из справочника)"
+        },
+        {
+          "name": "severity",
+          "type": "string",
+          "required": false,
+          "allowed_values": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "description": "Опциональная тяжесть (не диагноз)"
+        },
+        {
+          "name": "notes",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Комментарий оператора/ветврача"
+        }
+      ]
+    },
+    {
+      "dataset": "dm_lactations",
+      "contract_version": "1.0.0",
+      "status": "active",
+      "domain": "production",
+      "required_for_mvp": true,
+      "description": "Лактации животных (P0). 1 строка = 1 лактация у животного.",
+      "primary_key": [
+        "animal_id",
+        "lactation_no"
+      ],
+      "foreign_keys": [
+        {
+          "fields": [
+            "animal_id"
+          ],
+          "ref_dataset": "dm_animals",
+          "ref_fields": [
+            "animal_id"
+          ],
+          "enforced": false
+        }
+      ],
+      "field_count": 8,
+      "required_field_count": 2,
+      "required_fields": [
+        "animal_id",
+        "lactation_no"
+      ],
+      "notes": [
+        "Бизнес-правила и проверки дат — позже (QC)."
+      ],
+      "source_systems": [
+        "СЕЛЭКС",
+        "excel",
+        "1c",
+        "selex"
+      ],
+      "mapping_templates": [
+        "/mnt/data/t13_03_step2/configs/mappings/lactations_example.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/1c/lactations.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/excel/lactations.yaml",
+        "/mnt/data/t13_03_step2/configs/mappings/templates/selex/lactations.yaml"
+      ],
+      "mapping_template_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/lactations_example.yaml",
+          "relative_path": "configs/mappings/lactations_example.yaml",
+          "template_name": "lactations_example",
+          "source_system": "example",
+          "dataset_key": "lactations",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/1c/lactations.yaml",
+          "relative_path": "configs/mappings/templates/1c/lactations.yaml",
+          "template_name": "lactations",
+          "source_system": "1c",
+          "dataset_key": "lactations",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": true,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/excel/lactations.yaml",
+          "relative_path": "configs/mappings/templates/excel/lactations.yaml",
+          "template_name": "lactations",
+          "source_system": "excel",
+          "dataset_key": "lactations",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/templates/selex/lactations.yaml",
+          "relative_path": "configs/mappings/templates/selex/lactations.yaml",
+          "template_name": "lactations",
+          "source_system": "selex",
+          "dataset_key": "lactations",
+          "column_count": 8,
+          "constants_count": 0,
+          "dayfirst": true,
+          "exists": true
+        }
+      ],
+      "mapping_template_count": 4,
+      "example_files": [
+        "/mnt/data/t13_03_step2/data/examples/dm_lactations.csv",
+        "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_lactations.csv"
+      ],
+      "example_file_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/data/examples/dm_lactations.csv",
+          "relative_path": "data/examples/dm_lactations.csv",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_lactations.csv",
+          "relative_path": "data/fixtures/target_v2/dm_lactations.csv",
+          "exists": true
+        }
+      ],
+      "example_file_count": 2,
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "covered",
+        "qc.cross_dataset_links": "covered"
+      },
+      "qc_status_counts": {
+        "covered": 4,
+        "n/a": 1
+      },
+      "fields": [
+        {
+          "name": "animal_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Ссылка на животное"
+        },
+        {
+          "name": "lactation_no",
+          "type": "int",
+          "required": true,
+          "allowed_values": [],
+          "description": "Номер лактации"
+        },
+        {
+          "name": "calving_date",
+          "type": "date",
+          "required": false,
+          "allowed_values": [],
+          "description": "Дата отёла"
+        },
+        {
+          "name": "dryoff_date",
+          "type": "date",
+          "required": false,
+          "allowed_values": [],
+          "description": "Дата запуска"
+        },
+        {
+          "name": "days_in_milk",
+          "type": "int",
+          "required": false,
+          "allowed_values": [],
+          "description": "DIM"
+        },
+        {
+          "name": "milk_305d_kg",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "305-дневный удой (кг)"
+        },
+        {
+          "name": "fat_pct",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Жир, %"
+        },
+        {
+          "name": "protein_pct",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Белок, %"
+        }
+      ]
+    },
+    {
+      "dataset": "dm_testday",
+      "contract_version": "1.0.0",
+      "status": "active",
+      "domain": "production",
+      "required_for_mvp": false,
+      "description": "Контрольные дойки (опционально). 1 строка = измерение в дату.",
+      "primary_key": [
+        "animal_id",
+        "test_date"
+      ],
+      "foreign_keys": [
+        {
+          "fields": [
+            "animal_id"
+          ],
+          "ref_dataset": "dm_animals",
+          "ref_fields": [
+            "animal_id"
+          ],
+          "enforced": false
+        }
+      ],
+      "field_count": 6,
+      "required_field_count": 2,
+      "required_fields": [
+        "animal_id",
+        "test_date"
+      ],
+      "notes": [
+        "Файл может отсутствовать — validate не падает."
+      ],
+      "source_systems": [
+        "СЕЛЭКС",
+        "excel"
+      ],
+      "mapping_templates": [
+        "/mnt/data/t13_03_step2/configs/mappings/testday_example.yaml"
+      ],
+      "mapping_template_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/testday_example.yaml",
+          "relative_path": "configs/mappings/testday_example.yaml",
+          "template_name": "testday_example",
+          "source_system": "example",
+          "dataset_key": "testday",
+          "column_count": 6,
+          "constants_count": 0,
+          "dayfirst": false,
+          "exists": true
+        }
+      ],
+      "mapping_template_count": 1,
+      "example_files": [
+        "/mnt/data/t13_03_step2/data/examples/dm_testday.csv",
+        "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_testday.csv"
+      ],
+      "example_file_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/data/examples/dm_testday.csv",
+          "relative_path": "data/examples/dm_testday.csv",
+          "exists": true
+        },
+        {
+          "path": "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_testday.csv",
+          "relative_path": "data/fixtures/target_v2/dm_testday.csv",
+          "exists": true
+        }
+      ],
+      "example_file_count": 2,
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "planned",
+        "qc.cross_dataset_links": "planned"
+      },
+      "qc_status_counts": {
+        "covered": 2,
+        "n/a": 1,
+        "planned": 2
+      },
+      "fields": [
+        {
+          "name": "animal_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Ссылка на животное"
+        },
+        {
+          "name": "test_date",
+          "type": "date",
+          "required": true,
+          "allowed_values": [],
+          "description": "Дата измерения"
+        },
+        {
+          "name": "milk_kg",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Удой за день, кг"
+        },
+        {
+          "name": "fat_pct",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Жир, %"
+        },
+        {
+          "name": "protein_pct",
+          "type": "float",
+          "required": false,
+          "allowed_values": [],
+          "description": "Белок, %"
+        },
+        {
+          "name": "somatic_cells",
+          "type": "int",
+          "required": false,
+          "allowed_values": [],
+          "description": "Соматические клетки"
+        }
+      ]
+    },
+    {
+      "dataset": "dm_treatments",
+      "contract_version": "1.0.0",
+      "status": "active",
+      "domain": "health",
+      "required_for_mvp": false,
+      "description": "Учёт назначений/лечений. 1 строка = 1 курс/назначение.",
+      "primary_key": [
+        "tenant_id",
+        "treatment_id"
+      ],
+      "foreign_keys": [
+        {
+          "fields": [
+            "animal_id"
+          ],
+          "ref_dataset": "dm_animals",
+          "ref_fields": [
+            "animal_id"
+          ],
+          "enforced": false
+        },
+        {
+          "fields": [
+            "reason_event_id"
+          ],
+          "ref_dataset": "dm_health_events",
+          "ref_fields": [
+            "event_id"
+          ],
+          "enforced": false
+        }
+      ],
+      "field_count": 8,
+      "required_field_count": 5,
+      "required_fields": [
+        "tenant_id",
+        "treatment_id",
+        "animal_id",
+        "start_date",
+        "treatment_type"
+      ],
+      "notes": [
+        "withdrawal рассчитывается детерминированно по configs/health/withdrawal_rules.yaml (см. docs/health/withdrawal_rules.md).",
+        "Никаких диагнозов от ИИ: tests/веб используют только факты + правила."
+      ],
+      "source_systems": [
+        "1c",
+        "excel",
+        "manual"
+      ],
+      "mapping_templates": [
+        "/mnt/data/t13_03_step2/configs/mappings/treatments_example.yaml"
+      ],
+      "mapping_template_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/configs/mappings/treatments_example.yaml",
+          "relative_path": "configs/mappings/treatments_example.yaml",
+          "template_name": "treatments_example",
+          "source_system": "example",
+          "dataset_key": "treatments",
+          "column_count": 7,
+          "constants_count": 1,
+          "dayfirst": false,
+          "exists": true
+        }
+      ],
+      "mapping_template_count": 1,
+      "example_files": [
+        "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_treatments.csv"
+      ],
+      "example_file_rows": [
+        {
+          "path": "/mnt/data/t13_03_step2/data/fixtures/target_v2/dm_treatments.csv",
+          "relative_path": "data/fixtures/target_v2/dm_treatments.csv",
+          "exists": true
+        }
+      ],
+      "example_file_count": 1,
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "planned",
+        "qc.cross_dataset_links": "planned"
+      },
+      "qc_status_counts": {
+        "covered": 2,
+        "n/a": 1,
+        "planned": 2
+      },
+      "fields": [
+        {
+          "name": "tenant_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Идентификатор тенанта/фермы (логический)"
+        },
+        {
+          "name": "treatment_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Уникальный идентификатор лечения"
+        },
+        {
+          "name": "animal_id",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Идентификатор животного"
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "required": true,
+          "allowed_values": [],
+          "description": "Дата начала лечения"
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "required": false,
+          "allowed_values": [],
+          "description": "Дата окончания лечения (если пусто, считаем start_date)"
+        },
+        {
+          "name": "treatment_type",
+          "type": "string",
+          "required": true,
+          "allowed_values": [],
+          "description": "Категория лечения (из справочника)"
+        },
+        {
+          "name": "reason_event_id",
+          "type": "string",
+          "required": false,
+          "allowed_values": [],
+          "description": "Ссылка на событие здоровья (dm_health_events.event_id)"
+        },
+        {
+          "name": "withdrawal_end_date",
+          "type": "date",
+          "required": false,
+          "allowed_values": [],
+          "description": "Опциональная явная дата окончания withdrawal из источника"
+        }
+      ]
+    }
+  ],
+  "dataset_count": 6,
+  "required_for_mvp_count": 3,
+  "mapping_template_count": 15,
+  "example_file_count": 10,
+  "domains": [
+    "health",
+    "master_data",
+    "production",
+    "reference"
+  ],
+  "statuses": [
+    "active"
+  ],
+  "source_systems": [
+    "1c",
+    "excel",
+    "manual",
+    "selex",
+    "СЕЛЭКС"
+  ],
+  "qc_status_counts": {
+    "covered": 19,
+    "n/a": 5,
+    "planned": 6
+  }
+}

@@ -1,0 +1,2 @@
+tenant_id,decision_id,farm_id,decision_date,animal_id,lactation_id,recommendation_type,decision,comment,source_alert_id
+default,DE_001,FARM_001,2025-03-11,A1001,LAC_A1001_1,PRIORITY,accept,Treat per protocol,AL_001

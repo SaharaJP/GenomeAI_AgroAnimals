@@ -1,0 +1,2 @@
+tenant_id,price_id,item_type,item_name,currency,unit,valid_from,valid_to,value
+default,PR_001,milk,Raw milk,EUR,kg,2025-01-01,,0.52

@@ -1,0 +1,121 @@
+name: ci_gates
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: src
+      CI_ARTIFACTS_ROOT: artifacts/_ci
+      CI_SMOKE_WORKDIR: _tmp/ci_smoke
+      CI_VERIFY_REPORT_ROOT: artifacts/_ci/verify_refactor
+      CI_PERF_REPORT_ROOT: artifacts/_ci/performance_gates
+      CI_WARNING_REPORT_JSON: artifacts/_ci/warning_governance_report.json
+      CI_WARNING_REPORT_MD: artifacts/_ci/warning_governance_report.md
+      CI_OPERATIONAL_REPORT_ROOT: artifacts/_ci/operational_rollout_gates
+      CI_OPERATIONAL_WORKDIR: _tmp/ci_operational_rollout
+      CI_COMPETITIVE_ACCEPTANCE_REPORT_ROOT: artifacts/_ci/competitive_acceptance
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install project
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Prepare artifact directories
+        run: |
+          mkdir -p "$CI_ARTIFACTS_ROOT" "$CI_VERIFY_REPORT_ROOT"
+
+      - name: Pytest gate
+        id: pytest_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/run_ci_gate.sh
+
+      - name: E2E smoke gate
+        id: smoke_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m web_cabinet.smoke --workdir "$CI_SMOKE_WORKDIR" --clean --timing-json "$CI_ARTIFACTS_ROOT/web_smoke.json" | tee "$CI_ARTIFACTS_ROOT/web_smoke.log"
+      - name: Golden verification gate
+        id: verify_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          python -m genomeai.cli verify_refactor \
+            --project-root . \
+            --golden golden \
+            --report-root "$CI_VERIFY_REPORT_ROOT" | tee "$CI_ARTIFACTS_ROOT/verify_refactor.log"
+
+      - name: Warning governance gate
+        id: warning_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/run_warning_governance_gate.sh
+
+
+      - name: Operational rollout gate
+        id: rollout_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/run_operational_rollout_gate.sh
+
+
+      - name: Competitive acceptance gate
+        id: competitive_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/run_competitive_acceptance_gate.sh
+
+      - name: Performance/NFR gate
+        id: perf_gate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          bash scripts/run_perf_gates.sh
+
+      - name: Upload CI artifacts on failure
+        if: ${{ steps.pytest_gate.outcome == 'failure' || steps.smoke_gate.outcome == 'failure' || steps.verify_gate.outcome == 'failure' || steps.warning_gate.outcome == 'failure' || steps.rollout_gate.outcome == 'failure' || steps.competitive_gate.outcome == 'failure' || steps.perf_gate.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-failure-artifacts
+          path: |
+            artifacts/_ci
+            artifacts/_ci/operational_rollout_gates
+            artifacts/_ci/competitive_acceptance
+            _tmp/ci_smoke
+            _tmp/ci_operational_rollout
+          if-no-files-found: warn
+
+      - name: Enforce gates
+        if: always()
+        shell: bash
+        run: |
+          test "${{ steps.pytest_gate.outcome }}" = "success"
+          test "${{ steps.smoke_gate.outcome }}" = "success"
+          test "${{ steps.verify_gate.outcome }}" = "success"
+          test "${{ steps.warning_gate.outcome }}" = "success"
+          test "${{ steps.rollout_gate.outcome }}" = "success"
+          test "${{ steps.competitive_gate.outcome }}" = "success"
+          test "${{ steps.perf_gate.outcome }}" = "success"

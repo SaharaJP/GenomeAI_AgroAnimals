@@ -1,0 +1,199 @@
+{
+  "schema": "genomeai.pilot_framework_records.v1",
+  "record_mode": "starter_sample",
+  "synthetic_note": "Starter/sample pilot tracking records for framework validation. These are not evidence of real customer rollout readiness.",
+  "pilots": [
+    {
+      "pilot_id": "pilot_alpha_north",
+      "customer_label": "North River Dairy / Pilot Alpha",
+      "status": "onboarding",
+      "edition": "enterprise",
+      "duration_weeks": 8,
+      "scope": {"farms": 1, "sites": 2, "roles": ["Director", "Operator", "Zootech", "Admin"]},
+      "expected_outcomes": [
+        "Launch governed daily operator flow",
+        "Validate enterprise benchmark and daily brief",
+        "Collect acceptance evidence for migration-safe UAT"
+      ],
+      "success_criteria": [
+        {"criterion_key": "daily_use", "status": "tracking", "target": "2 start-of-day cycles without developer shadowing", "current": "mapping validated, training scheduled"},
+        {"criterion_key": "rollout_diagnostics", "status": "tracking", "target": "Operational rollout diagnostics attached", "current": "gate artifacts linked"}
+      ],
+      "roles": {
+        "customer": ["Director sponsor", "Data steward / operator", "Zootech lead"],
+        "genomeai": ["Pilot owner", "Implementation engineer"]
+      },
+      "versions": {
+        "data_version": "dv_demo_farm_v1",
+        "qc_run": "qc_demo_farm_v1",
+        "model_version": "model_demo_ops_v1",
+        "scoring_run": "score_demo_ops_v1",
+        "report_version": "daily_brief_demo_v1",
+        "decision_log": "decision_demo_ops_v1"
+      },
+      "support_cases": [
+        {
+          "case_id": "SUP-ALPHA-001",
+          "status": "open",
+          "severity": "medium",
+          "title": "Finalize role training schedule",
+          "opened_at": "2026-04-01",
+          "linked_versions": {"report_version": "daily_brief_demo_v1"}
+        }
+      ],
+      "incidents": [
+        {
+          "incident_id": "INC-ALPHA-001",
+          "status": "mitigated",
+          "severity": "high",
+          "title": "Mobile handover widget regression discovered during dry run",
+          "opened_at": "2026-03-29",
+          "linked_surface": "pages/43_Daily_Worklists_By_Role.py",
+          "diagnostics_ref": "artifacts/_ci/operational_rollout_gates/operational_rollout_gates_report.json"
+        }
+      ],
+      "manual_evidence": [
+        {"key": "customer_signoff", "present": false},
+        {"key": "acceptance_report", "present": true},
+        {"key": "support_summary", "present": false}
+      ],
+      "reference_deployment": {
+        "candidate": false,
+        "referenceable": false,
+        "reason": "Pilot is still in onboarding and has no customer signoff evidence."
+      },
+      "assumptions": [
+        "Customer timeline and scope are placeholders for framework validation.",
+        "Seed record is sample-only and must be replaced with real deployment evidence in field use."
+      ]
+    },
+    {
+      "pilot_id": "pilot_beta_repro_vet",
+      "customer_label": "South Creek Genetics / Pilot Beta",
+      "status": "active",
+      "edition": "enterprise",
+      "duration_weeks": 10,
+      "scope": {"farms": 1, "sites": 1, "roles": ["Director", "Vet", "Zootech", "Operator", "Admin"]},
+      "expected_outcomes": [
+        "Reproduction and vet triage flows become daily routine",
+        "Decision intelligence and explainability reduce manual reconstruction",
+        "Feedback capture dataset becomes recalibration-ready"
+      ],
+      "success_criteria": [
+        {"criterion_key": "daily_use", "status": "tracking", "target": "5 weekday operator/vet cycles executed", "current": "3 cycles completed"},
+        {"criterion_key": "governed_ai", "status": "tracking", "target": "assistant answers cited and captured", "current": "assistant notes captured, adoption under review"},
+        {"criterion_key": "acceptance_readiness", "status": "at_risk", "target": "competitive acceptance subset passed", "current": "migration evidence not attached yet"}
+      ],
+      "roles": {
+        "customer": ["Director sponsor", "Vet lead", "Zootech lead", "Data steward / operator"],
+        "genomeai": ["Pilot owner", "Product analyst", "Support / incident coordinator"]
+      },
+      "versions": {
+        "data_version": "dv_demo_farm_v1",
+        "qc_run": "qc_demo_farm_v1",
+        "model_version": "model_repro_vet_v2",
+        "scoring_run": "score_repro_vet_v2",
+        "report_version": "report_repro_vet_v2",
+        "decision_log": "decision_repro_vet_v2"
+      },
+      "support_cases": [
+        {
+          "case_id": "SUP-BETA-001",
+          "status": "open",
+          "severity": "high",
+          "title": "Need benchmark comparison walkthrough for director UAT",
+          "opened_at": "2026-04-03",
+          "linked_versions": {"report_version": "report_repro_vet_v2", "decision_log": "decision_repro_vet_v2"}
+        },
+        {
+          "case_id": "SUP-BETA-002",
+          "status": "closed",
+          "severity": "low",
+          "title": "Clarified withdrawal warnings in vet profile",
+          "opened_at": "2026-03-25",
+          "linked_versions": {"scoring_run": "score_repro_vet_v2"}
+        }
+      ],
+      "incidents": [
+        {
+          "incident_id": "INC-BETA-001",
+          "status": "open",
+          "severity": "medium",
+          "title": "Export mismatch in economics per action for one scenario",
+          "opened_at": "2026-04-04",
+          "linked_surface": "pages/65_Economics_Per_Action.py",
+          "diagnostics_ref": "artifacts/_ci/competitive_acceptance/competitive_acceptance_report.json"
+        }
+      ],
+      "manual_evidence": [
+        {"key": "customer_signoff", "present": false},
+        {"key": "acceptance_report", "present": true},
+        {"key": "support_summary", "present": true}
+      ],
+      "reference_deployment": {
+        "candidate": true,
+        "referenceable": false,
+        "reason": "Acceptance report exists, but customer signoff is missing and one incident remains open."
+      },
+      "assumptions": [
+        "Success metrics are starter placeholders until pilot owners attach field evidence.",
+        "Referenceability remains blocked until explicit evidence is present."
+      ]
+    },
+    {
+      "pilot_id": "pilot_gamma_replacement",
+      "customer_label": "Legacy Replacement / Pilot Gamma",
+      "status": "completed",
+      "edition": "enterprise",
+      "duration_weeks": 12,
+      "scope": {"farms": 2, "sites": 3, "roles": ["Director", "Operator", "Zootech", "Vet", "Admin"]},
+      "expected_outcomes": [
+        "Competitive acceptance set executed for migration narrative",
+        "Training by role and demo farm assets reused in UAT",
+        "Support/incident trail attached to deployment summary"
+      ],
+      "success_criteria": [
+        {"criterion_key": "acceptance_readiness", "status": "met", "target": "competitive acceptance report attached", "current": "attached"},
+        {"criterion_key": "rollout_diagnostics", "status": "met", "target": "operational rollout diagnostics available", "current": "attached"},
+        {"criterion_key": "daily_use", "status": "tracking", "target": "reference claim approved", "current": "awaiting customer signoff"}
+      ],
+      "roles": {
+        "customer": ["Director sponsor", "Zootech lead", "Vet lead", "IT / automation owner"],
+        "genomeai": ["Pilot owner", "Implementation engineer", "Support / incident coordinator"]
+      },
+      "versions": {
+        "data_version": "dv_demo_farm_v1",
+        "qc_run": "qc_demo_farm_v1",
+        "model_version": "model_enterprise_replace_v1",
+        "scoring_run": "score_enterprise_replace_v1",
+        "report_version": "report_enterprise_replace_v1",
+        "decision_log": "decision_enterprise_replace_v1"
+      },
+      "support_cases": [
+        {
+          "case_id": "SUP-GAMMA-001",
+          "status": "closed",
+          "severity": "medium",
+          "title": "Finalize migration cutover checklist",
+          "opened_at": "2026-03-14",
+          "linked_versions": {"decision_log": "decision_enterprise_replace_v1"}
+        }
+      ],
+      "incidents": [],
+      "manual_evidence": [
+        {"key": "customer_signoff", "present": false},
+        {"key": "acceptance_report", "present": true},
+        {"key": "support_summary", "present": true}
+      ],
+      "reference_deployment": {
+        "candidate": true,
+        "referenceable": false,
+        "reason": "Completed starter/sample record still lacks explicit field customer signoff, so it must not be used as a live reference deployment claim."
+      },
+      "assumptions": [
+        "Completed status in sample data does not mean commercial rollout evidence exists.",
+        "Reference deployment claim is blocked until customer signoff is attached."
+      ]
+    }
+  ]
+}

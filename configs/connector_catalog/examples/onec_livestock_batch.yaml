@@ -1,0 +1,27 @@
+connector_id: onec_livestock_batch
+kind: file
+enabled: true
+source_system: 1C Livestock
+system_family: erp_herd_management
+export_mode: scheduled_csv_api_drop
+description: Representative 1C livestock batch connector profile for staged interoperability.
+source_dir: data/imports/1c_livestock
+schedule: "0 4,12,20 * * *"
+data_version_template: "dv_1c_%Y%m%d_%H%M%S"
+datasets:
+  - dataset_key: animals
+    pattern: "animals_*.csv"
+    mapping: configs/mappings/connectors/onec_livestock/animals.yaml
+    required: true
+  - dataset_key: lactations
+    pattern: "lactations_*.csv"
+    mapping: configs/mappings/connectors/onec_livestock/lactations.yaml
+    required: true
+  - dataset_key: treatments
+    pattern: "treatments_*.csv"
+    mapping: configs/mappings/connectors/onec_livestock/treatments.yaml
+    required: false
+retry_policy:
+  auto_retry_failed_datasets: true
+  max_attempts: 2
+  backoff_sec: 300

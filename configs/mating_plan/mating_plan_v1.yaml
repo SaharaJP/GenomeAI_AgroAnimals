@@ -1,0 +1,57 @@
+schema: genomeai.mating_plan.v1
+
+# Сколько быков предлагать на одну корову
+top_k_per_cow: 5
+
+# Источник списка коров-кандидатов:
+# - repro_worklist: берём из последнего run T5-01 типы insemination+repeat
+# - all_females: все не-M животные из dm_animals
+cow_candidates_source: repro_worklist
+
+# Если repro_worklist не найден — fallback на all_females
+
+# Источник ограничений по родству: результаты T6-01 (inbreeding_constraints.csv)
+# generations здесь только для справки/репорта; фактически берётся из pedigree_run.
+generations: 3
+
+# Весовые коэффициенты для ранжирования быков.
+# В v1 это decision-support (простые и понятные правила), не оптимизация.
+weights:
+  milk: 1.0
+  fat: 0.4
+  protein: 0.4
+  scc: 0.8          # больше вес => сильнее штрафуем быков с высоким EBV_SCC
+  price: 0.1
+
+# Усиление веса под потребности коровы (если показатель хуже среднего по ферме)
+need_boost:
+  milk: 1.5
+  scc: 1.5
+
+# Порог потребности (в сигмах относительно среднего по ферме)
+need_threshold_z: 0.5
+
+filters:
+  require_available: false
+  max_price: null
+
+# Маппинг колонок в dm_bulls (best-effort; если нет — поля считаются пропущенными)
+bull_columns:
+  bull_id: bull_id
+  farm_id: farm_id
+  ebv_milk: ebv_milk
+  ebv_fat: ebv_fat
+  ebv_protein: ebv_protein
+  ebv_scc: ebv_scc
+  price: dose_price
+  available: available
+
+# Маппинг колонок в dm_lactations (best-effort)
+cow_lactation_columns:
+  cow_id: animal_id
+  farm_id: farm_id
+  calving_date: calving_date
+  milk_305d_kg: milk_305d_kg
+  fat_pct: fat_pct
+  protein_pct: protein_pct
+  scc: scc

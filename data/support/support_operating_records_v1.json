@@ -1,0 +1,114 @@
+{
+  "schema": "genomeai.support_operating_records.v1",
+  "record_mode": "starter_sample",
+  "synthetic_note": "Starter support/SLA records for runnable validation only; not evidence of real customer support or contractual SLA performance.",
+  "release_notes": [
+    {
+      "release_note_id": "REL-2026.04.1",
+      "title": "2026.04.1 stability and rollout hardening",
+      "version": "2026.04.1",
+      "published_at": "2026-04-04T10:00:00+00:00",
+      "linked_surfaces": ["admin_observability_release", "customer_upgrade", "pilot_framework"],
+      "known_issue_refs": ["KI-001", "KI-002"]
+    },
+    {
+      "release_note_id": "REL-2026.04.2",
+      "title": "2026.04.2 pilot adoption and operator flow fixes",
+      "version": "2026.04.2",
+      "published_at": "2026-04-06T08:30:00+00:00",
+      "linked_surfaces": ["pilot_adoption_metrics", "daily_worklists", "mobile_worklists"],
+      "known_issue_refs": ["KI-003"]
+    }
+  ],
+  "known_issues": [
+    {
+      "issue_id": "KI-001",
+      "title": "Support bundle missing latest runtime log after clean deploy",
+      "status": "mitigated",
+      "severity": "SEV3",
+      "workaround": "Collect support bundle again after first post-login action and attach Admin observability snapshot.",
+      "linked_release_note_id": "REL-2026.04.1",
+      "linked_diagnostics": ["admin_observability_release", "operational_rollout_gates"]
+    },
+    {
+      "issue_id": "KI-002",
+      "title": "Restore drill report absent when customer has not executed recovery baseline",
+      "status": "open",
+      "severity": "SEV2",
+      "workaround": "Run restore drill before go-live upgrade and attach resulting report to support case.",
+      "linked_release_note_id": "REL-2026.04.1",
+      "linked_diagnostics": ["restore_diagnostics", "customer_upgrade"]
+    },
+    {
+      "issue_id": "KI-003",
+      "title": "Pilot adoption dashboard shows low coverage if no governed outcomes are captured",
+      "status": "fixed_pending_release",
+      "severity": "SEV4",
+      "workaround": "Capture completion outcomes and assistant/decision feedback before interpreting ROI evidence rate.",
+      "linked_release_note_id": "REL-2026.04.2",
+      "linked_diagnostics": ["pilot_adoption_metrics"]
+    }
+  ],
+  "support_cases": [
+    {
+      "case_id": "CASE-ALPHA-001",
+      "status": "investigating",
+      "severity": "SEV2",
+      "title": "Operator cannot complete worklist after upgrade rehearsal",
+      "opened_at": "2026-04-05T07:30:00+00:00",
+      "customer_label": "Pilot Alpha North",
+      "pilot_id": "pilot_alpha_north",
+      "linked_surface": "daily_worklists",
+      "support_bundle_ref": "support_bundle_alpha_20260405.zip",
+      "diagnostics_ref": "operational_rollout_gates",
+      "release_note_id": "REL-2026.04.1",
+      "known_issue_id": "KI-003",
+      "version_linkage": {
+        "data_version": "dv_alpha_20260404",
+        "report_version": "rv_alpha_20260405",
+        "decision_log": "dl_alpha_20260405"
+      }
+    },
+    {
+      "case_id": "CASE-BETA-002",
+      "status": "waiting_customer",
+      "severity": "SEV3",
+      "title": "Need benchmark view export for director review",
+      "opened_at": "2026-04-06T06:10:00+00:00",
+      "customer_label": "Pilot Beta Central",
+      "pilot_id": "pilot_beta_central",
+      "linked_surface": "enterprise_benchmark_views",
+      "support_bundle_ref": "",
+      "diagnostics_ref": "competitive_acceptance",
+      "release_note_id": "REL-2026.04.2",
+      "known_issue_id": "",
+      "version_linkage": {
+        "data_version": "dv_beta_20260405",
+        "report_version": "rv_beta_20260406",
+        "decision_log": "dl_beta_20260406"
+      }
+    }
+  ],
+  "incidents": [
+    {
+      "incident_id": "INC-ALPHA-001",
+      "status": "mitigated",
+      "severity": "SEV1",
+      "title": "Admin observability page unavailable during pilot rehearsal",
+      "opened_at": "2026-04-04T05:20:00+00:00",
+      "customer_label": "Pilot Alpha North",
+      "pilot_id": "pilot_alpha_north",
+      "linked_surface": "admin_observability_release",
+      "support_bundle_ref": "support_bundle_alpha_20260404.zip",
+      "diagnostics_ref": "performance_gates",
+      "release_note_id": "REL-2026.04.1",
+      "known_issue_id": "KI-001",
+      "escalation_status": "implementation_lead_engaged",
+      "version_linkage": {
+        "data_version": "dv_alpha_20260404",
+        "report_version": "rv_alpha_20260404",
+        "decision_log": "dl_alpha_20260404"
+      }
+    }
+  ]
+}

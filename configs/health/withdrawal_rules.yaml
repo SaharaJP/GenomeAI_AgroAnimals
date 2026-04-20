@@ -1,0 +1,26 @@
+# Withdrawal rules (MVP / v1)
+# Source of truth for withdrawal window calculation used in Vet dashboard exports.
+#
+# Rule:
+#   withdrawal_end_date_calc = (end_date if provided else start_date) + withdrawal_days
+#
+# Notes:
+# - treatment_type comes from dm_treatments.treatment_type
+# - If dm_treatments.withdrawal_end_date is present, it is treated as an explicit override from source system.
+#   The dashboard still computes withdrawal_end_date_calc and flags mismatches.
+#
+# Units: days (calendar days)
+
+version: "1"
+
+default_withdrawal_days: 7
+
+treatment_types:
+  antibiotic:
+    withdrawal_days: 10
+  anti-inflammatory:
+    withdrawal_days: 3
+  antiparasitic:
+    withdrawal_days: 14
+  vitamin:
+    withdrawal_days: 0

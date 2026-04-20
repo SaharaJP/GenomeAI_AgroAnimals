@@ -1,0 +1,6 @@
+schema: genomeai.config.reports_approvals.v1
+
+reports_approvals_v1:
+  default_status: draft
+  # reject does not change status (keeps draft) to stay compatible with existing CHECK constraints.
+  reject_keeps_status: true

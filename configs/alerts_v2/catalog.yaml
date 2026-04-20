@@ -1,0 +1,612 @@
+version: 2
+
+types:
+  # --- QC (quality control) ---
+  - id: "QC.GENERIC"
+    title: "QC: обнаружены проблемы качества данных"
+    source: "QC"
+    severity: "HIGH"
+    default_deadline_days: 2
+    why: "QC-движок зафиксировал нарушения правил качества. Это факты, не интерпретации."
+    actions:
+      - "Открыть QC отчёт и посмотреть rule_id/row_id."
+      - "Исправить источник (ФИС/учёт/выгрузка), затем перезагрузить датасет."
+      - "Повторно запустить QC и убедиться, что ошибка исчезла."
+
+  - id: "QC.PK_DUPLICATE"
+    title: "QC: дубликаты первичного ключа"
+    source: "QC"
+    severity: "HIGH"
+    default_deadline_days: 2
+    why: "Обнаружены дубли идентификаторов. Это приводит к неверным агрегациям и скорингам."
+    actions:
+      - "Найти дубли по ключевым полям (см. QC issue)."
+      - "Устранить дубли в источнике и перезагрузить данные."
+
+  - id: "QC.MISSING_REQUIRED"
+    title: "QC: отсутствуют обязательные колонки"
+    source: "QC"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Датасет не соответствует контракту (schema)."
+    actions:
+      - "Сверить контракт датасета (configs/contracts)."
+      - "Поправить mapping и повторить ingest."
+
+  - id: "QC.NON_NULL_VIOLATION"
+    title: "QC: пустые значения в обязательных полях"
+    source: "QC"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Пустые значения ломают связи и расчёты."
+    actions:
+      - "Определить источник пустых значений по выборке QC."
+      - "Исправить заполнение и повторить ingest."
+
+  - id: "QC.DATE_ORDER"
+    title: "QC: неверный порядок дат (start > end)"
+    source: "QC"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Нарушены базовые временные ограничения."
+    actions:
+      - "Проверить правила ввода дат в источнике."
+      - "Исправить записи и повторить выгрузку."
+
+  - id: "QC.FK_MISSING"
+    title: "QC: нарушены внешние ключи (нет родительских записей)"
+    source: "QC"
+    severity: "HIGH"
+    default_deadline_days: 2
+    why: "Невозможно связать сущности (животное/ферма/событие)."
+    actions:
+      - "Добавить отсутствующие записи в справочники (dm_farms/dm_animals)."
+      - "Перезагрузить данные и повторить QC."
+
+  - id: "QC.NUMERIC_RANGE"
+    title: "QC: числовые значения вне допустимого диапазона"
+    source: "QC"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Подозрительные значения могут быть ошибками ввода/единиц измерения."
+    actions:
+      - "Проверить единицы измерения/формат выгрузки."
+      - "Исправить выбросы (если это ошибки), затем повторить QC."
+
+  - id: "QC.DATE_NOT_FUTURE"
+    title: "QC: дата в будущем"
+    source: "QC"
+    severity: "LOW"
+    default_deadline_days: 7
+    why: "Часто это ошибка часового пояса или ввода."
+    actions:
+      - "Проверить таймзону и формат даты в источнике."
+
+  - id: "QC.GROUP_SIZE_MIN"
+    title: "QC: слишком маленькая группа для расчёта"
+    source: "QC"
+    severity: "LOW"
+    default_deadline_days: 7
+    why: "Недостаточно данных в группе (например, по ферме/дню)."
+    actions:
+      - "Проверить полноту выгрузки за период."
+
+  - id: "QC.CONTRACT_MISMATCH"
+    title: "QC: несоответствие контракту (типы/форматы)"
+    source: "QC"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Колонки есть, но тип/формат не соответствует контракту."
+    actions:
+      - "Проверить mapping и преобразования."
+      - "Повторить ingest."
+
+  # --- ML risks (facts from scoring, not diagnoses) ---
+  - id: "ML.RISK_GENERIC"
+    title: "ML: риск-флаг (общий)"
+    source: "ML"
+    severity: "MEDIUM"
+    default_deadline_days: 5
+    why: "Модель посчитала повышенный риск по данным наблюдений/учёта."
+    actions:
+      - "Проверить факты/метрики, на которых основан риск."
+      - "Назначить ответственного и план действий."
+
+  - id: "ML.HEALTH_RISK"
+    title: "ML: риск по здоровью (без диагноза)"
+    source: "ML"
+    severity: "HIGH"
+    default_deadline_days: 3
+    why: "Риск по здоровью рассчитан моделью на основе фактов. Диагноз не ставится."
+    actions:
+      - "Добавить животное в список на осмотр."
+      - "Проверить историю событий здоровья и лечения."
+
+  - id: "ML.REPRO_RISK"
+    title: "ML: риск по репродукции (без диагноза)"
+    source: "ML"
+    severity: "MEDIUM"
+    default_deadline_days: 7
+    why: "Риск репродуктивных проблем (по данным учёта)."
+    actions:
+      - "Проверить календарь осеменений/осмотров."
+      - "Уточнить статус животного у зоотехника/ветврача."
+
+  - id: "ML.MASTITIS_RISK"
+    title: "ML: риск мастита (без диагноза)"
+    source: "ML"
+    severity: "HIGH"
+    default_deadline_days: 2
+    why: "Риск рассчитан по производственным/соматическим индикаторам."
+    actions:
+      - "Проверить данные по соматике/надою и провести осмотр."
+
+  - id: "ML.LAMENESS_RISK"
+    title: "ML: риск хромоты (без диагноза)"
+    source: "ML"
+    severity: "MEDIUM"
+    default_deadline_days: 5
+    why: "Риск по косвенным индикаторам (активность/поведение/надой)."
+    actions:
+      - "Проверить животное при выгуле/в станке."
+
+  - id: "ML.METABOLIC_RISK"
+    title: "ML: риск метаболических нарушений (без диагноза)"
+    source: "ML"
+    severity: "MEDIUM"
+    default_deadline_days: 5
+    why: "Риск по продуктивности и динамике показателей."
+    actions:
+      - "Проверить рацион/переходные группы и факты по тест-дням."
+
+  - id: "ML.CULL_RISK"
+    title: "ML: риск выбраковки"
+    source: "ML"
+    severity: "LOW"
+    default_deadline_days: 14
+    why: "Риск выбраковки как прогноз (для планирования), не решение."
+    actions:
+      - "Сверить с управленческими правилами и экономикой."
+
+  # --- Withdrawal / treatments ---
+  - id: "WITHDRAWAL.ACTIVE"
+    title: "Withdrawal: активный период ожидания"
+    source: "RULE"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Животное находится в периоде ожидания (withdrawal)."
+    actions:
+      - "Исключить из реализации продукции/молока до окончания срока."
+      - "Проверить корректность даты окончания withdrawal."
+
+  - id: "WITHDRAWAL.ENDING_SOON"
+    title: "Withdrawal: срок скоро заканчивается"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 2
+    why: "Withdrawal скоро закончится — важно проверить факты и оформить контроль."
+    actions:
+      - "Подготовить контроль/проверку перед снятием ограничений."
+
+  - id: "WITHDRAWAL.NO_RULE"
+    title: "Withdrawal: нет правила для препарата"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Для препарата/класса нет правила в withdrawal_rules.yaml."
+    actions:
+      - "Добавить правило в конфиг withdrawal_rules.yaml и пересчитать."
+
+  - id: "WITHDRAWAL.CONFLICT"
+    title: "Withdrawal: конфликт дат (источник vs правило)"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Дата окончания в источнике отличается от расчёта по правилам."
+    actions:
+      - "Проверить корректность лечения и правила препарата."
+
+  - id: "TREATMENT.MISSING_FIELDS"
+    title: "Лечение: неполные данные лечения"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 5
+    why: "Для лечения не хватает ключевых полей (препарат/доза/даты)."
+    actions:
+      - "Заполнить недостающие поля в учётной системе и повторить ingest."
+
+  # --- Reproduction business rules ---
+  - id: "REPRO.LONG_DAYS_OPEN"
+    title: "Репродукция: длительный open period"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 7
+    why: "Слишком много дней open — риск потери продуктивности/экономики."
+    actions:
+      - "Проверить статус и план осеменения/диагностики."
+
+  - id: "REPRO.REPEAT_BREEDER"
+    title: "Репродукция: повторный осеменитель (repeat breeder)"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 7
+    why: "Много осеменений без подтверждённой беременности."
+    actions:
+      - "Проверить качество семени/технику/время осеменения."
+
+  - id: "REPRO.MISSED_HEAT"
+    title: "Репродукция: пропущенная охота"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "По календарю ожидается событие, но записи нет."
+    actions:
+      - "Проверить наблюдения/датчики активности и план осеменения."
+
+  - id: "REPRO.CALVING_OVERDUE"
+    title: "Репродукция: ожидаемый отёл просрочен"
+    source: "RULE"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Ожидаемый отёл должен быть подтверждён фактом или корректировкой статуса."
+    actions:
+      - "Проверить животное и статус беременности/отёла."
+
+  - id: "REPRO.ABORTION_EVENT"
+    title: "Репродукция: событие аборта (факт)"
+    source: "FACT"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Зафиксировано событие аборта (факт из учёта)."
+    actions:
+      - "Назначить осмотр и протокол лечения/наблюдения."
+
+  # --- Sensors/anomalies ---
+  - id: "SENSOR.ANOMALY"
+    title: "Сенсоры: обнаружена аномалия датчика"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Данные датчика выходят за норму/помечены как anomaly."
+    actions:
+      - "Проверить корректность датчика и состояние животного."
+
+  - id: "SENSOR.TEMP_SPIKE"
+    title: "Сенсоры: резкий рост температуры"
+    source: "RULE"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Температура резко выросла относительно базового уровня."
+    actions:
+      - "Проверить животное и исключить техническую ошибку датчика."
+
+  - id: "SENSOR.RUMINATION_DROP"
+    title: "Сенсоры: падение жвачки"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 2
+    why: "Руминация снизилась — возможный сигнал неблагополучия."
+    actions:
+      - "Проверить рацион/поведение и добавить в осмотр при необходимости."
+
+  - id: "SENSOR.ACTIVITY_DROP"
+    title: "Сенсоры: падение активности"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 5
+    why: "Активность ниже обычного уровня."
+    actions:
+      - "Проверить локомоцию/копыта/условия содержания."
+
+  - id: "SENSOR.MILK_YIELD_DROP"
+    title: "Сенсоры: падение надоя"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Надой снизился относительно тренда."
+    actions:
+      - "Проверить кормление, здоровье и качество доения."
+
+  - id: "SENSOR.BASELINE_DRIFT"
+    title: "Сенсоры: дрейф baseline"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Средний уровень метрики устойчиво сместился относительно базового периода."
+    actions:
+      - "Проверить датчик (калибровка/перенос/батарея) и условия содержания."
+      - "Если дрейф подтверждается — добавить животное в осмотр и оценить причины."
+
+  # --- Operational / business ---
+  - id: "EXPORT.FAILED"
+    title: "Экспорт: ошибка выгрузки"
+    source: "SYSTEM"
+    severity: "LOW"
+    default_deadline_days: 7
+    why: "Экспорт не завершился успешно."
+    actions:
+      - "Открыть логи задания и повторить экспорт."
+
+  - id: "PIPELINE.STOPPED_BY_QC"
+    title: "Пайплайн: остановлен из-за QC BLOCKER"
+    source: "SYSTEM"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "QC вернул BLOCKER, downstream расчёты должны быть остановлены."
+    actions:
+      - "Исправить QC ошибки и перезапустить пайплайн."
+
+  - id: "ANIMAL.MISSING_PROFILE"
+    title: "Животное: отсутствует профиль/карточка"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Есть события/измерения, но нет записи животного в справочнике."
+    actions:
+      - "Добавить животное в dm_animals и повторить ingest."
+
+  - id: "ANIMAL.MISSING_FARM"
+    title: "Животное: отсутствует связь с фермой"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Невозможно привязать животное к ферме/площадке."
+    actions:
+      - "Проверить farm_id и справочник dm_farms."
+
+  - id: "HEALTH.EVENT_REPORTED"
+    title: "Здоровье: зарегистрировано событие (факт)"
+    source: "FACT"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Поступило событие здоровья из учёта."
+    actions:
+      - "Проверить событие и назначить действия при необходимости."
+
+  - id: "HEALTH.RECHECK_DUE"
+    title: "Здоровье: требуется повторный осмотр"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 2
+    why: "По правилам после лечения нужен контрольный осмотр."
+    actions:
+      - "Добавить животное в список на осмотр и выполнить контроль."
+
+  - id: "PRODUCTION.HERD_DROP"
+    title: "Производство: падение показателя по стаду"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 5
+    why: "Показатель (надой/жир/белок) упал относительно базовой линии."
+    actions:
+      - "Проверить кормление, здоровье и качество доения."
+
+  - id: "FEED.ANOMALY"
+    title: "Кормление: аномалия в расходах/рационе"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Обнаружены отклонения по кормам (факт/правило)."
+    actions:
+      - "Проверить склад/выдачу и корректность учёта."
+
+  - id: "DATA.FRESHNESS_STALE"
+    title: "Данные: устаревшая выгрузка"
+    source: "SYSTEM"
+    severity: "LOW"
+    default_deadline_days: 7
+    why: "Данные давно не обновлялись."
+    actions:
+      - "Проверить интеграции и расписание выгрузок."
+
+  # --- Additional catalog types to reach >=40 ---
+  - id: "QC.ROW_PARSE_ERROR"
+    title: "QC: ошибка парсинга строки"
+    source: "QC"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Строка не читается (формат/кодировка/разделители)."
+    actions:
+      - "Проверить формат входного файла."
+
+  - id: "QC.UNEXPECTED_ENUM"
+    title: "QC: неожиданные значения в перечислении"
+    source: "QC"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Поле содержит значения вне справочника."
+    actions:
+      - "Сверить справочник и источники данных."
+
+  - id: "ML.SCORE_MISSING"
+    title: "ML: отсутствует скоринг"
+    source: "SYSTEM"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Нет результатов скоринга для сущности/периода."
+    actions:
+      - "Проверить модель/скрипт скоринга и запустить заново."
+
+  - id: "ML.DRIFT_SUSPECT"
+    title: "ML: подозрение на дрейф данных"
+    source: "SYSTEM"
+    severity: "LOW"
+    default_deadline_days: 14
+    why: "Метрики/распределения отличаются от обучающих."
+    actions:
+      - "Проверить отчёт по дрейфу и при необходимости запланировать переобучение."
+
+  - id: "WITHDRAWAL.MISSING_END_DATE"
+    title: "Withdrawal: не заполнена дата окончания"
+    source: "RULE"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Без даты окончания нельзя контролировать ограничения."
+    actions:
+      - "Заполнить/пересчитать дату окончания withdrawal."
+
+  - id: "REPRO.MISSING_DATA"
+    title: "Репродукция: отсутствуют данные"
+    source: "SYSTEM"
+    severity: "LOW"
+    default_deadline_days: 14
+    why: "Нет данных репродукции для расчётов/контроля."
+    actions:
+      - "Проверить интеграции/выгрузку репродуктивных событий."
+
+  - id: "SENSOR.OFFLINE"
+    title: "Сенсоры: датчик не передаёт данные"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 7
+    why: "Нет данных датчика за ожидаемый период."
+    actions:
+      - "Проверить батарею/связь/назначение датчика."
+
+  - id: "BIZ.RULE_VIOLATION"
+    title: "Бизнес-правило: нарушение"
+    source: "RULE"
+    severity: "MEDIUM"
+    default_deadline_days: 7
+    why: "Сработало бизнес-правило контроля."
+    actions:
+      - "Открыть объяснение и выполнить рекомендуемые действия."
+
+  - id: "WORKFLOW.OWNER_MISSING"
+    title: "Workflow: у алерта нет владельца"
+    source: "SYSTEM"
+    severity: "LOW"
+    default_deadline_days: 7
+    why: "Нужно назначить ответственного для контроля статуса."
+    actions:
+      - "Назначить владельца (owner) и дедлайн."
+
+  - id: "WORKFLOW.DEADLINE_OVERDUE"
+    title: "Workflow: дедлайн просрочен"
+    source: "SYSTEM"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Алерт не обработан до дедлайна."
+    actions:
+      - "Проверить причины задержки и обновить план действий."
+
+  - id: "QC.DATASET_MISSING"
+    title: "QC: отсутствует датасет"
+    source: "QC"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Ожидаемый датасет не найден в canonical слое."
+    actions:
+      - "Проверить ingest и пути артефактов."
+
+  - id: "QC.PARQUET_READ_FAIL"
+    title: "QC: не удалось прочитать parquet"
+    source: "QC"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Parquet может требовать доп. зависимости; будет использован CSV."
+    actions:
+      - "Установить pyarrow или переключиться на CSV."
+
+  - id: "ML.FEATURES_MISSING"
+    title: "ML: отсутствуют фичи для скоринга"
+    source: "SYSTEM"
+    severity: "MEDIUM"
+    default_deadline_days: 3
+    why: "Не хватает входных признаков/таблиц для модели."
+    actions:
+      - "Проверить пайплайн подготовки фич."
+
+  - id: "HEALTH.TREATMENT_OVERLAP"
+    title: "Здоровье: пересекающиеся лечения"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "Для животного есть лечения с пересекающимися периодами."
+    actions:
+      - "Проверить корректность записей лечения."
+
+  - id: "HEALTH.NO_FOLLOWUP"
+    title: "Здоровье: нет follow-up после лечения"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 10
+    why: "После лечения не зарегистрирован контрольный осмотр."
+    actions:
+      - "Запланировать контрольный осмотр и внести событие."
+
+  - id: "PRODUCTION.MILK_TEST_MISSING"
+    title: "Производство: отсутствует тест-день"
+    source: "RULE"
+    severity: "LOW"
+    default_deadline_days: 14
+    why: "Нет тест-дня в ожидаемом интервале."
+    actions:
+      - "Проверить расписание тест-дней и корректность данных."
+
+  - id: "SYSTEM.STORAGE_LOW"
+    title: "Система: мало места на диске"
+    source: "SYSTEM"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Нехватка места может остановить пайплайны и экспорт."
+    actions:
+      - "Очистить старые артефакты/логи или увеличить диск."
+
+  - id: "SYSTEM.INTEGRATION_DOWN"
+    title: "Система: интеграция недоступна"
+    source: "SYSTEM"
+    severity: "HIGH"
+    default_deadline_days: 1
+    why: "Источник данных/интеграция не отвечает."
+    actions:
+      - "Проверить доступность API/учётной системы и логи интеграции."
+
+  - id: "SECURITY.SUSPICIOUS_LOGIN"
+    title: "Безопасность: подозрительный логин"
+    source: "SYSTEM"
+    severity: "MEDIUM"
+    default_deadline_days: 7
+    why: "Необычная активность входа (по audit log)."
+    actions:
+      - "Проверить audit log и при необходимости сменить пароль."
+
+  - id: "PEDIGREE.MISSING_PARENTS"
+    title: "Родословная: много пропусков родителей"
+    source: "QC"
+    severity: "LOW"
+    default_deadline_days: 30
+    why: "Высокая доля пропущенных sire/dam ухудшает контроль инбридинга и качество подбора пар."
+    actions:
+      - "Проверить выгрузку из племучёта и заполнить sire/dam для животных."
+      - "Для новых животных настроить обязательные поля родителей."
+
+  - id: "PEDIGREE.UNKNOWN_PARENT_REF"
+    title: "Родословная: ссылки на неизвестных родителей"
+    source: "QC"
+    severity: "MEDIUM"
+    default_deadline_days: 14
+    why: "Встречаются sire/dam, которых нет в справочнике животных (dm_animals)."
+    actions:
+      - "Проверить ID родителей на опечатки и соответствие справочнику животных."
+      - "Если родитель действительно внешний (бык/корова), добавить запись в dm_animals."
+
+  - id: "PEDIGREE.CONFLICT"
+    title: "Родословная: конфликтующие связи"
+    source: "QC"
+    severity: "HIGH"
+    default_deadline_days: 7
+    why: "У животного обнаружены конфликтующие записи sire/dam или самоссылающиеся родители."
+    actions:
+      - "Проверить дубликаты animal_id и исправить sire/dam."
+      - "Синхронизировать мастер-идентификацию животных (master-id)."
+
+  - id: "PEDIGREE.CYCLE"
+    title: "Родословная: обнаружены циклы"
+    source: "QC"
+    severity: "HIGH"
+    default_deadline_days: 7
+    why: "В графе родословной есть цикл (животное является своим предком), расчёт родословных ограничений становится некорректным."
+    actions:
+      - "Исправить ошибочные связи sire/dam в племучёте."
+      - "Проверить, не смешаны ли идентификаторы разных животных."

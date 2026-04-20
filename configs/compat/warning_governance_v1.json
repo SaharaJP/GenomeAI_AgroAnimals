@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "policy": {
+    "scope": "CI/runtime warning governance for pytest + smoke logs; project shim deprecations are allowed only when documented in deprecation_warnings_v1.json",
+    "dependency_policy_path": "configs/compat/dependency_update_policy_v1.json"
+  },
+  "allowlist": [
+    {
+      "name": "python-multipart-known-issue",
+      "origin": "dependency",
+      "package": "python_multipart",
+      "category": "PendingDeprecationWarning",
+      "message_regex": "^Please use import python_multipart instead\\.$",
+      "max_count": 1,
+      "escalation": "review in a separate dependency-only change; validate pytest + smoke + verify_refactor before changing runtime dependency versions",
+      "notes": "Documented historical external warning. Current target baseline is zero occurrences."
+    },
+    {
+      "name": "ddtrace-known-issue",
+      "origin": "dependency",
+      "package": "ddtrace",
+      "category_regex": "^(DeprecationWarning|PendingDeprecationWarning|RuntimeWarning|UserWarning)$",
+      "message_regex": ".+",
+      "max_count": 1,
+      "escalation": "treat as separate dependency/pytest-plugin investigation; do not mix with business refactor",
+      "notes": "Documented monitoring-only issue. Current target baseline is zero occurrences."
+    }
+  ],
+  "denylist": [
+    {
+      "name": "project-runtime-warning",
+      "origin": "project",
+      "category_regex": "^(RuntimeWarning|FutureWarning)$",
+      "message_regex": ".+",
+      "max_count": 0,
+      "escalation": "fix in project code before merge; runtime/future warnings from project code are not accepted in CI"
+    },
+    {
+      "name": "project-user-warning",
+      "origin": "project",
+      "category": "UserWarning",
+      "message_regex": ".+",
+      "max_count": 0,
+      "escalation": "either remove the warning or explicitly document/allowlist it in a separate compatibility change"
+    },
+    {
+      "name": "unknown-origin-warning",
+      "origin": "unknown",
+      "category_regex": ".+",
+      "message_regex": ".+",
+      "max_count": 0,
+      "escalation": "normalize filename/origin classification or document the warning source before accepting it"
+    }
+  ]
+}

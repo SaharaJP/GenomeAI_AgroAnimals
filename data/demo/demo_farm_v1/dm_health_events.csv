@@ -1,0 +1,5 @@
+tenant_id,event_id,animal_id,event_date,event_type,severity,notes
+default,HE_001,DEMO_COW_1002,2025-04-04,metritis,medium,fresh cow protocol
+default,HE_002,DEMO_COW_2002,2025-04-03,lameness,high,locomotion drop
+default,HE_003,DEMO_COW_3002,2025-04-02,mastitis,medium,SCC rise and conductivity
+default,HE_004,DEMO_COW_3003,2025-04-01,ketosis_risk,warn,fresh risk flag

@@ -1,0 +1,2 @@
+tenant_id,pen_id,site_id,pen_name,pen_type,capacity_head
+default,PEN_01,SITE_001,Lactating Pen 1,lactating,120

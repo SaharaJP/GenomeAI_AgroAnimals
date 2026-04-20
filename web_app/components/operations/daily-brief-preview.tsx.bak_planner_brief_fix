@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import type { DailyBriefPreviewModel } from '@/lib/api/daily-operations';
+import { Card } from '@/components/ui/card';
+
+export function DailyBriefPreview({brief}:{brief:DailyBriefPreviewModel}){return <Card><h3 className="card-title">Daily brief preview</h3><p className="card-subtitle">{brief.headline}</p><div className="brief-status">{brief.statusLine}</div><ul className="bullet-list">{brief.bullets.map(item=><li key={item}>{item}</li>)}</ul><div className="linked-actions-grid">{brief.actions.map(action=><Link className="linked-action-card" href={action.href} key={action.href}><div className="linked-action-count">{action.count}</div><div><div className="linked-action-title">{action.label}</div><div className="linked-action-caption">{action.caption}</div></div></Link>)}</div></Card>}

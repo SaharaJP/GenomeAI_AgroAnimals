@@ -1,0 +1,1 @@
+import './globals.css'; export const metadata={title:'GenomeAI AgroAnimals Web',description:'Canonical React / Next.js foundation for GenomeAI AgroAnimals'}; export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="ru"><body><div className="app-root">{children}</div></body></html>}

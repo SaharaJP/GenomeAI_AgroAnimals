@@ -1,0 +1,2 @@
+'use client'; import { useEffect } from 'react'; import { useRouter } from 'next/navigation'; import { useAuth } from '@/components/auth/auth-provider';
+export function RouteGuard({children}:{children:React.ReactNode}){const {me,loading}=useAuth() as { me: any; loading: boolean };const router=useRouter();useEffect(()=>{if(!loading&&!me)router.replace('/login')},[loading,me,router]);if(loading)return <div className="card">Loading session…</div>;if(!me)return <div className="card">Redirecting to login…</div>;return <>{children}</>}

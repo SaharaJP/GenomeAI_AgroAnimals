@@ -1,0 +1,17 @@
+services:
+  reverse-proxy:
+    ports:
+      - "${GENOMEAI_HTTP_PORT:-80}:80"
+  backend-api:
+    environment:
+      GENOMEAI_ENV: stage
+      GENOMEAI_DEPLOY_PROFILE: stage
+      GENOMEAI_WEB_SECRET_FILE: ${GENOMEAI_WEB_SECRET_FILE:-/run/secrets/genomeai_web_secret}
+  worker:
+    environment:
+      GENOMEAI_ENV: stage
+      GENOMEAI_DEPLOY_PROFILE: stage
+  scheduler:
+    environment:
+      GENOMEAI_ENV: stage
+      GENOMEAI_DEPLOY_PROFILE: stage

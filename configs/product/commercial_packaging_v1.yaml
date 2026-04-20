@@ -1,0 +1,171 @@
+version: 1
+basis:
+  license_unit: site
+  implementation_scope_unit: site_wave
+  notes:
+    - Base delivery is priced and scoped by site inside a tenant/holding.
+    - Optional modules extend bounded workflows and governed pages, not just UI labels.
+    - Enterprise capabilities are tied to rollout, multi-site and governance layers.
+deploy_profile_map:
+  dev: dev_all
+  prod: enterprise_default
+  demo: sales_demo
+feature_catalog:
+  operational_core:
+    label: Operational core
+    rationale: Required for daily-use worklists, profiles, reports and governed task/decision flows.
+  reports_governance:
+    label: Reports and governance
+    rationale: Version-linked reports, approvals, archive and audit-safe report actions.
+  training_onboarding:
+    label: Training and onboarding
+    rationale: Role-based onboarding and implementation references.
+  reproduction_ops:
+    label: Reproduction operations
+    rationale: Repro worklists, cockpit and mating workflows.
+  vet_ops:
+    label: Vet and health operations
+    rationale: Triage, protocol engine, treatment journal and compliance surfaces.
+  economics:
+    label: Economics and what-if
+    rationale: Action economics, ROI and what-if scenarios tied to facts and governance.
+  embedded_ai:
+    label: Embedded assistant and AI brief
+    rationale: Fact-pack only assistant, daily brief and linked actions under governance.
+  explainability:
+    label: Explainability layer
+    rationale: Reusable explainability widgets and source-linked why-this-object answers.
+  decision_intelligence:
+    label: Decision intelligence
+    rationale: Compare actions with expected effect, caveats and linked decisions/tasks.
+  mobile_cowside:
+    label: Mobile / cowside execution
+    rationale: Compact mobile worklists and cowside event entry workflows.
+  multi_site_enterprise:
+    label: Multi-site enterprise operations
+    rationale: Multi-farm/site model, benchmark views, team/shift execution and enterprise dashboards.
+  migration_replacement:
+    label: Migration and replacement readiness
+    rationale: Parallel run, migration verification, cutover playbook and replacement acceptance gates.
+  external_collaboration:
+    label: External collaboration boundaries
+    rationale: Consultant/partner bounded collaboration with full audit and no cross-farm leaks.
+  admin_rollout:
+    label: Admin / rollout diagnostics
+    rationale: Observability, release diagnostics and rollout gates for enterprise deployments.
+  competitive_acceptance:
+    label: Competitive acceptance
+    rationale: Formal replacement-readiness acceptance set and regression-ready product/UAT checks.
+  demo_kit:
+    label: Demo farm and benchmark demos
+    rationale: Synthetic runnable demo farm, scenario kits and sales/UAT benchmark demos.
+  genomics:
+    label: Genomics integration
+    rationale: Optional genomics / EBV / GEBV workflows and related explainable recommendations.
+module_catalog:
+  reproduction:
+    label: Reproduction module
+    includes_features: [reproduction_ops]
+    nav_keys: [reproduction_cockpit, repro_worklists, mating_plan_v1, mating_plan_phenotypes]
+    required_configs: [configs/repro/repro_rules_v1.yaml, configs/mating_plan/mating_plan_v1.yaml]
+  vet:
+    label: Vet module
+    includes_features: [vet_ops]
+    nav_keys: [vet_health_v2, vet_triage_queues, vet_protocol_engine, treatment_journal_withdrawal, drug_use_compliance]
+    required_configs: [configs/health/vet_protocols_v1.yaml, configs/health/withdrawal_rules.yaml]
+  economics:
+    label: Economics module
+    includes_features: [economics]
+    nav_keys: [economics_v2, unit_economics, roi_panel, economics_what_if, economics_per_action, operational_what_if, fresh_cows_transition_economics]
+    required_configs: [configs/economics/economics_v2.yaml, configs/economics/unit_economics_v1.yaml]
+  embedded_ai:
+    label: AI assistance module
+    includes_features: [embedded_ai, explainability, decision_intelligence]
+    nav_keys: [ai_assistant_rag, ai_daily_brief]
+    required_configs: [configs/copilot/copilot_v2.yaml]
+  mobile:
+    label: Mobile cowside module
+    includes_features: [mobile_cowside]
+    nav_keys: [mobile_worklists, cowside_event_entry]
+    required_configs: []
+  enterprise_ops:
+    label: Enterprise operations module
+    includes_features: [multi_site_enterprise]
+    nav_keys: [enterprise_benchmark_views]
+    required_configs: [configs/ops/team_shift_v1.yaml]
+  migration:
+    label: Migration replacement module
+    includes_features: [migration_replacement, competitive_acceptance]
+    nav_keys: [migration_verification_toolkit, parallel_run_mode, migration_playbook_and_cutover]
+    required_configs: [configs/ops/competitive_acceptance_set_v1.yaml]
+  external_collab:
+    label: External collaboration module
+    includes_features: [external_collaboration]
+    nav_keys: [admin_users_security]
+    required_configs: [configs/security/external_collaboration_v1.yaml]
+  demo_training:
+    label: Demo and training module
+    includes_features: [training_onboarding, demo_kit]
+    nav_keys: [training_onboarding_by_role, demo_farm_and_benchmark_demos]
+    required_configs: [configs/ui/onboarding_by_role_v1.yaml, configs/ui/demo_farm_scenarios_v1.yaml]
+  genomics:
+    label: Genomics module
+    includes_features: [genomics]
+    nav_keys: [genomics_integration]
+    required_configs: []
+editions:
+  foundation:
+    label: Foundation
+    summary: Base single-site delivery for governed daily operations, reports and onboarding.
+    base_features: [operational_core, reports_governance, training_onboarding]
+    optional_modules: [reproduction, vet, economics, embedded_ai, mobile, demo_training]
+    enterprise_capabilities: []
+    implementation_scope:
+      includes:
+        - Single-site setup and role/RBAC configuration
+        - Governed daily-use pages, reports and onboarding
+      excludes:
+        - Multi-site benchmark rollout
+        - Parallel run / legacy replacement toolkit by default
+  professional:
+    label: Professional
+    summary: Operational intelligence package for daily execution, economics and embedded assistant workflows.
+    parent: foundation
+    base_features: [reproduction_ops, vet_ops, economics, embedded_ai, explainability, decision_intelligence]
+    optional_modules: [mobile, demo_training, genomics]
+    enterprise_capabilities: []
+    implementation_scope:
+      includes:
+        - Foundation scope
+        - Reproduction, vet, economics and embedded AI workflows
+      excludes:
+        - Multi-site enterprise boundaries and migration replacement by default
+  enterprise:
+    label: Enterprise
+    summary: Multi-site governed deployment package for rollout, migration and bounded collaboration.
+    parent: professional
+    base_features: [multi_site_enterprise, migration_replacement, external_collaboration, admin_rollout, competitive_acceptance]
+    optional_modules: [mobile, demo_training, genomics]
+    enterprise_capabilities: [multi_site_enterprise, migration_replacement, external_collaboration, admin_rollout, competitive_acceptance]
+    implementation_scope:
+      includes:
+        - Professional scope
+        - Multi-site rollout, migration and competitive acceptance gates
+        - External collaboration boundaries and admin rollout diagnostics
+      excludes: []
+runtime_profiles:
+  dev_all:
+    edition: enterprise
+    enabled_modules: [reproduction, vet, economics, embedded_ai, mobile, enterprise_ops, migration, external_collab, demo_training, genomics]
+  sales_demo:
+    edition: enterprise
+    enabled_modules: [reproduction, vet, economics, embedded_ai, mobile, enterprise_ops, migration, demo_training]
+  enterprise_default:
+    edition: enterprise
+    enabled_modules: [reproduction, vet, economics, embedded_ai, mobile, enterprise_ops, migration, external_collab]
+  professional_default:
+    edition: professional
+    enabled_modules: [reproduction, vet, economics, embedded_ai]
+  foundation_default:
+    edition: foundation
+    enabled_modules: []

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Очередь работ</h2>
+<div class="card">
+  <p class="muted">Единая очередь для ingest / qc / train / score / report. Для длинных запусков доступны cancel и retry. На этом шаге добавлены active-filter, auto refresh и live log streaming из карточки job.</p>
+  <form method="get" action="/jobs" style="display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:12px;">
+    <div>
+      <label>status</label><br />
+      <input type="text" name="status" value="{{ filters.status }}" placeholder="active / queued / running / failed" />
+    </div>
+    <div>
+      <label>pipeline</label><br />
+      <input type="text" name="pipeline" value="{{ filters.pipeline }}" placeholder="ingest / qc / train / score / report" />
+    </div>
+    <div>
+      <label>search</label><br />
+      <input type="text" name="q" value="{{ filters.q }}" placeholder="run_id / data_version / report_version / retry" />
+    </div>
+    <div>
+      <label>limit</label><br />
+      <input type="number" name="limit" min="1" max="1000" value="{{ filters.limit }}" />
+    </div>
+    <div>
+      <label>live</label><br />
+      <label style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+        <input type="checkbox" name="auto_refresh" value="1" {% if auto_refresh_enabled %}checked{% endif %} />
+        auto refresh
+      </label>
+    </div>
+    <div style="display:flex; gap:8px;">
+      <button type="submit">Применить</button>
+      <a href="/jobs">Сбросить</a>
+      <a href="/jobs?status=active&auto_refresh=1">Только active</a>
+    </div>
+  </form>
+  <div class="muted" style="margin-bottom:10px;">{% if auto_refresh_enabled and has_active_jobs %}Автообновление включено: каждые {{ auto_refresh_sec }} сек.{% elif auto_refresh_enabled %}Автообновление включено, но активных job сейчас нет.{% else %}Автообновление выключено.{% endif %}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>pipeline</th>
+        <th>status</th>
+        <th>run_id</th>
+        <th>data_version</th>
+        <th>attempt</th>
+        <th>retry</th>
+        <th>user</th>
+        <th>created</th>
+        <th>artifacts</th>
+        <th>actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for j in jobs %}
+      <tr>
+        <td><a href="/jobs/{{ j.id }}">{{ j.id }}</a></td>
+        <td>
+          <div><b>{{ j.pipeline_key or j.kind }}</b></div>
+          <div class="muted">{{ j.kind }}</div>
+        </td>
+        <td><span class="pill {{ j.status }}">{{ j.status }}</span></td>
+        <td class="muted">{{ j.run_id or j.report_version or j.scoring_run or j.qc_run or j.model_version or '' }}</td>
+        <td class="muted">{{ j.data_version or '' }}</td>
+        <td class="muted">{{ j.attempt_no or 0 }} / {{ j.max_attempts or 1 }}</td>
+        <td class="muted">
+          {% if j.retry_source %}
+            {{ j.retry_source }}
+          {% else %}
+            —
+          {% endif %}
+          {% if j.next_attempt_at %}<div>{{ j.next_attempt_at }}</div>{% endif %}
+        </td>
+        <td>{{ j.user }}</td>
+        <td class="muted">{{ j.created_at }}</td>
+        <td class="muted">{{ j.artifacts_count or 0 }}</td>
+        <td>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a href="/jobs/{{ j.id }}">Открыть</a>
+            {% if j.status in ['queued', 'running', 'cancel_requested'] %}
+            <form method="post" action="/jobs/{{ j.id }}/cancel">
+              <button type="submit">Cancel</button>
+            </form>
+            {% endif %}
+            {% if j.status in ['failed', 'cancelled'] %}
+            <form method="post" action="/jobs/{{ j.id }}/retry">
+              <button type="submit">Retry</button>
+            </form>
+            {% endif %}
+          </div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if auto_refresh_enabled and has_active_jobs %}
+<script>
+  setTimeout(function () {
+    window.location.reload();
+  }, {{ auto_refresh_sec * 1000 }});
+</script>
+{% endif %}
+{% endblock %}

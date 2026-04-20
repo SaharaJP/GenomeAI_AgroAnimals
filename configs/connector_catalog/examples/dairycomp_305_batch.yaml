@@ -1,0 +1,31 @@
+connector_id: dc305_farm_batch
+kind: file
+enabled: true
+source_system: DairyComp 305
+system_family: herd_management
+export_mode: scheduled_csv_batch
+description: Representative DairyComp 305 batch connector profile for phased rollout.
+source_dir: data/imports/dc305
+schedule: "0 */6 * * *"
+data_version_template: "dv_dc305_%Y%m%d_%H%M%S"
+datasets:
+  - dataset_key: animals
+    pattern: "animals_*.csv"
+    mapping: configs/mappings/connectors/dairycomp_305/animals.yaml
+    required: true
+  - dataset_key: lactations
+    pattern: "lactations_*.csv"
+    mapping: configs/mappings/connectors/dairycomp_305/lactations.yaml
+    required: true
+  - dataset_key: testday
+    pattern: "testday_*.csv"
+    mapping: configs/mappings/connectors/dairycomp_305/testday.yaml
+    required: false
+  - dataset_key: treatments
+    pattern: "treatments_*.csv"
+    mapping: configs/mappings/connectors/dairycomp_305/treatments.yaml
+    required: false
+retry_policy:
+  auto_retry_failed_datasets: true
+  max_attempts: 2
+  backoff_sec: 300

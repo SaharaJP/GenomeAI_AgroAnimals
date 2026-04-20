@@ -1,0 +1,120 @@
+enabled: true
+default_tool: query_kpi
+tools:
+  query_kpi:
+    label: KPI
+    required_permission: kpi.view
+    priority: 10
+    max_rows: 5
+    section_prefixes:
+      - modules.kpi
+    section_permissions:
+      modules.kpi: kpi.view
+    intent_bonuses:
+      overview: 0
+    keywords:
+      - kpi
+      - показат
+      - удо
+      - milk
+      - молок
+      - fat
+      - protein
+      - scc
+
+  query_anomalies:
+    label: Аномалии и алерты
+    required_permission: alerts.view
+    priority: 20
+    max_rows: 5
+    section_prefixes:
+      - modules.alerts_v2
+      - modules.health.mastitis_risk
+    extra_section_prefixes:
+      - assistant_knowledge.playbooks
+    section_permissions:
+      modules.alerts_v2: alerts.view
+      modules.health.mastitis_risk: alerts.view
+      assistant_knowledge.playbooks: playbooks.view
+      assistant_knowledge.tasks_v1: tasks.view
+    intent_bonuses:
+      why: 25
+      what_to_do: 15
+    intent_section_prefixes:
+      what_to_do:
+        - assistant_knowledge.tasks_v1
+    keywords:
+      - аномал
+      - alert
+      - алерт
+      - отклон
+      - риск
+      - мастит
+      - mastitis
+      - qc
+      - проблем
+      - почему
+
+  query_tasks:
+    label: Задачи и worklists
+    required_permission: tasks.view
+    priority: 30
+    max_rows: 5
+    section_prefixes:
+      - assistant_knowledge.tasks_v1
+    extra_section_prefixes:
+      - assistant_knowledge.playbooks
+      - assistant_knowledge.feedback_loop
+    section_permissions:
+      assistant_knowledge.tasks_v1: tasks.view
+      assistant_knowledge.playbooks: playbooks.view
+      assistant_knowledge.feedback_loop: decisionlog.view
+      modules.alerts_v2: alerts.view
+      modules.health.mastitis_risk: alerts.view
+    intent_bonuses:
+      what_to_do: 25
+      why: 10
+    intent_section_prefixes:
+      incident_context:
+        - modules.alerts_v2
+        - modules.health.mastitis_risk
+    keywords:
+      - задач
+      - task
+      - workflow
+      - worklist
+      - что делать
+      - сделать
+      - todo
+      - план действий
+      - feedback
+      - принят
+      - отклон
+      - acceptance
+      - reject
+      - accepted
+      - rejected
+      - рекомендац
+
+  query_economics:
+    label: Экономика
+    required_permission: economics.view
+    priority: 40
+    max_rows: 5
+    section_prefixes:
+      - modules.economics
+    section_permissions:
+      modules.economics: economics.view
+    intent_bonuses:
+      cost: 40
+    keywords:
+      - эконом
+      - стоит
+      - cost
+      - выруч
+      - прибыл
+      - марж
+      - убыт
+      - revenue
+      - roi
+      - окуп

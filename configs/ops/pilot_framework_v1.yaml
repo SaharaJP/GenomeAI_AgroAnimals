@@ -1,0 +1,64 @@
+version: 1
+framework:
+  title: Pilot framework and reference deployments
+  target_pilot_range: [2, 5]
+  default_duration_weeks: 8
+  notes:
+    - This framework governs pilots as product evidence collection, not as an informal delivery spreadsheet.
+    - Referenceable deployment requires explicit evidence and must not be inferred from synthetic/demo runs.
+    - Seed records in repository are starter/sample tracking records for runnable validation and are not proof of field rollout.
+  statuses:
+    planned:
+      label: Planned
+      category: pipeline
+    onboarding:
+      label: Onboarding
+      category: launch
+    active:
+      label: Active
+      category: execution
+    uat:
+      label: UAT / Validation
+      category: validation
+    completed:
+      label: Completed
+      category: evidence
+    closed:
+      label: Closed
+      category: archive
+  success_criteria:
+    - key: daily_use
+      title: Daily-use workflows run without developer shadowing
+      measurable_signal: operator/zootech/vet/director workflows reproducibly executed with onboarding and no blocker incidents
+    - key: governed_ai
+      title: Explainable AI and governed decision flows are used in pilot routine
+      measurable_signal: assistant/decision surfaces produce source-linked outputs and are captured in decision/feedback traces
+    - key: rollout_diagnostics
+      title: Rollout diagnostics and support traceability stay available during pilot
+      measurable_signal: operational rollout gate artifacts + incident/support case linkage present for each active pilot
+    - key: acceptance_readiness
+      title: Competitive acceptance evidence is collected before reference claim
+      measurable_signal: competitive acceptance report exists and manual signoff status is explicit
+  role_model:
+    customer:
+      - Director sponsor
+      - Zootech lead
+      - Vet lead
+      - Data steward / operator
+      - IT / automation owner
+    genomeai:
+      - Pilot owner
+      - Implementation engineer
+      - Product analyst
+      - Support / incident coordinator
+  expected_outcomes:
+    - Repeatable daily operator flow
+    - Governed reports and AI brief usage
+    - Explainable decision/task loop with feedback capture
+    - Migration-safe evidence for replacement discussion
+  reference_deployment_rules:
+    required_statuses: [completed]
+    required_manual_evidence: [customer_signoff, acceptance_report, support_summary]
+    not_referenceable_without_evidence: true
+records:
+  path: data/pilots/pilot_framework_v1/pilot_records_v1.json

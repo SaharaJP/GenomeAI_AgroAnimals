@@ -1,0 +1,3 @@
+tenant_id,farm_id,farm_name,country_code,timezone,currency
+default,DEMO_FARM_001,SYNTHETIC North River Demo Farm,DE,Europe/Berlin,EUR
+default,DEMO_FARM_002,SYNTHETIC South Creek Demo Farm,DE,Europe/Berlin,EUR

@@ -1,0 +1,15 @@
+{
+  "schema": "genomeai.rollback_checklist.v1",
+  "steps": [
+    "confirm release note and affected migration set",
+    "take fresh backup and preserve support bundle",
+    "execute rollback procedure for application release",
+    "apply schema rollback only if explicitly supported",
+    "run post-rollback smoke and lockdown checks",
+    "record incident/support notes and customer impact"
+  ],
+  "warnings": [
+    "do not promise schema rollback if migration does not support downgrade",
+    "preserve evidence before rollback"
+  ]
+}

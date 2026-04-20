@@ -1,0 +1,196 @@
+{
+  "schema": "genomeai.t34.hard_proof_manifest.v1",
+  "iteration": "T34-01",
+  "scope": "Hard-proof baseline audit for runtime persistence, queue/worker contour, unified auth/session/RBAC, adult deployment proof, and operational supportability.",
+  "questions": [
+    {
+      "key": "postgres_runtime_persistence",
+      "status": "not_proven",
+      "summary": "Adult compose declares PostgreSQL, but executable runtime paths still point to sqlite/web.db and no Postgres repository implementation is wired into application runtime.",
+      "evidence": [
+        {
+          "path": "deploy/adult/compose.yaml",
+          "lines": "1-120",
+          "note": "postgres service exists and backend depends on it"
+        },
+        {
+          "path": "src/core/infra/database.py",
+          "lines": "1-61",
+          "note": "only backend selector / placeholder abstraction; no live Postgres connection/repository implementation"
+        },
+        {
+          "path": "src/web_cabinet/app.py",
+          "lines": "534-535, 839, 1187, 6025",
+          "note": "runtime app still initialises and health-checks sqlite-backed web.db"
+        },
+        {
+          "path": "web_cabinet/worker.py",
+          "lines": "41-46",
+          "note": "worker docstring states jobs are stored in sqlite"
+        },
+        {
+          "path": "src/genomeai/backup_restore.py",
+          "lines": "107-110, 250-259",
+          "note": "backup/restore logic still opens sqlite database directly"
+        }
+      ],
+      "blocking_gaps": [
+        "No demonstrated runtime path with GENOMEAI_DB_BACKEND=postgres actually serving requests/jobs.",
+        "No proof that users/roles/sessions/jobs/audit/workflow metadata persist in PostgreSQL instead of sqlite.",
+        "No Postgres migration/cutover proof or restore proof for production metadata store."
+      ]
+    },
+    {
+      "key": "redis_queue_and_dedicated_workers",
+      "status": "not_proven",
+      "summary": "Adult compose declares Redis plus worker/scheduler services, but queue execution path is still an in-process sqlite-backed worker; repository search found no active Redis queue client usage.",
+      "evidence": [
+        {
+          "path": "deploy/adult/compose.yaml",
+          "lines": "1-190",
+          "note": "redis, worker, scheduler services exist in compose"
+        },
+        {
+          "path": "web_cabinet/worker.py",
+          "lines": "41-46",
+          "note": "explicitly describes a very small in-process queue worker with sqlite job storage and a single thread"
+        },
+        {
+          "path": "src/core/application/job_runner.py",
+          "lines": "1-120, 192-260",
+          "note": "enqueue path writes jobs via create_job into web_db-backed storage"
+        },
+        {
+          "path": "repository search",
+          "lines": null,
+          "note": "no substantive redis client / rq / celery / dramatiq / arq execution path found in src/web_cabinet/genomeai/apps/scripts/tests"
+        }
+      ],
+      "blocking_gaps": [
+        "No proof that queued jobs are enqueued/dequeued via Redis.",
+        "No proof that worker and scheduler process a Redis queue instead of sqlite polling.",
+        "No failure/retry/dead-letter/runtime observability proof on Redis-backed queue path."
+      ]
+    },
+    {
+      "key": "unified_server_auth_session_rbac",
+      "status": "partially_proven",
+      "summary": "Unified server-side auth/session/RBAC model for web and Android exists and auth boundary tests pass, but legacy fallback remains on executable request path so old auth route is not yet eliminated from adult runtime proof.",
+      "evidence": [
+        {
+          "path": "docs/auth_rbac_for_web_and_mobile.md",
+          "lines": "1-76",
+          "note": "documents single auth_sessions_v1 model for web and Android with server-side RBAC"
+        },
+        {
+          "path": "src/web_cabinet/auth_boundary_v1.py",
+          "lines": "96-274",
+          "note": "login/refresh/me/logout/sessions endpoints implemented"
+        },
+        {
+          "path": "src/web_cabinet/auth.py",
+          "lines": "289-421",
+          "note": "resolve_request_auth_context still contains legacy fallback and legacy_cookie_session transport"
+        },
+        {
+          "path": "tests/web/test_t32_03_auth_boundary.py",
+          "lines": "full test file",
+          "note": "android bearer + refresh flow and revoke/current-session behaviour covered by passing tests"
+        }
+      ],
+      "blocking_gaps": [
+        "Legacy session fallback remains enabled on request execution path.",
+        "No proof that adult/prod profile disables old auth/runtime bypasses by default.",
+        "No end-to-end proof that web frontend and Android both authenticate only through the same server contract in a deployed contour."
+      ]
+    },
+    {
+      "key": "adult_deployment_runtime_proof",
+      "status": "not_proven",
+      "summary": "Deployment artifacts, guides, healthchecks and baseline validation tests exist, but current proof is repository-level/static and local-test only; no live composed adult contour proof was captured.",
+      "evidence": [
+        {
+          "path": "deploy/adult/compose.yaml",
+          "lines": "1-220",
+          "note": "adult services/healthchecks declared"
+        },
+        {
+          "path": "scripts/validate_t32_10_server_deployment.py",
+          "lines": "1-48",
+          "note": "validation script checks presence of files/services, not live runtime execution"
+        },
+        {
+          "path": "docs/deployment_full_guide.md",
+          "lines": "1-220",
+          "note": "deployment and verification guide exists"
+        },
+        {
+          "path": "tests/test_t32_10_server_deployment_baseline.py",
+          "lines": "full test file",
+          "note": "baseline deployment artifacts tested"
+        }
+      ],
+      "blocking_gaps": [
+        "No recorded live docker compose up proof with healthy backend/web/worker/scheduler/postgres/redis/object storage contour.",
+        "No runtime evidence pack showing login → enqueue job → worker execution → artifact persistence → download/export in adult contour.",
+        "No go/no-go gradeable proof report for deployment contour under stage/prod profile."
+      ]
+    },
+    {
+      "key": "operational_supportability",
+      "status": "partially_proven",
+      "summary": "Supportability artifacts are present and several related tests pass, but they are proven mainly against sqlite/local harnesses rather than the adult production contour claimed for T34.",
+      "evidence": [
+        {
+          "path": "docs/operations_runbook.md",
+          "lines": "full file",
+          "note": "operations runbook exists"
+        },
+        {
+          "path": "docs/backup_restore_v2.md",
+          "lines": "full file",
+          "note": "backup/restore documentation exists"
+        },
+        {
+          "path": "deploy/adult/ops/collect_support_bundle.sh",
+          "lines": "full file",
+          "note": "support bundle collection script exists"
+        },
+        {
+          "path": "tests/test_t17_04_artifact_lifecycle.py",
+          "lines": "full test file",
+          "note": "support bundle determinism covered by passing tests"
+        },
+        {
+          "path": "tests/test_t17_07_backup_restore_drill.py",
+          "lines": "full test file",
+          "note": "backup/restore drill covered by passing tests"
+        },
+        {
+          "path": "tests/web/test_nfr_controls.py",
+          "lines": "full test file",
+          "note": "healthz/readyz and local queued job controls covered by passing tests"
+        }
+      ],
+      "blocking_gaps": [
+        "No production-contour restore drill against PostgreSQL + Redis + object storage runtime state.",
+        "No release/rollback proof bound to adult contour and no captured support bundle from a live deployed stack.",
+        "No CI gate that fails specifically when sqlite/legacy auth paths remain enabled in prod profile."
+      ]
+    }
+  ],
+  "executed_checks": [
+    {
+      "command": "pytest -q tests/test_t32_10_server_deployment_baseline.py tests/test_t32_10a_production_security_baseline.py tests/test_t32_13_deployment_full_guide.py tests/test_t13_06_backup_restore_step1.py tests/test_t13_06_backup_restore_step2.py tests/test_t17_04_artifact_lifecycle.py tests/test_t32_03_auth_contract_models.py tests/web/test_t32_03_auth_boundary.py",
+      "result": "28 passed, 26 warnings"
+    },
+    {
+      "command": "pytest -q tests/test_t17_07_backup_restore_drill.py tests/web/test_nfr_controls.py",
+      "result": "9 passed, 28 warnings"
+    }
+  ],
+  "go_no_go": {
+    "status": "no_go",
+    "reason": "Current repository proves baseline docs/tests and partial auth unification, but does not prove PostgreSQL runtime persistence, Redis-backed background execution, or live adult deployment runtime contour."
+  }
+}

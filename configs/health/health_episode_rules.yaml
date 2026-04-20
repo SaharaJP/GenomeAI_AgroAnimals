@@ -1,0 +1,28 @@
+version: 1.0
+max_gap_days_same_family: 21
+acute_active_days: 14
+alert_link_window_days: 14
+decision_link_window_days: 21
+worklist_link_window_days: 21
+treatment_link_buffer_days: 7
+outcome_link_window_days: 21
+family_keywords:
+  mastitis: [mastitis, udder, somatic, scc]
+  lameness: [lameness, hoof, leg, limb, claw]
+  ketosis: [ketosis, acetone, energy]
+  metritis: [metritis, uter, postpartum, fresh]
+  fresh_cow: [fresh, calved, postpartum]
+  chronic: [chronic, recurring, repeat]
+family_labels:
+  mastitis: Мастит
+  lameness: Хромота
+  ketosis: Кетоз
+  metritis: Метрит
+  fresh_cow: Fresh cow
+  chronic: Хронический обзор
+  other: Прочий health episode
+state_labels:
+  active: Активный
+  monitoring: Под наблюдением
+  resolved: Завершён
+  blocked: Заблокирован

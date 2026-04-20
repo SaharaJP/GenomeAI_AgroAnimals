@@ -1,0 +1,7 @@
+{
+  "max_retry_attempts": 5,
+  "retryable_failure_classes": ["RetryableNetwork", "RetryableServer"],
+  "non_retryable_failure_classes": ["Conflict", "TerminalValidation", "TerminalAuth", "Cancelled"],
+  "silent_merges_allowed": false,
+  "requires_server_audit_ack": true
+}

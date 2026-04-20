@@ -1,0 +1,2 @@
+import type { ReactNode } from 'react'; export type TableColumn<T>={key:string;header:string;render:(row:T)=>ReactNode};
+export function DataTable<T>({rows,columns}:{rows:T[];columns:TableColumn<T>[]}){return <div className="card table-wrap"><table className="table"><thead><tr>{columns.map(c=><th key={c.key}>{c.header}</th>)}</tr></thead><tbody>{rows.map((row,i)=><tr key={i}>{columns.map(c=><td key={c.key}>{c.render(row)}</td>)}</tr>)}</tbody></table></div>}

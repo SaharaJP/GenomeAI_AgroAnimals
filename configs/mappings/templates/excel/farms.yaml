@@ -1,0 +1,10 @@
+dataset: farms
+columns:
+  Farm_ID: farm_id
+  Farm_Name: farm_name
+  Region: region
+  Country: country
+  Lat: lat
+  Lon: lon
+  Created_At: created_at
+  Is_Active: is_active

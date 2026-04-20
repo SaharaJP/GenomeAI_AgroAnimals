@@ -1,0 +1,29 @@
+currency: RUB
+fx_rates:
+  EUR_RUB: 100.0
+thresholds:
+- kpi_id: milk_avg_kg_per_cow_1d
+  severity: MAJOR
+  low: 25.0
+  alert_type: MILK_LOW
+  message: Средний удой на корову ниже 25 кг/день
+- kpi_id: scc_avg_7d
+  severity: MAJOR
+  high: 200000.0
+  alert_type: SCC_HIGH
+  message: Средняя соматика выше 200k
+- kpi_id: mastitis_events_30d
+  severity: MINOR
+  high: 3
+  alert_type: MASTITIS_SPIKE
+  message: Рост маститов за 30 дней
+- kpi_id: rumination_avg_7d
+  severity: MINOR
+  low: 350.0
+  alert_type: RUMINATION_LOW
+  message: Низкая руминация
+- kpi_id: margin_rub_7d
+  severity: MAJOR
+  low: 0.0
+  alert_type: MARGIN_NEGATIVE
+  message: Отрицательная маржа за 7 дней

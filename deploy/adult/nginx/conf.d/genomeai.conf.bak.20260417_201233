@@ -1,0 +1,56 @@
+upstream genomeai_web_frontend {
+  server web-frontend:3000;
+}
+
+upstream genomeai_backend_api {
+  server backend-api:8000;
+}
+
+server {
+  listen 80;
+  server_name _;
+
+  include /etc/nginx/security/security_headers.conf;
+
+  location = /healthz {
+    access_log off;
+    proxy_pass http://genomeai_backend_api/healthz;
+  }
+
+  location = /readyz {
+    access_log off;
+    proxy_pass http://genomeai_backend_api/readyz;
+  }
+
+  location /api/ {
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Request-Id $request_id;
+    proxy_pass http://genomeai_backend_api;
+  }
+
+  location = /metrics/prometheus {
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Request-Id $request_id;
+    proxy_pass http://genomeai_backend_api/metrics/prometheus;
+  }
+
+  location /metrics {
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Request-Id $request_id;
+    proxy_pass http://genomeai_backend_api;
+  }
+
+  location / {
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Request-Id $request_id;
+    proxy_pass http://genomeai_web_frontend;
+  }
+}

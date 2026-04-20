@@ -1,0 +1,266 @@
+{
+  "version": 1,
+  "policy": {
+    "scope": "legacy shim imports and explicit backward-compatible CLI aliases",
+    "unexpected_deprecations_fail_ci": true,
+    "notes": [
+      "Documented deprecation warnings are allowed only for backward-compatible shim surfaces.",
+      "Every allowed warning must have an explicit regex and max_count budget."
+    ]
+  },
+  "allowed": [
+    {
+      "name": "genomeai.application",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application is deprecated; import from core\\.application instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify is deprecated; import from core\\.application\\.refactor_verify instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_service",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_service"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_service is deprecated; import from core\\.infra\\.refactor_verify_service instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_runtime",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_runtime"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_runtime is deprecated; import from core\\.application\\.refactor_verify_runtime instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_dispatch",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_dispatch"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_dispatch is deprecated; import from core\\.application\\.refactor_verify_dispatch instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_compare",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_compare"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_compare is deprecated; import from core\\.application\\.refactor_verify_compare instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_result",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_result"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_result is deprecated; import from core\\.application\\.refactor_verify_result instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_errors",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_errors"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_errors is deprecated; import from core\\.application\\.refactor_verify_errors instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.refactor_verify_command",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.refactor_verify_command"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.refactor_verify_command is deprecated; import from core\\.application\\.refactor_verify_command instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.application.job_runner",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.application.job_runner"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.application\\.job_runner is deprecated; import from core\\.application\\.job_runner instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.train",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.train"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.train is deprecated; import from core\\.application\\.ml_pipeline instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.score",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.score"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.score is deprecated; import from core\\.application\\.ml_pipeline instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "genomeai.target.model_v2",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "genomeai.target.model_v2"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^genomeai\\.target\\.model_v2 is deprecated; import from core\\.domain\\.target_models instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.audit",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.audit"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.audit is deprecated; import from core\\.audit\\.events instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.rbac",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.rbac"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.rbac is deprecated; import from core\\.security instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.observability",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.observability"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.observability is deprecated; import from core\\.observability instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.security_matrix",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.security_matrix"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.security_matrix is deprecated; import from core\\.security\\.matrix instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.db",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.db"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.db is deprecated; import from core\\.infra\\.web_db instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.alerts_v2",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.alerts_v2"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.alerts_v2 is deprecated; import from core\\.workflow\\.alerts instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.decision_log_v2",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.decision_log_v2"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.decision_log_v2 is deprecated; import from core\\.workflow\\.decisions instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.entities",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.entities"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.entities is deprecated; import from core\\.workflow\\.entities instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "web_cabinet.tasks_v1",
+      "kind": "shim_import",
+      "trigger": {
+        "type": "import",
+        "target": "web_cabinet.tasks_v1"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^web_cabinet\\.tasks_v1 is deprecated; import from core\\.workflow\\.tasks instead\\.$",
+      "max_count": 1
+    },
+    {
+      "name": "verify-refactor-cli-alias",
+      "kind": "cli_alias",
+      "trigger": {
+        "type": "cli_alias",
+        "target": "verify-refactor"
+      },
+      "category": "DeprecationWarning",
+      "message_regex": "^CLI alias 'verify-refactor' is deprecated; use 'verify_refactor' instead\\.$",
+      "max_count": 1
+    }
+  ]
+}

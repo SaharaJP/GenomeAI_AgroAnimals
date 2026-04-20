@@ -1,0 +1,11 @@
+productivity_explainability:
+  top_k: 3
+  counterfactual:
+    max_counterfactuals: 2
+    abs_step_default: 1.0
+    pct_step_default: 0.10
+    feature_steps:
+      parity: 1.0
+      calving_year: 1.0
+      calving_quarter: 1.0
+      age_at_calving: 0.25

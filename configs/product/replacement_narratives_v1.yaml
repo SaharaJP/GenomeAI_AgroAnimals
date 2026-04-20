@@ -1,0 +1,484 @@
+version: 1
+default_profile: legacy_replacement_ci
+themes:
+  daily_operations_parity:
+    title: Daily operations parity
+    summary: Governed daily-use queue, profile and mobile/cowside flows cover the
+      formal replacement baseline for everyday herd execution.
+    why_it_wins: GenomeAI keeps daily parity but adds linked facts, explainability
+      and action surfaces instead of manual spreadsheet reconstruction.
+    not_claimed:
+    - Does not claim to replace every ERP or full HR scheduling function.
+    - Does not claim zero-training rollout without governed onboarding.
+    proof_points:
+    - pp_daily_queue_profile
+    - pp_mobile_cowside
+    - pp_training_by_role
+  explainable_ai:
+    title: Explainable AI under governance
+    summary: Embedded assistant, explainability by object and governed daily brief
+      are fact-pack only and source-linked.
+    why_it_wins: AI is used as triage and execution support, not as a freeform chat
+      shell.
+    not_claimed:
+    - No hallucination mode or hidden autonomous decisions.
+    - No invented model factors when source evidence is absent.
+    proof_points:
+    - pp_embedded_assistant
+    - pp_explainability_by_object
+    - pp_governed_daily_brief
+  qc_governance:
+    title: QC and governance
+    summary: Product readiness is grounded in QC, rollout gates, audit trails and
+      bounded external collaboration.
+    why_it_wins: Replacement story is backed by formal evidence, not only by feature
+      claims.
+    not_claimed:
+    - No unsupported cross-farm sharing or ad hoc per-page permissions.
+    - No invisible write-actions outside audit-safe flows.
+    proof_points:
+    - pp_operational_gates
+    - pp_external_collaboration
+    - pp_competitive_acceptance
+  economics_and_decisions:
+    title: Economics and explainable action guidance
+    summary: Users can inspect economics delta, linked actions and recalibration-ready
+      feedback signals inside governed workflows.
+    why_it_wins: Product shows action economics and feedback evidence inside the workflow
+      instead of separate offline reasoning.
+    not_claimed:
+    - No hidden optimizer making decisions for the user.
+    - No economics statements without linked facts and assumptions.
+    proof_points:
+    - pp_economics_per_action
+    - pp_feedback_readiness
+  migration_safety:
+    title: Migration and replacement safety
+    summary: Parallel run, migration verification, cutover playbook and acceptance
+      evidence provide a bounded path away from legacy HMS.
+    why_it_wins: Migration readiness is shown as governed evidence and rollback-aware
+      playbooks, not as a big-bang promise.
+    not_claimed:
+    - No claim that every legacy export is auto-mapped without validation.
+    - No claim that cutover should happen without verification evidence.
+    proof_points:
+    - pp_migration_verification
+    - pp_parallel_run
+    - pp_demo_benchmark
+compare_checklists:
+  pre_sales:
+    title: Pre-sales compare checklist
+    audience: pre-sales
+    entries:
+    - question: Can we show daily-use parity without slideware?
+      proof_points:
+      - pp_daily_queue_profile
+      - pp_mobile_cowside
+      - pp_demo_benchmark
+    - question: Can we prove AI stays fact-linked and governed?
+      proof_points:
+      - pp_embedded_assistant
+      - pp_governed_daily_brief
+      - pp_explainability_by_object
+    - question: Can we explain migration safety beyond marketing text?
+      proof_points:
+      - pp_migration_verification
+      - pp_parallel_run
+      - pp_competitive_acceptance
+  uat:
+    title: UAT compare checklist
+    audience: uat
+    entries:
+    - question: Which parity scenarios are formally regression-ready?
+      proof_points:
+      - pp_competitive_acceptance
+      - pp_operational_gates
+    - question: Where are source-linked actions and caveats visible in workflow?
+      proof_points:
+      - pp_explainability_by_object
+      - pp_economics_per_action
+    - question: How is bounded collaboration controlled during pilot/UAT?
+      proof_points:
+      - pp_external_collaboration
+      - pp_training_by_role
+  implementation:
+    title: Implementation compare checklist
+    audience: implementation
+    entries:
+    - question: What supports safe onboarding and role ramp-up?
+      proof_points:
+      - pp_training_by_role
+      - pp_demo_benchmark
+    - question: What artifacts show rollout and diagnostics readiness?
+      proof_points:
+      - pp_operational_gates
+      - pp_competitive_acceptance
+      - pp_migration_verification
+feature_maps:
+  parity_map:
+    title: Legacy replacement parity map
+    entries:
+    - legacy_capability: Daily queue and object drilldown
+      genomeai_surfaces:
+      - daily_worklists_by_role
+      - operational_planner
+      - animal_profile
+      - group_profile
+      proof_points:
+      - pp_daily_queue_profile
+    - legacy_capability: Reproduction execution and review
+      genomeai_surfaces:
+      - reproduction_worklists
+      - reproduction_cockpit
+      - mating_plan
+      - repro_mating_integration
+      proof_points:
+      - pp_demo_benchmark
+      - pp_competitive_acceptance
+    - legacy_capability: Vet triage and treatment context
+      genomeai_surfaces:
+      - alert_center
+      - vet_triage_queues
+      - treatment_journal_withdrawal
+      - animal_profile
+      proof_points:
+      - pp_demo_benchmark
+      - pp_explainability_by_object
+    - legacy_capability: Mobile / cowside execution
+      genomeai_surfaces:
+      - mobile_worklists
+      - cowside_event_entry
+      proof_points:
+      - pp_mobile_cowside
+      - pp_operational_gates
+    - legacy_capability: Migration verification and cutover
+      genomeai_surfaces:
+      - migration_verification_toolkit
+      - parallel_run_mode
+      - migration_playbook_and_cutover
+      proof_points:
+      - pp_migration_verification
+      - pp_parallel_run
+  win_map:
+    title: Win themes map
+    entries:
+    - win_theme: Explainable AI inside workflow
+      genomeai_surfaces:
+      - ai_assistant
+      - report_view
+      - daily_worklists_by_role
+      - operational_planner
+      proof_points:
+      - pp_embedded_assistant
+      - pp_governed_daily_brief
+      - pp_explainability_by_object
+    - win_theme: QC and rollout governance
+      genomeai_surfaces:
+      - qc_ops
+      - admin_observability_release
+      - admin_users_security
+      proof_points:
+      - pp_operational_gates
+      - pp_external_collaboration
+      - pp_competitive_acceptance
+    - win_theme: Economics and decision intelligence
+      genomeai_surfaces:
+      - economics_per_action
+      - operational_what_if
+      - decision_log
+      - feedback_admin_surface
+      proof_points:
+      - pp_economics_per_action
+      - pp_feedback_readiness
+proof_points:
+  pp_daily_queue_profile:
+    title: Daily queue → profile → action path
+    statement: Operator/Herd Manager can move from daily queue to object profile and
+      next-step actions without manual reconstruction.
+    source_nav_keys:
+    - daily_worklists_by_role
+    - operational_planner
+    - animal_profile
+    - group_profile
+    required_features:
+    - operational_core
+    source_docs:
+    - docs/daily_worklists_by_role.md
+    - docs/animal_profile_daily_use.md
+    - docs/group_profile_operational_hub.md
+    source_tests:
+    - tests/test_t21_02_daily_worklists_by_role.py
+    - tests/test_t20_04_animal_profile_daily_use.py
+    - tests/test_t20_05_group_profile_operational_hub.py
+    source_scripts:
+    - scripts/smoke_t28_05_worklists_daily_use.py
+    acceptance_scenarios:
+    - daily_operations
+    demo_scenarios:
+    - daily_operator_flow
+  pp_mobile_cowside:
+    title: Mobile and cowside parity
+    statement: Mobile worklists and cowside event entry are runnable, synthetic-demo-backed
+      and covered by stable smoke rather than flaky browser automation.
+    source_nav_keys:
+    - mobile_worklists
+    - cowside_event_entry
+    required_features:
+    - mobile_cowside
+    source_docs:
+    - docs/mobile_worklists.md
+    - docs/mobile_shell_pwa_foundation.md
+    - docs/demo_farm_and_benchmark_demos.md
+    source_tests:
+    - tests/test_t25_02_mobile_worklists.py
+    - tests/test_t30_03_demo_farm_and_benchmark_demos.py
+    source_scripts:
+    - scripts/smoke_t25_02_mobile_worklists.py
+    - scripts/smoke_t25_03_cowside_event_entry.py
+    - scripts/smoke_t30_03_demo_farm.py
+    acceptance_scenarios:
+    - mobile
+    demo_scenarios:
+    - daily_operator_flow
+    - mobile_cowside
+  pp_training_by_role:
+    title: Role-based onboarding without developer сопровождение
+    statement: Operator, Zootech, Vet, Director and Admin have role-specific onboarding
+      kits and in-product references aligned with RBAC and real pages.
+    source_nav_keys:
+    - training_onboarding_by_role
+    - home
+    required_features:
+    - training_onboarding
+    source_docs:
+    - docs/training_onboarding_by_role.md
+    source_tests:
+    - tests/test_t30_02_training_onboarding_by_role.py
+    source_scripts: []
+    acceptance_scenarios: []
+    demo_scenarios:
+    - admin_rollout
+  pp_embedded_assistant:
+    title: Embedded assistant under fact-pack guardrails
+    statement: Assistant is embedded in worklists and planner as governed triage/execution
+      support with linked actions and source-linked answers.
+    source_nav_keys:
+    - ai_assistant
+    - daily_worklists_by_role
+    - operational_planner
+    required_features:
+    - embedded_ai
+    source_docs:
+    - docs/embedded_operational_assistant.md
+    source_tests:
+    - tests/test_t29_01_embedded_operational_assistant.py
+    source_scripts: []
+    acceptance_scenarios: []
+    demo_scenarios:
+    - reports_and_brief
+  pp_explainability_by_object:
+    title: Why this cow / list / alert / economics delta
+    statement: Reusable explainability layer shows source facts, versions, events,
+      thresholds, model factors and caveats across profiles, alerts, reports and economics.
+    source_nav_keys:
+    - animal_profile
+    - group_profile
+    - alert_center
+    - report_view
+    - economics_per_action
+    required_features:
+    - explainability
+    source_docs:
+    - docs/explainability_by_object.md
+    source_tests:
+    - tests/test_t29_04_explainability_by_object.py
+    source_scripts: []
+    acceptance_scenarios:
+    - daily_operations
+    - reports_worklists
+    - vet
+    demo_scenarios:
+    - vet_triage
+    - economics_delta
+  pp_governed_daily_brief:
+    title: Governed AI daily brief
+    statement: Role-specific daily brief is facts-only, reproducible, version-linked
+      and wired to linked facts, actions and expected effect.
+    source_nav_keys:
+    - home
+    - report_view
+    - report_view
+    required_features:
+    - embedded_ai
+    source_docs:
+    - docs/ai_generated_daily_brief.md
+    source_tests:
+    - tests/test_t29_05_ai_generated_daily_brief.py
+    source_scripts: []
+    acceptance_scenarios:
+    - reports_worklists
+    demo_scenarios:
+    - reports_and_brief
+  pp_operational_gates:
+    title: Operational rollout gates
+    statement: Daily-use pages and workflows are guarded by deterministic operational
+      SLA gates with diagnosable reports and CI integration.
+    source_nav_keys:
+    - admin_observability_release
+    required_features:
+    - admin_rollout
+    source_docs:
+    - docs/operational_sla_and_gates.md
+    source_tests:
+    - tests/test_t28_05_operational_sla_and_gates.py
+    source_scripts:
+    - scripts/smoke_t28_05_operational_rollout_gates.py
+    - scripts/run_operational_rollout_gate.sh
+    acceptance_scenarios:
+    - daily_operations
+    - mobile
+    demo_scenarios:
+    - admin_rollout
+  pp_external_collaboration:
+    title: Bounded consultant / partner collaboration
+    statement: External consultant and partner roles are bounded by central policy
+      with audit-safe comments, recommendations and approvals review.
+    source_nav_keys:
+    - admin_users_security
+    - daily_worklists_by_role
+    - animal_profile
+    - group_profile
+    required_features:
+    - external_collaboration
+    source_docs:
+    - docs/external_collaboration_boundaries.md
+    source_tests:
+    - tests/test_t28_04_external_collaboration_boundaries.py
+    source_scripts: []
+    acceptance_scenarios: []
+    demo_scenarios: []
+  pp_economics_per_action:
+    title: Action-level economics linked to workflow
+    statement: Economics delta and action economics are visible with linked source
+      facts and drilldown rather than separate offline spreadsheets.
+    source_nav_keys:
+    - economics_per_action
+    - economics_v2
+    - operational_what_if
+    required_features:
+    - economics
+    source_docs:
+    - docs/economics_per_action.md
+    - docs/operational_what_if.md
+    source_tests:
+    - tests/test_t27_05_operational_what_if.py
+    source_scripts: []
+    acceptance_scenarios:
+    - reports_worklists
+    demo_scenarios:
+    - economics_delta
+  pp_feedback_readiness:
+    title: Feedback → calibration readiness
+    statement: Acceptance/reject, outcome, override and time-to-action are captured
+      as audit-safe signals for recalibration readiness without hidden retrain.
+    source_nav_keys:
+    - feedback_admin_surface
+    - ai_assistant
+    - alert_center
+    required_features:
+    - decision_intelligence
+    source_docs:
+    - docs/feedback_calibration_loop_v2.md
+    source_tests:
+    - tests/test_t29_03_feedback_calibration_loop_v2.py
+    source_scripts: []
+    acceptance_scenarios: []
+    demo_scenarios: []
+  pp_migration_verification:
+    title: Migration verification toolkit
+    statement: Migration path includes formal compare evidence and smoke-able verification
+      artifacts, not only a cutover promise.
+    source_nav_keys:
+    - migration_verification_toolkit
+    - migration_playbook_and_cutover
+    required_features:
+    - migration_replacement
+    source_docs:
+    - docs/migration_verification_toolkit.md
+    - docs/migration_playbook_and_cutover.md
+    source_tests:
+    - tests/test_t26_02_migration_verification_toolkit.py
+    - tests/test_t26_05_migration_playbook_and_cutover.py
+    source_scripts:
+    - scripts/smoke_t26_02_migration_verification_toolkit.py
+    - scripts/smoke_t26_05_migration_playbook_and_cutover.py
+    acceptance_scenarios:
+    - migration
+    demo_scenarios: []
+  pp_parallel_run:
+    title: Parallel run before replacement
+    statement: Replacement narrative is bounded by parallel run evidence, freshness
+      diagnostics and rollback-aware cutover steps.
+    source_nav_keys:
+    - parallel_run_mode
+    - migration_playbook_and_cutover
+    required_features:
+    - migration_replacement
+    source_docs:
+    - docs/parallel_run_mode.md
+    - docs/migration_playbook_and_cutover.md
+    source_tests:
+    - tests/test_t26_03_parallel_run_mode.py
+    - tests/test_t26_05_migration_playbook_and_cutover.py
+    source_scripts: []
+    acceptance_scenarios:
+    - migration
+    demo_scenarios: []
+  pp_competitive_acceptance:
+    title: Formal competitive acceptance set
+    statement: Product replacement readiness is stated through formal pass/fail scenarios
+      with regression-ready checks and manual signoff evidence path.
+    source_nav_keys:
+    - admin_observability_release
+    required_features:
+    - competitive_acceptance
+    source_docs:
+    - docs/competitive_acceptance_set.md
+    source_tests:
+    - tests/test_t30_01_competitive_acceptance_set.py
+    source_scripts:
+    - scripts/smoke_t30_01_competitive_acceptance_set.py
+    - scripts/run_competitive_acceptance_gate.sh
+    acceptance_scenarios:
+    - daily_operations
+    - reproduction
+    - vet
+    - reports_worklists
+    - mobile
+    - migration
+    demo_scenarios: []
+  pp_demo_benchmark:
+    title: Runnable demo farm and benchmark demos
+    statement: Sales/UAT narratives are backed by a synthetic but realistic runnable
+      dataset, role scenarios and benchmark demos rather than hand-drawn screenshots.
+    source_nav_keys:
+    - demo_farm_and_benchmark_demos
+    - enterprise_benchmark_views
+    required_features:
+    - demo_kit
+    source_docs:
+    - docs/demo_farm_and_benchmark_demos.md
+    source_tests:
+    - tests/test_t30_03_demo_farm_and_benchmark_demos.py
+    source_scripts:
+    - scripts/build_demo_farm_v1.py
+    - scripts/smoke_t30_03_demo_farm.py
+    - scripts/run_demo_farm_v1.sh
+    acceptance_scenarios: []
+    demo_scenarios:
+    - daily_operator_flow
+    - enterprise_benchmark_compare
+    - vet_triage
+    - reports_and_brief
+    - economics_delta
+    - admin_rollout

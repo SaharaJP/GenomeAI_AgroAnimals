@@ -1,0 +1,37 @@
+{
+  "iteration": "T34-07",
+  "title": "Final legacy tails removal / production profile lockdown",
+  "status": "partially_proven",
+  "deliverables": [
+    "src/core/ops/production_lockdown.py",
+    "scripts/check_production_lockdown.py",
+    "src/web_cabinet/app.py",
+    "web_cabinet/app.py",
+    "src/web_cabinet/deploy_guard.py",
+    "web_cabinet/deploy_guard.py",
+    "docs/production_profile_lockdown.md",
+    "docs/iterations/T34-07_execution_proof.md",
+    "docs/iterations/T34-07_execution_manifest.json",
+    "tests/test_t34_07_production_lockdown.py",
+    "tests/web/test_t34_07_production_profile_diagnostics.py",
+    "tests/test_t34_07_ci_lockdown_gate.py",
+    "ci/pytest_gate.txt"
+  ],
+  "checks": {
+    "targeted_tests_passed": 6,
+    "regression_tests_passed": 24,
+    "total_passed": 30
+  },
+  "proven": [
+    "production diagnostics page/report exists",
+    "startup production lockdown gate exists",
+    "internal web login is no longer a silent production path",
+    "readiness and observability expose lockdown state",
+    "CI gate coverage for forbidden production regressions exists"
+  ],
+  "not_proven": [
+    "live adult contour end-to-end runtime proof",
+    "full removal of all compatibility code from repository",
+    "successful production-like boot with all cutovers completed"
+  ]
+}

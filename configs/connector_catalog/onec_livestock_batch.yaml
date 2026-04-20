@@ -1,0 +1,33 @@
+adapter_id: onec_livestock_batch
+label: 1C livestock / farm batch export
+source_system: 1C Livestock
+system_family: erp_herd_management
+connector_kind: file
+export_mode: scheduled_csv_api_drop
+default_schedule: "0 4,12,20 * * *"
+description: Representative connector profile for 1C-based animal, lactation and treatment exports reused across farms.
+supported_datasets:
+  - animals
+  - lactations
+  - treatments
+data_contracts:
+  - dm_animals
+  - dm_lactations
+  - dm_treatments
+reusable_mapping_templates:
+  - configs/mappings/connectors/onec_livestock/animals.yaml
+  - configs/mappings/connectors/onec_livestock/lactations.yaml
+  - configs/mappings/connectors/onec_livestock/treatments.yaml
+representative_config_path: configs/connector_catalog/examples/onec_livestock_batch.yaml
+diagnostics:
+  common_issues:
+    - Export delivered with delimiter/encoding drift.
+    - Last pull succeeded but latest batch was not copied to inbox.
+    - Site/group identifiers flattened to text labels.
+  action_hints:
+    missing_source: Проверьте export job 1C и копирование файлов в agreed inbox.
+    stale_batch: Источник batch-only; не используйте как near-real-time контур.
+limitations:
+  - Designed for staged interoperability over scheduled exports.
+  - Group/site drilldown depends on identifiers being exported consistently.
+staged_adoption_note: Useful when farm keeps 1C as source-of-record during parallel run.

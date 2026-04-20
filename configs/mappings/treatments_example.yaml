@@ -1,0 +1,14 @@
+# Пример мэппинга для dm_treatments (external -> canonical)
+# Внешний файл: data/examples/external/treatments_ext.csv
+
+dataset: treatments
+constants:
+  tenant_id: default
+columns:
+  TreatmentID: treatment_id
+  AnimalID: animal_id
+  StartDate: start_date
+  EndDate: end_date
+  TreatmentType: treatment_type
+  ReasonEventID: reason_event_id
+  WithdrawalEndDate: withdrawal_end_date

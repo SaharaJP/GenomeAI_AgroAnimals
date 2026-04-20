@@ -1,0 +1,4946 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contract_set": "genomeai.app_boundary",
+  "models": {
+    "AlertsListResponse": {
+      "$defs": {
+        "AlertItem": {
+          "properties": {
+            "alert_id": {
+              "title": "Alert Id",
+              "type": "string"
+            },
+            "alert_type": {
+              "title": "Alert Type",
+              "type": "string"
+            },
+            "attachments": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Attachments",
+              "type": "array"
+            },
+            "cause": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Cause"
+            },
+            "confidence": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Confidence"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "deadline": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Deadline"
+            },
+            "entity": {
+              "$ref": "#/$defs/EntityRef"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "owner_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner User Id"
+            },
+            "owner_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner Username"
+            },
+            "severity": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Severity"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Updated At"
+            },
+            "what_to_do": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "What To Do",
+              "type": "array"
+            },
+            "why": {
+              "additionalProperties": true,
+              "title": "Why",
+              "type": "object"
+            }
+          },
+          "required": [
+            "alert_id",
+            "status",
+            "alert_type",
+            "title",
+            "entity"
+          ],
+          "title": "AlertItem",
+          "type": "object"
+        },
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/AlertItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "title": "Offset",
+          "type": "integer"
+        },
+        "schema": {
+          "default": "genomeai.api.alerts.list.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "limit",
+        "offset"
+      ],
+      "title": "AlertsListResponse",
+      "type": "object"
+    },
+    "AssistantResolveTargetRequest": {
+      "properties": {
+        "data_version": {
+          "title": "Data Version",
+          "type": "string"
+        },
+        "fact_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact Id"
+        },
+        "metric": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Metric"
+        },
+        "report_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Report Version"
+        },
+        "request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Id"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "section": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Section"
+        },
+        "source_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Id"
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Table"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        }
+      },
+      "required": [
+        "data_version"
+      ],
+      "title": "AssistantResolveTargetRequest",
+      "type": "object"
+    },
+    "AssistantResolveTargetResponse": {
+      "properties": {
+        "detail_actions": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Detail Actions",
+          "type": "array"
+        },
+        "fact": {
+          "additionalProperties": true,
+          "title": "Fact",
+          "type": "object"
+        },
+        "missing_data_request": {
+          "additionalProperties": true,
+          "title": "Missing Data Request",
+          "type": "object"
+        },
+        "navigation_hints": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Navigation Hints",
+          "type": "array"
+        },
+        "required_permission": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required Permission"
+        },
+        "resolution_summary": {
+          "default": "",
+          "title": "Resolution Summary",
+          "type": "string"
+        },
+        "schema": {
+          "default": "genomeai.api.assistant.resolve_target.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "source_lines": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Lines",
+          "type": "array"
+        },
+        "table": {
+          "additionalProperties": true,
+          "title": "Table",
+          "type": "object"
+        },
+        "target": {
+          "additionalProperties": true,
+          "title": "Target",
+          "type": "object"
+        }
+      },
+      "title": "AssistantResolveTargetResponse",
+      "type": "object"
+    },
+    "AuthLoginRequest": {
+      "$defs": {
+        "AuthDeviceInfo": {
+          "properties": {
+            "app_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "App Version"
+            },
+            "device_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Id"
+            },
+            "device_label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Label"
+            },
+            "platform": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Platform"
+            }
+          },
+          "title": "AuthDeviceInfo",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "active_farm_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Active Farm Id"
+        },
+        "active_site_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Active Site Id"
+        },
+        "client_kind": {
+          "default": "web",
+          "title": "Client Kind",
+          "type": "string"
+        },
+        "device": {
+          "$ref": "#/$defs/AuthDeviceInfo"
+        },
+        "issue_web_session_cookie": {
+          "default": false,
+          "title": "Issue Web Session Cookie",
+          "type": "boolean"
+        },
+        "password": {
+          "title": "Password",
+          "type": "string"
+        },
+        "tenant_id": {
+          "default": "default",
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ],
+      "title": "AuthLoginRequest",
+      "type": "object"
+    },
+    "AuthLoginResponse": {
+      "$defs": {
+        "AuthDeviceInfo": {
+          "properties": {
+            "app_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "App Version"
+            },
+            "device_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Id"
+            },
+            "device_label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Label"
+            },
+            "platform": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Platform"
+            }
+          },
+          "title": "AuthDeviceInfo",
+          "type": "object"
+        },
+        "AuthScope": {
+          "properties": {
+            "active_farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Farm Id"
+            },
+            "active_site_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Site Id"
+            },
+            "allowed_farm_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Farm Ids",
+              "type": "array"
+            },
+            "allowed_site_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Site Ids",
+              "type": "array"
+            },
+            "tenant_id": {
+              "default": "default",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          "title": "AuthScope",
+          "type": "object"
+        },
+        "AuthSessionView": {
+          "properties": {
+            "auth_transport": {
+              "title": "Auth Transport",
+              "type": "string"
+            },
+            "client_kind": {
+              "title": "Client Kind",
+              "type": "string"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "current": {
+              "default": false,
+              "title": "Current",
+              "type": "boolean"
+            },
+            "device": {
+              "$ref": "#/$defs/AuthDeviceInfo"
+            },
+            "expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Expires At"
+            },
+            "last_seen_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Last Seen At"
+            },
+            "refresh_expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Refresh Expires At"
+            },
+            "scope": {
+              "$ref": "#/$defs/AuthScope"
+            },
+            "session_id": {
+              "title": "Session Id",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "updated_at": {
+              "title": "Updated At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "session_id",
+            "client_kind",
+            "auth_transport",
+            "status",
+            "created_at",
+            "updated_at",
+            "scope"
+          ],
+          "title": "AuthSessionView",
+          "type": "object"
+        },
+        "AuthTokenBundle": {
+          "properties": {
+            "access_token": {
+              "title": "Access Token",
+              "type": "string"
+            },
+            "expires_in_sec": {
+              "title": "Expires In Sec",
+              "type": "integer"
+            },
+            "refresh_expires_in_sec": {
+              "title": "Refresh Expires In Sec",
+              "type": "integer"
+            },
+            "refresh_token": {
+              "title": "Refresh Token",
+              "type": "string"
+            },
+            "token_type": {
+              "default": "Bearer",
+              "title": "Token Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in_sec",
+            "refresh_expires_in_sec"
+          ],
+          "title": "AuthTokenBundle",
+          "type": "object"
+        },
+        "AuthUserView": {
+          "properties": {
+            "collaboration_mode": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Collaboration Mode"
+            },
+            "external_org": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "External Org"
+            },
+            "permissions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Permissions",
+              "type": "array"
+            },
+            "role": {
+              "title": "Role",
+              "type": "string"
+            },
+            "user_id": {
+              "title": "User Id",
+              "type": "integer"
+            },
+            "username": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_id",
+            "username",
+            "role"
+          ],
+          "title": "AuthUserView",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "schema": {
+          "default": "genomeai.api.auth.login.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/AuthScope"
+        },
+        "session": {
+          "$ref": "#/$defs/AuthSessionView"
+        },
+        "tokens": {
+          "$ref": "#/$defs/AuthTokenBundle"
+        },
+        "user": {
+          "$ref": "#/$defs/AuthUserView"
+        }
+      },
+      "required": [
+        "user",
+        "session",
+        "scope",
+        "tokens"
+      ],
+      "title": "AuthLoginResponse",
+      "type": "object"
+    },
+    "AuthLogoutRequest": {
+      "properties": {
+        "all_devices": {
+          "default": false,
+          "title": "All Devices",
+          "type": "boolean"
+        }
+      },
+      "title": "AuthLogoutRequest",
+      "type": "object"
+    },
+    "AuthLogoutResponse": {
+      "properties": {
+        "revoked_session_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Revoked Session Ids",
+          "type": "array"
+        },
+        "schema": {
+          "default": "genomeai.api.auth.logout.v1",
+          "title": "Schema",
+          "type": "string"
+        }
+      },
+      "title": "AuthLogoutResponse",
+      "type": "object"
+    },
+    "AuthMeResponse": {
+      "$defs": {
+        "AuthDeviceInfo": {
+          "properties": {
+            "app_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "App Version"
+            },
+            "device_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Id"
+            },
+            "device_label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Label"
+            },
+            "platform": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Platform"
+            }
+          },
+          "title": "AuthDeviceInfo",
+          "type": "object"
+        },
+        "AuthScope": {
+          "properties": {
+            "active_farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Farm Id"
+            },
+            "active_site_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Site Id"
+            },
+            "allowed_farm_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Farm Ids",
+              "type": "array"
+            },
+            "allowed_site_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Site Ids",
+              "type": "array"
+            },
+            "tenant_id": {
+              "default": "default",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          "title": "AuthScope",
+          "type": "object"
+        },
+        "AuthSessionView": {
+          "properties": {
+            "auth_transport": {
+              "title": "Auth Transport",
+              "type": "string"
+            },
+            "client_kind": {
+              "title": "Client Kind",
+              "type": "string"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "current": {
+              "default": false,
+              "title": "Current",
+              "type": "boolean"
+            },
+            "device": {
+              "$ref": "#/$defs/AuthDeviceInfo"
+            },
+            "expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Expires At"
+            },
+            "last_seen_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Last Seen At"
+            },
+            "refresh_expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Refresh Expires At"
+            },
+            "scope": {
+              "$ref": "#/$defs/AuthScope"
+            },
+            "session_id": {
+              "title": "Session Id",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "updated_at": {
+              "title": "Updated At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "session_id",
+            "client_kind",
+            "auth_transport",
+            "status",
+            "created_at",
+            "updated_at",
+            "scope"
+          ],
+          "title": "AuthSessionView",
+          "type": "object"
+        },
+        "AuthUserView": {
+          "properties": {
+            "collaboration_mode": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Collaboration Mode"
+            },
+            "external_org": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "External Org"
+            },
+            "permissions": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Permissions",
+              "type": "array"
+            },
+            "role": {
+              "title": "Role",
+              "type": "string"
+            },
+            "user_id": {
+              "title": "User Id",
+              "type": "integer"
+            },
+            "username": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "user_id",
+            "username",
+            "role"
+          ],
+          "title": "AuthUserView",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "schema": {
+          "default": "genomeai.api.auth.me.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/AuthScope"
+        },
+        "session": {
+          "$ref": "#/$defs/AuthSessionView"
+        },
+        "user": {
+          "$ref": "#/$defs/AuthUserView"
+        }
+      },
+      "required": [
+        "user",
+        "session",
+        "scope"
+      ],
+      "title": "AuthMeResponse",
+      "type": "object"
+    },
+    "AuthRefreshRequest": {
+      "$defs": {
+        "AuthDeviceInfo": {
+          "properties": {
+            "app_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "App Version"
+            },
+            "device_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Id"
+            },
+            "device_label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Label"
+            },
+            "platform": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Platform"
+            }
+          },
+          "title": "AuthDeviceInfo",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "device": {
+          "$ref": "#/$defs/AuthDeviceInfo"
+        },
+        "refresh_token": {
+          "title": "Refresh Token",
+          "type": "string"
+        }
+      },
+      "required": [
+        "refresh_token"
+      ],
+      "title": "AuthRefreshRequest",
+      "type": "object"
+    },
+    "AuthRefreshResponse": {
+      "$defs": {
+        "AuthDeviceInfo": {
+          "properties": {
+            "app_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "App Version"
+            },
+            "device_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Id"
+            },
+            "device_label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Label"
+            },
+            "platform": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Platform"
+            }
+          },
+          "title": "AuthDeviceInfo",
+          "type": "object"
+        },
+        "AuthScope": {
+          "properties": {
+            "active_farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Farm Id"
+            },
+            "active_site_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Site Id"
+            },
+            "allowed_farm_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Farm Ids",
+              "type": "array"
+            },
+            "allowed_site_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Site Ids",
+              "type": "array"
+            },
+            "tenant_id": {
+              "default": "default",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          "title": "AuthScope",
+          "type": "object"
+        },
+        "AuthSessionView": {
+          "properties": {
+            "auth_transport": {
+              "title": "Auth Transport",
+              "type": "string"
+            },
+            "client_kind": {
+              "title": "Client Kind",
+              "type": "string"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "current": {
+              "default": false,
+              "title": "Current",
+              "type": "boolean"
+            },
+            "device": {
+              "$ref": "#/$defs/AuthDeviceInfo"
+            },
+            "expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Expires At"
+            },
+            "last_seen_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Last Seen At"
+            },
+            "refresh_expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Refresh Expires At"
+            },
+            "scope": {
+              "$ref": "#/$defs/AuthScope"
+            },
+            "session_id": {
+              "title": "Session Id",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "updated_at": {
+              "title": "Updated At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "session_id",
+            "client_kind",
+            "auth_transport",
+            "status",
+            "created_at",
+            "updated_at",
+            "scope"
+          ],
+          "title": "AuthSessionView",
+          "type": "object"
+        },
+        "AuthTokenBundle": {
+          "properties": {
+            "access_token": {
+              "title": "Access Token",
+              "type": "string"
+            },
+            "expires_in_sec": {
+              "title": "Expires In Sec",
+              "type": "integer"
+            },
+            "refresh_expires_in_sec": {
+              "title": "Refresh Expires In Sec",
+              "type": "integer"
+            },
+            "refresh_token": {
+              "title": "Refresh Token",
+              "type": "string"
+            },
+            "token_type": {
+              "default": "Bearer",
+              "title": "Token Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "access_token",
+            "refresh_token",
+            "expires_in_sec",
+            "refresh_expires_in_sec"
+          ],
+          "title": "AuthTokenBundle",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "schema": {
+          "default": "genomeai.api.auth.refresh.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/AuthScope"
+        },
+        "session": {
+          "$ref": "#/$defs/AuthSessionView"
+        },
+        "tokens": {
+          "$ref": "#/$defs/AuthTokenBundle"
+        }
+      },
+      "required": [
+        "session",
+        "scope",
+        "tokens"
+      ],
+      "title": "AuthRefreshResponse",
+      "type": "object"
+    },
+    "AuthSessionRevokeResponse": {
+      "properties": {
+        "revoked_session_id": {
+          "title": "Revoked Session Id",
+          "type": "string"
+        },
+        "schema": {
+          "default": "genomeai.api.auth.sessions.revoke.v1",
+          "title": "Schema",
+          "type": "string"
+        }
+      },
+      "required": [
+        "revoked_session_id"
+      ],
+      "title": "AuthSessionRevokeResponse",
+      "type": "object"
+    },
+    "AuthSessionsListResponse": {
+      "$defs": {
+        "AuthDeviceInfo": {
+          "properties": {
+            "app_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "App Version"
+            },
+            "device_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Id"
+            },
+            "device_label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Device Label"
+            },
+            "platform": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Platform"
+            }
+          },
+          "title": "AuthDeviceInfo",
+          "type": "object"
+        },
+        "AuthScope": {
+          "properties": {
+            "active_farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Farm Id"
+            },
+            "active_site_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Active Site Id"
+            },
+            "allowed_farm_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Farm Ids",
+              "type": "array"
+            },
+            "allowed_site_ids": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Allowed Site Ids",
+              "type": "array"
+            },
+            "tenant_id": {
+              "default": "default",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          "title": "AuthScope",
+          "type": "object"
+        },
+        "AuthSessionView": {
+          "properties": {
+            "auth_transport": {
+              "title": "Auth Transport",
+              "type": "string"
+            },
+            "client_kind": {
+              "title": "Client Kind",
+              "type": "string"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "current": {
+              "default": false,
+              "title": "Current",
+              "type": "boolean"
+            },
+            "device": {
+              "$ref": "#/$defs/AuthDeviceInfo"
+            },
+            "expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Expires At"
+            },
+            "last_seen_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Last Seen At"
+            },
+            "refresh_expires_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Refresh Expires At"
+            },
+            "scope": {
+              "$ref": "#/$defs/AuthScope"
+            },
+            "session_id": {
+              "title": "Session Id",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "updated_at": {
+              "title": "Updated At",
+              "type": "string"
+            }
+          },
+          "required": [
+            "session_id",
+            "client_kind",
+            "auth_transport",
+            "status",
+            "created_at",
+            "updated_at",
+            "scope"
+          ],
+          "title": "AuthSessionView",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/AuthSessionView"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "schema": {
+          "default": "genomeai.api.auth.sessions.list.v1",
+          "title": "Schema",
+          "type": "string"
+        }
+      },
+      "title": "AuthSessionsListResponse",
+      "type": "object"
+    },
+    "DecisionIntelligenceResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "DecisionIntelligenceSummary": {
+          "properties": {
+            "acceptance_rate": {
+              "default": 0.0,
+              "title": "Acceptance Rate",
+              "type": "number"
+            },
+            "accepted_feedback": {
+              "default": 0,
+              "title": "Accepted Feedback",
+              "type": "integer"
+            },
+            "linked_alerts": {
+              "default": 0,
+              "title": "Linked Alerts",
+              "type": "integer"
+            },
+            "rejected_feedback": {
+              "default": 0,
+              "title": "Rejected Feedback",
+              "type": "integer"
+            },
+            "total_decisions": {
+              "default": 0,
+              "title": "Total Decisions",
+              "type": "integer"
+            }
+          },
+          "title": "DecisionIntelligenceSummary",
+          "type": "object"
+        },
+        "DecisionIntelligenceTopAction": {
+          "properties": {
+            "action": {
+              "title": "Action",
+              "type": "string"
+            },
+            "count": {
+              "default": 0,
+              "title": "Count",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "title": "DecisionIntelligenceTopAction",
+          "type": "object"
+        },
+        "DecisionItem": {
+          "properties": {
+            "action": {
+              "title": "Action",
+              "type": "string"
+            },
+            "comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Comment"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "decision_id": {
+              "title": "Decision Id",
+              "type": "string"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "metadata": {
+              "additionalProperties": true,
+              "title": "Metadata",
+              "type": "object"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            "recommendation_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Recommendation Id"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "User Id"
+            },
+            "username": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "decision_id",
+            "created_at",
+            "action",
+            "username"
+          ],
+          "title": "DecisionItem",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "latest_decisions": {
+          "items": {
+            "$ref": "#/$defs/DecisionItem"
+          },
+          "title": "Latest Decisions",
+          "type": "array"
+        },
+        "schema": {
+          "default": "genomeai.api.decision_intelligence.summary.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/DecisionIntelligenceSummary"
+        },
+        "top_actions": {
+          "items": {
+            "$ref": "#/$defs/DecisionIntelligenceTopAction"
+          },
+          "title": "Top Actions",
+          "type": "array"
+        }
+      },
+      "title": "DecisionIntelligenceResponse",
+      "type": "object"
+    },
+    "DecisionsListResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "DecisionItem": {
+          "properties": {
+            "action": {
+              "title": "Action",
+              "type": "string"
+            },
+            "comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Comment"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "decision_id": {
+              "title": "Decision Id",
+              "type": "string"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "metadata": {
+              "additionalProperties": true,
+              "title": "Metadata",
+              "type": "object"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            "recommendation_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Recommendation Id"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "User Id"
+            },
+            "username": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "decision_id",
+            "created_at",
+            "action",
+            "username"
+          ],
+          "title": "DecisionItem",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/DecisionItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "title": "Offset",
+          "type": "integer"
+        },
+        "schema": {
+          "default": "genomeai.api.decisions.list.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "limit",
+        "offset"
+      ],
+      "title": "DecisionsListResponse",
+      "type": "object"
+    },
+    "EconomicsListResponse": {
+      "$defs": {
+        "EconomicsScenarioItem": {
+          "properties": {
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "description": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Description"
+            },
+            "last_economics_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Last Economics Run"
+            },
+            "name": {
+              "title": "Name",
+              "type": "string"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "scenario_id": {
+              "title": "Scenario Id",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Updated At"
+            }
+          },
+          "required": [
+            "scenario_id",
+            "name",
+            "status"
+          ],
+          "title": "EconomicsScenarioItem",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "report_items": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Report Items",
+          "type": "array"
+        },
+        "reports_total": {
+          "title": "Reports Total",
+          "type": "integer"
+        },
+        "scenario_items": {
+          "items": {
+            "$ref": "#/$defs/EconomicsScenarioItem"
+          },
+          "title": "Scenario Items",
+          "type": "array"
+        },
+        "scenarios_total": {
+          "title": "Scenarios Total",
+          "type": "integer"
+        },
+        "schema": {
+          "default": "genomeai.api.economics.list.v1",
+          "title": "Schema",
+          "type": "string"
+        }
+      },
+      "required": [
+        "scenarios_total",
+        "reports_total"
+      ],
+      "title": "EconomicsListResponse",
+      "type": "object"
+    },
+    "FeedbackListResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        },
+        "FeedbackItem": {
+          "properties": {
+            "comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Comment"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "decision": {
+              "title": "Decision",
+              "type": "string"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "feedback_id": {
+              "title": "Feedback Id",
+              "type": "string"
+            },
+            "feedback_source": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Feedback Source"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "metadata": {
+              "additionalProperties": true,
+              "title": "Metadata",
+              "type": "object"
+            },
+            "reason_code": {
+              "title": "Reason Code",
+              "type": "string"
+            },
+            "recommendation_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Recommendation Id"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "task_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Task Id"
+            }
+          },
+          "required": [
+            "feedback_id",
+            "created_at",
+            "decision",
+            "reason_code"
+          ],
+          "title": "FeedbackItem",
+          "type": "object"
+        },
+        "FeedbackMetrics": {
+          "properties": {
+            "acceptance_rate": {
+              "default": 0.0,
+              "title": "Acceptance Rate",
+              "type": "number"
+            },
+            "accepted_count": {
+              "default": 0,
+              "title": "Accepted Count",
+              "type": "integer"
+            },
+            "median_decision_seconds": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Median Decision Seconds"
+            },
+            "rejected_count": {
+              "default": 0,
+              "title": "Rejected Count",
+              "type": "integer"
+            },
+            "total_feedback": {
+              "default": 0,
+              "title": "Total Feedback",
+              "type": "integer"
+            }
+          },
+          "title": "FeedbackMetrics",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/FeedbackItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "metrics": {
+          "$ref": "#/$defs/FeedbackMetrics"
+        },
+        "offset": {
+          "title": "Offset",
+          "type": "integer"
+        },
+        "schema": {
+          "default": "genomeai.api.feedback.list.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "limit",
+        "offset"
+      ],
+      "title": "FeedbackListResponse",
+      "type": "object"
+    },
+    "PilotResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "PilotPackItem": {
+          "properties": {
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "data_version": {
+              "title": "Data Version",
+              "type": "string"
+            },
+            "file_count": {
+              "default": 0,
+              "title": "File Count",
+              "type": "integer"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "pack_id": {
+              "title": "Pack Id",
+              "type": "string"
+            },
+            "source_paths": {
+              "additionalProperties": true,
+              "title": "Source Paths",
+              "type": "object"
+            },
+            "status": {
+              "default": "ready",
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "pack_id",
+            "data_version"
+          ],
+          "title": "PilotPackItem",
+          "type": "object"
+        },
+        "PilotSummary": {
+          "properties": {
+            "latest_data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Latest Data Version"
+            },
+            "latest_pack_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Latest Pack Id"
+            },
+            "total_pilot_packs": {
+              "default": 0,
+              "title": "Total Pilot Packs",
+              "type": "integer"
+            }
+          },
+          "title": "PilotSummary",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/PilotPackItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "schema": {
+          "default": "genomeai.api.pilot.summary.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/PilotSummary"
+        }
+      },
+      "title": "PilotResponse",
+      "type": "object"
+    },
+    "PlannerResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        },
+        "PlannerPlanItem": {
+          "properties": {
+            "approval_requested_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approval Requested At"
+            },
+            "approval_requested_by_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approval Requested By Username"
+            },
+            "approved_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approved At"
+            },
+            "approved_by_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approved By Username"
+            },
+            "citation_count": {
+              "default": 0,
+              "title": "Citation Count",
+              "type": "integer"
+            },
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "item_count": {
+              "default": 0,
+              "title": "Item Count",
+              "type": "integer"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "name": {
+              "title": "Name",
+              "type": "string"
+            },
+            "plan_id": {
+              "title": "Plan Id",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "week_start": {
+              "title": "Week Start",
+              "type": "string"
+            }
+          },
+          "required": [
+            "plan_id",
+            "status",
+            "name",
+            "week_start"
+          ],
+          "title": "PlannerPlanItem",
+          "type": "object"
+        },
+        "PlannerSummary": {
+          "properties": {
+            "alerts_acknowledged": {
+              "default": 0,
+              "title": "Alerts Acknowledged",
+              "type": "integer"
+            },
+            "alerts_new": {
+              "default": 0,
+              "title": "Alerts New",
+              "type": "integer"
+            },
+            "alerts_resolved": {
+              "default": 0,
+              "title": "Alerts Resolved",
+              "type": "integer"
+            },
+            "overdue_active": {
+              "default": 0,
+              "title": "Overdue Active",
+              "type": "integer"
+            },
+            "tasks_done": {
+              "default": 0,
+              "title": "Tasks Done",
+              "type": "integer"
+            },
+            "tasks_open": {
+              "default": 0,
+              "title": "Tasks Open",
+              "type": "integer"
+            }
+          },
+          "title": "PlannerSummary",
+          "type": "object"
+        },
+        "WorklistItem": {
+          "properties": {
+            "assignee_team": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Assignee Team"
+            },
+            "attachments": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Attachments",
+              "type": "array"
+            },
+            "confidence": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Confidence"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Domain"
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Due At"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "is_overdue": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Is Overdue"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "owner_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner User Id"
+            },
+            "owner_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner Username"
+            },
+            "priority": {
+              "default": 3,
+              "title": "Priority",
+              "type": "integer"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "stage": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Stage"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "task_id": {
+              "title": "Task Id",
+              "type": "string"
+            },
+            "task_type": {
+              "title": "Task Type",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Updated At"
+            },
+            "what_to_do": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "What To Do",
+              "type": "array"
+            },
+            "why": {
+              "additionalProperties": true,
+              "title": "Why",
+              "type": "object"
+            },
+            "worklist_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Worklist Type"
+            }
+          },
+          "required": [
+            "task_id",
+            "status",
+            "task_type",
+            "title"
+          ],
+          "title": "WorklistItem",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "overdue_items": {
+          "items": {
+            "$ref": "#/$defs/WorklistItem"
+          },
+          "title": "Overdue Items",
+          "type": "array"
+        },
+        "pending_approvals": {
+          "default": 0,
+          "title": "Pending Approvals",
+          "type": "integer"
+        },
+        "schema": {
+          "default": "genomeai.api.planner.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/PlannerSummary"
+        },
+        "weekly_plans": {
+          "items": {
+            "$ref": "#/$defs/PlannerPlanItem"
+          },
+          "title": "Weekly Plans",
+          "type": "array"
+        }
+      },
+      "required": [
+        "summary"
+      ],
+      "title": "PlannerResponse",
+      "type": "object"
+    },
+    "ProfileResponse": {
+      "$defs": {
+        "AlertItem": {
+          "properties": {
+            "alert_id": {
+              "title": "Alert Id",
+              "type": "string"
+            },
+            "alert_type": {
+              "title": "Alert Type",
+              "type": "string"
+            },
+            "attachments": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Attachments",
+              "type": "array"
+            },
+            "cause": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Cause"
+            },
+            "confidence": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Confidence"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "deadline": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Deadline"
+            },
+            "entity": {
+              "$ref": "#/$defs/EntityRef"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "owner_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner User Id"
+            },
+            "owner_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner Username"
+            },
+            "severity": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Severity"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Updated At"
+            },
+            "what_to_do": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "What To Do",
+              "type": "array"
+            },
+            "why": {
+              "additionalProperties": true,
+              "title": "Why",
+              "type": "object"
+            }
+          },
+          "required": [
+            "alert_id",
+            "status",
+            "alert_type",
+            "title",
+            "entity"
+          ],
+          "title": "AlertItem",
+          "type": "object"
+        },
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "DecisionItem": {
+          "properties": {
+            "action": {
+              "title": "Action",
+              "type": "string"
+            },
+            "comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Comment"
+            },
+            "created_at": {
+              "title": "Created At",
+              "type": "string"
+            },
+            "decision_id": {
+              "title": "Decision Id",
+              "type": "string"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "metadata": {
+              "additionalProperties": true,
+              "title": "Metadata",
+              "type": "object"
+            },
+            "reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Reason"
+            },
+            "recommendation_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Recommendation Id"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "User Id"
+            },
+            "username": {
+              "title": "Username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "decision_id",
+            "created_at",
+            "action",
+            "username"
+          ],
+          "title": "DecisionItem",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        },
+        "ProfileSummary": {
+          "properties": {
+            "alerts_open": {
+              "default": 0,
+              "title": "Alerts Open",
+              "type": "integer"
+            },
+            "decisions_total": {
+              "default": 0,
+              "title": "Decisions Total",
+              "type": "integer"
+            },
+            "worklists_open": {
+              "default": 0,
+              "title": "Worklists Open",
+              "type": "integer"
+            }
+          },
+          "title": "ProfileSummary",
+          "type": "object"
+        },
+        "WorklistItem": {
+          "properties": {
+            "assignee_team": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Assignee Team"
+            },
+            "attachments": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Attachments",
+              "type": "array"
+            },
+            "confidence": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Confidence"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Domain"
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Due At"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "is_overdue": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Is Overdue"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "owner_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner User Id"
+            },
+            "owner_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner Username"
+            },
+            "priority": {
+              "default": 3,
+              "title": "Priority",
+              "type": "integer"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "stage": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Stage"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "task_id": {
+              "title": "Task Id",
+              "type": "string"
+            },
+            "task_type": {
+              "title": "Task Type",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Updated At"
+            },
+            "what_to_do": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "What To Do",
+              "type": "array"
+            },
+            "why": {
+              "additionalProperties": true,
+              "title": "Why",
+              "type": "object"
+            },
+            "worklist_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Worklist Type"
+            }
+          },
+          "required": [
+            "task_id",
+            "status",
+            "task_type",
+            "title"
+          ],
+          "title": "WorklistItem",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "alerts": {
+          "items": {
+            "$ref": "#/$defs/AlertItem"
+          },
+          "title": "Alerts",
+          "type": "array"
+        },
+        "decisions": {
+          "items": {
+            "$ref": "#/$defs/DecisionItem"
+          },
+          "title": "Decisions",
+          "type": "array"
+        },
+        "entity": {
+          "$ref": "#/$defs/EntityRef"
+        },
+        "schema": {
+          "default": "genomeai.api.profile.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "summary": {
+          "$ref": "#/$defs/ProfileSummary"
+        },
+        "worklists": {
+          "items": {
+            "$ref": "#/$defs/WorklistItem"
+          },
+          "title": "Worklists",
+          "type": "array"
+        }
+      },
+      "required": [
+        "entity",
+        "summary"
+      ],
+      "title": "ProfileResponse",
+      "type": "object"
+    },
+    "ReadinessResponse": {
+      "$defs": {
+        "ReadinessCheck": {
+          "properties": {
+            "check_id": {
+              "title": "Check Id",
+              "type": "string"
+            },
+            "message": {
+              "title": "Message",
+              "type": "string"
+            },
+            "severity": {
+              "default": "info",
+              "title": "Severity",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "check_id",
+            "status",
+            "message"
+          ],
+          "title": "ReadinessCheck",
+          "type": "object"
+        },
+        "ReadinessSummary": {
+          "properties": {
+            "checks_total": {
+              "default": 0,
+              "title": "Checks Total",
+              "type": "integer"
+            },
+            "failed": {
+              "default": 0,
+              "title": "Failed",
+              "type": "integer"
+            },
+            "overall_status": {
+              "default": "unknown",
+              "title": "Overall Status",
+              "type": "string"
+            },
+            "passed": {
+              "default": 0,
+              "title": "Passed",
+              "type": "integer"
+            },
+            "warnings": {
+              "default": 0,
+              "title": "Warnings",
+              "type": "integer"
+            }
+          },
+          "title": "ReadinessSummary",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/ReadinessCheck"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "profile": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Profile"
+        },
+        "schema": {
+          "default": "genomeai.api.readiness.summary.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "source_paths": {
+          "additionalProperties": true,
+          "title": "Source Paths",
+          "type": "object"
+        },
+        "summary": {
+          "$ref": "#/$defs/ReadinessSummary"
+        }
+      },
+      "title": "ReadinessResponse",
+      "type": "object"
+    },
+    "ReportsListResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "ReportItem": {
+          "properties": {
+            "approved_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approved At"
+            },
+            "approved_by_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Approved By Username"
+            },
+            "comment": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Comment"
+            },
+            "data_version": {
+              "title": "Data Version",
+              "type": "string"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "report_version": {
+              "title": "Report Version",
+              "type": "string"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "data_version",
+            "report_version",
+            "status"
+          ],
+          "title": "ReportItem",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/ReportItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "schema": {
+          "default": "genomeai.api.reports.list.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total"
+      ],
+      "title": "ReportsListResponse",
+      "type": "object"
+    },
+    "SupportResponse": {
+      "$defs": {
+        "SupportSummary": {
+          "properties": {
+            "critical_open_incidents": {
+              "default": 0,
+              "title": "Critical Open Incidents",
+              "type": "integer"
+            },
+            "diagnostics_available": {
+              "default": 0,
+              "title": "Diagnostics Available",
+              "type": "integer"
+            },
+            "open_incidents": {
+              "default": 0,
+              "title": "Open Incidents",
+              "type": "integer"
+            },
+            "open_support_cases": {
+              "default": 0,
+              "title": "Open Support Cases",
+              "type": "integer"
+            },
+            "release_notes_total": {
+              "default": 0,
+              "title": "Release Notes Total",
+              "type": "integer"
+            },
+            "support_bundle_count": {
+              "default": 0,
+              "title": "Support Bundle Count",
+              "type": "integer"
+            }
+          },
+          "title": "SupportSummary",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "observability": {
+          "additionalProperties": true,
+          "title": "Observability",
+          "type": "object"
+        },
+        "release": {
+          "additionalProperties": true,
+          "title": "Release",
+          "type": "object"
+        },
+        "schema": {
+          "default": "genomeai.api.support.summary.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "source_paths": {
+          "additionalProperties": true,
+          "title": "Source Paths",
+          "type": "object"
+        },
+        "summary": {
+          "$ref": "#/$defs/SupportSummary"
+        }
+      },
+      "title": "SupportResponse",
+      "type": "object"
+    },
+    "WorklistsListResponse": {
+      "$defs": {
+        "ApiLinkage": {
+          "properties": {
+            "data_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Data Version"
+            },
+            "model_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Model Version"
+            },
+            "qc_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Qc Run"
+            },
+            "report_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Report Version"
+            },
+            "request_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Request Id"
+            },
+            "scoring_run": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Scoring Run"
+            }
+          },
+          "title": "ApiLinkage",
+          "type": "object"
+        },
+        "EntityRef": {
+          "properties": {
+            "farm_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Farm Id"
+            },
+            "group_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Group Id"
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Label"
+            },
+            "object_id": {
+              "title": "Object Id",
+              "type": "string"
+            },
+            "object_type": {
+              "title": "Object Type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "object_type",
+            "object_id"
+          ],
+          "title": "EntityRef",
+          "type": "object"
+        },
+        "WorklistItem": {
+          "properties": {
+            "assignee_team": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Assignee Team"
+            },
+            "attachments": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "Attachments",
+              "type": "array"
+            },
+            "confidence": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Confidence"
+            },
+            "created_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Created At"
+            },
+            "domain": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Domain"
+            },
+            "due_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Due At"
+            },
+            "entity": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/EntityRef"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "is_overdue": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Is Overdue"
+            },
+            "linkage": {
+              "$ref": "#/$defs/ApiLinkage"
+            },
+            "owner_user_id": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner User Id"
+            },
+            "owner_username": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Owner Username"
+            },
+            "priority": {
+              "default": 3,
+              "title": "Priority",
+              "type": "integer"
+            },
+            "related_alert": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Related Alert"
+            },
+            "stage": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Stage"
+            },
+            "status": {
+              "title": "Status",
+              "type": "string"
+            },
+            "task_id": {
+              "title": "Task Id",
+              "type": "string"
+            },
+            "task_type": {
+              "title": "Task Type",
+              "type": "string"
+            },
+            "title": {
+              "title": "Title",
+              "type": "string"
+            },
+            "updated_at": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Updated At"
+            },
+            "what_to_do": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "title": "What To Do",
+              "type": "array"
+            },
+            "why": {
+              "additionalProperties": true,
+              "title": "Why",
+              "type": "object"
+            },
+            "worklist_type": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Worklist Type"
+            }
+          },
+          "required": [
+            "task_id",
+            "status",
+            "task_type",
+            "title"
+          ],
+          "title": "WorklistItem",
+          "type": "object"
+        }
+      },
+      "properties": {
+        "items": {
+          "items": {
+            "$ref": "#/$defs/WorklistItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "offset": {
+          "title": "Offset",
+          "type": "integer"
+        },
+        "schema": {
+          "default": "genomeai.api.worklists.list.v1",
+          "title": "Schema",
+          "type": "string"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "limit",
+        "offset"
+      ],
+      "title": "WorklistsListResponse",
+      "type": "object"
+    }
+  },
+  "path_prefix": "/api/app/v1",
+  "version": "1.0.0"
+}

@@ -1,0 +1,281 @@
+name: genomeai-adult
+
+x-python-service: &python-service
+  build:
+    context: ../..
+    dockerfile: deploy/adult/docker/python-service.Dockerfile
+  init: true
+  restart: unless-stopped
+  env_file:
+    - ./env/runtime.env
+  environment:
+    PYTHONUNBUFFERED: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
+    GENOMEAI_PROJECT_ROOT: /app
+    GENOMEAI_ARTIFACTS_ROOT: /runtime/artifacts
+    GENOMEAI_WEB_STORAGE: /runtime/web_storage
+    GENOMEAI_WEB_DISABLE_WORKER: "1"
+    GENOMEAI_RUNTIME_STORAGE_BACKEND: ${GENOMEAI_RUNTIME_STORAGE_BACKEND:-postgres}
+    GENOMEAI_JOB_QUEUE_BACKEND: ${GENOMEAI_JOB_QUEUE_BACKEND:-redis}
+    GENOMEAI_REDIS_DSN: ${GENOMEAI_REDIS_DSN:-redis://redis:6379/0}
+    GENOMEAI_RUNTIME_POSTGRES_DSN_FILE: ${GENOMEAI_RUNTIME_POSTGRES_DSN_FILE:-/run/secrets/postgres_runtime_dsn}
+    GENOMEAI_AUTH_ACCESS_TTL_SEC: ${GENOMEAI_AUTH_ACCESS_TTL_SEC:-900}
+    GENOMEAI_AUTH_REFRESH_TTL_SEC: ${GENOMEAI_AUTH_REFRESH_TTL_SEC:-2592000}
+    GENOMEAI_INTERNAL_SERVICE_TOKEN_FILE: ${GENOMEAI_INTERNAL_SERVICE_TOKEN_FILE:-/run/secrets/internal_service_token}
+    GENOMEAI_AUTH_SIGNING_KEY_FILE: ${GENOMEAI_AUTH_SIGNING_KEY_FILE:-/run/secrets/auth_signing_key}
+    GENOMEAI_AUTH_REFRESH_HMAC_KEY_FILE: ${GENOMEAI_AUTH_REFRESH_HMAC_KEY_FILE:-/run/secrets/auth_refresh_hmac_key}
+  volumes:
+    - runtime_artifacts:/runtime/artifacts
+    - runtime_web_storage:/runtime/web_storage
+    - runtime_logs:/runtime/logs
+    - ./secrets:/run/secrets:ro
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    artifact-storage:
+      condition: service_healthy
+
+services:
+  reverse-proxy:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      web-frontend:
+        condition: service_started
+      backend-api:
+        condition: service_healthy
+    ports:
+      - "${GENOMEAI_HTTP_PORT:-80}:80"
+      - "${GENOMEAI_HTTPS_PORT:-443}:443"
+    networks:
+      - edge_net
+      - app_net
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./security/security_headers.conf:/etc/nginx/security/security_headers.conf:ro
+      - runtime_logs:/var/log/genomeai
+      - tls_certs:/etc/nginx/tls
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/healthz >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  web-frontend:
+    build:
+      context: ../..
+      dockerfile: deploy/adult/docker/web-app.Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./env/runtime.env
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      GENOMEAI_WEB_BASE_URL: ${GENOMEAI_WEB_BASE_URL:-http://reverse-proxy}
+      GENOMEAI_API_BASE_URL: ${GENOMEAI_API_BASE_URL:-http://backend-api:8000}
+      GENOMEAI_BACKEND_PROXY_BASE_PATH: /api/backend
+      GENOMEAI_INTERNAL_SERVICE_TOKEN_FILE: ${GENOMEAI_INTERNAL_SERVICE_TOKEN_FILE:-/run/secrets/internal_service_token}
+    networks:
+      - app_net
+    volumes:
+      - ./secrets:/run/secrets:ro
+    depends_on:
+      backend-api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/healthz >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  backend-api:
+    <<: *python-service
+    command: ["sh", "/app/deploy/adult/ops/run_with_runtime_secrets.sh", "/app/deploy/adult/ops/service_api.sh"]
+    networks:
+      - app_net
+      - data_net
+      - ops_net
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3).status == 200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    <<: *python-service
+    command: ["sh", "/app/deploy/adult/ops/run_with_runtime_secrets.sh", "python", "/app/scripts/service_worker.py"]
+    networks:
+      - data_net
+      - ops_net
+    healthcheck:
+      test: ["CMD-SHELL", "python /app/scripts/check_heartbeat.py /tmp/genomeai-worker-heartbeat.json 120"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  scheduler:
+    <<: *python-service
+    command: ["sh", "/app/deploy/adult/ops/run_with_runtime_secrets.sh", "python", "/app/scripts/service_scheduler.py"]
+    networks:
+      - data_net
+      - ops_net
+    healthcheck:
+      test: ["CMD-SHELL", "python /app/scripts/check_heartbeat.py /tmp/genomeai-scheduler-heartbeat.json 180"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-genomeai}
+      POSTGRES_USER: ${POSTGRES_USER:-genomeai}
+      POSTGRES_PASSWORD_FILE: ${POSTGRES_PASSWORD_FILE:-/run/secrets/postgres_password}
+    networks:
+      - data_net
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./secrets:/run/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-genomeai} -d ${POSTGRES_DB:-genomeai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        REDIS_PASSWORD="${REDIS_PASSWORD:-}"
+        if [ -n "${REDIS_PASSWORD_FILE:-}" ] && [ -f "${REDIS_PASSWORD_FILE}" ]; then
+          REDIS_PASSWORD="$(tr -d '\r\n' < "${REDIS_PASSWORD_FILE}")"
+        fi
+        if [ -n "${REDIS_PASSWORD}" ]; then
+          exec redis-server --appendonly yes --save 60 1000 --requirepass "${REDIS_PASSWORD}"
+        fi
+        exec redis-server --appendonly yes --save 60 1000
+    environment:
+      REDIS_PASSWORD_FILE: ${REDIS_PASSWORD_FILE:-/run/secrets/redis_password}
+    networks:
+      - data_net
+    volumes:
+      - redis_data:/data
+      - ./secrets:/run/secrets:ro
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  artifact-storage:
+    image: quay.io/minio/minio:RELEASE.2025-02-03T21-03-04Z
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+      - -lc
+      - |
+        MINIO_ROOT_USER_RUNTIME="${MINIO_ROOT_USER:-genomeai}"
+        MINIO_ROOT_PASSWORD_RUNTIME="${MINIO_ROOT_PASSWORD:-}"
+        if [ -n "${MINIO_ROOT_USER_FILE:-}" ] && [ -f "${MINIO_ROOT_USER_FILE}" ]; then
+          MINIO_ROOT_USER_RUNTIME="$(tr -d '\r\n' < "${MINIO_ROOT_USER_FILE}")"
+        fi
+        if [ -n "${MINIO_ROOT_PASSWORD_FILE:-}" ] && [ -f "${MINIO_ROOT_PASSWORD_FILE}" ]; then
+          MINIO_ROOT_PASSWORD_RUNTIME="$(tr -d '\r\n' < "${MINIO_ROOT_PASSWORD_FILE}")"
+        fi
+        export MINIO_ROOT_USER="${MINIO_ROOT_USER_RUNTIME}"
+        export MINIO_ROOT_PASSWORD="${MINIO_ROOT_PASSWORD_RUNTIME:-genomeai-change-me}"
+        exec minio server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER_FILE: ${MINIO_ROOT_USER_FILE:-/run/secrets/minio_root_user}
+      MINIO_ROOT_PASSWORD_FILE: ${MINIO_ROOT_PASSWORD_FILE:-/run/secrets/minio_root_password}
+    networks:
+      - data_net
+    volumes:
+      - minio_data:/data
+      - ./secrets:/run/secrets:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:9000/minio/health/live >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  artifact-storage-bootstrap:
+    image: quay.io/minio/mc:RELEASE.2025-02-08T19-14-21Z
+    restart: "no"
+    depends_on:
+      artifact-storage:
+        condition: service_healthy
+    networks:
+      - data_net
+    entrypoint:
+      - /bin/sh
+      - -lc
+      - |
+        MINIO_ROOT_USER_RUNTIME="${MINIO_ROOT_USER:-genomeai}"
+        MINIO_ROOT_PASSWORD_RUNTIME="${MINIO_ROOT_PASSWORD:-genomeai-change-me}"
+        if [ -n "${MINIO_ROOT_USER_FILE:-}" ] && [ -f "${MINIO_ROOT_USER_FILE}" ]; then
+          MINIO_ROOT_USER_RUNTIME="$(tr -d '\r\n' < "${MINIO_ROOT_USER_FILE}")"
+        fi
+        if [ -n "${MINIO_ROOT_PASSWORD_FILE:-}" ] && [ -f "${MINIO_ROOT_PASSWORD_FILE}" ]; then
+          MINIO_ROOT_PASSWORD_RUNTIME="$(tr -d '\r\n' < "${MINIO_ROOT_PASSWORD_FILE}")"
+        fi
+        mc alias set genomeai http://artifact-storage:9000 ${MINIO_ROOT_USER_RUNTIME} ${MINIO_ROOT_PASSWORD_RUNTIME}
+        mc mb --ignore-existing genomeai/${MINIO_BUCKET_ARTIFACTS:-genomeai-artifacts}
+        mc anonymous set private genomeai/${MINIO_BUCKET_ARTIFACTS:-genomeai-artifacts}
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    restart: unless-stopped
+    depends_on:
+      backend-api:
+        condition: service_healthy
+      reverse-proxy:
+        condition: service_healthy
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    networks:
+      - ops_net
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:9090/-/healthy >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+networks:
+  edge_net:
+  app_net:
+    internal: true
+  data_net:
+    internal: true
+  ops_net:
+    internal: true
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  prometheus_data:
+  runtime_artifacts:
+  runtime_web_storage:
+  runtime_logs:
+  tls_certs:

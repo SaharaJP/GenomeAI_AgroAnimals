@@ -1,0 +1,2 @@
+tenant_id,report_id,farm_id,report_date,report_type,data_version,run_id,storage_path
+default,RP_001,FARM_001,2025-03-12,weekly_ops,dv_demo,run_001,artifacts/dv_demo/reports/run_001/report.docx

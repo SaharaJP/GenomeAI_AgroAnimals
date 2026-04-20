@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Задача</h2>
+
+<div class="card">
+  <div><strong>{{ task.title }}</strong></div>
+  <div class="muted">{{ task.task_type }} · {{ task.task_id }}</div>
+  <div style="margin-top:8px;" class="row">
+    <div><span class="pill">status={{ task.status }}</span></div>
+    <div class="muted">priority={{ task.priority }}</div>
+    <div class="muted">stage={{ task.stage }}</div>
+    <div class="muted">due={{ task.due_at or '' }}</div>
+  </div>
+  <div style="margin-top:8px;" class="muted">object: {{ task.object_type or '' }} / {{ task.object_id or '' }} · alert={{ task.related_alert or '' }}</div>
+</div>
+
+{% if playbook %}
+<div class="card">
+  <h3>Рекомендуемый план действий (playbook)</h3>
+  <div class="muted">{{ playbook.playbook_key }} · farm_id={{ playbook.farm_id or '' }} · version={{ playbook.version_id }}</div>
+  <p><strong>{{ playbook.name }}</strong></p>
+  {% if playbook.description %}<p class="muted">{{ playbook.description }}</p>{% endif %}
+  <pre>{{ playbook.steps | tojson(indent=2) }}</pre>
+</div>
+{% else %}
+<div class="card"><div class="muted">Плейбук не найден для task_type={{ task.task_type }}</div></div>
+{% endif %}
+
+{% endblock %}

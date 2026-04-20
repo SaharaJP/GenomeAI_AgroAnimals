@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHONPATH="$ROOT/src:$ROOT" python "$ROOT/scripts/smoke_t30_03_demo_farm.py" \
+  --dataset-dir "$ROOT/data/demo/demo_farm_v1" \
+  --report-root "$ROOT/artifacts/_ci/demo_farm_v1"

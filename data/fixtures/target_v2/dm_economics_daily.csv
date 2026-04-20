@@ -1,0 +1,3 @@
+tenant_id,record_id,farm_id,date,milk_price_per_kg,milk_price_ccy,feed_cost_per_kg_dm,feed_cost_ccy,other_cost_eur
+default,EC_001,FARM_001,2025-01-05,0.52,EUR,0.29,EUR,120.0
+default,EC_002,FARM_001,2025-01-10,0.52,EUR,0.29,EUR,120.0

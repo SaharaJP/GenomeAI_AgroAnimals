@@ -1,0 +1,4 @@
+tenant_id,treatment_id,animal_id,start_date,end_date,treatment_type,reason_event_id,withdrawal_end_date
+default,TR_001,DEMO_COW_1002,2025-04-04,2025-04-08,protocol_metritis,HE_001,2025-04-12
+default,TR_002,DEMO_COW_2002,2025-04-03,2025-04-10,pain_relief,HE_002,2025-04-05
+default,TR_003,DEMO_COW_3002,2025-04-02,2025-04-06,mastitis_protocol,HE_003,2025-04-15

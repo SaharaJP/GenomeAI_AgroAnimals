@@ -1,0 +1,121 @@
+version: 3
+terms:
+- key: data_version
+  title: data_version
+  short: Версия входных данных (снимок), по которой строятся витрины и расчёты.
+  details: Ключ в artifacts/<data_version>/...; должен совпадать во всех связанных
+    артефактах.
+- key: qc_run
+  title: qc_run
+  short: ID прогона контроля качества данных (QC) для data_version.
+  details: Фиксируется при выполнении genomeai qc. Используется для трассировки проблем
+    качества.
+- key: model_version
+  title: model_version
+  short: Версия обученной ML-модели (артефакт обучения).
+  details: Создаётся при genomeai train; используется при скоринге и в отчётах.
+- key: scoring_run
+  title: scoring_run
+  short: ID прогона скоринга (применение модели к данным).
+  details: Создаётся при genomeai score; связывает risk outputs с model_version и
+    data_version.
+- key: report_version
+  title: report_version
+  short: Версия сформированного отчёта (PDF/XLSX/JSON).
+  details: Создаётся при genomeai report; должна быть воспроизводима из фактов/таблиц.
+- key: decision_log
+  title: Журнал решений
+  short: 'Журнал решений: кто, когда и почему подтвердил рекомендацию/закрыл алерт.'
+  details: Критические действия фиксируются с user_id, run_id, data_version и полями
+    до/после.
+- key: pr_auc
+  title: PR-AUC
+  short: Площадь под PR-кривой (Precision-Recall). Устойчива к дисбалансу классов.
+  details: Основная метрика качества для редких событий (например, мастит).
+- key: recall_at_k
+  title: Recall@K
+  short: Доля найденных позитивов среди топ-K объектов по риску.
+  details: Используется для выбора бизнес-порога алертов (K = ограничение по ресурсу
+    специалистов).
+- key: mastitis_risk
+  title: Mastitis Risk
+  short: Риск мастита на горизонте N дней для коровы.
+  details: Скор модели. Используется для алертов, списка приоритетов и рекомендаций.
+- key: confidence
+  title: confidence
+  short: Уверенность системы в выводе (0..1) на основе качества данных/модели.
+  details: Должна считаться из метрик/фактов и иметь fallback без LLM.
+
+# --- KPI (часто используемые) ---
+- key: milk_total_kg_1d
+  title: Total milk, 1d
+  short: Суммарный надой молока за последние 1 сутки (кг) по выбранному срезу.
+  details: Источник dm_milkings_daily.milk_kg; обновление daily; агрегация по ферме/сайт/группам.
+- key: milk_total_kg_7d
+  title: Total milk, 7d
+  short: Суммарный надой молока за 7 дней (кг).
+  details: Окно 7 дней; удобно для сглаживания дневной сезонности.
+- key: milk_avg_kg_per_cow_1d
+  title: Avg milk per cow, 1d
+  short: Средний надой на корову в сутки (кг/корова/день).
+  details: Считается по активным животным (status=active) в dm_animals.
+- key: fat_pct_avg_7d
+  title: Average fat %, 7d
+  short: Средняя жирность молока за 7 дней (%).
+  details: Контроль качества рациона/здоровья; источник dm_milkings_daily.fat_pct.
+- key: protein_pct_avg_7d
+  title: Average protein %, 7d
+  short: Средний белок в молоке за 7 дней (%).
+  details: Источник dm_milkings_daily.protein_pct.
+- key: scc_avg_7d
+  title: Somatic cell count, avg 7d
+  short: Среднее количество соматических клеток (SCC) за 7 дней.
+  details: Маркер здоровья вымени; рост SCC повышает риск мастита и штрафы по качеству.
+- key: mastitis_events_30d
+  title: Mastitis events, 30d
+  short: Количество зарегистрированных событий мастита за 30 дней.
+  details: Источник dm_health_events / health_events; зависит от кодов заболеваний и маппинга.
+- key: health_events_30d
+  title: Health events, 30d
+  short: Количество медицинских/ветеринарных событий за 30 дней.
+  details: Используется как общий индикатор нагрузки на ветслужбу и здоровья стада.
+- key: activity_avg_7d
+  title: Activity, avg 7d
+  short: Средняя активность за 7 дней (по данным сенсоров).
+  details: Снижение может указывать на болезнь/стресс; рост — на охоту.
+- key: rumination_avg_7d
+  title: Rumination, avg 7d
+  short: Средняя руминация за 7 дней (мин/день или условные единицы).
+  details: Важный предиктор проблем ЖКТ/рациона.
+- key: inseminations_30d
+  title: Inseminations, 30d
+  short: Количество осеменений за 30 дней.
+  details: Операционная метрика воспроизводства; интерпретировать вместе с pregnancy_positive_90d.
+- key: pregnancy_positive_90d
+  title: Pregnancy positive, 90d
+  short: Количество подтверждённых беременностей за 90 дней.
+  details: Используется для оценки эффективности репродукции на горизонте квартала.
+- key: feed_dm_kg_per_cow_7d
+  title: Feed DM per cow, 7d
+  short: Сухое вещество кормов на корову за 7 дней (кг СВ/корова).
+  details: Нормировать на активное стадо; используется в экономике и эффективности.
+- key: milk_revenue_rub_7d
+  title: Milk revenue, 7d
+  short: Выручка от молока за 7 дней (RUB).
+  details: Экономический KPI; зависит от цены молока и объёма надоя.
+- key: feed_cost_rub_7d
+  title: Feed cost, 7d
+  short: Стоимость кормов за 7 дней (RUB).
+  details: Входит в маржинальность; источники dm_feed_* и справочники цен.
+- key: margin_rub_7d
+  title: Margin, 7d
+  short: Маржа за 7 дней (RUB) = выручка − затраты.
+  details: Упрощённая экономика для контроля трендов.
+- key: alerts_open_count
+  title: Alerts open count
+  short: Количество активных (не закрытых) алертов.
+  details: Берётся из web.db/alerts_v2; отражает операционную нагрузку.
+- key: decisions_accept_rate_90d
+  title: Доля принятых решений за 90 дней
+  short: Доля подтверждённых рекомендаций за 90 дней.
+  details: Строится из журнала решений; показывает доверие к рекомендациям и дисциплину исполнения.

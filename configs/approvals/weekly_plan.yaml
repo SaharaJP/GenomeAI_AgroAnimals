@@ -1,0 +1,9 @@
+weekly_plan_v1:
+  # Default task type used when action item does not provide task_type.
+  default_task_type: "weekly_plan.action"
+  # Default priority for auto-created tasks (1=highest .. 5=lowest)
+  default_priority: 3
+  # Default domain for auto-created tasks (health/repro/data/qc/econ)
+  default_domain: "data"
+  # Max number of auto-created tasks per approval.
+  max_tasks_per_approval: 50

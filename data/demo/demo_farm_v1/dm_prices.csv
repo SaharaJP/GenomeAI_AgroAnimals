@@ -1,0 +1,4 @@
+tenant_id,price_id,item_type,item_name,currency,unit,valid_from,valid_to,value
+default,PR_001,milk,raw_milk,EUR,kg,2025-04-01,2025-04-30,0.53
+default,PR_002,feed,tMR,EUR,kg_dm,2025-04-01,2025-04-30,0.31
+default,PR_003,service,vet_visit,EUR,visit,2025-04-01,2025-04-30,45.0

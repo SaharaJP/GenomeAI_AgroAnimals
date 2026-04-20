@@ -1,0 +1,13 @@
+dataset: repro_events
+columns:
+  СобытиеID: repro_event_id
+  НомерЖивотного: animal_id
+  Ферма: farm_id
+  ЛактацияID: lactation_id
+  ДатаСобытия: event_date
+  ТипСобытия: event_type
+  Результат: result
+  Бык: bull_id
+  Техник: technician
+  Метод: method
+  Комментарий: notes

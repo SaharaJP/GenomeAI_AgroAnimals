@@ -1,0 +1,26 @@
+[
+  {
+    "action": "verify_refactor.report_seeded",
+    "action_group": "verify",
+    "data_version": "dv_refactor_standard",
+    "object_id": "report_refactor_standard",
+    "object_type": "report",
+    "role": "admin",
+    "run_id": "report_refactor_standard",
+    "status": "OK",
+    "tenant_id": "default",
+    "username": "admin"
+  },
+  {
+    "action": "verify_refactor.task_seeded",
+    "action_group": "verify",
+    "data_version": "dv_refactor_standard",
+    "object_id": "<task_id>",
+    "object_type": "task",
+    "role": "admin",
+    "run_id": "score_refactor_standard",
+    "status": "OK",
+    "tenant_id": "default",
+    "username": "admin"
+  }
+]

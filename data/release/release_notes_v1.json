@@ -1,0 +1,31 @@
+{
+  "schema": "genomeai.release_notes.v1",
+  "version": 1,
+  "summary": "Starter release notes record for governed customer upgrades. Use this file to link change summary, diagnostics and known issues to repeatable upgrade checks.",
+  "notes": [
+    {
+      "note_id": "rn_upgrade_baseline_v1",
+      "title": "Upgrade discipline baseline",
+      "change_summary": [
+        "Release metadata and startup bundle remain version-linked.",
+        "Upgrade path requires support bundle, backup preview, restore drill and post-upgrade smoke.",
+        "Customer upgrade reports remain diagnostics-first and do not imply rollout safety without evidence."
+      ],
+      "known_issues": [
+        "Legacy web_cabinet import warnings may still appear in dev/test logs.",
+        "Operational rollout and competitive acceptance diagnostics may be absent in fresh environments until their gates are run."
+      ],
+      "diagnostics_refs": [
+        "release",
+        "restore_diagnostics",
+        "operational_rollout_gates",
+        "competitive_acceptance"
+      ],
+      "upgrade_notes": [
+        "Run support bundle and pre-upgrade backup before touching the customer environment.",
+        "Use restore drill proof as rollback-readiness evidence.",
+        "Use release package smoke to confirm packaged build integrity."
+      ]
+    }
+  ]
+}

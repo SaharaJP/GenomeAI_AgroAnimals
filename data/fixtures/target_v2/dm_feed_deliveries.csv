@@ -1,0 +1,3 @@
+tenant_id,delivery_id,ration_id,pen_id,delivery_date,feed_kg_as_fed
+default,FD_001,RAT_001,PEN_01,2025-01-05,3500.0
+default,FD_002,RAT_001,PEN_01,2025-01-10,3200.0

@@ -1,0 +1,24 @@
+{
+  "name": "GenomeAI AgroAnimals",
+  "short_name": "GenomeAI",
+  "description": "Mobile-first legacy artifact note retained for compatibility; active cowside app is mobile_android.",
+  "display": "standalone",
+  "start_url": "/?mobile=1",
+  "scope": "/",
+  "background_color": "#ffffff",
+  "theme_color": "#0f766e",
+  "icons": [
+    {
+      "src": "/static/pwa/icon-any.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/pwa/icon-maskable.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,1735 @@
+{
+  "version": 1,
+  "cli": {
+    "commands": [
+      {
+        "command": "artifact-archive",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--db-path",
+          "--family",
+          "--help",
+          "--out",
+          "--project-root",
+          "--scope",
+          "--tmp-root",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "artifact-cleanup",
+        "options": [
+          "--apply",
+          "--artifacts",
+          "--config",
+          "--db-path",
+          "--help",
+          "--include-data-versions",
+          "--project-root",
+          "--tmp-root",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "backup",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--db-path",
+          "--help",
+          "--out",
+          "--project-root",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "backup-cleanup",
+        "options": [
+          "--apply",
+          "--artifacts",
+          "--config",
+          "--db-path",
+          "--help",
+          "--include-data-versions",
+          "--project-root",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "connectors",
+        "options": [
+          "--help",
+          "-h"
+        ]
+      },
+      {
+        "command": "connectors cleanup",
+        "options": [
+          "--configs-dir",
+          "--dry-run",
+          "--help",
+          "-h"
+        ]
+      },
+      {
+        "command": "connectors run",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--connector-run-id",
+          "--datasets",
+          "--force",
+          "--help",
+          "--project-root",
+          "--retry-attempt-no",
+          "--retry-parent-run-id",
+          "--scheduled-slot",
+          "--tenant-id",
+          "--trigger",
+          "--user-id",
+          "--username",
+          "-h"
+        ]
+      },
+      {
+        "command": "connectors schedule",
+        "options": [
+          "--at",
+          "--configs-dir",
+          "--help",
+          "--tenant-id",
+          "--user-id",
+          "--username",
+          "-h"
+        ]
+      },
+      {
+        "command": "connectors validate",
+        "options": [
+          "--config",
+          "--help",
+          "--project-root",
+          "-h"
+        ]
+      },
+      {
+        "command": "contracts-catalog",
+        "options": [
+          "--catalog",
+          "--contracts",
+          "--help",
+          "--markdown-output",
+          "--output",
+          "-h"
+        ]
+      },
+      {
+        "command": "dashboard",
+        "options": [
+          "--artifacts",
+          "--asof-date",
+          "--data-version",
+          "--help",
+          "--input-dir",
+          "--kpi-run-id",
+          "--run-id",
+          "-h"
+        ]
+      },
+      {
+        "command": "dashboard-report",
+        "options": [
+          "--artifacts",
+          "--dashboard-kind",
+          "--dashboard-run-id",
+          "--data-version",
+          "--help",
+          "--notes",
+          "--report-version",
+          "-h"
+        ]
+      },
+      {
+        "command": "decision",
+        "options": [
+          "--help",
+          "-h"
+        ]
+      },
+      {
+        "command": "decision add",
+        "options": [
+          "--animal-id",
+          "--artifacts",
+          "--comment",
+          "--data-version",
+          "--decision",
+          "--farm-id",
+          "--help",
+          "--lactation-id",
+          "--lactation-no",
+          "--recommendation-type",
+          "--scoring-run",
+          "--user",
+          "-h"
+        ]
+      },
+      {
+        "command": "decision init",
+        "options": [
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--no-template",
+          "--scoring-run",
+          "--user",
+          "-h"
+        ]
+      },
+      {
+        "command": "economics",
+        "options": [
+          "--artifacts",
+          "--cfg",
+          "--data-version",
+          "--date-from",
+          "--date-to",
+          "--economics-run",
+          "--feed-cost-multiplier",
+          "--help",
+          "--input-dir",
+          "--milk-price-multiplier",
+          "--other-cost-multiplier",
+          "--tenant-id",
+          "-h"
+        ]
+      },
+      {
+        "command": "economics-v2",
+        "options": [
+          "--artifacts",
+          "--assumptions-version",
+          "--cfg",
+          "--data-version",
+          "--date-from",
+          "--date-to",
+          "--economics-run",
+          "--help",
+          "--input-dir",
+          "--price-version",
+          "--refdata-db",
+          "--tenant-id",
+          "-h"
+        ]
+      },
+      {
+        "command": "import-pack",
+        "options": [
+          "--artifacts",
+          "--force",
+          "--help",
+          "--no-verify",
+          "--pack-zip",
+          "-h"
+        ]
+      },
+      {
+        "command": "ingest",
+        "options": [
+          "--artifacts",
+          "--contracts",
+          "--dataset",
+          "--file",
+          "--help",
+          "--mapping",
+          "--out-version",
+          "-h"
+        ]
+      },
+      {
+        "command": "init-run",
+        "options": [
+          "--artifacts",
+          "--help",
+          "--run-id",
+          "-h"
+        ]
+      },
+      {
+        "command": "kpi",
+        "options": [
+          "--artifacts",
+          "--asof-date",
+          "--config-kpi",
+          "--config-thresholds",
+          "--data-version",
+          "--help",
+          "--input-dir",
+          "--run-id",
+          "-h"
+        ]
+      },
+      {
+        "command": "marts-ts",
+        "options": [
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--input-dir",
+          "--marts-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "master-id",
+        "options": [
+          "--help",
+          "-h"
+        ]
+      },
+      {
+        "command": "master-id merge",
+        "options": [
+          "--actor",
+          "--artifacts",
+          "--data-version",
+          "--from-master",
+          "--help",
+          "--into-master",
+          "--reason",
+          "--rules",
+          "--run-id",
+          "--tenant",
+          "-h"
+        ]
+      },
+      {
+        "command": "master-id resolve",
+        "options": [
+          "--actor",
+          "--artifacts",
+          "--birth-date",
+          "--breed",
+          "--calving-date",
+          "--dam-animal-id",
+          "--data-version",
+          "--ear-tag-id",
+          "--farm-id",
+          "--help",
+          "--required-by-source",
+          "--rules",
+          "--run-id",
+          "--sex",
+          "--source-id",
+          "--source-system",
+          "--status",
+          "--tenant",
+          "-h"
+        ]
+      },
+      {
+        "command": "master-id split",
+        "options": [
+          "--actor",
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--master",
+          "--move-alias",
+          "--new-master",
+          "--reason",
+          "--rules",
+          "--run-id",
+          "--tenant",
+          "-h"
+        ]
+      },
+      {
+        "command": "mating-plan",
+        "options": [
+          "--artifacts",
+          "--cfg",
+          "--data-version",
+          "--help",
+          "--mating-plan-run",
+          "--pedigree-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "pack",
+        "options": [
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--model-version",
+          "--pack-id",
+          "--qc-run",
+          "--report-version",
+          "--scoring-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "pedigree",
+        "options": [
+          "--artifacts",
+          "--cfg",
+          "--data-version",
+          "--generations",
+          "--help",
+          "--pedigree-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "perf-gates",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--gate",
+          "--golden",
+          "--help",
+          "--profile",
+          "--project-root",
+          "--report-root",
+          "-h"
+        ]
+      },
+      {
+        "command": "qc",
+        "options": [
+          "--artifacts",
+          "--contracts",
+          "--data-version",
+          "--help",
+          "--qc-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "qc2",
+        "options": [
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--qc-run",
+          "--rules",
+          "-h"
+        ]
+      },
+      {
+        "command": "regular-report",
+        "options": [
+          "--artifacts",
+          "--asof-date",
+          "--data-version",
+          "--help",
+          "--llm-model",
+          "--mode",
+          "--period",
+          "--report-version",
+          "-h"
+        ]
+      },
+      {
+        "command": "release-build",
+        "options": [
+          "--build-stamp",
+          "--config",
+          "--help",
+          "--out",
+          "--project-root",
+          "--release-channel",
+          "--source-date-epoch",
+          "-h"
+        ]
+      },
+      {
+        "command": "release-smoke",
+        "options": [
+          "--archive",
+          "--help",
+          "--python",
+          "--report-json",
+          "-h"
+        ]
+      },
+      {
+        "command": "report",
+        "options": [
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--llm-model",
+          "--mode",
+          "--model-version",
+          "--no-pdf",
+          "--qc-run",
+          "--report-version",
+          "--scoring-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "repro",
+        "options": [
+          "--artifacts",
+          "--asof-date",
+          "--cfg",
+          "--data-version",
+          "--help",
+          "--input-dir",
+          "--repro-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "restore",
+        "options": [
+          "--artifacts",
+          "--backup",
+          "--db-path",
+          "--force",
+          "--help",
+          "--smoke-check",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "restore-drill",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--db-path",
+          "--help",
+          "--project-root",
+          "--report-root",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "roi",
+        "options": [
+          "--artifacts",
+          "--cfg",
+          "--data-version",
+          "--date-from",
+          "--date-to",
+          "--economics-run",
+          "--help",
+          "--roi-run",
+          "--tenant-id",
+          "--unit-econ-run",
+          "--web-db",
+          "-h"
+        ]
+      },
+      {
+        "command": "run",
+        "options": [
+          "--help",
+          "-h"
+        ]
+      },
+      {
+        "command": "run reproduce",
+        "options": [
+          "--artifacts",
+          "--data-version",
+          "--help",
+          "--mode",
+          "--out-run-id",
+          "--run-id",
+          "-h"
+        ]
+      },
+      {
+        "command": "score",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--data-version",
+          "--help",
+          "--model-version",
+          "--scoring-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "sleep",
+        "options": [
+          "--help",
+          "--seconds",
+          "-h"
+        ]
+      },
+      {
+        "command": "smoke",
+        "options": [
+          "--artifacts",
+          "--contracts",
+          "--data",
+          "--help",
+          "--mappings",
+          "--out-version",
+          "-h"
+        ]
+      },
+      {
+        "command": "smoke-migration",
+        "options": [
+          "--artifacts",
+          "--contracts",
+          "--data",
+          "--help",
+          "--mappings",
+          "-h"
+        ]
+      },
+      {
+        "command": "support-bundle",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--db-path",
+          "--help",
+          "--out",
+          "--project-root",
+          "--tmp-root",
+          "--web-storage",
+          "-h"
+        ]
+      },
+      {
+        "command": "train",
+        "options": [
+          "--artifacts",
+          "--config",
+          "--data-version",
+          "--help",
+          "--model-version",
+          "--qc-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "unit-economics",
+        "options": [
+          "--artifacts",
+          "--cfg",
+          "--data-version",
+          "--date-from",
+          "--date-to",
+          "--economics-run",
+          "--help",
+          "--input-dir",
+          "--tenant-id",
+          "--unit-econ-run",
+          "-h"
+        ]
+      },
+      {
+        "command": "validate",
+        "options": [
+          "--contracts",
+          "--help",
+          "--input",
+          "-h"
+        ]
+      },
+      {
+        "command": "verify-refactor",
+        "options": [
+          "--golden",
+          "--help",
+          "--i-understand-update-golden",
+          "--project-root",
+          "--report-root",
+          "--scenarios",
+          "--update-golden",
+          "-h"
+        ]
+      },
+      {
+        "command": "verify_refactor",
+        "options": [
+          "--golden",
+          "--help",
+          "--i-understand-update-golden",
+          "--project-root",
+          "--report-root",
+          "--scenarios",
+          "--update-golden",
+          "-h"
+        ]
+      },
+      {
+        "command": "version",
+        "options": [
+          "--format",
+          "--help",
+          "--project-root",
+          "-h"
+        ]
+      }
+    ]
+  },
+  "api": {
+    "routes": [
+      {
+        "path": "/",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/admin/users",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/admin/users/create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/admin/users/{user_id}/reset_password",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/admin/users/{user_id}/role",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/admin/users/{user_id}/status",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/admin/permission-matrix",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/alerts_v2",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/alerts_v2",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/alerts_v2/generate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/alerts_v2/{alert_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/alerts_v2/{alert_id}/ack",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/alerts_v2/{alert_id}/resolve",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/audit",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/audit/archive-old",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/audit/export.csv",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/audit/facets",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/contracts/catalog",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/contracts/validation-report",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/copilot/fact",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/decision_log_v2",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/decision_log_v2",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/decision_log_v2/{decision_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/feedback_v1",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/feedback_v1",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/feedback_v1/config",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/feedback_v1/export.csv",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/feedback_v1/metrics",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/jobs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/jobs/{job_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/jobs/{job_id}/artifacts",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/jobs/{job_id}/cancel",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/jobs/{job_id}/log",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/jobs/{job_id}/log/stream",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/jobs/{job_id}/retry",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/observability",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/playbooks_v1",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/playbooks_v1",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/playbooks_v1/active",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/playbooks_v1/{version_id}/activate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/release",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/reports_v1/approval",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/reports_v1/{report_version}/approve",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/reports_v1/{report_version}/archive",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/reports_v1/{report_version}/reject",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/export",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/generate_from_alerts",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/metrics",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/overdue",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/{task_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/{task_id}/assign",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/{task_id}/close",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/{task_id}/take",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/tasks_v1/{task_id}/update",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/users_v2",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/versions",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/generate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/pending_approval",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}/approve",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}/archive",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}/export_pdf",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}/reject",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}/request_approval",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/weekly_plans_v1/{plan_id}/update",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_compare_v1",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_reports_v1",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/whatif_reports_v1/{report_version}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}/approve",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}/archive",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}/clone",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}/reject",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}/report_pdf",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/whatif_scenarios_v1/{scenario_id}/update",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/api/workflow_v2/stages",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/api/workflow_v2/teams",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/audit",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/configs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/configs/upload",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/connectors/new",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/connectors/preview",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/recovery/cancel",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/recovery/clear",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/run-slot",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/runs/{connector_run_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/connectors/save",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/schedule/tick",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/upload",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/connectors/{connector_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/connectors/{connector_id}/edit",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/contracts",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/contracts/validation-report",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/copilot/fact",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/decisions",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/decisions/add",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/decisions/init",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/docs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/docs/oauth2-redirect",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/download",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/healthz",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/jobs",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/jobs/{job_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/jobs/{job_id}/artifact-preview",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/jobs/{job_id}/cancel",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/jobs/{job_id}/log",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/jobs/{job_id}/retry",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/login",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/login",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/logout",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/metrics",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/openapi.json",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/pack",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/pack/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/playbooks",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/playbooks/activate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/playbooks/create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/qc",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/qc/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/readyz",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/redoc",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/reports",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/reports/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/repro",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/repro/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/score",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/score/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/static",
+        "methods": []
+      },
+      {
+        "path": "/tasks",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/tasks/{job_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/tasks/{job_id}/log",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/train",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/train/run",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/upload",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/upload/ingest-all",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/weekly_plans/create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/generate",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}/approve",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}/archive",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}/export_pdf",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}/reject",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}/request_approval",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/weekly_plans/{plan_id}/update",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/create",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/{scenario_id}",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/{scenario_id}/approve",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/{scenario_id}/archive",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/{scenario_id}/clone",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/{scenario_id}/reject",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/whatif_scenarios/{scenario_id}/update",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/workflow",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/workflow/{task_id}",
+        "methods": [
+          "GET"
+        ]
+      }
+    ]
+  },
+  "python": {
+    "functions": [
+      {
+        "path": "genomeai.cli.build_parser",
+        "signature": "() -> 'argparse.ArgumentParser'"
+      },
+      {
+        "path": "genomeai.cli.main",
+        "signature": "(argv=None) -> 'int'"
+      },
+      {
+        "path": "core.security.load_permission_matrix",
+        "signature": "(project_root: 'Path') -> 'dict[str, Any]'"
+      },
+      {
+        "path": "core.security.ensure_permissions",
+        "signature": "(user_permissions: 'Iterable[str] | None', *required_permissions: 'str', role: 'str | None' = None, operation: 'str | None' = None) -> 'tuple[str, ...]'"
+      },
+      {
+        "path": "core.security.resolve_role_permissions",
+        "signature": "(role: 'str', *, role_permissions: 'Mapping[str, Sequence[str]] | None' = None) -> 'tuple[str, ...]'"
+      },
+      {
+        "path": "core.audit.load_audit_retention_config",
+        "signature": "(project_root: 'str | Path') -> 'dict[str, Any]'"
+      },
+      {
+        "path": "core.audit.write_audit",
+        "signature": "(conn, *, tenant_id: 'str', user_id: 'int', username: 'str', role: 'str', action: 'str', object_type: 'Optional[str]' = None, object_id: 'Optional[str]' = None, data_version: 'Optional[str]' = None, run_id: 'Optional[str]' = None, before: 'Optional[dict[str, Any]]' = None, after: 'Optional[dict[str, Any]]' = None, ip: 'Optional[str]' = None, user_agent: 'Optional[str]' = None, status: 'str' = 'OK', error: 'Optional[str]' = None, request_id: 'Optional[str]' = None) -> 'int'"
+      },
+      {
+        "path": "core.audit.list_audit",
+        "signature": "(conn, *, tenant_id: 'str', limit: 'int' = 200, offset: 'int' = 0, action: 'Optional[str]' = None, action_prefix: 'Optional[str]' = None, action_group: 'Optional[str]' = None, status: 'Optional[str]' = None, username: 'Optional[str]' = None, role: 'Optional[str]' = None, object_type: 'Optional[str]' = None, object_id: 'Optional[str]' = None, object_ref: 'Optional[str]' = None, run_id: 'Optional[str]' = None, data_version: 'Optional[str]' = None, request_id: 'Optional[str]' = None, q: 'Optional[str]' = None, ts_from: 'Optional[str]' = None, ts_to: 'Optional[str]' = None, scope: 'str' = 'active') -> 'list[dict[str, Any]]'"
+      },
+      {
+        "path": "web_cabinet.jobs_v2.load_job_runner_config",
+        "signature": "(project_root: 'Path') -> 'JobRunnerConfig'"
+      },
+      {
+        "path": "core.config.validate_startup_config_bundle",
+        "signature": "(project_root: 'str | Path') -> 'dict[str, Any]'"
+      }
+    ]
+  },
+  "deprecations": [
+    {
+      "kind": "cli_alias",
+      "name": "verify-refactor",
+      "replacement": "verify_refactor",
+      "status": "deprecated"
+    },
+    {
+      "kind": "import",
+      "name": "genomeai.application",
+      "replacement": "core.application",
+      "status": "deprecated"
+    },
+    {
+      "kind": "import",
+      "name": "web_cabinet.audit",
+      "replacement": "core.audit",
+      "status": "deprecated"
+    },
+    {
+      "kind": "import",
+      "name": "web_cabinet.rbac",
+      "replacement": "core.security",
+      "status": "deprecated"
+    }
+  ]
+}

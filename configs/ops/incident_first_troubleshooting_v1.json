@@ -1,0 +1,30 @@
+{
+  "schema": "genomeai.incident_first_troubleshooting.v1",
+  "commands": [
+    "GET /readyz",
+    "GET /api/observability",
+    "GET /api/runtime-storage",
+    "GET /api/runtime-state",
+    "GET /api/queue-runtime",
+    "GET /api/production-profile",
+    "python scripts/check_production_lockdown.py",
+    "python scripts/check_production_operability.py",
+    "bash deploy/adult/ops/collect_support_bundle.sh"
+  ],
+  "operator_checklist": [
+    "capture request_id/job_id/run_id if available",
+    "capture support bundle before risky changes",
+    "check storage/auth/queue backends and lockdown state",
+    "verify worker/scheduler ownership and queue counters"
+  ],
+  "admin_checklist": [
+    "check release metadata and build stamp",
+    "check latest migrations and backup metadata",
+    "check incident/support operating records"
+  ],
+  "maintenance_windows_guidance": [
+    "announce scope and rollback point",
+    "freeze schema-changing changes outside approved window",
+    "collect before/after diagnostics"
+  ]
+}

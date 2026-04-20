@@ -1,0 +1,63 @@
+version: 1
+
+# Workflow reason codes are advisory options for UI/API.
+# Backward compatibility is preserved: free-text reasons remain allowed.
+
+alert_resolve:
+  - FALSE_POSITIVE
+  - ALREADY_ACTIONED
+  - DUPLICATE_ALERT
+  - INVESTIGATED
+  - RESOLVED_OTHER
+
+task_close:
+  default:
+    - COMPLETED
+    - NOT_FEASIBLE
+    - DUPLICATE_TASK
+    - DATA_ISSUE
+    - CLOSED_OTHER
+  done:
+    - COMPLETED
+    - ALREADY_ACTIONED
+    - VERIFIED
+    - DONE_OTHER
+  cancelled:
+    - NOT_FEASIBLE
+    - DUPLICATE_TASK
+    - FALSE_POSITIVE
+    - CANCELLED_OTHER
+
+
+completion_outcome:
+  default:
+    - COMPLETED
+    - CANCELLED_OTHER
+    - DEFERRED_OTHER
+    - NO_EFFECT_OTHER
+    - ESCALATED_OTHER
+  done:
+    - COMPLETED
+    - VERIFIED
+    - FOLLOW_UP_DONE
+    - DONE_OTHER
+  cancelled:
+    - NOT_FEASIBLE
+    - DUPLICATE_TASK
+    - FALSE_POSITIVE
+    - CANCELLED_OTHER
+  deferred:
+    - WAIT_FOR_WINDOW
+    - WAIT_FOR_RESULT
+    - BLOCKED_BY_DEPENDENCY
+    - DEFERRED_OTHER
+  no_effect:
+    - NO_EFFECT_OBSERVED
+    - CONDITION_UNCHANGED
+    - DATA_ISSUE
+    - NO_EFFECT_OTHER
+  escalated:
+    - NEEDS_MANAGER_REVIEW
+    - NEEDS_VET_REVIEW
+    - NEEDS_ZOOTECH_REVIEW
+    - ESCALATED_OTHER

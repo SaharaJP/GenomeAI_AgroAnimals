@@ -1,0 +1,11 @@
+dataset: animals
+dayfirst: true
+columns:
+  ИДЖивотного: animal_id
+  КодФермы: farm_id
+  Бирка: ear_tag
+  Порода: breed
+  Пол: sex
+  ДатаРождения: birth_date
+  Живо: is_alive
+  Статус: status

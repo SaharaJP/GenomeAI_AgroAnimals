@@ -1,0 +1,31 @@
+schema: genomeai.economics.v2
+output:
+  currency: RUB
+fx_rates:
+  RUB: 1.0
+  EUR: 100.0
+  USD: 90.0
+inputs:
+  dm_economics_daily_currency: RUB
+defaults:
+  milk_price:
+    currency: RUB
+    value_per_kg: 50.0
+  feed_cost:
+    currency: RUB
+    value_per_kg_dm: 30.0
+  other_cost:
+    currency: RUB
+    value_per_farm_day: 0.0
+cost_models:
+  vet:
+    cost_per_treatment_event_rub: 1500.0
+  repro:
+    insemination_cost_rub: 800.0
+  cull:
+    revenue_per_head_rub: 45000.0
+    cost_per_head_rub: 5000.0
+allocation:
+  other_cost_allocation: revenue_share
+ui:
+  max_rows_daily: 5000

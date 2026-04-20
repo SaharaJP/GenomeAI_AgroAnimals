@@ -1,0 +1,31 @@
+connector_id: selex_daily_batch
+kind: file
+enabled: true
+source_system: СЕЛЭКС
+system_family: herd_management
+export_mode: scheduled_xlsx_csv_batch
+description: Representative СЕЛЭКС connector profile with explicit contracts and daily schedule.
+source_dir: data/imports/selex
+schedule: "30 5 * * *"
+data_version_template: "dv_selex_%Y%m%d_%H%M%S"
+datasets:
+  - dataset_key: animals
+    pattern: "animals_*.xlsx"
+    mapping: configs/mappings/connectors/selex_basic/animals.yaml
+    required: true
+  - dataset_key: lactations
+    pattern: "lactations_*.xlsx"
+    mapping: configs/mappings/connectors/selex_basic/lactations.yaml
+    required: true
+  - dataset_key: health_events
+    pattern: "health_events_*.xlsx"
+    mapping: configs/mappings/connectors/selex_basic/health_events.yaml
+    required: false
+  - dataset_key: treatments
+    pattern: "treatments_*.xlsx"
+    mapping: configs/mappings/connectors/selex_basic/treatments.yaml
+    required: false
+retry_policy:
+  auto_retry_failed_datasets: true
+  max_attempts: 1
+  backoff_sec: 600

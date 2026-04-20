@@ -1,0 +1,26 @@
+version: milk_quality_scc_cockpit_v1
+label: Milk quality / SCC cockpit v1
+target_bulk_tank_scc: 200000
+warning_bulk_tank_scc: 250000
+high_bulk_tank_scc: 350000
+action_scc_threshold: 200000
+critical_scc_threshold: 300000
+active_withdrawal_priority: 1
+mastitis_event_window_days: 30
+followup_due_days: 2
+penalty_bonus_tiers:
+  - max_scc: 150000
+    adjustment_rub_per_kg: 0.8
+    label: bonus_high_quality
+  - max_scc: 200000
+    adjustment_rub_per_kg: 0.2
+    label: bonus_standard
+  - max_scc: 300000
+    adjustment_rub_per_kg: 0.0
+    label: neutral
+  - max_scc: 400000
+    adjustment_rub_per_kg: -0.8
+    label: penalty_attention
+  - max_scc: null
+    adjustment_rub_per_kg: -2.0
+    label: penalty_critical

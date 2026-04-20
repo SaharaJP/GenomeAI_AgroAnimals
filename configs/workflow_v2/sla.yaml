@@ -1,0 +1,47 @@
+version: 1
+
+# Workflow 2.0 SLA defaults.
+#
+# Notes:
+# - SLA is stored per-task as `sla_hours` and translated into `due_at` when `due_at` is missing.
+# - `priority`: 1..5 (1 — высокий приоритет)
+# - Domains are coarse categories required by T12-01: health/repro/data/qc/econ
+
+default_domain: data
+
+domains:
+  health:
+    priority_to_hours:
+      1: 24
+      2: 48
+      3: 72
+      4: 120
+      5: 168
+  repro:
+    priority_to_hours:
+      1: 24
+      2: 72
+      3: 120
+      4: 168
+      5: 240
+  qc:
+    priority_to_hours:
+      1: 24
+      2: 48
+      3: 72
+      4: 120
+      5: 168
+  data:
+    priority_to_hours:
+      1: 48
+      2: 72
+      3: 120
+      4: 168
+      5: 240
+  econ:
+    priority_to_hours:
+      1: 72
+      2: 120
+      3: 168
+      4: 240
+      5: 336

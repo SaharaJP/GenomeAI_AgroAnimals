@@ -1,0 +1,65 @@
+version: 1
+report_dir: artifacts/customer_upgrade_v1
+release_notes_path: data/release/release_notes_v1.json
+build_support_bundle: true
+build_backup_preview: true
+run_restore_drill: true
+build_release_package: true
+pre_upgrade_checks:
+  - id: runtime_paths
+    label: Runtime roots available
+    required: true
+  - id: release_metadata
+    label: Release metadata available
+    required: true
+  - id: startup_bundle
+    label: Startup config bundle valid
+    required: true
+  - id: release_notes
+    label: Release notes linked
+    required: true
+  - id: support_bundle
+    label: Support bundle built
+    required: true
+  - id: backup_preview
+    label: Pre-upgrade backup preview built
+    required: true
+post_upgrade_checks:
+  - id: restore_drill
+    label: Backup / restore drill ok
+    required: true
+  - id: release_package_smoke
+    label: Release package smoke ok
+    required: true
+  - id: release_diagnostics
+    label: Release diagnostics available
+    required: true
+  - id: restore_diagnostics
+    label: Restore diagnostics linked
+    required: true
+  - id: operational_rollout_policy
+    label: Operational rollout diagnostics policy linked
+    required: false
+  - id: competitive_acceptance_policy
+    label: Competitive acceptance policy linked
+    required: false
+rollback_criteria:
+  - criterion_id: missing_pre_upgrade_backup
+    severity: critical
+    description: Stop and rollback if pre-upgrade backup preview could not be created.
+  - criterion_id: restore_drill_failed
+    severity: critical
+    description: Stop and rollback if restore drill fails or cannot verify restored artifacts and DB tables.
+  - criterion_id: release_package_smoke_failed
+    severity: critical
+    description: Stop and rollback if packaged release cannot pass manifest plus CLI/API smoke.
+  - criterion_id: startup_bundle_invalid
+    severity: critical
+    description: Stop and rollback if startup bundle is not readable and versioned for the target release.
+  - criterion_id: release_notes_missing
+    severity: warn
+    description: Do not upgrade without linked release notes, known issues and diagnostics references.
+manual_checklist:
+  - Confirm target customer window and maintenance owner.
+  - Communicate rollback criteria and support contact before upgrade.
+  - Run the generated repeatable checks before touching the live environment.

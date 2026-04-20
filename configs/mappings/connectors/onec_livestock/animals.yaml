@@ -1,0 +1,9 @@
+dataset: animals
+columns:
+  AnimalCode: animal_id
+  FarmCode: farm_id
+  GroupCode: pen_id
+  EarTag: ear_tag
+  BreedName: breed
+  DateBirth: birth_date
+  StatusName: status

@@ -1,0 +1,21 @@
+{
+  "version": "v1",
+  "silent_merges_allowed": false,
+  "conflict_modes": {
+    "QuickEventEntry": "ClientReplayRequired",
+    "TaskCompletion": "ManualReviewRequired",
+    "ShiftHandover": "ManualReviewRequired",
+    "FeedbackSubmission": "RejectSilentMerge",
+    "AssistantLinkedAction": "ManualReviewRequired"
+  },
+  "retryable_failure_classes": [
+    "RetryableNetwork",
+    "RetryableServer"
+  ],
+  "non_retryable_failure_classes": [
+    "Conflict",
+    "TerminalValidation",
+    "TerminalAuth",
+    "Cancelled"
+  ]
+}

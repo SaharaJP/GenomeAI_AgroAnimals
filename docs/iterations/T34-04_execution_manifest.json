@@ -1,0 +1,51 @@
+{
+  "iteration": "T34-04",
+  "title": "Redis broker queue cutover + dedicated worker/scheduler execution model",
+  "status": "partially_proven",
+  "proof": {
+    "py_compile": true,
+    "targeted_tests": {
+      "passed": 5,
+      "files": [
+        "tests/test_t34_04_queue_runtime_foundation.py",
+        "tests/test_t34_04_embedded_worker_guard.py",
+        "tests/web/test_t34_04_queue_observability.py"
+      ]
+    },
+    "regression_tests": {
+      "passed": 24,
+      "files": [
+        "tests/test_t16_02_web_lifespan.py",
+        "tests/test_t34_01_postgres_cutover_foundation.py",
+        "tests/test_t34_02_auth_storage_foundation.py",
+        "tests/test_t34_03_runtime_state_storage_foundation.py",
+        "tests/web/test_t34_01_runtime_storage_observability.py",
+        "tests/web/test_t34_02_auth_admin_diagnostics.py",
+        "tests/web/test_t34_03_runtime_state_observability.py",
+        "tests/web/test_nfr_controls.py"
+      ]
+    },
+    "combined_passed": 29
+  },
+  "deliverables": [
+    "src/core/infra/queue_runtime.py",
+    "src/core/infra/web_db.py",
+    "web_cabinet/worker.py",
+    "src/web_cabinet/worker.py",
+    "web_cabinet/app.py",
+    "src/web_cabinet/app.py",
+    "web_cabinet/deploy_guard.py",
+    "src/web_cabinet/deploy_guard.py",
+    "scripts/service_worker.py",
+    "docs/redis_queue_cutover.md",
+    "tests/test_t34_04_queue_runtime_foundation.py",
+    "tests/test_t34_04_embedded_worker_guard.py",
+    "tests/web/test_t34_04_queue_observability.py"
+  ],
+  "not_proven": [
+    "live redis broker consume/ack/fail",
+    "adult end-to-end queue runtime proof",
+    "live stuck-job and dead-letter diagnostics",
+    "live scheduler to worker execution proof"
+  ]
+}

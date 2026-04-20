@@ -1,0 +1,10 @@
+dataset: basic_events
+columns:
+  EventID: event_id
+  AnimalID: animal_id
+  FarmID: farm_id
+  EventDate: event_date
+  EventType: event_type
+  Comment: comment
+  PenID: pen_id
+  ReasonCode: reason_code

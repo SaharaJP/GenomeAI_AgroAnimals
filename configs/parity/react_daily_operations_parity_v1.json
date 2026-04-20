@@ -1,0 +1,84 @@
+{
+  "schema": "genomeai.react.daily_operations.parity.v1",
+  "scope": "daily read parity only",
+  "legacy_surfaces": [
+    {
+      "legacy_files": [],
+      "react_route": "/daily-summary",
+      "backend_contracts": [
+        "/api/app/v1/alerts",
+        "/api/app/v1/worklists",
+        "/api/app/v1/planner",
+        "/api/app/v1/reports",
+        "/api/app/v1/decision-intelligence"
+      ],
+      "capabilities": [
+        "home_daily_summary",
+        "multi_site_scope_awareness",
+        "linked_actions",
+        "daily_brief_preview"
+      ],
+      "parity_level": "implemented_read_parity",
+      "legacy_status": "removed_after_t32_12"
+    },
+    {
+      "legacy_files": [],
+      "react_route": "/alerts",
+      "backend_contracts": [
+        "/api/app/v1/alerts"
+      ],
+      "capabilities": [
+        "alert_triage",
+        "explainability_entry_points",
+        "decision_hook",
+        "feedback_hook",
+        "multi_site_visibility"
+      ],
+      "parity_level": "implemented_read_parity",
+      "legacy_status": "removed_after_t32_12"
+    },
+    {
+      "legacy_files": [],
+      "react_route": "/worklists",
+      "backend_contracts": [
+        "/api/app/v1/worklists"
+      ],
+      "capabilities": [
+        "role_queue_visibility",
+        "linked_actions",
+        "single_farm_and_multi_site_visibility"
+      ],
+      "parity_level": "implemented_read_parity",
+      "legacy_status": "removed_after_t32_12"
+    },
+    {
+      "legacy_files": [],
+      "react_route": "/planner",
+      "backend_contracts": [
+        "/api/app/v1/planner"
+      ],
+      "capabilities": [
+        "operational_planner",
+        "weekly_plans",
+        "overdue_backlog",
+        "daily_brief_preview"
+      ],
+      "parity_level": "implemented_read_parity",
+      "legacy_status": "removed_after_t32_12"
+    },
+    {
+      "legacy_files": [],
+      "react_route": "/daily-summary",
+      "backend_contracts": [
+        "derived_from_/api/app/v1/{alerts,worklists,planner,reports,decision-intelligence,feedback}"
+      ],
+      "capabilities": [
+        "daily_brief_preview"
+      ],
+      "parity_level": "preview_only",
+      "legacy_status": "removed_after_t32_12"
+    }
+  ],
+  "formal_cutover_allowed": true,
+  "notes": "Streamlit remains legacy transitional UI until separate formal parity evidence and cutover gate are completed."
+}

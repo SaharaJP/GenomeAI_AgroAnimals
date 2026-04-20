@@ -1,0 +1,10 @@
+dataset: lactations
+columns:
+  COWID: animal_id
+  LACTNO: lactation_no
+  CALVEDATE: calving_date
+  DRYDATE: dryoff_date
+  DIM: days_in_milk
+  M305: milk_305d_kg
+  FATPCT: fat_pct
+  PROTPCT: protein_pct

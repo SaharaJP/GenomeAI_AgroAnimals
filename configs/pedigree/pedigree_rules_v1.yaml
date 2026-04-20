@@ -1,0 +1,29 @@
+version: v1
+
+# T6-01 Pedigree QC + inbreeding constraints (v1, без геномики)
+# Важно: здесь нет «генетики» и нет «диагнозов». Только проверки родословной и объяснимые запреты по общим предкам.
+
+unknown_parent_tokens:
+  - ""
+  - "NA"
+  - "N/A"
+  - "NULL"
+  - "NONE"
+  - "UNKNOWN"
+  - "0"
+
+qc:
+  missing_parent_pct_warn: 0.20
+  max_issues_per_rule: 200
+  severity:
+    cycle: "MAJOR"
+    self_parent: "MAJOR"
+    duplicate_conflict: "MAJOR"
+    unknown_parent_ref: "MINOR"
+    missing_parents_farm: "MINOR"
+
+inbreeding:
+  generations: 3
+  prohibit_if_common_ancestor: true
+  max_common_ancestors_list: 5
+  allow_if_bull_missing_pedigree: true

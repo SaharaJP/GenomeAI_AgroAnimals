@@ -1,0 +1,2 @@
+tenant_id,event_id,animal_id,event_date,event_type,severity,notes
+default,HE_001,A1001,2025-03-10,mastitis,medium,Detected by SCC rise

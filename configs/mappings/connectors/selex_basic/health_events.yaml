@@ -1,0 +1,8 @@
+dataset: health_events
+columns:
+  EventID: event_id
+  AnimalID: animal_id
+  EventDate: event_date
+  EventType: event_type
+  Severity: severity
+  Notes: notes

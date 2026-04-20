@@ -1,0 +1,7 @@
+version: 1
+enabled: true
+archive_after_days: 90
+max_archive_batch_size: 1000
+facets:
+  top_actions_limit: 8
+  top_users_limit: 8

@@ -1,0 +1,2 @@
+tenant_id,cull_event_id,animal_id,event_date,event_type,revenue_rub,cost_rub,notes
+default,CU_DEMO_001,DEMO_COW_3003,2025-03-20,cull,38000.0,9000.0,synthetic economics benchmark note

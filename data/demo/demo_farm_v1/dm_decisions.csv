@@ -1,0 +1,4 @@
+tenant_id,decision_id,farm_id,decision_date,animal_id,lactation_id,recommendation_type,decision,comment,source_alert_id
+default,DEMO_DEC_001,DEMO_FARM_001,2025-04-05,DEMO_COW_1002,LAC_DEMO_COW_1002_2,fresh_protocol,accept,Treat and monitor fresh cow,AL_DEMO_001
+default,DEMO_DEC_002,DEMO_FARM_001,2025-04-05,DEMO_COW_2002,LAC_DEMO_COW_2002_2,vet_review,accept,Escalate to vet round,AL_DEMO_002
+default,DEMO_DEC_003,DEMO_FARM_002,2025-04-05,DEMO_COW_3003,LAC_DEMO_COW_3003_2,dry_off,review,Check economics before dry-off move,AL_DEMO_005

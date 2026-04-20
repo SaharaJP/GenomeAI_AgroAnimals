@@ -1,0 +1,23 @@
+{
+  "schema": "genomeai.security.iam.token_policy.v1",
+  "access_token_ttl_sec": 900,
+  "refresh_token_ttl_sec": 2592000,
+  "refresh_rotation_required": true,
+  "revoke_on_logout": true,
+  "revoke_on_session_revoke": true,
+  "refresh_reuse_detection": "required",
+  "session_scope": "per-device-session",
+  "audit_sensitive_operations": [
+    "auth.login",
+    "auth.token.refresh",
+    "auth.logout",
+    "auth.session.revoke",
+    "security.secret.rotate",
+    "ops.backup",
+    "ops.restore",
+    "report.governance.approve",
+    "report.governance.reject",
+    "support.escalation",
+    "release.promote"
+  ]
+}

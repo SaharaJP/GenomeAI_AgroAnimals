@@ -1,0 +1,3 @@
+TreatmentID,AnimalID,StartDate,EndDate,TreatmentType,ReasonEventID,WithdrawalEndDate
+TR1,A1,2025-03-10,2025-03-12,antibiotic,HE1,
+TR2,A2,2025-03-11,,vitamin,HE2,

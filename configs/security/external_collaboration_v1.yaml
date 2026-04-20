@@ -1,0 +1,19 @@
+version: 1
+internal_review_roles:
+  - Admin
+  - Director
+roles:
+  Consultant:
+    collaboration_mode: external_consultant
+    flags:
+      allow_comments: true
+      allow_recommendations: true
+      allow_approval_requests: true
+      allow_approval_review: false
+  Partner:
+    collaboration_mode: external_partner
+    flags:
+      allow_comments: true
+      allow_recommendations: true
+      allow_approval_requests: true
+      allow_approval_review: false

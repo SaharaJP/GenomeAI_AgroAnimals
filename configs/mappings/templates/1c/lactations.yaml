@@ -1,0 +1,11 @@
+dataset: lactations
+dayfirst: true
+columns:
+  ИДЖивотного: animal_id
+  НомерЛактации: lactation_no
+  ДатаОтела: calving_date
+  ДатаЗапуска: dryoff_date
+  ДниВЛактации: days_in_milk
+  Удой305: milk_305d_kg
+  ЖирПроцент: fat_pct
+  БелокПроцент: protein_pct

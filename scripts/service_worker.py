@@ -1,0 +1,33 @@
+from __future__ import annotations
+
+import os
+from web_cabinet.worker import JobWorker
+from scripts.service_runtime import run_loop
+
+worker = JobWorker(execution_model="dedicated")
+# T34 deploy stabilization: do not start legacy sqlite-backed background thread here.
+
+
+def tick() -> dict[str, object]:
+    if os.environ.get("GENOMEAI_RUNTIME_STORAGE_BACKEND", "").lower() == "postgres":
+        return {
+            "jobs_processed": 0,
+            "worker_mode": "postgres_cutover_gap_noop",
+        }
+
+    ran = worker.run_until_empty(
+        max_jobs=int(os.environ.get("GENOMEAI_WORKER_MAX_JOBS_PER_TICK", "25"))
+    )
+    return {"jobs_processed": int(ran)}
+
+
+if __name__ == "__main__":
+    try:
+        run_loop(
+            component="worker",
+            interval_sec=float(os.environ.get("GENOMEAI_WORKER_INTERVAL_SEC", "5")),
+            heartbeat_path=os.environ.get("GENOMEAI_WORKER_HEARTBEAT", "/tmp/genomeai-worker-heartbeat.json"),
+            tick=tick,
+        )
+    finally:
+        worker.stop()

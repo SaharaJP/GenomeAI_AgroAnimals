@@ -1,0 +1,50 @@
+from __future__ import annotations
+
+import json
+import os
+import signal
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Callable
+
+from core.observability import get_structured_logger
+
+logger = get_structured_logger("services.runtime")
+STOP = False
+
+
+def utc_now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
+
+
+def heartbeat_writer(path: str | Path, payload: dict[str, Any]) -> None:
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def install_signal_handlers() -> None:
+    def _handler(signum, _frame):
+        global STOP
+        STOP = True
+        logger.info("service.signal", signal=signum)
+    signal.signal(signal.SIGTERM, _handler)
+    signal.signal(signal.SIGINT, _handler)
+
+
+def run_loop(*, component: str, interval_sec: float, heartbeat_path: str | Path, tick: Callable[[], dict[str, Any]]) -> None:
+    install_signal_handlers()
+    logger.info("service.started", component=component, interval_sec=interval_sec)
+    while not STOP:
+        started = time.time()
+        try:
+            result = tick() or {}
+            heartbeat_writer(heartbeat_path, {"component": component, "status": "ok", "ts": utc_now_iso(), **result})
+            logger.info("service.tick", component=component, **{k: v for k, v in result.items() if isinstance(v, (str, int, float, bool))})
+        except Exception as exc:  # pragma: no cover
+            heartbeat_writer(heartbeat_path, {"component": component, "status": "error", "ts": utc_now_iso(), "error": f"{type(exc).__name__}: {exc}"})
+            logger.error("service.tick.failed", component=component, error=f"{type(exc).__name__}: {exc}")
+        elapsed = max(0.0, time.time() - started)
+        time.sleep(max(0.1, interval_sec - elapsed))
+    logger.info("service.stopped", component=component)

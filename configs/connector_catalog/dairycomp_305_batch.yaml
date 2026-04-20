@@ -1,0 +1,36 @@
+adapter_id: dairycomp_305_batch
+label: DairyComp 305 batch export
+source_system: DairyComp 305
+system_family: herd_management
+connector_kind: file
+export_mode: scheduled_csv_batch
+default_schedule: "0 */6 * * *"
+description: Reusable batch connector profile for DairyComp 305 CSV exports (animals, lactations, testday, treatments).
+supported_datasets:
+  - animals
+  - lactations
+  - testday
+  - treatments
+data_contracts:
+  - dm_animals
+  - dm_lactations
+  - dm_testday
+  - dm_treatments
+reusable_mapping_templates:
+  - configs/mappings/connectors/dairycomp_305/animals.yaml
+  - configs/mappings/connectors/dairycomp_305/lactations.yaml
+  - configs/mappings/connectors/dairycomp_305/testday.yaml
+  - configs/mappings/connectors/dairycomp_305/treatments.yaml
+representative_config_path: configs/connector_catalog/examples/dairycomp_305_batch.yaml
+diagnostics:
+  common_issues:
+    - Missing daily export files in inbox.
+    - Changed column names after vendor report update.
+    - Testday export present but lactations export stale.
+  action_hints:
+    missing_source: Проверьте batch-export task в DairyComp 305 и наличие файлов в inbox.
+    stale_batch: Выгрузка устарела; запросите новый export batch перед operational use.
+limitations:
+  - Batch export only; no near-real-time expectations.
+  - Repro/basic events remain migration-preview scope until reconciliation step.
+staged_adoption_note: Safe for staged adoption on regular CSV drops without day-1 full cutover.

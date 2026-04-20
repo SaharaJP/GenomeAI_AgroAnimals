@@ -1,0 +1,14 @@
+{
+  "data_version": "dv_refactor_standard",
+  "llm_used": false,
+  "mode_requested": "fallback",
+  "model_version": "model_refactor_standard",
+  "outputs": {
+    "report_docx_exists": true,
+    "report_pdf_exists": false
+  },
+  "qc_run": "qc_refactor_standard",
+  "report_version": "report_refactor_standard",
+  "schema": "genomeai.report_summary.v1",
+  "scoring_run": "score_refactor_standard"
+}

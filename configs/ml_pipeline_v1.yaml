@@ -1,0 +1,22 @@
+schema: genomeai.ml_pipeline_config.v1
+config_version: ml_pipeline_v1
+productivity_model:
+  task: baseline_regression
+  target: milk_305d_kg
+  seed: 42
+  split:
+    year_holdout:
+      min_train_rows: 20
+      min_test_rows: 10
+    fallback_train_fraction: 0.8
+  scoring:
+    min_group_size: 10
+  features:
+    numeric_base:
+      - parity
+      - calving_year
+      - calving_quarter
+    categorical_base:
+      - calving_season
+    optional_numeric_if_available:
+      - age_at_calving

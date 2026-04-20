@@ -1,0 +1,2 @@
+tenant_id,alert_id,farm_id,alert_date,severity,alert_type,entity_type,entity_id,message
+default,AL_001,FARM_001,2025-03-10,warn,health_risk,animal,A1001,Mastitis suspected

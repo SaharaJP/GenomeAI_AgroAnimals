@@ -1,0 +1,116 @@
+x-backend-common: &backend-common
+  build:
+    context: ..
+    dockerfile: deploy/Dockerfile
+  restart: unless-stopped
+  init: true
+  environment: &backend-env
+    GENOMEAI_PROJECT_ROOT: /app
+    GENOMEAI_ARTIFACTS_ROOT: /data/artifacts
+    GENOMEAI_WEB_STORAGE: /data/web_storage
+    GENOMEAI_WEB_SECRET: ${GENOMEAI_WEB_SECRET:-}
+    GENOMEAI_WEB_SECRET_FILE: ${GENOMEAI_WEB_SECRET_FILE:-}
+    GENOMEAI_WEB_MAX_UPLOAD_MB: ${GENOMEAI_WEB_MAX_UPLOAD_MB:-200}
+    GENOMEAI_WEB_MAX_MAPPING_MB: ${GENOMEAI_WEB_MAX_MAPPING_MB:-5}
+    GENOMEAI_JOB_TIMEOUT_SEC: ${GENOMEAI_JOB_TIMEOUT_SEC:-1800}
+    GENOMEAI_CONNECTOR_RECOVERY_QUEUE_LIMIT: ${GENOMEAI_CONNECTOR_RECOVERY_QUEUE_LIMIT:-5}
+    OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    OPENAI_API_KEY_FILE: ${OPENAI_API_KEY_FILE:-}
+    GENOMEAI_WEB_PUBLIC_URL: ${GENOMEAI_WEB_PUBLIC_URL:-http://127.0.0.1:${GENOMEAI_WEB_UI_PORT:-3000}}
+    PYTHONUNBUFFERED: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
+  ports:
+    - "${GENOMEAI_WEB_PORT:-8000}:8000"
+  volumes:
+    - ../runtime/artifacts:/data/artifacts
+    - ../runtime/web_storage:/data/web_storage
+  command: ["uvicorn", "web_cabinet.app:app", "--host", "0.0.0.0", "--port", "8000"]
+  healthcheck:
+    test:
+      [
+        "CMD-SHELL",
+        "python -c \"import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3).status == 200 else 1)\"",
+      ]
+    interval: 15s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+
+x-frontend-common: &frontend-common
+  build:
+    context: ..
+    dockerfile: deploy/adult/docker/web-app.Dockerfile
+  restart: unless-stopped
+  init: true
+  environment: &frontend-env
+    PORT: "3000"
+    NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:${GENOMEAI_WEB_PORT:-8000}}
+    GENOMEAI_WEB_PUBLIC_URL: ${GENOMEAI_WEB_PUBLIC_URL:-http://127.0.0.1:${GENOMEAI_WEB_UI_PORT:-3000}}
+  ports:
+    - "${GENOMEAI_WEB_UI_PORT:-3000}:3000"
+  healthcheck:
+    test:
+      [
+        "CMD-SHELL",
+        "node -e \"fetch('http://127.0.0.1:3000/api/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+      ]
+    interval: 15s
+    timeout: 5s
+    retries: 5
+    start_period: 15s
+
+services:
+  backend-dev:
+    <<: *backend-common
+    container_name: genomeai-backend-dev
+    profiles: ["dev"]
+    environment:
+      <<: *backend-env
+      GENOMEAI_DEPLOY_PROFILE: dev
+      GENOMEAI_ENV: dev
+      GENOMEAI_WEB_SECRET: ${GENOMEAI_WEB_SECRET:-dev-secret-change-me}
+
+  frontend-dev:
+    <<: *frontend-common
+    container_name: genomeai-frontend-dev
+    profiles: ["dev"]
+    depends_on:
+      backend-dev:
+        condition: service_healthy
+    environment:
+      <<: *frontend-env
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend-dev:8000}
+
+  backend-prod:
+    <<: *backend-common
+    container_name: genomeai-backend-prod
+    profiles: ["prod"]
+    environment:
+      <<: *backend-env
+      GENOMEAI_DEPLOY_PROFILE: prod
+      GENOMEAI_ENV: prod
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  frontend-prod:
+    <<: *frontend-common
+    container_name: genomeai-frontend-prod
+    profiles: ["prod"]
+    depends_on:
+      backend-prod:
+        condition: service_healthy
+    environment:
+      <<: *frontend-env
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://backend-prod:8000}
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

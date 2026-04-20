@@ -1,0 +1,11 @@
+{
+  "description": "Базовый smoke-сценарий без QC-ошибок.",
+  "scenario": "standard",
+  "versions": {
+    "data_version": "dv_refactor_standard",
+    "model_version": "model_refactor_standard",
+    "qc_run": "qc_refactor_standard",
+    "report_version": "report_refactor_standard",
+    "scoring_run": "score_refactor_standard"
+  }
+}

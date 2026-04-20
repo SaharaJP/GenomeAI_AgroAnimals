@@ -1,0 +1,11 @@
+dataset: farms
+dayfirst: true
+columns:
+  КодФермы: farm_id
+  НаименованиеФермы: farm_name
+  Регион: region
+  Страна: country
+  Широта: lat
+  Долгота: lon
+  ДатаСоздания: created_at
+  Активна: is_active

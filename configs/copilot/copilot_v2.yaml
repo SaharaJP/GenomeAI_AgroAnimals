@@ -1,0 +1,20 @@
+answer:
+  strict_source_only: true
+  require_inline_citations: true
+  max_facts: 5
+  max_tables: 3
+  max_missing_sections: 3
+  max_sources: 25
+llm:
+  enabled: true
+  mode: disabled_when_strict
+  post_validate_enabled: true
+  require_target_links: true
+
+resolver:
+  default_period: daily
+  max_rows: 20
+ui:
+  web_base_url: http://127.0.0.1:8000
+  show_citation_cards: true
+  max_citation_cards: 8

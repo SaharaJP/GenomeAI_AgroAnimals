@@ -1,0 +1,74 @@
+{
+  "dataset": "dm_lactations",
+  "contract_version": "1.0.0",
+  "description": "Лактации животных (P0). 1 строка = 1 лактация у животного.",
+  "primary_key": [
+    "animal_id",
+    "lactation_no"
+  ],
+  "foreign_keys": [
+    {
+      "fields": [
+        "animal_id"
+      ],
+      "ref_dataset": "dm_animals",
+      "ref_fields": [
+        "animal_id"
+      ],
+      "enforced": false
+    }
+  ],
+  "fields": [
+    {
+      "name": "animal_id",
+      "type": "string",
+      "required": true,
+      "description": "Ссылка на животное"
+    },
+    {
+      "name": "lactation_no",
+      "type": "int",
+      "required": true,
+      "description": "Номер лактации"
+    },
+    {
+      "name": "calving_date",
+      "type": "date",
+      "required": false,
+      "description": "Дата отёла"
+    },
+    {
+      "name": "dryoff_date",
+      "type": "date",
+      "required": false,
+      "description": "Дата запуска"
+    },
+    {
+      "name": "days_in_milk",
+      "type": "int",
+      "required": false,
+      "description": "DIM"
+    },
+    {
+      "name": "milk_305d_kg",
+      "type": "float",
+      "required": false,
+      "description": "305-дневный удой (кг)"
+    },
+    {
+      "name": "fat_pct",
+      "type": "float",
+      "required": false,
+      "description": "Жир, %"
+    },
+    {
+      "name": "protein_pct",
+      "type": "float",
+      "required": false,
+      "description": "Белок, %"
+    }
+  ],
+  "notes": [
+    "Бизнес-правила и проверки дат — позже (QC)."
+  ]
+}

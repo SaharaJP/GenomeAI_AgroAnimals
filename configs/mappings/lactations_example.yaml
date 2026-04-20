@@ -1,0 +1,12 @@
+# Пример мэппинга для dm_lactations
+
+dataset: lactations
+columns:
+  AnimalID: animal_id
+  LactNo: lactation_no
+  Calving: calving_date
+  Dryoff: dryoff_date
+  DIM: days_in_milk
+  Milk305: milk_305d_kg
+  Fat: fat_pct
+  Protein: protein_pct

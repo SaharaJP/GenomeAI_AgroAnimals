@@ -1,0 +1,15 @@
+connector_id: demo_api_stub
+kind: api_stub
+enabled: false
+description: Stub API connector. Real API integration is intentionally deferred beyond T13-02.
+source_system: Farm API (stub)
+system_family: api_stub
+export_mode: api_stub
+diagnostics_profile: api_stub_common
+schedule_hint: Representative API connector placeholder; not a live integration.
+schedule: "*/30 * * * *"
+datasets:
+  - dataset_key: animals
+    path: data/examples/external/animals.csv
+    mapping: configs/mappings/animals_example.yaml
+    required: false

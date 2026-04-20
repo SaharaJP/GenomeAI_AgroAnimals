@@ -1,0 +1,13 @@
+dataset: repro_events
+columns:
+  ReproEventID: repro_event_id
+  AnimalID: animal_id
+  FarmID: farm_id
+  LactationID: lactation_id
+  EventDate: event_date
+  EventType: event_type
+  Result: result
+  BullID: bull_id
+  Technician: technician
+  Method: method
+  Notes: notes

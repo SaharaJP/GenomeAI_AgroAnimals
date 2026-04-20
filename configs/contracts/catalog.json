@@ -1,0 +1,89 @@
+{
+  "schema": "genomeai.data_contract_catalog_config.v1",
+  "datasets": [
+    {
+      "dataset": "dm_farms",
+      "domain": "reference",
+      "status": "active",
+      "required_for_mvp": true,
+      "source_systems": ["excel", "1c", "manual"],
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "covered",
+        "qc.cross_dataset_links": "n/a"
+      }
+    },
+    {
+      "dataset": "dm_animals",
+      "domain": "master_data",
+      "status": "active",
+      "required_for_mvp": true,
+      "source_systems": ["СЕЛЭКС", "excel", "1c"],
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "covered",
+        "qc.primary_key": "covered",
+        "qc.cross_dataset_links": "covered"
+      }
+    },
+    {
+      "dataset": "dm_lactations",
+      "domain": "production",
+      "status": "active",
+      "required_for_mvp": true,
+      "source_systems": ["СЕЛЭКС", "excel", "1c"],
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "covered",
+        "qc.cross_dataset_links": "covered"
+      }
+    },
+    {
+      "dataset": "dm_testday",
+      "domain": "production",
+      "status": "active",
+      "required_for_mvp": false,
+      "source_systems": ["СЕЛЭКС", "excel"],
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "planned",
+        "qc.cross_dataset_links": "planned"
+      }
+    },
+    {
+      "dataset": "dm_health_events",
+      "domain": "health",
+      "status": "active",
+      "required_for_mvp": false,
+      "source_systems": ["1c", "excel", "manual"],
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "covered",
+        "qc.primary_key": "planned",
+        "qc.cross_dataset_links": "planned"
+      }
+    },
+    {
+      "dataset": "dm_treatments",
+      "domain": "health",
+      "status": "active",
+      "required_for_mvp": false,
+      "source_systems": ["1c", "excel", "manual"],
+      "qc_coverage": {
+        "ingest.header_and_required_columns": "covered",
+        "ingest.type_coercion": "covered",
+        "ingest.allowed_values": "n/a",
+        "qc.primary_key": "planned",
+        "qc.cross_dataset_links": "planned"
+      }
+    }
+  ]
+}

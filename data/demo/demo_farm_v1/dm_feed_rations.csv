@@ -1,0 +1,4 @@
+tenant_id,ration_id,site_id,ration_name,effective_from,effective_to,dm_pct
+default,RAT_NA_LACT,DEMO_SITE_001,North Lactating TMR,2025-03-01,2025-04-30,48.0
+default,RAT_NB_REPRO,DEMO_SITE_002,North Repro Mix,2025-03-01,2025-04-30,46.5
+default,RAT_S_LACT,DEMO_SITE_003,South Lactating TMR,2025-03-01,2025-04-30,47.2

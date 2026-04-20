@@ -1,0 +1,717 @@
+version: 3
+nav:
+- group: Главная
+  items:
+  - key: home
+    label: 🏠 Главная
+    page: pages/0_Home_v3.py
+    page_by_role:
+      Director: pages/0_Home_Director.py
+      Zootech: pages/0_Home_Zootech.py
+      Vet: pages/0_Home_Vet.py
+      Operator: pages/0_Home_Operator.py
+      Admin: pages/0_Home_Admin.py
+      Viewer: pages/0_Home_Viewer.py
+- group: Операции
+  items:
+  - key: operations_shell
+    label: 🧭 Операционный центр
+    page: pages/24_Operations_Shell.py
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    description: 'Единая точка входа для рабочих сценариев: загрузка данных, задания,
+      проверка качества, обучение, скоринг, отчёты и пакет артефактов.'
+  - key: upload_ingest_wizard
+    label: 📥 Загрузка данных
+    page: pages/26_Upload_And_Ingest_Wizard.py
+    permissions:
+    - upload.create
+    - pipeline.run
+    description: Пошаговая загрузка файлов, сопоставление полей и публикация версии
+      данных.
+  - key: migration_verification_toolkit
+    label: 🧪 Migration verification
+    page: pages/60_Migration_Verification_Toolkit.py
+    roles:
+    - Director
+    - Zootech
+    - Operator
+    - Admin
+    - Viewer
+    description: 'Versioned migration verification toolkit: compare legacy and GenomeAI
+      by headcount, lactations, events, repro statuses, treatments and KPIs with farm/site/group
+      drilldown and exportable reports.'
+    features:
+    - migration_replacement
+    modules:
+    - migration
+  - key: jobs_center
+    label: 🧵 Задания и логи
+    page: pages/25_Jobs_Center.py
+    permissions:
+    - pipeline.run
+    description: Статусы, логи, артефакты и повторный запуск заданий.
+  - key: qc_ops
+    label: ✅ Проверка качества
+    page: pages/27_QC_Operations.py
+    permissions:
+    - pipeline.run
+    description: Запуск проверки качества данных и просмотр результатов.
+  - key: train_ops
+    label: 🧠 Обучение модели
+    page: pages/28_Train_Operations.py
+    permissions:
+    - pipeline.run
+    description: Запуск обучения модели и просмотр версии модели и артефактов.
+  - key: score_ops
+    label: 📈 Скоринг
+    page: pages/29_Score_Operations.py
+    permissions:
+    - pipeline.run
+    description: Запуск скоринга и просмотр результатов.
+  - key: report_ops
+    label: 📝 Отчёты
+    page: pages/30_Report_Operations.py
+    permissions:
+    - pipeline.run
+    description: Формирование отчётов и просмотр их версий и артефактов.
+  - key: decisions_ops
+    label: 🧾 Решения
+    page: pages/31_Decisions_Operations.py
+    permissions:
+    - decisionlog.view
+    description: Ролевой сценарий решений, согласование и архивирование отчётов, а
+      а также связанные объекты alert/task context in the web frontend.
+    roles: &id001
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    - Consultant
+    - Partner
+  - key: tasks_workflow_ops
+    label: ✅ Задачи и выполнение
+    page: pages/32_Tasks_Workflow_Operations.py
+    permissions:
+    - tasks.view
+    description: Задачи и действия со связанными сигналами и решениями с учётом роли
+      close/update/export in the web frontend.
+    roles: *id001
+  - key: daily_worklists_by_role
+    label: 🗓 Что делать сегодня
+    page: pages/43_Daily_Worklists_By_Role.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Ролевой daily worklist: today queue, quick actions accept/postpone/complete/escalate
+      и linked facts без heavy recompute в render-path.'
+  - key: mobile_worklists
+    label: 📱 Mobile worklists
+    page: pages/58_Mobile_Worklists.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Cowside mobile worklists for vet/repro/group rounds: compact cards,
+      fast complete/postpone/comment/open object and linked facts without raw-table
+      default UX.'
+    features:
+    - mobile_cowside
+    modules:
+    - mobile
+  - key: cowside_event_entry
+    label: 📲 Cowside event entry
+    page: pages/59_Cowside_Event_Entry.py
+    permissions:
+    - animal_events.write
+    roles: *id001
+    description: 'Fast cowside event entry for operator/vet/zootech: animal search,
+      bounded quick templates, optional follow-up creation and append-only audit-linked
+      event logging.'
+    features:
+    - mobile_cowside
+    modules:
+    - mobile
+  - key: reproduction_worklists
+    label: ♀️ Repro worklists
+    page: pages/45_Reproduction_Worklists.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Reproduction due actions: heat watch / insemination / preg check
+      / recheck / dry-off через core state machine и общие worklist use-cases.'
+  - key: reproduction_cockpit
+    label: 📊 Reproduction cockpit
+    page: pages/46_Reproduction_Cockpit.py
+    permissions:
+    - kpi.view
+    roles: *id001
+    description: 'Operational reproduction cockpit: pregnancy rate, heat detection,
+      conception/service rate, repeat breeders и drill-down до группы/животного с
+      переходом к repro worklists и decisions.'
+  - key: calving_forecast_inventory
+    label: 🐄 Calving forecast & inventory
+    page: pages/47_Calving_Forecast_And_Inventory.py
+    permissions:
+    - kpi.view
+    roles: *id001
+    description: Calving forecast, dry-off planning and projected herd inventory with
+      7/30/60/90-day buckets, weekly view, site/group filters and economics linkage.
+  - key: repro_mating_integration
+    label: 🔗 Repro → Mating
+    page: pages/48_Repro_Mating_Integration.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Operational integration between reproduction due actions and mating
+      plan: pending breeding decision queue, explainable constraints, source versions
+      and linked worklist/decision flow.'
+  - key: vet_protocol_engine
+    label: 🩺 Vet protocol engine
+    page: pages/49_Vet_Protocol_Engine.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: Versioned reusable vet protocols with steps, follow-up dates, linked
+      treatments/observations and shared workflow linkage to alerts, health events
+      and worklists.
+  - key: vet_triage_queues
+    label: 🐾 Vet triage queues
+    page: pages/51_Vet_Triage_Queues.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: Prioritized veterinary triage queues for mastitis, lameness, ketosis,
+      metritis, fresh cows, retreatment and chronic review with severity, confidence,
+      source facts and shared completion flow.
+  - key: treatment_journal_withdrawal
+    label: 💊 Treatment journal & withdrawal
+    page: pages/50_Treatment_Journal_And_Withdrawal.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Unified treatment journal: courses, statuses, follow-up and active
+      withdrawal control at animal/group/farm level with transparent versioned rules
+      and audit-logged changes.'
+  - key: drug_use_compliance
+    label: 📋 Drug use & compliance
+    page: pages/52_Drug_Use_Compliance.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Append-only trail for drug use: prescribed / approved / executed,
+      protocol reference, linked object, active withdrawal context and compliance-ready
+      exports.'
+  - key: health_episode_timeline
+    label: 🧩 Health episode timeline
+    page: pages/53_Health_Episode_Timeline.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Explainable health episodes: related health events, treatments,
+      alerts, decisions and outcomes linked into a single operational episode.'
+  - key: universal_list_builder
+    label: 🧾 Universal list builder
+    page: pages/54_Universal_List_Builder.py
+    permissions:
+    - drilldown.view
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    - Viewer
+    description: Fast operational lists for animals / groups / events with filters,
+      sorting, selected columns, saved views and export without external BI.
+  - key: operational_report_builder
+    label: 📑 Operational report builder
+    page: pages/55_Operational_Report_Builder.py
+    permissions:
+    - reports.view
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    - Viewer
+    description: Quick operational reports for animals / groups / events / repro /
+      health / milk quality with templates, favorites, transparent formulas and linked
+      actions.
+  - key: fast_query_mode
+    label: ⚡ Fast query mode
+    page: pages/56_Fast_Query_Mode.py
+    permissions:
+    - reports.view
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    - Viewer
+    description: 'Bounded fast query syntax for power users: compact filters, history,
+      favorites, pinned queries and safe routing into lists, reports and profiles.'
+  - key: trend_reports_compare_periods
+    label: 📉 Trend reports / compare periods
+    page: pages/57_Trend_Reports_Compare_Periods.py
+    permissions:
+    - reports.view
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    - Viewer
+    description: 'Fast operational trend reports: compare periods, DIM-based views,
+      site/group compare and drilldown from chart bucket to underlying object/event
+      lists.'
+  - key: operational_planner
+    label: 🧱 Планировщик смены/дня/недели
+    page: pages/44_Operational_Planner.py
+    permissions:
+    - tasks.view
+    roles: *id001
+    description: 'Time-bucket planner: overdue / today / tomorrow / this_week по alerts,
+      worklists, follow-ups, reproduction cycles и treatments без нового календарного
+      backend-а.'
+  - key: pilot_pack_ops
+    label: 📦 Пакет артефактов
+    page: pages/33_Pilot_Pack_Operations.py
+    permissions:
+    - export.download
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    description: Pilot Pack launch/export and pack artifacts through the target web frontend.
+  - key: alert_center
+    label: 🚨 Сигналы
+    page: pages/5_Alert_Center_v2.py
+    permissions:
+    - alerts.view
+  - key: mating_plan
+    label: 🧬 План подбора пар
+    page: pages/8_Mating_Plan_v1.py
+    permissions:
+    - kpi.view
+  - key: connectors_platform
+    label: 🔌 Коннекторы
+    page: pages/38_Connectors_Platform.py
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    description: Connector catalog, health, recent runs and manual queueing in the target web frontend.
+  - key: approvals_center
+    label: 🛂 Согласования
+    page: pages/40_Approvals_Center.py
+    roles:
+    - Director
+    - Admin
+    description: Согласование отчётов и недельных планов в едином web contour.
+  - key: weekly_plans_platform
+    label: 🗓 Недельные планы
+    page: pages/41_Weekly_Plans.py
+    roles:
+    - Director
+    - Zootech
+    - Operator
+    - Admin
+    permissions:
+    - weekly_plans.view
+    description: Draft/create/update/request approval/export weekly plans without
+      FastAPI UI.
+- group: Аналитика
+  items:
+  - key: director_summary
+    label: 📊 Сводка для руководителя
+    page: pages/1_Director_Summary.py
+    permissions:
+    - kpi.view
+  - key: kpi_drilldown
+    label: 🔎 Детализация KPI
+    page: pages/2_KPI_Drilldown.py
+    permissions:
+    - drilldown.view
+  - key: zootech
+    label: 🐄 Продуктивность стада
+    page: pages/3_Zootech_Productivity.py
+    permissions:
+    - kpi.view
+  - key: vet
+    label: 🩺 Здоровье животных
+    page: pages/4_Vet_Health_v2.py
+    permissions:
+    - kpi.view
+  - key: economics
+    label: 💰 Экономические сценарии
+    page: pages/9_Economics_WhatIf.py
+    permissions:
+    - kpi.view
+    features:
+    - economics
+    modules:
+    - economics
+  - key: economics_v2
+    label: 💸 Экономика
+    page: pages/19_Economics_v2.py
+    permissions:
+    - economics.view
+    features:
+    - economics
+    modules:
+    - economics
+  - key: unit_economics
+    label: 🧮 Юнит-экономика
+    page: pages/21_Unit_Economics.py
+    permissions:
+    - economics.view
+    features:
+    - economics
+    modules:
+    - economics
+  - key: cow_value_culling
+    label: 🐄 Cow value / culling
+    page: pages/63_Cow_Value_And_Culling.py
+    permissions:
+    - economics.view
+    - drilldown.view
+  - key: milk_quality_scc_cockpit
+    label: 🥛 Milk quality / SCC
+    page: pages/64_Milk_Quality_SCC_Cockpit.py
+    permissions:
+    - reports.view
+    - drilldown.view
+  - key: economics_per_action
+    label: ⚡ Economics per action
+    page: pages/65_Economics_Per_Action.py
+    permissions:
+    - economics.view
+    - tasks.view
+    features:
+    - economics
+    modules:
+    - economics
+  - key: roi_panel
+    label: 📈 ROI панель
+    page: pages/22_ROI_Panel.py
+    permissions:
+    - economics.view
+    features:
+    - economics
+    modules:
+    - economics
+- group: Отчёты
+  items:
+  - key: reports
+    label: 🗂 Отчёты
+    page: pages/10_Regular_Reports.py
+    permissions:
+    - export.download
+  - key: dashboard_reports
+    label: 📸 Дашборд-отчёты
+    page: pages/13_Dashboard_Reports.py
+    permissions:
+    - export.download
+  - key: saved_views
+    label: ⭐ Сохранённые представления
+    page: pages/17_Saved_Views_And_Favorites.py
+    permissions:
+    - saved_views.view
+  - key: report_view
+    label: 🧾 Просмотр отчёта
+    page: pages/16_Report_View.py
+    permissions:
+    - export.download
+    show_in_shell: false
+    description: Подробный просмотр отчёта открывается из каталога, сигналов и сохранённых
+      представлений.
+- group: Карточки
+  items:
+  - key: group_profile
+    label: 👥 Карточка группы
+    page: pages/14_Group_Profile.py
+    permissions:
+    - drilldown.view
+    show_in_shell: false
+    description: Подробная карточка группы открывается из аналитики и рабочих сигналов.
+  - key: animal_profile
+    label: 🐮 Карточка животного
+    page: pages/15_Animal_Profile.py
+    permissions:
+    - drilldown.view
+    show_in_shell: false
+    description: Подробная карточка животного открывается из аналитики и рабочих сигналов.
+- group: Справка
+  items:
+  - key: contracts_data_catalog
+    label: 🗃 Каталог данных и контрактов
+    page: pages/39_Contracts_Data_Catalog.py
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    - Viewer
+    description: Contracts catalog + data catalog with lightweight artifacts/data_version
+      status.
+  - key: ai_assistant
+    label: 🤖 Помощник
+    page: pages/12_AI_Assistant_RAG.py
+    permissions:
+    - export.download
+    features:
+    - embedded_ai
+    modules:
+    - embedded_ai
+  - key: glossary
+    label: 📖 Глоссарий
+    page: pages/11_Glossary_v3.py
+  - key: report_templates
+    label: 🧱 Шаблоны отчётов
+    page: pages/18_Report_Templates.py
+    permissions:
+    - report_templates.view
+  - key: training_onboarding_by_role
+    label: 🎓 Onboarding by role
+    page: pages/70_Training_Onboarding_By_Role.py
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    show_in_shell: false
+    description: Role-based onboarding kit with start-of-day workflows, do/don't and
+      diagnostics aligned with current UI and RBAC.
+    features:
+    - training_onboarding
+    modules:
+    - demo_training
+  - key: demo_farm_and_benchmark_demos
+    label: 🧪 Demo farm demos
+    page: pages/71_Demo_Farm_And_Benchmark_Demos.py
+    roles:
+    - Director
+    - Zootech
+    - Vet
+    - Operator
+    - Admin
+    show_in_shell: false
+    description: Synthetic but realistic demo farm and benchmark scenarios for sales,
+      pilot and UAT with runnable dataset and role-based walkthroughs.
+    features:
+    - demo_kit
+    modules:
+    - demo_training
+- group: Администрирование
+  items:
+  - key: admin_console
+    label: 🛡️ Консоль администратора
+    page: pages/34_Admin_Console.py
+    roles:
+    - Admin
+    description: Единая admin-зона web-first для users/security/configs/audit/observability/release
+      diagnostics.
+  - key: admin_users_security
+    label: 👤 Пользователи и доступ
+    page: pages/35_Admin_Users_Security.py
+    roles:
+    - Admin
+    permissions:
+    - users.manage
+    description: Управление пользователями, ролями и правами доступа.
+  - key: admin_configs_audit
+    label: ⚙️ Настройки и аудит
+    page: pages/36_Admin_Configs_Audit.py
+    roles:
+    - Admin
+    permissions:
+    - configs.manage
+    - audit.view
+    description: Переопределения конфигов, фильтры аудита и архивирование старых записей.
+  - key: admin_observability_release
+    label: 📡 Наблюдаемость и выпуск
+    page: pages/37_Admin_Observability_Release.py
+    roles:
+    - Admin
+    description: Метаданные выпуска, отчёты по предупреждениям и производительности,
+      диагностика восстановления и журналы выполнения.
+  - key: commercial_packaging_and_editions
+    label: 📦 Commercial packaging
+    page: pages/72_Commercial_Packaging_And_Editions.py
+    roles:
+    - Admin
+    - Director
+    description: Edition model, optional modules, enterprise capabilities and runtime
+      config gates tied to real feature/module controls.
+  - key: replacement_narratives_and_win_themes
+    label: 🧭 Replacement narratives
+    page: pages/73_Replacement_Narratives_And_Win_Themes.py
+    roles:
+    - Admin
+    - Director
+    show_in_shell: false
+    description: Product-backed replacement narratives, compare checklists, feature
+      maps and proof points tied to actual system capabilities.
+    features:
+    - demo_kit
+    - competitive_acceptance
+    modules:
+    - demo_training
+    - migration
+  - key: pilot_framework_and_reference_deployments
+    label: 🚀 Pilot framework
+    page: pages/74_Pilot_Framework_And_Reference_Deployments.py
+    roles:
+    - Admin
+    - Director
+    show_in_shell: false
+    description: Runnable pilot tracking contour with explicit pilot status, expected
+      outcomes, support cases, incidents and reference deployment evidence rules.
+  - key: pilot_adoption_and_roi_metrics
+    label: 📈 Pilot adoption / ROI metrics
+    page: pages/75_Pilot_Adoption_And_ROI_Metrics.py
+    roles:
+    - Admin
+    - Director
+    show_in_shell: false
+    description: Reproducible adoption, usage, onboarding friction and ROI-evidence metrics for governed pilots.
+  - key: support_sla_incident_model
+    label: 🛟 Support / SLA / incidents
+    page: pages/76_Support_SLA_Incident_Model.py
+    roles:
+    - Admin
+    - Director
+    show_in_shell: false
+    description: Runnable support operating contour with severity levels, response targets, escalation paths, support bundle usage and release-note linkage.
+  - key: customer_upgrade_and_release_discipline
+    label: 🧱 Customer upgrade discipline
+    page: pages/77_Customer_Upgrade_And_Release_Discipline.py
+    roles:
+    - Admin
+    show_in_shell: false
+    description: Repeatable pre-upgrade checks, backup/restore proof, release linkage, post-upgrade verification and rollback criteria for governed customer environments.
+
+  - key: commercial_readiness_gate
+    label: 🏁 Commercial readiness gate
+    page: pages/78_Commercial_Readiness_Gate.py
+    roles:
+    - Admin
+    - Director
+    show_in_shell: false
+    description: Final evidence-backed gate for product-ready, pilot-ready and commercially-ready with market-launch checklist and explicit blockers.
+  - key: feedback_admin_surface
+    label: 🧪 Аналитика обратной связи
+    page: pages/42_Feedback_Admin_Surface.py
+    roles:
+    - Director
+    - Admin
+    permissions:
+    - decisionlog.view
+    description: Метрики обратной связи и экспорт данных для анализа.
+  - key: refdata_pricebooks
+    label: 💲 Цены и допущения
+    page: pages/20_Refdata_Pricebooks_Assumptions.py
+    permissions:
+    - configs.manage
+  - key: worklist
+    label: ✅ Рабочий список
+    page: pages/7_Worklist_v1.py
+    permissions:
+    - tasks.view
+    show_in_shell: false
+    description: Страница сохранена для совместимости; в основном меню используется
+      объединённый рабочий поток.
+  - key: decision_log
+    label: 🧾 Журнал решений
+    page: pages/6_Decision_Log_v2.py
+    permissions:
+    - decisionlog.view
+    show_in_shell: false
+    description: Страница сохранена для совместимости; в основном меню используется
+      объединённый рабочий поток.
+  - key: parallel_run_mode
+    label: 🔁 Parallel Run Mode
+    page: pages/61_Parallel_Run_Mode.py
+    permissions:
+    - reports.view
+    description: Batch-based parallel exploitation over legacy HMS with freshness,
+      sync lag and trusted scope visibility.
+    features:
+    - migration_replacement
+    modules:
+    - migration
+  - key: fresh_cows_transition_economics
+    label: 🐄 Fresh Cows / Transition Economics
+    page: pages/66_Fresh_Cows_Transition_Economics.py
+    permissions:
+    - reports.view
+    description: Fresh cows / transition operational-economic cockpit with weekly
+      monitoring and follow-up lists.
+    features:
+    - economics
+    modules:
+    - economics
+  - key: migration_playbook_and_cutover
+    label: 🚦 Migration Playbook & Cutover
+    page: pages/62_Migration_Playbook_And_Cutover.py
+    permissions:
+    - reports.view
+    description: Formalized migration playbook, cutover preview, rollback readiness
+      and support diagnostics.
+    features:
+    - migration_replacement
+    modules:
+    - migration
+  - key: operational_what_if
+    label: 🔍 Explainable Operational What-If
+    page: pages/67_Operational_What_If.py
+    permissions:
+    - reports.view
+    description: Practical what-if layer for herd-manager decisions with explainable
+      scenarios and exports.
+    features:
+    - economics
+    modules:
+    - economics
+- group: Operations
+  items:
+  - key: enterprise_benchmark_views
+    label: 🏢 Enterprise benchmark views
+    page: pages/68_Enterprise_Benchmark_Views.py
+    roles:
+    - Director
+    - Admin
+    - Consultant
+    - Partner
+    permissions:
+    - kpi.view
+    show_in_shell: true
+    features:
+    - multi_site_enterprise
+    modules:
+    - enterprise_ops
+shell:
+  recent_limit: 6
+  favorites_limit: 8
+  section_descriptions:
+    Главная: стартовые экраны по ролям
+    Операции: загрузка данных, процессы, согласования и ежедневные действия
+    Аналитика: KPI, экономика и предметный анализ
+    Отчёты: опубликованные материалы, выгрузки и сохранённые представления
+    Карточки: детальные страницы групп и животных
+    Справка: каталоги, глоссарий, помощник и шаблоны
+    Администрирование: безопасность, настройки, аудит и диагностика

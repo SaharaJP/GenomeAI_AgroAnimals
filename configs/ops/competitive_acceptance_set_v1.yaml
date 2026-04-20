@@ -1,0 +1,20 @@
+version: 1
+manual_signoff:
+  path: artifacts/_qa/competitive_acceptance/manual_signoff.json
+artifact_aliases:
+  web_cutover: configs/post_removal/streamlit_legacy_cleanup_report_v1.json
+  operational_rollout: artifacts/_ci/operational_rollout_gates/operational_rollout_gates_report.json
+profiles:
+  legacy_replacement_ci:
+    daily_operations:
+      title: Daily operations parity
+    reproduction:
+      title: Reproduction parity
+    vet:
+      title: Vet operations parity
+    reports_worklists:
+      title: Reports and worklists parity
+    mobile:
+      title: Mobile and cowside parity
+    migration:
+      title: Migration and replacement readiness
