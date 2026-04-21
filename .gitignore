@@ -40,3 +40,4 @@ runtime/
 MVP_progress.md
 design_decisions.md
 .env.ai
+tests.backup.*

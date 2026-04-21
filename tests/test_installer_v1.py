@@ -14,13 +14,14 @@ def test_installer_scripts_present() -> None:
 
 
 def test_launcher_dry_run() -> None:
-    # The launcher must be testable without any removed legacy UI installed.
+    # The launcher must be testable without Streamlit installed.
     cmd = [sys.executable, "-m", "genomeai.app_launcher", "--dry-run"]
     p = subprocess.run(cmd, capture_output=True, text=True, check=False)
     assert p.returncode == 0, p.stderr
     out = p.stdout
     assert "DRY_RUN" in out
     assert "PRIMARY_ENTRY:" in out
-    assert "PRIMARY_ENTRY:" in out
-    assert "WEB_URL:" in out
+    assert "UI:" in out
+    assert "STREAMLIT_PUBLIC_URL:" in out
     assert "BACKEND:" in out
+    assert "BACKEND_ROLE:" in out

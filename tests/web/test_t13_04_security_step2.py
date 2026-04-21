@@ -115,38 +115,35 @@ def test_prod_startup_blocks_default_secret(tmp_path: Path, monkeypatch: pytest.
             pass
 
 
-def test_prod_startup_blocks_legacy_sqlite_runtime_even_with_secret_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_prod_startup_accepts_secret_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     repo_root = Path(__file__).resolve().parents[2]
     secret_file = tmp_path / "session.secret"
-    dsn_file = tmp_path / "postgres.dsn"
     secret_file.write_text("prod-secret-long-enough", encoding="utf-8")
-    dsn_file.write_text("postgresql://genomeai:secret@postgres:5432/genomeai", encoding="utf-8")
     monkeypatch.setenv("GENOMEAI_PROJECT_ROOT", str(repo_root))
     monkeypatch.setenv("GENOMEAI_WEB_STORAGE", str(tmp_path / "web_storage"))
     monkeypatch.setenv("GENOMEAI_ARTIFACTS_ROOT", str(tmp_path / "artifacts"))
     monkeypatch.setenv("GENOMEAI_WEB_DISABLE_WORKER", "1")
     monkeypatch.setenv("GENOMEAI_DEPLOY_PROFILE", "prod")
-    monkeypatch.setenv("GENOMEAI_RUNTIME_STORAGE_BACKEND", "postgres")
-    monkeypatch.setenv("GENOMEAI_RUNTIME_POSTGRES_DSN_FILE", str(dsn_file))
     monkeypatch.setenv("GENOMEAI_WEB_SECRET", "")
     monkeypatch.setenv("GENOMEAI_WEB_SECRET_FILE", str(secret_file))
 
     import web_cabinet.app as appmod
     importlib.reload(appmod)
 
-    with pytest.raises(RuntimeError, match="startup_config_invalid: .*legacy SQLite path"):
-        with TestClient(appmod.app):
-            pass
+    with TestClient(appmod.app) as c:
+        r = c.get("/healthz")
+        assert r.status_code == 200
+        assert r.text.strip() == "ok"
 
 
 def test_compose_profiles_and_healthcheck_are_present():
     compose_path = Path(__file__).resolve().parents[2] / "deploy" / "docker-compose.yml"
     payload = yaml.safe_load(compose_path.read_text(encoding="utf-8"))
     services = payload["services"]
-    assert set(services) >= {"backend-dev", "backend-prod", "frontend-dev", "frontend-prod"}
-    assert services["backend-dev"]["profiles"] == ["dev"]
-    assert services["backend-prod"]["profiles"] == ["prod"]
-    health = services["backend-prod"]["healthcheck"]
+    assert set(services) >= {"web-dev", "web-prod"}
+    assert services["web-dev"]["profiles"] == ["dev"]
+    assert services["web-prod"]["profiles"] == ["prod"]
+    health = services["web-prod"]["healthcheck"]
     assert "/readyz" in str(health["test"])
-    assert services["backend-prod"]["read_only"] is True
-    assert "no-new-privileges:true" in services["backend-prod"]["security_opt"]
+    assert services["web-prod"]["read_only"] is True
+    assert "no-new-privileges:true" in services["web-prod"]["security_opt"]

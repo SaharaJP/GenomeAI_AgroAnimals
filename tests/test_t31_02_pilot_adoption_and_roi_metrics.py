@@ -26,7 +26,7 @@ def _seed(conn: sqlite3.Connection) -> datetime:
         (4, 'vet', 'Vet'),
         (5, 'admin', 'Admin'),
     ]:
-        write_audit(conn, tenant_id='default', user_id=user_id, username=username, role=role, action='auth.login.web', object_type='session', object_id=f'req-{username}', request_id=f'req-{username}')
+        write_audit(conn, tenant_id='default', user_id=user_id, username=username, role=role, action='auth.login.streamlit', object_type='session', object_id=f'req-{username}', request_id=f'req-{username}')
     write_audit(conn, tenant_id='default', user_id=1, username='director', role='Director', action='assistant.contextual.answer', object_type='report', object_id='rv_demo')
     write_audit(conn, tenant_id='default', user_id=1, username='director', role='Director', action='export.download', object_type='report', object_id='rv_demo')
     write_audit(conn, tenant_id='default', user_id=2, username='operator', role='Operator', action='pipeline.run', object_type='job', object_id='job1')
@@ -88,7 +88,7 @@ def test_t31_02_builds_actionable_pilot_adoption_metrics() -> None:
 def test_t31_02_onboarding_friction_uses_role_activation_signals() -> None:
     conn = _conn()
     now = datetime(2026, 4, 6, 9, 0, tzinfo=timezone.utc)
-    write_audit(conn, tenant_id='default', user_id=10, username='dir_drop', role='Director', action='auth.login.web', object_type='session', object_id='req-dir-drop')
+    write_audit(conn, tenant_id='default', user_id=10, username='dir_drop', role='Director', action='auth.login.streamlit', object_type='session', object_id='req-dir-drop')
     payload = build_pilot_adoption_metrics_summary(project_root=Path('.'), conn=conn, tenant_id='default', now_utc=now)
     rows = {row['role']: row for row in payload['onboarding_friction_by_role']}
     assert rows['Director']['users_started'] == 1

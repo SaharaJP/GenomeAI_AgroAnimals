@@ -8,16 +8,17 @@ import pytest
 from core.public_interfaces import (
     collect_cli_contract,
     collect_python_function_contract,
+    collect_streamlit_contract,
     load_public_interfaces_snapshot,
 )
 from genomeai import cli as cli_module
 
 
-def test_t15_11_cli_and_python_contract_matches_snapshot() -> None:
+def test_t15_11_cli_and_streamlit_contract_matches_snapshot() -> None:
     snapshot = load_public_interfaces_snapshot()
     assert collect_cli_contract() == snapshot["cli"]
+    assert collect_streamlit_contract() == snapshot["streamlit"]
     assert collect_python_function_contract() == snapshot["python"]
-    assert "streamlit" not in snapshot
 
 
 def test_t15_11_verify_refactor_legacy_alias_emits_deprecation(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
