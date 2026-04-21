@@ -1,0 +1,25 @@
+{
+  "name": "GenomeAI Агро",
+  "short_name": "GenomeAI",
+  "description": "Цифровой зоотехник вашей фермы",
+  "start_url": "/daily-summary",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2dd4bf",
+  "lang": "ru",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
