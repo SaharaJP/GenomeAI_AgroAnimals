@@ -625,6 +625,9 @@ web_logger = get_structured_logger("web.api")
 app.include_router(auth_boundary_v1_router)
 app.include_router(api_boundary_v1_router)
 
+from web_cabinet.ai.endpoints import register_ai_routes
+register_ai_routes(app)
+
 
 @app.middleware("http")
 async def auth_context_http_middleware(request: Request, call_next):
