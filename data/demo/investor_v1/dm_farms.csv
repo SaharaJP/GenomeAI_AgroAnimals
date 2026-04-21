@@ -1,0 +1,2 @@
+farm_id,farm_name,region,country,lat,lon,created_at,is_active
+INV_FARM_001,Демо-ферма,Васильковский район,RU,55.123,37.456,2026-04-21,true

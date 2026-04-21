@@ -1,0 +1,48 @@
+[
+  {
+    "impact_id": "IMP_TL_001",
+    "timeline_event_id": "TL_001",
+    "animal_id": "4821",
+    "metric": "milk_yield",
+    "period_days": 28,
+    "baseline_kg_day": 36.0,
+    "actual_kg_day": 28.0,
+    "loss_kg_total": 224.0,
+    "loss_rub": 7168.0,
+    "note": "Расчёт при цене 32 руб/кг"
+  },
+  {
+    "impact_id": "IMP_TL_003",
+    "timeline_event_id": "TL_003",
+    "animal_id": "3891",
+    "metric": "milk_yield",
+    "period_days": 7,
+    "baseline_kg_day": 16.0,
+    "actual_kg_day": 11.2,
+    "loss_kg_total": 33.6,
+    "loss_rub": 1075.0,
+    "note": "Эпизод 1, мастит"
+  },
+  {
+    "impact_id": "IMP_TL_004",
+    "timeline_event_id": "TL_004",
+    "animal_id": "3891",
+    "metric": "npv_30d",
+    "period_days": 30,
+    "npv_usd": -180,
+    "culling_recommendation_triggered": true,
+    "note": "Рецидив мастита → SELL"
+  },
+  {
+    "impact_id": "IMP_TL_010",
+    "timeline_event_id": "TL_010",
+    "animal_id": null,
+    "metric": "withdrawal_milk_loss",
+    "period_days": 3,
+    "cows_in_withdrawal": 5,
+    "avg_milk_kg": 28.0,
+    "loss_kg_total": 420.0,
+    "loss_rub": 13440.0,
+    "note": "Соблюдение карантина 100% — потери плановые"
+  }
+]

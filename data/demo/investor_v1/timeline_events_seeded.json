@@ -1,0 +1,143 @@
+[
+  {
+    "timeline_event_id": "TL_001",
+    "date": "2026-03-10",
+    "event_type": "mastitis_outbreak",
+    "title": "Мастит у Звёздочки — начало лечения",
+    "body": "СКК 450k, проводимость аномальная. Начат протокол Цефквином.",
+    "animal_ids": [
+      "4821"
+    ],
+    "impact": "yield_loss",
+    "impact_value": "-22% удоя на 28 дней"
+  },
+  {
+    "timeline_event_id": "TL_002",
+    "date": "2026-03-14",
+    "event_type": "pen_move",
+    "title": "Звёздочка переведена в группу 3",
+    "body": "Социальный стресс после лечения. DMI -14%.",
+    "animal_ids": [
+      "4821"
+    ],
+    "impact": "dmi_drop",
+    "impact_value": "-14% DMI на 10 дней"
+  },
+  {
+    "timeline_event_id": "TL_003",
+    "date": "2026-02-20",
+    "event_type": "mastitis_recurrence",
+    "title": "Малина: первый эпизод мастита",
+    "body": "Задняя правая четверть. СКК 680k. Эпизод 1 из 2.",
+    "animal_ids": [
+      "3891"
+    ],
+    "impact": "yield_loss",
+    "impact_value": "-30% удоя на 7 дней"
+  },
+  {
+    "timeline_event_id": "TL_004",
+    "date": "2026-03-22",
+    "event_type": "mastitis_recurrence",
+    "title": "Малина: повторный мастит",
+    "body": "Тот же сектор. СКК 800k. Рецидив — изменение рекомендации на SELL.",
+    "animal_ids": [
+      "3891"
+    ],
+    "impact": "culling_trigger",
+    "impact_value": "Score 82 → SELL"
+  },
+  {
+    "timeline_event_id": "TL_005",
+    "date": "2026-04-18",
+    "event_type": "activity_drop",
+    "title": "Ночка: падение активности 3 дня подряд",
+    "body": "Активность снизилась с 91 до 65 (-29%). СКК растёт.",
+    "animal_ids": [
+      "3142"
+    ],
+    "impact": "health_risk",
+    "impact_value": "Вероятность мастита 78%"
+  },
+  {
+    "timeline_event_id": "TL_006",
+    "date": "2026-04-20",
+    "event_type": "scc_alert",
+    "title": "Ночка: СКК 450k, проводимость аномальная",
+    "body": "Нет открытого лечения. Требуется осмотр ветврача сегодня.",
+    "animal_ids": [
+      "3142"
+    ],
+    "impact": "milk_quality_risk",
+    "impact_value": "Потеря >2 кг/день при развитии"
+  },
+  {
+    "timeline_event_id": "TL_007",
+    "date": "2026-04-07",
+    "event_type": "heat_detection",
+    "title": "Волна охоты: 11 коров осеменены за 3 дня",
+    "body": "Система активности зафиксировала 14 коров. 11 осеменено. 3 пропущено.",
+    "animal_ids": [],
+    "impact": "repro_opportunity",
+    "impact_value": "PR 21d +2pp"
+  },
+  {
+    "timeline_event_id": "TL_008",
+    "date": "2026-03-07",
+    "event_type": "calving_wave",
+    "title": "6 отёлов за 5 дней",
+    "body": "Все с исходом «лёгкий». 1 задержание последа (3088). Fresh-протокол соблюдён.",
+    "animal_ids": [
+      "3085",
+      "3086",
+      "3087",
+      "3088",
+      "3089",
+      "3090"
+    ],
+    "impact": "herd_expansion",
+    "impact_value": "+6 в лактацию"
+  },
+  {
+    "timeline_event_id": "TL_009",
+    "date": "2026-01-21",
+    "event_type": "scc_group_rise",
+    "title": "Рост СКК в PEN_LACT_3 — начало тренда",
+    "body": "Среднее СКК 185k → 210k за 2 недели. Первый сигнал.",
+    "animal_ids": [],
+    "impact": "milk_quality",
+    "impact_value": "Trend -3 балла качества"
+  },
+  {
+    "timeline_event_id": "TL_010",
+    "date": "2026-03-31",
+    "event_type": "withdrawal_compliance",
+    "title": "Карантин: 5 коров — молоко не в танк",
+    "body": "Соблюдение карантина 100%. Потери: 5 × 3 дня × 28 кг = 420 кг.",
+    "animal_ids": [],
+    "impact": "milk_loss",
+    "impact_value": "-420 кг за период"
+  },
+  {
+    "timeline_event_id": "TL_011",
+    "date": "2026-04-14",
+    "event_type": "benchmark_update",
+    "title": "Pregnancy Rate 21d вышел на уровень 24%",
+    "body": "Новый рекорд фермы. +3pp к медиане аналогов.",
+    "animal_ids": [],
+    "impact": "repro_kpi",
+    "impact_value": "PR 24% vs benchmark 21%"
+  },
+  {
+    "timeline_event_id": "TL_012",
+    "date": "2026-04-21",
+    "event_type": "daily_kpi_snapshot",
+    "title": "Утренний снапшот KPI — сегодня",
+    "body": "Надой 28.5 кг/гол. Health index 94%. 3 коровы требуют внимания.",
+    "animal_ids": [
+      "3142"
+    ],
+    "impact": "ops_summary",
+    "impact_value": "3 действия в worklist"
+  }
+]
