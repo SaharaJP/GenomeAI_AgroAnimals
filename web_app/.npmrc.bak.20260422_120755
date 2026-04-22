@@ -1,0 +1,5 @@
+registry=https://packages.applied-caas-gateway1.internal.api.openai.org/artifactory/api/npm/npm-public/
+//packages.applied-caas-gateway1.internal.api.openai.org/artifactory/api/npm/npm-public/:username=reader
+//packages.applied-caas-gateway1.internal.api.openai.org/artifactory/api/npm/npm-public/:_password=Tmc4ZG4yUzlLbkM3a2xERw==
+//packages.applied-caas-gateway1.internal.api.openai.org/artifactory/api/npm/npm-public/:email=none@example.com
+always-auth=true

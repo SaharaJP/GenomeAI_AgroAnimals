@@ -1,0 +1,74 @@
+[
+  {
+    "task_id": "TASK_001",
+    "task_type": "pregnancy_check",
+    "animal_id": "3015",
+    "due_date": "2026-04-21",
+    "priority": "high",
+    "notes": "30 дней после AI #2",
+    "assigned_to": "demo_operator"
+  },
+  {
+    "task_id": "TASK_002",
+    "task_type": "pregnancy_check",
+    "animal_id": "3028",
+    "due_date": "2026-04-21",
+    "priority": "high",
+    "notes": "32 дня после AI",
+    "assigned_to": "demo_operator"
+  },
+  {
+    "task_id": "TASK_003",
+    "task_type": "pregnancy_check",
+    "animal_id": "3044",
+    "due_date": "2026-04-21",
+    "priority": "normal",
+    "notes": "35 дней после AI",
+    "assigned_to": "demo_operator"
+  },
+  {
+    "task_id": "TASK_004",
+    "task_type": "insemination",
+    "animal_id": "3067",
+    "due_date": "2026-04-21",
+    "priority": "high",
+    "notes": "Охота зафиксирована в 08:00",
+    "assigned_to": "demo_operator"
+  },
+  {
+    "task_id": "TASK_005",
+    "task_type": "insemination",
+    "animal_id": "3112",
+    "due_date": "2026-04-21",
+    "priority": "high",
+    "notes": "Охота обнаружена ночью",
+    "assigned_to": "demo_operator"
+  },
+  {
+    "task_id": "TASK_006",
+    "task_type": "health_check",
+    "animal_id": "3142",
+    "due_date": "2026-04-21",
+    "priority": "urgent",
+    "notes": "Падение активности + СКК алерт — Ночка",
+    "assigned_to": "demo_vet"
+  },
+  {
+    "task_id": "TASK_007",
+    "task_type": "health_check",
+    "animal_id": "3078",
+    "due_date": "2026-04-21",
+    "priority": "normal",
+    "notes": "Контроль хромоты, оценка локомоции",
+    "assigned_to": "demo_vet"
+  },
+  {
+    "task_id": "TASK_008",
+    "task_type": "intake_record",
+    "animal_id": "3200",
+    "due_date": "2026-04-21",
+    "priority": "normal",
+    "notes": "Ежедневный контроль DMI",
+    "assigned_to": "demo_operator"
+  }
+]

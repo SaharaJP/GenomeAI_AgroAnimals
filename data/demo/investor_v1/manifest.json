@@ -1,0 +1,50 @@
+{
+  "dataset_id": "investor_v1",
+  "synthetic": true,
+  "synthetic_note": "Investor-grade synthetic demo farm. Never mix with production data.",
+  "generated_at": "2026-04-21",
+  "generator": "scripts/build_demo_farm_investor.py",
+  "mode": "connecterra",
+  "farm_id": "INV_FARM_001",
+  "farm_name": "Демо-ферма",
+  "holding": "Агрохолдинг Заря",
+  "director": "Андрей Жиров",
+  "total_cows": 350,
+  "history_days": 180,
+  "history_start": "2025-10-23",
+  "history_end": "2026-04-21",
+  "seeded_cows": {
+    "zvezdochka": {
+      "id": "4821",
+      "act": 2
+    },
+    "malina": {
+      "id": "3891",
+      "act": 3
+    },
+    "nochka": {
+      "id": "3142",
+      "act": 4
+    }
+  },
+  "kpis_act1": {
+    "avg_milk_yield_kg": 28.5,
+    "health_index_pct": 94,
+    "pregnancy_rate_21d_pct": 24,
+    "cows_need_attention_today": 3
+  },
+  "row_counts": {
+    "animals": 350,
+    "events": 3364,
+    "treatments": 61,
+    "breedings": 159,
+    "milk_yields": 37310,
+    "operator_tasks": 8,
+    "culling_candidates": 15,
+    "insights_seeded": 12,
+    "timeline_events_seeded": 12,
+    "morning_briefs_seeded": 3,
+    "weekly_briefs_seeded": 2,
+    "impact_analyses_seeded": 4
+  }
+}

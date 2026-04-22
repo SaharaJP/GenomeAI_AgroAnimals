@@ -1,0 +1,63 @@
+[
+  {
+    "brief_id": "MBRIEF_20260421",
+    "date": "2026-04-21",
+    "farm_id": "INV_FARM_001",
+    "director_greeting": "Доброе утро, Андрей Жиров!",
+    "kpis": {
+      "avg_milk_yield_kg": 28.5,
+      "health_index_pct": 94,
+      "pregnancy_rate_21d_pct": 24,
+      "cows_need_attention_today": 3,
+      "active_cows": 350,
+      "lactating_cows": 300,
+      "dry_cows": 50
+    },
+    "highlights": [
+      "Ночка (3142): активность упала 3 дня, СКК 450k — ветврачу на осмотр",
+      "Звёздочка (4821): удой стабилизировался на 28 кг после мастита",
+      "2 коровы с охотой: AI запланировано оператору"
+    ],
+    "generated_at": "2026-04-21T05:00:00+00:00"
+  },
+  {
+    "brief_id": "MBRIEF_20260420",
+    "date": "2026-04-20",
+    "farm_id": "INV_FARM_001",
+    "director_greeting": "Доброе утро, Андрей Жиров!",
+    "kpis": {
+      "avg_milk_yield_kg": 28.2,
+      "health_index_pct": 94,
+      "pregnancy_rate_21d_pct": 24,
+      "cows_need_attention_today": 2,
+      "active_cows": 350,
+      "lactating_cows": 300,
+      "dry_cows": 50
+    },
+    "highlights": [
+      "Ночка (3142): второй день снижения активности",
+      "СКК Ночки 420k при контроле вечером — формируется алерт"
+    ],
+    "generated_at": "2026-04-20T05:00:00+00:00"
+  },
+  {
+    "brief_id": "MBRIEF_20260419",
+    "date": "2026-04-19",
+    "farm_id": "INV_FARM_001",
+    "director_greeting": "Доброе утро, Андрей Жиров!",
+    "kpis": {
+      "avg_milk_yield_kg": 28.7,
+      "health_index_pct": 95,
+      "pregnancy_rate_21d_pct": 24,
+      "cows_need_attention_today": 1,
+      "active_cows": 350,
+      "lactating_cows": 300,
+      "dry_cows": 50
+    },
+    "highlights": [
+      "Ночка (3142): первое снижение активности, мониторинг",
+      "Малина (3891): консультация ветврача по выбраковке"
+    ],
+    "generated_at": "2026-04-19T05:00:00+00:00"
+  }
+]
