@@ -41,3 +41,8 @@ MVP_progress.md
 design_decisions.md
 .env.ai
 tests.backup.*
+
+# Smoke test artifacts — не коммитим
+tmp/smoke_*/
+*.db-journal
+src/core/web_cabinet/storage/web.db

@@ -1,2 +1,0 @@
-ReproEventID,AnimalID,FarmID,LactationID,EventDate,EventType,Result,BullID,Technician,Method,Notes
-RE1,A1,F1,L1,2025-02-01,insemination,,B1,tech,synch,first

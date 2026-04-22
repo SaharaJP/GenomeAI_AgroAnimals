@@ -1,2 +1,0 @@
-EventID,AnimalID,FarmID,EventDate,EventType,Comment,PenID,ReasonCode
-BE1,A1,F1,2025-03-10,pen_move,moved,PEN-2,pen_rebalance
