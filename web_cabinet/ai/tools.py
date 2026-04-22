@@ -1,17 +1,30 @@
-"""Tool definitions для Anthropic tool use — skeleton для N12."""
+"""Tool definitions + executors for Anthropic tool use (MVP-N12)."""
 from __future__ import annotations
+
+import datetime
+from typing import Any, Optional
+
+import pandas as pd
+
+# ---------------------------------------------------------------------------
+# Anthropic tool definition dicts
+# ---------------------------------------------------------------------------
 
 COW_HISTORY_TOOL = {
     "name": "get_cow_history",
     "description": (
-        "Получает историю событий по конкретной корове: удои, SCC, лечения, "
-        "воспроизводство за указанный период."
+        "Получить полную историю коровы: события за N дней, лечения, удой по дням, BCS, "
+        "переводы групп. Используй когда нужны детали конкретной коровы."
     ),
     "input_schema": {
         "type": "object",
         "properties": {
             "cow_id": {"type": "string", "description": "ID коровы"},
-            "days_back": {"type": "integer", "description": "Глубина истории в днях", "default": 30},
+            "days_back": {
+                "type": "integer",
+                "description": "Глубина истории в днях",
+                "default": 30,
+            },
         },
         "required": ["cow_id"],
     },
@@ -19,86 +32,146 @@ COW_HISTORY_TOOL = {
 
 GROUP_METRICS_TOOL = {
     "name": "get_group_metrics",
-    "description": "Получает агрегированные метрики по группе/стаду за период.",
+    "description": (
+        "Получить агрегированные метрики по группе/стаду за период: удой, SCC, "
+        "события здоровья, воспроизводство. Используй для сравнения групп или "
+        "анализа динамики в группе."
+    ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "group_id": {"type": "string", "description": "ID группы, или 'all' для всего стада"},
-            "metric": {
+            "group_id": {
                 "type": "string",
-                "enum": ["milk_yield", "scc", "reproduction", "health"],
-                "description": "Тип метрики",
+                "description": "ID группы/пера, или 'all' для всего стада",
             },
-            "days_back": {"type": "integer", "default": 7},
+            "period": {
+                "type": "string",
+                "enum": ["7d", "14d", "30d"],
+                "description": "Период анализа",
+                "default": "7d",
+            },
         },
-        "required": ["metric"],
+        "required": ["group_id"],
     },
 }
 
 EVENT_SEARCH_TOOL = {
     "name": "search_events",
-    "description": "Ищет события по ферме: болезни, лечения, осеменения, отёлы, выбраковки.",
+    "description": (
+        "Поиск событий по ферме с фильтрацией: болезни, лечения, осеменения, "
+        "отёлы, выбраковки. Используй когда нужно найти конкретный тип событий "
+        "за период или по конкретным коровам."
+    ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "event_type": {
-                "type": "string",
-                "enum": ["mastitis", "treatment", "insemination", "calving", "culling", "scc_spike", "all"],
+            "event_types": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Типы событий: mastitis, treatment, insemination, calving, culling, scc_spike, health, repro",
             },
-            "days_back": {"type": "integer", "default": 14},
-            "cow_id": {"type": "string", "description": "Опционально: фильтр по корове"},
+            "cow_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Опциональный фильтр по коровам",
+            },
+            "date_from": {
+                "type": "string",
+                "description": "Начало периода ISO-8601 (YYYY-MM-DD)",
+            },
+            "date_to": {
+                "type": "string",
+                "description": "Конец периода ISO-8601 (YYYY-MM-DD)",
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Максимум результатов",
+                "default": 50,
+            },
         },
-        "required": ["event_type"],
     },
 }
 
 TREATMENT_TOOL = {
-    "name": "get_treatments",
-    "description": "Получает список текущих и завершённых лечений.",
+    "name": "get_treatment_records",
+    "description": (
+        "Получить список лечений и withdrawal-статусов. "
+        "Используй для проверки активных withdrawals или истории лечений."
+    ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "status": {"type": "string", "enum": ["active", "completed", "all"], "default": "active"},
-            "days_back": {"type": "integer", "default": 30},
+            "status": {
+                "type": "string",
+                "enum": ["active", "completed", "all"],
+                "description": "Фильтр по статусу",
+                "default": "all",
+            },
+            "cow_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Опциональный фильтр по коровам",
+            },
         },
     },
 }
 
 REPRODUCTION_TOOL = {
     "name": "get_reproduction_status",
-    "description": "Получает статус воспроизводства: коровы в охоте, стельные, ожидающие осеменения.",
+    "description": (
+        "Получить статус воспроизводства: последняя охота, осеменение, "
+        "результат проверки стельности, DIM, VWP. "
+        "Используй для анализа эффективности воспроизводства."
+    ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "status": {
+            "cow_ids": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Список ID коров (опционально)",
+            },
+            "group_id": {
                 "type": "string",
-                "enum": ["in_heat", "pregnant", "open", "all"],
-                "default": "all",
+                "description": "ID группы для агрегации (опционально)",
             },
         },
     },
 }
 
 MILK_QUALITY_TOOL = {
-    "name": "get_milk_quality",
-    "description": "Получает показатели качества молока: SCC, жир, белок, бактериальная обсеменённость.",
+    "name": "get_milk_quality_trend",
+    "description": (
+        "Получить тренды качества молока: SCC, conductivity, жир, белок. "
+        "Работает на уровне коровы или группы за период."
+    ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "days_back": {"type": "integer", "default": 7},
-            "level": {"type": "string", "enum": ["herd", "group", "cow"], "default": "herd"},
-            "id": {"type": "string", "description": "ID группы или коровы (при level != herd)"},
+            "cow_id": {"type": "string", "description": "ID коровы (или null для группы/стада)"},
+            "group_id": {"type": "string", "description": "ID группы (или null для отдельной коровы)"},
+            "period": {
+                "type": "string",
+                "enum": ["7d", "14d", "30d"],
+                "default": "30d",
+            },
         },
     },
 }
 
 ECONOMICS_TOOL = {
-    "name": "get_economics",
-    "description": "Получает экономические показатели: выручка, затраты, маржа, прогноз.",
+    "name": "get_economics_snapshot",
+    "description": (
+        "Получить экономику: NPV, дневной cash flow, break-even прогноз. "
+        "На уровне коровы или всей фермы. Используй для оценки целесообразности выбраковки."
+    ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "period": {"type": "string", "enum": ["day", "week", "month"], "default": "week"},
+            "cow_id": {
+                "type": "string",
+                "description": "ID коровы для индивидуального NPV (или null для фермы)",
+            },
         },
     },
 }
@@ -112,3 +185,453 @@ ALL_TOOLS = [
     MILK_QUALITY_TOOL,
     ECONOMICS_TOOL,
 ]
+
+# ---------------------------------------------------------------------------
+# Tool executor
+# ---------------------------------------------------------------------------
+
+_MAX_OUTPUT_TOKENS = 5000
+_APPROX_CHARS_PER_TOKEN = 4
+
+
+def _truncate(data: Any, label: str = "") -> Any:
+    """Truncate serialised output to stay under _MAX_OUTPUT_TOKENS."""
+    import json
+    text = json.dumps(data, ensure_ascii=False, default=str)
+    limit = _MAX_OUTPUT_TOKENS * _APPROX_CHARS_PER_TOKEN
+    if len(text) <= limit:
+        return data
+    # Return truncated rows
+    if isinstance(data, dict) and "rows" in data:
+        rows = data["rows"]
+        while len(json.dumps(data, ensure_ascii=False, default=str)) > limit and rows:
+            rows = rows[:-1]
+        data["rows"] = rows
+        data["truncated"] = True
+        return data
+    return {"truncated_text": text[:limit], "truncated": True}
+
+
+def execute_tool(tool_name: str, tool_input: dict, store: Any) -> dict:
+    """
+    Dispatch a tool call to the appropriate executor.
+
+    Parameters
+    ----------
+    tool_name:   One of the tool names in ALL_TOOLS.
+    tool_input:  Parsed input dict from Claude tool_use block.
+    store:       DemoDataStore (or future DB-backed store).
+
+    Returns
+    -------
+    JSON-serialisable dict, max ~5000 tokens.
+    """
+    handlers = {
+        "get_cow_history": _exec_cow_history,
+        "get_group_metrics": _exec_group_metrics,
+        "search_events": _exec_search_events,
+        "get_treatment_records": _exec_treatment_records,
+        "get_reproduction_status": _exec_reproduction_status,
+        "get_milk_quality_trend": _exec_milk_quality_trend,
+        "get_economics_snapshot": _exec_economics_snapshot,
+    }
+    handler = handlers.get(tool_name)
+    if handler is None:
+        return {"error": f"unknown tool: {tool_name}"}
+    result = handler(tool_input, store)
+    return _truncate(result, tool_name)
+
+
+# ---------------------------------------------------------------------------
+# Individual executors
+# ---------------------------------------------------------------------------
+
+def _exec_cow_history(inp: dict, store: Any) -> dict:
+    cow_id = str(inp["cow_id"])
+    days_back = int(inp.get("days_back", 30))
+    as_ts = pd.Timestamp(datetime.date.today())
+    window = as_ts - pd.Timedelta(days=days_back)
+
+    rows_mk = _filter_df(
+        store.milkings(), "animal_id", cow_id,
+        date_col="date", date_from=window,
+    )
+    rows_he = _filter_df(
+        store.health_events(), "animal_id", cow_id,
+        date_col="event_date", date_from=window,
+    )
+    rows_tr = _filter_df(
+        store.treatments(), "animal_id", cow_id,
+        date_col="start_date", date_from=window,
+    )
+    rows_repro = _filter_df(
+        store.repro_events(), "animal_id", cow_id,
+        date_col="event_date", date_from=window,
+    )
+    rows_moves = _filter_df(
+        store.pen_moves(), "animal_id", cow_id,
+        date_col="move_date", date_from=window,
+    )
+
+    return {
+        "cow_id": cow_id,
+        "days_back": days_back,
+        "rows": {
+            "milkings": _df_to_records(rows_mk),
+            "health_events": _df_to_records(rows_he),
+            "treatments": _df_to_records(rows_tr),
+            "repro_events": _df_to_records(rows_repro),
+            "pen_moves": _df_to_records(rows_moves),
+        },
+    }
+
+
+def _exec_group_metrics(inp: dict, store: Any) -> dict:
+    group_id = str(inp.get("group_id", "all"))
+    period = inp.get("period", "7d")
+    days_back = int(period.rstrip("d")) if period else 7
+
+    as_ts = pd.Timestamp(datetime.date.today())
+    window = as_ts - pd.Timedelta(days=days_back)
+
+    animals = store.animals()
+    if group_id != "all" and not animals.empty and "current_pen_id" in animals.columns:
+        group_animals = animals[animals["current_pen_id"] == group_id]["animal_id"].tolist()
+    else:
+        group_animals = animals["animal_id"].tolist() if not animals.empty else []
+
+    milkings = store.milkings()
+    avg_yield = scc_avg = 0.0
+    if not milkings.empty and group_animals:
+        mk = milkings.copy()
+        mk["date"] = pd.to_datetime(mk["date"], errors="coerce")
+        gm = mk[(mk["animal_id"].isin(group_animals)) & (mk["date"] >= window)]
+        if not gm.empty:
+            avg_yield = float(gm["milk_kg"].mean()) if "milk_kg" in gm else 0.0
+            scc_avg = float(gm["scc_cells_ml"].mean()) / 1000 if "scc_cells_ml" in gm else 0.0
+
+    he = store.health_events()
+    health_event_count = 0
+    if not he.empty and group_animals:
+        h = he.copy()
+        h["event_date"] = pd.to_datetime(h["event_date"], errors="coerce")
+        health_event_count = int(
+            len(h[(h["animal_id"].isin(group_animals)) & (h["event_date"] >= window)])
+        )
+
+    return {
+        "group_id": group_id,
+        "period": period,
+        "cow_count": len(group_animals),
+        "avg_milk_yield_kg": round(avg_yield, 2),
+        "scc_avg_k": round(scc_avg, 1),
+        "health_event_count": health_event_count,
+    }
+
+
+def _exec_search_events(inp: dict, store: Any) -> dict:
+    event_types = [str(t) for t in inp.get("event_types", [])]
+    cow_ids = [str(c) for c in inp.get("cow_ids", [])] if inp.get("cow_ids") else []
+    date_from = pd.Timestamp(inp["date_from"]) if inp.get("date_from") else pd.Timestamp("2020-01-01")
+    date_to = pd.Timestamp(inp["date_to"]) if inp.get("date_to") else pd.Timestamp(datetime.date.today())
+    limit = int(inp.get("limit", 50))
+
+    results: list[dict] = []
+
+    # Health events
+    if not event_types or any(t in event_types for t in ("mastitis", "health", "all")):
+        he = store.health_events()
+        if not he.empty:
+            h = he.copy()
+            h["event_date"] = pd.to_datetime(h["event_date"], errors="coerce")
+            mask = (h["event_date"] >= date_from) & (h["event_date"] <= date_to)
+            if cow_ids:
+                mask &= h["animal_id"].isin(cow_ids)
+            if event_types and "all" not in event_types and "health" not in event_types:
+                mask &= h["event_type"].isin(event_types)
+            for _, row in h[mask].iterrows():
+                results.append({
+                    "source": "health_events",
+                    "evidence_id": str(row.get("event_id", "")),
+                    "cow_id": str(row.get("animal_id", "")),
+                    "date": str(row["event_date"].date()) if pd.notna(row["event_date"]) else "",
+                    "type": str(row.get("event_type", "")),
+                    "severity": str(row.get("severity", "")),
+                    "notes": str(row.get("notes", "")),
+                })
+
+    # Treatments
+    if not event_types or any(t in event_types for t in ("treatment", "all")):
+        tr = store.treatments()
+        if not tr.empty:
+            t = tr.copy()
+            t["start_date"] = pd.to_datetime(t["start_date"], errors="coerce")
+            mask = (t["start_date"] >= date_from) & (t["start_date"] <= date_to)
+            if cow_ids:
+                mask &= t["animal_id"].isin(cow_ids)
+            for _, row in t[mask].iterrows():
+                results.append({
+                    "source": "treatments",
+                    "evidence_id": str(row.get("treatment_id", "")),
+                    "cow_id": str(row.get("animal_id", "")),
+                    "date": str(row["start_date"].date()) if pd.notna(row["start_date"]) else "",
+                    "type": "treatment",
+                    "treatment_type": str(row.get("treatment_type", "")),
+                    "withdrawal_end": str(row.get("withdrawal_end_date", "")),
+                })
+
+    # Repro events
+    repro_types = {"insemination", "calving", "repro"}
+    if not event_types or any(t in event_types for t in repro_types | {"all"}):
+        repro = store.repro_events()
+        if not repro.empty:
+            r = repro.copy()
+            r["event_date"] = pd.to_datetime(r["event_date"], errors="coerce")
+            mask = (r["event_date"] >= date_from) & (r["event_date"] <= date_to)
+            if cow_ids:
+                mask &= r["animal_id"].isin(cow_ids)
+            if event_types and "all" not in event_types and "repro" not in event_types:
+                mask &= r["event_type"].isin(event_types)
+            for _, row in r[mask].iterrows():
+                results.append({
+                    "source": "repro_events",
+                    "evidence_id": str(row.get("repro_event_id", "")),
+                    "cow_id": str(row.get("animal_id", "")),
+                    "date": str(row["event_date"].date()) if pd.notna(row["event_date"]) else "",
+                    "type": str(row.get("event_type", "")),
+                    "result": str(row.get("result", "")),
+                    "notes": str(row.get("notes", "")),
+                })
+
+    results.sort(key=lambda e: e.get("date", ""), reverse=True)
+    return {"rows": results[:limit], "total_found": len(results)}
+
+
+def _exec_treatment_records(inp: dict, store: Any) -> dict:
+    status = str(inp.get("status", "all")).lower()
+    cow_ids = [str(c) for c in inp.get("cow_ids", [])] if inp.get("cow_ids") else []
+
+    tr = store.treatments()
+    if tr.empty:
+        return {"rows": [], "status_filter": status}
+
+    t = tr.copy()
+    today = pd.Timestamp(datetime.date.today())
+    t["start_date"] = pd.to_datetime(t["start_date"], errors="coerce")
+    t["end_date"] = pd.to_datetime(t["end_date"], errors="coerce")
+    t["withdrawal_end_date"] = pd.to_datetime(t["withdrawal_end_date"], errors="coerce")
+
+    mask = pd.Series([True] * len(t), index=t.index)
+    if cow_ids:
+        mask &= t["animal_id"].isin(cow_ids)
+
+    if status == "active":
+        mask &= (t["start_date"] <= today) & (t["end_date"] >= today)
+    elif status == "completed":
+        mask &= t["end_date"] < today
+
+    rows = []
+    for _, row in t[mask].iterrows():
+        wd = row.get("withdrawal_end_date")
+        in_withdrawal = pd.notna(wd) and pd.Timestamp(wd) >= today if pd.notna(wd) else False
+        rows.append({
+            "treatment_id": str(row.get("treatment_id", "")),
+            "cow_id": str(row.get("animal_id", "")),
+            "start_date": str(row["start_date"].date()) if pd.notna(row["start_date"]) else "",
+            "end_date": str(row["end_date"].date()) if pd.notna(row["end_date"]) else "",
+            "treatment_type": str(row.get("treatment_type", "")),
+            "reason_event_id": str(row.get("reason_event_id", "")),
+            "withdrawal_end_date": str(wd.date()) if pd.notna(wd) else None,
+            "in_withdrawal": bool(in_withdrawal),
+            "evidence_id": str(row.get("treatment_id", "")),
+        })
+
+    return {"rows": rows, "status_filter": status, "count": len(rows)}
+
+
+def _exec_reproduction_status(inp: dict, store: Any) -> dict:
+    cow_ids = [str(c) for c in inp.get("cow_ids", [])] if inp.get("cow_ids") else []
+    group_id = inp.get("group_id")
+
+    animals = store.animals()
+    repro = store.repro_events()
+    milkings = store.milkings()
+
+    # Resolve cow list
+    if cow_ids:
+        target_ids = cow_ids
+    elif group_id and not animals.empty and "current_pen_id" in animals.columns:
+        target_ids = animals[animals["current_pen_id"] == group_id]["animal_id"].tolist()
+    else:
+        target_ids = animals["animal_id"].tolist() if not animals.empty else []
+
+    rows = []
+    for cow_id in target_ids:
+        rec: dict = {"cow_id": str(cow_id)}
+
+        if not repro.empty:
+            r = repro[repro["animal_id"] == cow_id].copy()
+            r["event_date"] = pd.to_datetime(r["event_date"], errors="coerce")
+            r = r.sort_values("event_date", ascending=False)
+
+            last_heat = r[r["event_type"] == "heat"]
+            rec["last_heat_date"] = str(last_heat.iloc[0]["event_date"].date()) if not last_heat.empty else None
+
+            last_ins = r[r["event_type"] == "insemination"]
+            rec["last_breeding_date"] = str(last_ins.iloc[0]["event_date"].date()) if not last_ins.empty else None
+
+            preg = r[r["event_type"].isin(["preg_check", "preg_check_due"])]
+            if not preg.empty:
+                rec["preg_check_status"] = str(preg.iloc[0].get("result", "unknown"))
+            else:
+                rec["preg_check_status"] = None
+
+        # DIM from latest milking
+        if not milkings.empty:
+            mk = milkings[milkings["animal_id"] == cow_id].copy()
+            if not mk.empty:
+                mk["date"] = pd.to_datetime(mk["date"], errors="coerce")
+                latest_date = mk["date"].max()
+                if pd.notna(latest_date):
+                    today = pd.Timestamp(datetime.date.today())
+                    rec["dim_approx"] = int((today - latest_date).days)
+
+        rows.append(rec)
+
+    return {
+        "rows": rows,
+        "group_id": group_id,
+        "cow_count": len(rows),
+    }
+
+
+def _exec_milk_quality_trend(inp: dict, store: Any) -> dict:
+    cow_id = inp.get("cow_id")
+    group_id = inp.get("group_id")
+    period = inp.get("period", "30d")
+    days_back = int(str(period).rstrip("d")) if period else 30
+
+    as_ts = pd.Timestamp(datetime.date.today())
+    window = as_ts - pd.Timedelta(days=days_back)
+
+    milkings = store.milkings()
+    if milkings.empty:
+        return {"rows": [], "cow_id": cow_id, "group_id": group_id, "period": period}
+
+    mk = milkings.copy()
+    mk["date"] = pd.to_datetime(mk["date"], errors="coerce")
+    mask = mk["date"] >= window
+
+    if cow_id:
+        mask &= mk["animal_id"] == cow_id
+    elif group_id:
+        animals = store.animals()
+        if not animals.empty and "current_pen_id" in animals.columns:
+            group_cows = animals[animals["current_pen_id"] == group_id]["animal_id"].tolist()
+            mask &= mk["animal_id"].isin(group_cows)
+
+    subset = mk[mask].sort_values("date")
+    cols = ["date", "animal_id", "milk_kg", "fat_pct", "protein_pct", "scc_cells_ml"]
+    available = [c for c in cols if c in subset.columns]
+
+    rows = []
+    for _, row in subset[available].iterrows():
+        entry = {c: (str(row[c].date()) if c == "date" and pd.notna(row[c]) else row.get(c)) for c in available}
+        if "scc_cells_ml" in entry:
+            entry["scc_k"] = round(float(entry["scc_cells_ml"]) / 1000, 1) if entry["scc_cells_ml"] else None
+        rows.append(entry)
+
+    return {
+        "rows": rows,
+        "cow_id": cow_id,
+        "group_id": group_id,
+        "period": period,
+        "count": len(rows),
+    }
+
+
+def _exec_economics_snapshot(inp: dict, store: Any) -> dict:
+    cow_id = inp.get("cow_id")
+
+    econ = store.economics()
+    prices = store.prices()
+    milkings = store.milkings()
+
+    if econ.empty:
+        return {"cow_id": cow_id, "npv": None, "daily_cash_flow": None, "note": "no economics data"}
+
+    ec = econ.copy()
+    ec["date"] = pd.to_datetime(ec["date"], errors="coerce")
+    latest = ec.sort_values("date", ascending=False).head(1).iloc[0]
+
+    milk_price = float(latest.get("milk_price_per_kg", 0.5))
+    feed_cost = float(latest.get("feed_cost_per_kg_dm", 0.3))
+    other_cost = float(latest.get("other_cost_eur", 0))
+
+    if cow_id and not milkings.empty:
+        mk = milkings[milkings["animal_id"] == cow_id].copy()
+        if not mk.empty:
+            avg_yield = float(mk["milk_kg"].mean())
+            daily_revenue = avg_yield * milk_price
+            daily_feed_cost = avg_yield * 0.4 * feed_cost  # rough DMI estimate
+            daily_cf = daily_revenue - daily_feed_cost - other_cost / max(len(milkings["animal_id"].unique()), 1)
+            npv_30d = daily_cf * 30
+            return {
+                "cow_id": cow_id,
+                "avg_yield_kg": round(avg_yield, 2),
+                "milk_price_per_kg": milk_price,
+                "daily_revenue_eur": round(daily_revenue, 2),
+                "daily_cash_flow_eur": round(daily_cf, 2),
+                "npv_30d_eur": round(npv_30d, 2),
+                "break_even_yield_kg": round((daily_feed_cost + other_cost / max(len(milkings["animal_id"].unique()), 1)) / milk_price, 2) if milk_price else None,
+                "evidence_id": str(latest.get("record_id", "")),
+            }
+
+    # Farm-level
+    if not milkings.empty:
+        avg_yield = float(milkings["milk_kg"].mean()) if "milk_kg" in milkings else 0.0
+    else:
+        avg_yield = 0.0
+    n_cows = len(milkings["animal_id"].unique()) if not milkings.empty else 1
+    farm_daily_revenue = avg_yield * n_cows * milk_price
+    farm_daily_cost = avg_yield * n_cows * 0.4 * feed_cost + other_cost
+    return {
+        "cow_id": None,
+        "farm_avg_yield_kg": round(avg_yield, 2),
+        "n_cows_sampled": int(n_cows),
+        "milk_price_per_kg": milk_price,
+        "farm_daily_revenue_eur": round(farm_daily_revenue, 2),
+        "farm_daily_cost_eur": round(farm_daily_cost, 2),
+        "farm_daily_margin_eur": round(farm_daily_revenue - farm_daily_cost, 2),
+        "evidence_id": str(latest.get("record_id", "")),
+    }
+
+
+# ---------------------------------------------------------------------------
+# internal helpers
+# ---------------------------------------------------------------------------
+
+def _filter_df(
+    df: pd.DataFrame,
+    id_col: str,
+    id_val: str,
+    date_col: Optional[str] = None,
+    date_from: Optional[Any] = None,
+) -> pd.DataFrame:
+    if df.empty:
+        return df
+    mask = df[id_col] == id_val
+    if date_col and date_from is not None and date_col in df.columns:
+        df = df.copy()
+        df[date_col] = pd.to_datetime(df[date_col], errors="coerce")
+        mask &= df[date_col] >= pd.Timestamp(date_from)
+    return df[mask]
+
+
+def _df_to_records(df: pd.DataFrame) -> list[dict]:
+    if df.empty:
+        return []
+    return [
+        {k: (str(v) if isinstance(v, pd.Timestamp) else v) for k, v in row.items()}
+        for row in df.to_dict("records")
+    ]
