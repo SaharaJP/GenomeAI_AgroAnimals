@@ -22,6 +22,9 @@ from packages.contracts.api_boundary_v1 import (
     FeedbackItem,
     FeedbackListResponse,
     FeedbackMetrics,
+    InsightItem,
+    InsightsListResponse,
+    InsightTransitionRequest,
     PilotPackItem,
     PilotResponse,
     PilotSummary,
@@ -67,6 +70,11 @@ from genomeai.copilot_tools import load_copilot_tools_config, resolve_section_re
 
 from .auth import get_current_user, get_db
 from .feedback_v1 import compute_feedback_metrics, list_feedback
+from .insights_v1 import (
+    get_insight as _get_insight,
+    list_insights as _list_insights,
+    transition_insight as _transition_insight,
+)
 from .observability import snapshot as obs_snapshot
 from .rbac import require_permissions
 from .reports_approvals_v1 import list_report_statuses
@@ -877,3 +885,39 @@ def boundary_support(user=Depends(get_current_user)):
         ),
         source_paths=dict(support_payload.get('source_paths') or {}),
     )
+
+
+@router.get('/insights', response_model=InsightsListResponse)
+def boundary_insights_list(
+    status: Optional[str] = None,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
+        raise HTTPException(status_code=403)
+    return _list_insights(status=status)
+
+
+@router.get('/insights/{insight_id}', response_model=InsightItem)
+def boundary_insights_get(
+    insight_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
+        raise HTTPException(status_code=403)
+    item = _get_insight(insight_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found')
+    return item
+
+
+@router.post('/insights/{insight_id}/transition', response_model=InsightItem)
+def boundary_insights_transition(
+    insight_id: str,
+    body: InsightTransitionRequest,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    item = _transition_insight(insight_id, body.status)
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or invalid status')
