@@ -128,3 +128,37 @@ class AIHealthResponse(BaseModel):
     demo_mode: bool
     cache_enabled: bool
     api_configured: bool
+
+
+# ---------------------------------------------------------------------------
+# Insight Scanner V2 (MVP-N15)
+# ---------------------------------------------------------------------------
+
+class ScannerRecommendation(BaseModel):
+    action: str
+    priority: Literal["high", "medium", "low"]
+    role: Literal["vet", "zootech", "operator", "director"]
+    due_hint: Optional[str] = None
+
+
+class ScannerInsight(BaseModel):
+    insight_id: str = Field(default_factory=lambda: f"ins_{uuid.uuid4().hex[:12]}")
+    farm_id: str
+    title: str
+    description: str
+    category: Literal["production", "reproduction", "health", "feeding", "welfare", "economics"]
+    priority: Literal["high", "medium", "low"]
+    status: Literal["to_check", "to_follow_up", "done"] = "to_check"
+    affected_cow_ids: list[str] = []
+    affected_group_ids: list[str] = []
+    evidence_ids: list[str] = []
+    recommendations: list[ScannerRecommendation] = []
+    generated_at_utc: datetime = Field(default_factory=datetime.utcnow)
+    generator: str = "ai_scanner"
+
+
+class ScanNowResponse(BaseModel):
+    farm_id: str
+    new_insights: list[ScannerInsight]
+    message: str
+    demo_mode: bool = True
