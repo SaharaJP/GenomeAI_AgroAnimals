@@ -1,8 +1,10 @@
 """Pydantic схемы для всех AI endpoints и use-cases GenomeAI."""
 from __future__ import annotations
 
+import uuid
+from datetime import date as _date
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -40,20 +42,44 @@ class Insight(BaseModel):
     cow_id: Optional[str] = None
 
 
-class MorningBrief(BaseModel):
-    date: str
-    farm_id: str
-    executive_summary: str
-    critical_count: int = 0
-    warning_count: int = 0
-    top_insights: list[Insight] = []
-    action_items: list[str] = []
-    kpi_snapshot: dict = Field(default_factory=dict)
-    model: str
-    generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    input_tokens: int = 0
-    output_tokens: int = 0
+# ---------------------------------------------------------------------------
+# Morning Brief V2 (MVP-N14)
+# ---------------------------------------------------------------------------
 
+class OvernightChange(BaseModel):
+    text: str
+    evidence_id: Optional[str] = None
+
+
+class TodayAction(BaseModel):
+    action: str
+    priority: Literal["high", "medium", "low"]
+    due: Optional[str] = None
+    role: Literal["vet", "zootech", "operator", "director"]
+
+
+class MorningBriefRequest(BaseModel):
+    farm_id: str = "demo-farm-v1"
+    force_regenerate: bool = False
+
+
+class MorningBrief(BaseModel):
+    brief_id: str = Field(default_factory=lambda: f"mb_{uuid.uuid4().hex[:12]}")
+    farm_id: str
+    generated_at_utc: datetime = Field(default_factory=datetime.utcnow)
+    date: _date = Field(default_factory=_date.today)
+    headline: str
+    main_takeaway: str
+    overnight_changes: list[OvernightChange] = []
+    today_actions: list[TodayAction] = []
+    notes: list[str] = []
+    generation_model: str
+    generation_tokens: dict = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Weekly Brief
+# ---------------------------------------------------------------------------
 
 class WeeklyBrief(BaseModel):
     week_start: str
