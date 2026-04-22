@@ -20,6 +20,10 @@ Generated: 2026-04-21 | seed=42 | mode=connecterra
 | `morning_briefs_seeded.json` | 3 | 3 morning briefings (today/yesterday/day before) |
 | `weekly_briefs_seeded.json` | 2 | 2 weekly briefings |
 | `impact_analyses_seeded.json` | 4 | Economic impact per timeline event |
+| `seeded_insights.json` | 12 | 12 AI-schema insights (Insight model) — --with-ai-seeds |
+| `seeded_morning_briefs.json` | 3 | 3 MorningBrief-schema briefings — --with-ai-seeds |
+| `seeded_weekly_briefs.json` | 2 | 2 WeeklyBrief-schema briefings — --with-ai-seeds |
+| `seeded_impact_analyses.json` | 8 | 8 ImpactAnalysis-schema records — --with-ai-seeds |
 
 ## Seeded Demo Cases
 

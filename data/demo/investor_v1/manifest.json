@@ -45,6 +45,10 @@
     "timeline_events_seeded": 12,
     "morning_briefs_seeded": 3,
     "weekly_briefs_seeded": 2,
-    "impact_analyses_seeded": 4
+    "impact_analyses_seeded": 4,
+    "seeded_insights": 12,
+    "seeded_morning_briefs": 3,
+    "seeded_weekly_briefs": 2,
+    "seeded_impact_analyses": 8
   }
 }

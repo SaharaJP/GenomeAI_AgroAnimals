@@ -632,6 +632,664 @@ def _build_impact_analyses() -> list:
     ]
 
 
+# ─── AI-schema seeded fixtures (--with-ai-seeds) ──────────────────────────────
+
+def _build_seeded_insights() -> list:
+    ts = _ts(TODAY, hour=5)
+    return [
+        {
+            "id": "INS_AI_001",
+            "title": "Ночка: признаки мастита без назначенного лечения",
+            "description": (
+                "Корова 3142 (Ночка, 2-я лактация, 45 DIM) показывает нарастающие признаки "
+                "субклинического мастита. Активность снизилась на 29% за 3 дня (91→65 баллов). "
+                "СКК вчера: 450k клеток/мл, проводимость аномальная. Открытых протоколов лечения "
+                "не назначено — риск перехода в клиническую форму и потерь >2 кг/день."
+            ),
+            "severity": "critical",
+            "evidence": [
+                {"event_id": "EV_3142_ACT_1",  "description": "Активность 65 (−29% vs baseline 91)"},
+                {"event_id": "EV_3142_SCC_01", "description": "СКК 450k, проводимость аномальная, нет лечения"},
+            ],
+            "recommendation": (
+                "Ветврачу осмотреть Ночку сегодня до 12:00. Взять пробы молока из всех четвертей, "
+                "при подтверждении назначить протокол Цефквином интрамаммарно."
+            ),
+            "deadline_hours": 4,
+            "cow_id": "3142",
+        },
+        {
+            "id": "INS_AI_002",
+            "title": "Звёздочка: удой не восстановился — 42 дня после мастита",
+            "description": (
+                "Корова 4821 (Звёздочка, 3-я лактация, 156 DIM) перенесла мастит 42 дня назад "
+                "(СКК 450k, лечение Цефквином). После перевода в группу 3 DMI упал на 14%, "
+                "удой стабилизировался на 28 кг/день вместо ожидаемых 36 кг (−22%). "
+                "Потери за 28 дней: 224 кг молока (~7 168 руб)."
+            ),
+            "severity": "warning",
+            "evidence": [
+                {"event_id": "EV_4821_MAST_01", "description": "Мастит СКК 450k, начало лечения Цефквином"},
+                {"event_id": "EV_4821_MOVE_01", "description": "Перевод в группу 3, DMI −14%"},
+            ],
+            "recommendation": (
+                "Оценить возможность возврата в группу 1 через 10–14 дней при надое >30 кг. "
+                "Еженедельный мониторинг удоя и DMI."
+            ),
+            "deadline_hours": None,
+            "cow_id": "4821",
+        },
+        {
+            "id": "INS_AI_003",
+            "title": "Малина: рекомендована выбраковка — негативный NPV и рецидив мастита",
+            "description": (
+                "Корова 3891 (Малина, 3-я лактация, 285 DIM) получила два эпизода мастита "
+                "за 60 дней: СКК 680k (20 февраля) и СКК 800k (22 марта, тот же сектор). "
+                "Open 145 дней. NPV последних 30 дней: −$180 USD. Индекс выбраковки: 82/100. "
+                "Экономика продолжения лактации не восстанавливается."
+            ),
+            "severity": "critical",
+            "evidence": [
+                {"event_id": "EV_3891_MAST_01", "description": "1-й мастит СКК 680k"},
+                {"event_id": "EV_3891_MAST_02", "description": "2-й мастит СКК 800k, рецидив"},
+            ],
+            "recommendation": (
+                "Принять решение о выбраковке на ближайшем совещании. "
+                "Альтернатива — досрочный сухостой с повторной оценкой через 30 дней."
+            ),
+            "deadline_hours": 48,
+            "cow_id": "3891",
+        },
+        {
+            "id": "INS_AI_004",
+            "title": "Pregnancy Rate 21d достиг 24% — новый рекорд фермы",
+            "description": (
+                "Показатель стельности за последние 21 день: 24% (+3pp к медиане аналогов 21%). "
+                "В ходе волны охоты 7–9 апреля осеменено 11 из 14 коров. "
+                "Ожидаемый эффект: +14 стельностей в квартал (+56 в год). "
+                "Конверсия при стоимости телёнка 20 000 руб: +1,12 млн руб/год."
+            ),
+            "severity": "info",
+            "evidence": [
+                {"event_id": "TL_007", "description": "11 из 14 коров осеменено при волне охоты"},
+                {"event_id": "TL_011", "description": "PR 21d = 24%, +3pp к медиане"},
+            ],
+            "recommendation": (
+                "Поддерживать текущий протокол синхронизации. "
+                "Включить KPI в презентацию для инвестора."
+            ),
+            "deadline_hours": None,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_005",
+            "title": "СКК в группе Лактирующие III растёт второй месяц",
+            "description": (
+                "Среднее СКК PEN_LACT_3 выросло с 185k до 247k клеток/мл за 45 дней (+33%). "
+                "6 коров преодолели порог 400k. Тренд начат 21 января, не остановлен. "
+                "Риск потери ценовой премии за качество при дальнейшем росте: "
+                "~8 400 руб/неделю (50 коров × 28 кг × 6 руб/кг)."
+            ),
+            "severity": "warning",
+            "evidence": [
+                {"event_id": "TL_009", "description": "Начало тренда СКК 185k→210k в январе"},
+            ],
+            "recommendation": (
+                "Ревизия доильного оборудования (вакуум, пульсация). "
+                "Аудит гигиены додаивания и постдоильной обработки. "
+                "Осмотр 6 коров с СКК >400k."
+            ),
+            "deadline_hours": 72,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_006",
+            "title": "2 коровы с высокой охотой — AI рекомендован сегодня",
+            "description": (
+                "Система активности зафиксировала охоту у двух коров сегодня утром: "
+                "3067 (активность +140% vs baseline, пик 04:30) и "
+                "3112 (активность +128%, пик 05:15). "
+                "Оптимальное окно осеменения: 6–18 часов после пика."
+            ),
+            "severity": "info",
+            "evidence": [
+                {"event_id": "EV_3067_HEAT_01", "description": "Активность 3067 +140% vs baseline"},
+                {"event_id": "EV_3112_HEAT_01", "description": "Активность 3112 +128% vs baseline"},
+            ],
+            "recommendation": "Запланировать AI для 3067 и 3112 сегодня до 14:00. Добавить в worklist оператора.",
+            "deadline_hours": 8,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_007",
+            "title": "Карантин: 5 коров — молоко не сдаётся на танк",
+            "description": (
+                "Пять коров находятся в периоде ожидания после антибиотикотерапии: "
+                "3033 (−2д), 3078 (−1д), 3101 (−3д), 3155 (−5д), 3201 (−4д). "
+                "Суммарные плановые потери молока: 420 кг (~13 440 руб). "
+                "Соблюдение карантина 100% — молоко корректно изолируется."
+            ),
+            "severity": "warning",
+            "evidence": [
+                {"event_id": "TL_010", "description": "Карантин: 5 коров, 420 кг потерь"},
+            ],
+            "recommendation": (
+                "Проверить дату снятия карантина у каждой коровы. "
+                "3155 и 3201 — ближайшие к завершению."
+            ),
+            "deadline_hours": 24,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_008",
+            "title": "Средний надой 28.5 кг/гол — в плановом диапазоне",
+            "description": (
+                "Суточный надой сегодня: 28.5 кг/гол (план 28.0–30.0 кг). "
+                "Health Index: 94%. Жир: 3.82%, белок: 3.19%. "
+                "300 лактирующих, 50 сухостоя. Надой за прошлую неделю: 28.4 кг/гол."
+            ),
+            "severity": "info",
+            "evidence": [
+                {"event_id": "TL_012", "description": "KPI-снапшот 2026-04-21"},
+            ],
+            "recommendation": "Мониторинг без действий. Поддерживать кормовой рацион.",
+            "deadline_hours": None,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_009",
+            "title": "Ферма опережает медиану аналогов на 3pp по PR 21d",
+            "description": (
+                "PR 21d фермы = 24% при медиане аналогичных хозяйств 21%. "
+                "Разрыв +3pp при 300 лактирующих коровах даёт ~+56 стельностей в год. "
+                "При стоимости телёнка 20 000 руб: ~+1,12 млн руб/год дополнительно."
+            ),
+            "severity": "info",
+            "evidence": [
+                {"event_id": "TL_011", "description": "PR 24% vs benchmark 21%"},
+            ],
+            "recommendation": "Включить KPI в презентацию для инвестора как демонстрацию ROI системы.",
+            "deadline_hours": None,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_010",
+            "title": "Fresh-группа: 3 коровы с признаками субклинического кетоза",
+            "description": (
+                "В группе PEN_FRESH_1 (50 коров, DIM 1–30) плановый скрининг BHBA "
+                "выявил 3 коровы с показателем >1.2 ммоль/л. Возможный субклинический кетоз. "
+                "Риск: снижение пикового удоя и ухудшение репродуктивных показателей в текущей лактации."
+            ),
+            "severity": "info",
+            "evidence": [
+                {"event_id": "EV_FRESH_KETOSIS_01", "description": "3 коровы BHBA >1.2 при скрининге"},
+            ],
+            "recommendation": (
+                "Повторный замер через 3 дня. Проверить NDF/NFC рациона. "
+                "При BHBA >2.0 — пропиленгликоль или Бутафосфан+В12."
+            ),
+            "deadline_hours": None,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_011",
+            "title": "Прогноз: 8 отёлов ожидается в ближайшие 14 дней",
+            "description": (
+                "По репродуктивным карточкам 8 коров имеют расчётную дату отёла до 2026-05-05. "
+                "Все переведены в Сухостой. Предыдущая волна отёлов (6 коров в марте) "
+                "прошла успешно, fresh-протокол соблюдён. Готовность родильного отделения "
+                "необходимо проверить заблаговременно."
+            ),
+            "severity": "info",
+            "evidence": [
+                {"event_id": "TL_008", "description": "6 отёлов в марте, опыт fresh-протокола"},
+            ],
+            "recommendation": (
+                "Проверить родильное отделение, запас окситоцина, кальция, витамина Е. "
+                "Назначить дежурного ветврача на 26 апреля — 5 мая."
+            ),
+            "deadline_hours": None,
+            "cow_id": None,
+        },
+        {
+            "id": "INS_AI_012",
+            "title": "DMI в группе Лактирующие III снизился на 8% за неделю",
+            "description": (
+                "Среднее потребление корма в PEN_LACT_3 упало с 21.8 до 20.1 кг/гол/день (−8%). "
+                "Снижение коррелирует с переводом 3 коров после лечения (социальный стресс) "
+                "и возможным ухудшением качества силоса. "
+                "Риск: дальнейшее снижение удоя в группе."
+            ),
+            "severity": "warning",
+            "evidence": [
+                {"event_id": "TL_002", "description": "Перевод Звёздочки — DMI −14% в группе"},
+            ],
+            "recommendation": (
+                "Анализ силоса на крахмал и pH. "
+                "Подгонка рациона совместно с нутрициологом."
+            ),
+            "deadline_hours": 48,
+            "cow_id": None,
+        },
+    ]
+
+
+def _build_seeded_morning_briefs() -> list:
+    insights = _build_seeded_insights()
+    by_id = {i["id"]: i for i in insights}
+
+    return [
+        {
+            "date": TODAY.isoformat(),
+            "farm_id": FARM_ID,
+            "executive_summary": (
+                "Ферма работает стабильно. Надой 28.5 кг/гол, Health Index 94%. "
+                "Критическая ситуация: Ночка (3142) — признаки мастита без назначенного "
+                "лечения, ветврачу на осмотр до 12:00. 2 коровы в охоте — AI сегодня."
+            ),
+            "critical_count": 1,
+            "warning_count": 2,
+            "top_insights": [
+                by_id["INS_AI_001"],
+                by_id["INS_AI_006"],
+                by_id["INS_AI_002"],
+            ],
+            "action_items": [
+                "Ветврачу: осмотреть Ночку (3142) до 12:00 — подозрение на мастит",
+                "Оператору: AI для коров 3067 и 3112 до 14:00",
+                "Проверить дату снятия карантина у 5 коров на антибиотиках",
+            ],
+            "kpi_snapshot": {
+                "avg_milk_yield_kg": 28.5,
+                "health_index_pct": 94,
+                "pregnancy_rate_21d_pct": 24,
+                "cows_need_attention_today": 3,
+                "active_cows": 350,
+                "lactating_cows": 300,
+                "dry_cows": 50,
+                "fat_pct": 3.82,
+                "protein_pct": 3.19,
+            },
+            "model": "claude-sonnet-4-6",
+            "generated_at": _ts(TODAY, hour=5),
+            "input_tokens": 2841,
+            "output_tokens": 412,
+        },
+        {
+            "date": (TODAY - timedelta(days=1)).isoformat(),
+            "farm_id": FARM_ID,
+            "executive_summary": (
+                "Показатели в норме. Надой 28.2 кг/гол, Health Index 94%. "
+                "Нарастающий алерт: Ночка (3142) — второй день снижения активности, "
+                "СКК вечером 420k. Рекомендован утренний осмотр."
+            ),
+            "critical_count": 0,
+            "warning_count": 2,
+            "top_insights": [
+                {
+                    "id": "INS_AI_001_D1",
+                    "title": "Ночка: второй день снижения активности",
+                    "description": (
+                        "Активность 72 балла (−21% vs baseline 91). СКК вечером 420k. "
+                        "Тренд нарастает второй день. Риск перехода в клинику."
+                    ),
+                    "severity": "warning",
+                    "evidence": [
+                        {"event_id": "EV_3142_ACT_2", "description": "Активность 72, день 2"},
+                    ],
+                    "recommendation": "Плановый осмотр ветврача утром, при СКК >450k — немедленный протокол",
+                    "deadline_hours": 12,
+                    "cow_id": "3142",
+                },
+                by_id["INS_AI_007"],
+            ],
+            "action_items": [
+                "Ночка (3142): контроль активности утром, при СКК >450k — ветврач",
+                "Малина (3891): консультация по выбраковке запланирована",
+            ],
+            "kpi_snapshot": {
+                "avg_milk_yield_kg": 28.2,
+                "health_index_pct": 94,
+                "pregnancy_rate_21d_pct": 24,
+                "cows_need_attention_today": 2,
+                "active_cows": 350,
+                "lactating_cows": 300,
+                "dry_cows": 50,
+            },
+            "model": "claude-sonnet-4-6",
+            "generated_at": _ts(TODAY - timedelta(days=1), hour=5),
+            "input_tokens": 2756,
+            "output_tokens": 367,
+        },
+        {
+            "date": (TODAY - timedelta(days=2)).isoformat(),
+            "farm_id": FARM_ID,
+            "executive_summary": (
+                "Хороший день: надой 28.7 кг/гол, Health Index 95%. "
+                "Первый сигнал по Ночке (3142) — снижение активности, мониторинг. "
+                "Малина (3891): ветврач рекомендует консультацию по выбраковке."
+            ),
+            "critical_count": 0,
+            "warning_count": 1,
+            "top_insights": [
+                {
+                    "id": "INS_AI_001_D2",
+                    "title": "Ночка: первое снижение активности — мониторинг",
+                    "description": (
+                        "Активность снизилась с 91 до 78 (−14%). Первый сигнал. "
+                        "СКК в норме. Одиночное снижение — возможен эструс или начало болезни."
+                    ),
+                    "severity": "warning",
+                    "evidence": [
+                        {"event_id": "EV_3142_ACT_3", "description": "Активность 78, день 1"},
+                    ],
+                    "recommendation": "Мониторинг активности следующие 24 ч, повторный контроль утром",
+                    "deadline_hours": 24,
+                    "cow_id": "3142",
+                },
+            ],
+            "action_items": [
+                "Ночка (3142): мониторинг активности следующие 24 ч",
+                "Малина (3891): записать на консультацию ветврача по экономике",
+            ],
+            "kpi_snapshot": {
+                "avg_milk_yield_kg": 28.7,
+                "health_index_pct": 95,
+                "pregnancy_rate_21d_pct": 24,
+                "cows_need_attention_today": 1,
+                "active_cows": 350,
+                "lactating_cows": 300,
+                "dry_cows": 50,
+            },
+            "model": "claude-sonnet-4-6",
+            "generated_at": _ts(TODAY - timedelta(days=2), hour=5),
+            "input_tokens": 2698,
+            "output_tokens": 298,
+        },
+    ]
+
+
+def _build_seeded_weekly_briefs() -> list:
+    insights = _build_seeded_insights()
+    by_id = {i["id"]: i for i in insights}
+
+    week1_end   = TODAY
+    week1_start = TODAY - timedelta(days=6)
+    week2_end   = TODAY - timedelta(days=7)
+    week2_start = TODAY - timedelta(days=13)
+
+    return [
+        {
+            "week_start": week1_start.isoformat(),
+            "week_end":   week1_end.isoformat(),
+            "farm_id": FARM_ID,
+            "executive_summary": (
+                "Неделя прошла стабильно при среднем надое 28.4 кг/гол и Health Index 94%. "
+                "Ключевые события: нарастание алерта у Ночки (3142) с выходом на критический "
+                "уровень на 3-й день и достижение рекордного PR 21d = 24%. "
+                "1 отёл (лёгкий), 5 стельностей подтверждено."
+            ),
+            "kpi_analysis": (
+                "Надой на 1.4% ниже прошлой недели (28.4 vs 28.8 кг/гол) — снижение "
+                "обусловлено нарастанием проблемы у Ночки и эффектом карантина (−420 кг). "
+                "Репродукция на рекордном уровне: PR 21d = 24%. "
+                "Health Index 94% — небольшое снижение с 95% из-за нового алерта."
+            ),
+            "top_insights": [
+                by_id["INS_AI_001"],
+                by_id["INS_AI_004"],
+                by_id["INS_AI_005"],
+            ],
+            "recommendations": [
+                "Приоритет №1: срочный осмотр Ночки (3142) и назначение лечения",
+                "Ревизия доильного оборудования PEN_LACT_3 по СКК-тренду",
+                "Подготовить родильное отделение — 8 отёлов ожидается в следующие 14 дней",
+            ],
+            "trend_summary": (
+                "Удой: −1.4% week/week, в плановом диапазоне. "
+                "Репродукция: +2pp за месяц, рекордный PR. "
+                "Здоровье: +1 новый алерт (Ночка), тренд СКК в PEN_LACT_3 продолжается."
+            ),
+            "model": "claude-sonnet-4-6",
+            "generated_at": _ts(TODAY, hour=6),
+            "input_tokens": 5842,
+            "output_tokens": 687,
+        },
+        {
+            "week_start": week2_start.isoformat(),
+            "week_end":   week2_end.isoformat(),
+            "farm_id": FARM_ID,
+            "executive_summary": (
+                "Высокопродуктивная неделя: надой 29.1 кг/гол, Health Index 95%. "
+                "Волна охоты 7–9 апреля дала 11 осеменений за 3 дня — рекордная активность AI. "
+                "2 отёла (лёгкие), 7 стельностей подтверждено. "
+                "Малина (3891) поставлена в план на выбраковку."
+            ),
+            "kpi_analysis": (
+                "Лучшая неделя по надою за последний месяц: 29.1 кг/гол. "
+                "Волна охоты обеспечила рекордные 11 осеменений — PR 21d вырос до 24%. "
+                "Health Index 95%: Малина переведена в список WATCH, активное лечение завершено."
+            ),
+            "top_insights": [
+                by_id["INS_AI_004"],
+                by_id["INS_AI_003"],
+                by_id["INS_AI_009"],
+            ],
+            "recommendations": [
+                "Принять решение по Малине (3891): выбраковка vs досрочный сухостой",
+                "Продолжать протокол синхронизации — результаты подтверждены",
+                "Проверить 3 коровы, пропущенные в ходе волны охоты",
+            ],
+            "trend_summary": (
+                "Удой: +2.5% vs предыдущей неделе, высокая продуктивность. "
+                "Репродукция: рекордная активность AI, PR растёт. "
+                "Здоровье: Малина — кандидат на выбраковку, остальные показатели стабильны."
+            ),
+            "model": "claude-sonnet-4-6",
+            "generated_at": _ts(TODAY - timedelta(days=7), hour=6),
+            "input_tokens": 5611,
+            "output_tokens": 643,
+        },
+    ]
+
+
+def _build_seeded_impact_analyses() -> list:
+    ts = _ts(TODAY, hour=5)
+    return [
+        {
+            "event_id": "TL_001",
+            "event_type": "mastitis_outbreak",
+            "animal_id": "4821",
+            "impact_score": 7.5,
+            "financial_impact_rub": 8368.0,
+            "description": (
+                "Мастит у Звёздочки (4821) снизил удой с 36 до 28 кг/день (−22%). "
+                "Потери молока за 28 дней: 224 кг (~7 168 руб при 32 руб/кг). "
+                "Затраты на лечение Цефквином: ~1 200 руб. Итого: ~8 368 руб."
+            ),
+            "timeline": (
+                "Мастит выявлен 2026-03-10. Лечение 4 дня, withdrawal до 2026-03-17. "
+                "Удой частично восстанавливается."
+            ),
+            "evidence": [
+                {"event_id": "EV_4821_MAST_01", "description": "СКК 450k, аномальная проводимость"},
+                {"event_id": "TR_4821_MAST_01", "description": "Цефквином 4 дня, withdrawal 3 дня"},
+            ],
+            "recommendations": [
+                "Оценить возврат в группу 1 при нормализации удоя",
+                "Мониторинг СКК еженедельно до DIM 200",
+                "Проверить гигиену доения как источник инфекции",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_002",
+            "event_type": "pen_move",
+            "animal_id": "4821",
+            "impact_score": 5.0,
+            "financial_impact_rub": 2150.0,
+            "description": (
+                "Перевод Звёздочки в группу 3 вызвал социальный стресс: DMI −14% "
+                "(21.8 → 18.7 кг/день). Дополнительные потери удоя от стресса "
+                "за 10 дней: ~640 руб. Затронуты соседние коровы в группе: средний DMI −3%."
+            ),
+            "timeline": "Перевод 2026-03-14. DMI восстановился через 10 дней (2026-03-24).",
+            "evidence": [
+                {"event_id": "EV_4821_MOVE_01", "description": "Перевод в PEN_LACT_3, DMI −14%"},
+            ],
+            "recommendations": [
+                "Возврат Звёздочки в группу 1 при надое >30 кг/день",
+                "Минимизировать переводы лечащихся коров между группами",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_003",
+            "event_type": "mastitis_recurrence",
+            "animal_id": "3891",
+            "impact_score": 6.5,
+            "financial_impact_rub": 1075.0,
+            "description": (
+                "Первый эпизод мастита у Малины (3891): задняя правая четверть, СКК 680k. "
+                "Удой снизился на 30% за 7 дней. Потери: 33.6 кг × 32 руб = 1 075 руб. "
+                "Первый из двух эпизодов за 60 дней — начало паттерна рецидива."
+            ),
+            "timeline": "Эпизод 1: 2026-02-20. Лечение 4 дня. Частичное восстановление к 2026-02-28.",
+            "evidence": [
+                {"event_id": "EV_3891_MAST_01", "description": "СКК 680k, задняя правая четверть"},
+            ],
+            "recommendations": [
+                "Мониторинг того же сектора после лечения",
+                "При повторном эпизоде — смена протокола антибиотикотерапии",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_004",
+            "event_type": "mastitis_recurrence",
+            "animal_id": "3891",
+            "impact_score": 9.0,
+            "financial_impact_rub": None,
+            "description": (
+                "Второй эпизод мастита у Малины (3891) через 30 дней: тот же сектор, СКК 800k. "
+                "Смена рекомендации на SELL. NPV за последние 30 дней: −$180 USD. "
+                "Индекс выбраковки: 82/100. Корова open 145 дней, 285 DIM. "
+                "Экономическая нецелесообразность продолжения лактации."
+            ),
+            "timeline": "Эпизод 2: 2026-03-22. Решение о выбраковке — до 2026-04-22.",
+            "evidence": [
+                {"event_id": "EV_3891_MAST_02", "description": "СКК 800k, рецидив, тот же сектор"},
+                {"event_id": "EV_3891_NPV_01",  "description": "NPV −$180 за 30 дней"},
+            ],
+            "recommendations": [
+                "Выбраковка — экономически обоснованное решение",
+                "Альтернатива: досрочный сухостой + повторная оценка через 60 дней",
+                "Обсудить с директором на плановом совещании",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_005",
+            "event_type": "activity_drop",
+            "animal_id": "3142",
+            "impact_score": 6.0,
+            "financial_impact_rub": None,
+            "description": (
+                "Ночка (3142, 45 DIM) — устойчивое снижение активности 3 дня подряд: "
+                "91→78→72→65 баллов (−29%). Паттерн соответствует ранней стадии мастита. "
+                "При подтверждении ожидаемые потери: >2 кг/день на 7–14 дней."
+            ),
+            "timeline": "Первый сигнал: 2026-04-18. Прогрессирует 3 дня. Требует действия сегодня.",
+            "evidence": [
+                {"event_id": "EV_3142_ACT_3", "description": "Активность 78 (−14%), день 1"},
+                {"event_id": "EV_3142_ACT_2", "description": "Активность 72 (−21%), день 2"},
+                {"event_id": "EV_3142_ACT_1", "description": "Активность 65 (−29%), день 3"},
+            ],
+            "recommendations": [
+                "Осмотр ветврача сегодня — вероятность мастита 78%",
+                "При подтверждении: немедленный протокол антибиотикотерапии",
+                "Взять пробы молока перед лечением для анализа патогена",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_006",
+            "event_type": "scc_alert",
+            "animal_id": "3142",
+            "impact_score": 7.0,
+            "financial_impact_rub": 2048.0,
+            "description": (
+                "Ночка (3142): СКК 450k, аномальная проводимость. Нет открытого лечения. "
+                "Прогнозируемые потери при развитии: >2 кг/день × 14 дней = 28 кг (~896 руб) "
+                "+ затраты на лечение ~1 200 руб. Риск: ~2 048 руб."
+            ),
+            "timeline": "СКК алерт: 2026-04-20. Лечение должно быть назначено сегодня.",
+            "evidence": [
+                {"event_id": "EV_3142_SCC_01", "description": "СКК 450k, проводимость аномальная"},
+            ],
+            "recommendations": [
+                "Назначить лечение сегодня до 12:00",
+                "Цефквином интрамаммарно или Пенициллин согласно протоколу",
+                "Изолировать молоко в период карантина",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_009",
+            "event_type": "scc_group_rise",
+            "animal_id": None,
+            "impact_score": 6.0,
+            "financial_impact_rub": 8400.0,
+            "description": (
+                "PEN_LACT_3: устойчивый рост СКК второй месяц — 185k → 247k (+33%). "
+                "6 коров превысили 400k. При СКК >250k молоко не соответствует высшему сорту. "
+                "Потери ценовой премии при сохранении тренда: "
+                "50 коров × 28 кг × 6 руб × 5 дней ~8 400 руб/неделю."
+            ),
+            "timeline": "Тренд начат 2026-01-21. Продолжается 90 дней. Требует немедленного вмешательства.",
+            "evidence": [
+                {"event_id": "TL_009", "description": "СКК 185k→247k за 45 дней, 6 коров >400k"},
+            ],
+            "recommendations": [
+                "Ревизия доильного оборудования: вакуум, пульсация, состояние стаканов",
+                "Аудит гигиены сдаивания и постдоильной обработки",
+                "Скрининг 6 коров >400k на хронический мастит",
+                "Контрольный замер СКК через 14 дней после коррекции",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+        {
+            "event_id": "TL_010",
+            "event_type": "withdrawal_compliance",
+            "animal_id": None,
+            "impact_score": 3.5,
+            "financial_impact_rub": 13440.0,
+            "description": (
+                "Карантин: 5 коров × 3 дня × 28 кг/день = 420 кг (~13 440 руб). "
+                "Соблюдение 100% — потери плановые и юридически обязательные. "
+                "Влияние на качество молока: отсутствует (молоко корректно изолировано)."
+            ),
+            "timeline": "Карантин: 2026-03-31. Завершение у разных коров: 1–5 апреля.",
+            "evidence": [
+                {"event_id": "TL_010", "description": "5 коров в карантине, 420 кг потерь"},
+            ],
+            "recommendations": [
+                "Действия не требуются — соблюдение 100%",
+                "Документировать потери для отчёта по ветеринарным расходам",
+            ],
+            "model": "claude-sonnet-4-6",
+            "generated_at": ts,
+        },
+    ]
+
+
 # ─── Act 5 operator tasks and Act 3 culling ───────────────────────────────────
 
 def _operator_tasks() -> list:
@@ -949,7 +1607,7 @@ def build_dataset(with_ai_seeds: bool = False) -> dict[str, Any]:
                 "reporter": "system", "evidence_ids": [],
             })
 
-    return {
+    result: dict[str, Any] = {
         "animals":              animals,
         "events":               events,
         "treatments":           treatments,
@@ -963,6 +1621,12 @@ def build_dataset(with_ai_seeds: bool = False) -> dict[str, Any]:
         "weekly_briefs_seeded":   _build_weekly_briefs(),
         "impact_analyses_seeded": _build_impact_analyses(),
     }
+    if with_ai_seeds:
+        result["seeded_insights"]         = _build_seeded_insights()
+        result["seeded_morning_briefs"]   = _build_seeded_morning_briefs()
+        result["seeded_weekly_briefs"]    = _build_seeded_weekly_briefs()
+        result["seeded_impact_analyses"]  = _build_seeded_impact_analyses()
+    return result
 
 
 # ─── SQL generator ────────────────────────────────────────────────────────────
@@ -1175,13 +1839,17 @@ def _write_readme(out: Path, counts: dict[str, int]) -> None:
         "treatments":            "Drug treatments with withdrawal dates",
         "breedings":             "AI breeding records",
         "milk_yields":           "Daily milk yield (350 cows × 180 days)",
-        "insights_seeded":       "12 seeded AI insights for demo acts",
-        "timeline_events_seeded": "10–12 timeline events with impact",
-        "morning_briefs_seeded": "3 morning briefings (today/yesterday/day before)",
-        "weekly_briefs_seeded":  "2 weekly briefings",
-        "impact_analyses_seeded": "Economic impact per timeline event",
-        "operator_tasks":        "Act 5: 8 operator worklist tasks",
-        "culling_candidates":    "Act 3: 15 culling candidates (5 sell/5 watch/5 keep)",
+        "insights_seeded":         "12 seeded AI insights for demo acts",
+        "timeline_events_seeded":  "10–12 timeline events with impact",
+        "morning_briefs_seeded":   "3 morning briefings (today/yesterday/day before)",
+        "weekly_briefs_seeded":    "2 weekly briefings",
+        "impact_analyses_seeded":  "Economic impact per timeline event",
+        "operator_tasks":          "Act 5: 8 operator worklist tasks",
+        "culling_candidates":      "Act 3: 15 culling candidates (5 sell/5 watch/5 keep)",
+        "seeded_insights":         "12 AI-schema insights (Insight model) — --with-ai-seeds",
+        "seeded_morning_briefs":   "3 MorningBrief-schema briefings — --with-ai-seeds",
+        "seeded_weekly_briefs":    "2 WeeklyBrief-schema briefings — --with-ai-seeds",
+        "seeded_impact_analyses":  "8 ImpactAnalysis-schema records — --with-ai-seeds",
     }
     for key, cnt in counts.items():
         lines.append(f"| `{key}.json` | {cnt} | {desc.get(key, '')} |")
