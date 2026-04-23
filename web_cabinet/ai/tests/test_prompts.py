@@ -106,11 +106,12 @@ class TestBuildUserMessages:
         assert "farm_context" in msg
 
     def test_impact_narrative_includes_event(self):
-        ctx = self._demo_ctx()
         event = {"event_id": "event_001", "type": "mastitis"}
-        msg = build_impact_narrative_message(event, ctx)
+        before = {"milk_yield": {"value": 36.0, "period": "до события"}}
+        after = {"milk_yield": {"value": 28.0, "period": "после события"}}
+        msg = build_impact_narrative_message(event, before, after, [])
         assert "event_001" in msg
-        assert "farm_context" in msg
+        assert "before_metrics" in msg
 
     def test_insight_narrative_includes_insight(self):
         ctx = self._demo_ctx()
