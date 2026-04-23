@@ -1,204 +1,175 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-
 import {
-  fetchImpactNarrative,
-  type ImpactNarrative,
-  type ImpactWindow,
-} from '@/lib/api/impact-narrative';
-import { ImpactNarrativeSection } from './impact-narrative-section';
+  Salad,
+  UserPlus,
+  Scissors,
+  Users,
+  Package,
+  FlaskConical,
+  ArrowRightLeft,
+  Syringe,
+  Heart,
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  ShieldCheck,
+  Award,
+  BarChart3,
+  Clock,
+  MousePointerClick,
+  Plus,
+  Cpu,
+} from 'lucide-react';
+import type { TimelineEvent, MetricWindow } from '@/lib/api/timeline';
+import { getImpactForEvent, formatDayMonth, formatRelativeDate } from '@/lib/api/timeline';
+import { WindowTabs } from './window-tabs';
+import { MetricCompareCard } from './metric-compare-card';
+import { OtherChangesTable } from './other-changes-table';
 
-const WINDOW_LABELS: Record<ImpactWindow, string> = {
-  '3d': '3 дня',
-  '1w': '1 неделя',
-  '2w': '2 недели',
-  '4w': '4 недели',
+const ICONS: Record<string, React.ReactNode> = {
+  ration_change: <Salad size={18} />,
+  new_employee: <UserPlus size={18} />,
+  feeding_schedule: <Salad size={18} />,
+  hoof_trim: <Scissors size={18} />,
+  pen_density: <Users size={18} />,
+  bedding: <Package size={18} />,
+  mastitis_outbreak: <FlaskConical size={18} />,
+  mastitis_recurrence: <FlaskConical size={18} />,
+  pen_move: <ArrowRightLeft size={18} />,
+  vaccination: <Syringe size={18} />,
+  breeding: <Heart size={18} />,
+  heat_detection: <Heart size={18} />,
+  scc_alert: <AlertCircle size={18} />,
+  scc_group_rise: <TrendingUp size={18} />,
+  activity_drop: <TrendingDown size={18} />,
+  withdrawal_compliance: <ShieldCheck size={18} />,
+  benchmark_update: <Award size={18} />,
+  daily_kpi_snapshot: <BarChart3 size={18} />,
 };
 
-interface TimelineEvent {
-  timeline_event_id: string;
-  date: string;
-  event_type: string;
-  title: string;
-  body: string;
-  animal_ids?: string[];
-  impact?: string;
-  impact_value?: string;
-}
+type Props = {
+  event: TimelineEvent | null;
+  window: MetricWindow;
+  onWindowChange: (w: MetricWindow) => void;
+};
 
-interface MetricCard {
-  label: string;
-  value: string | number;
-  unit?: string;
-  delta?: string;
-}
+export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Props) {
+  if (!event) {
+    return (
+      <div className="tl-right">
+        <div className="impact-empty">
+          <div className="impact-empty-icon">
+            <MousePointerClick size={22} />
+          </div>
+          <div className="impact-empty-title">Выберите событие</div>
+          <div className="impact-empty-sub">
+            Кликните на событие слева, чтобы увидеть анализ его влияния на метрики фермы.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-interface Props {
-  event: TimelineEvent;
-  metrics?: MetricCard[];
-  farmId?: string;
-  defaultWindow?: ImpactWindow;
-}
+  const icon = ICONS[event.event_type] ?? <Clock size={18} />;
+  const impact = getImpactForEvent(event.timeline_event_id, activeWindow);
 
-function WindowSelector({
-  value,
-  onChange,
-}: {
-  value: ImpactWindow;
-  onChange: (w: ImpactWindow) => void;
-}) {
-  const windows: ImpactWindow[] = ['3d', '1w', '2w', '4w'];
   return (
-    <div style={{ display: 'flex', gap: 4 }}>
-      {windows.map((w) => (
-        <button
-          key={w}
-          type="button"
-          onClick={() => onChange(w)}
-          style={{
-            padding: '2px 8px',
-            borderRadius: 4,
-            border: `1px solid ${value === w ? '#009688' : 'rgba(0,0,0,0.15)'}`,
-            background: value === w ? 'rgba(0,150,136,0.1)' : 'transparent',
-            color: value === w ? '#009688' : 'inherit',
-            fontSize: 11,
-            fontWeight: value === w ? 600 : 400,
-            cursor: 'pointer',
-          }}
-        >
-          {WINDOW_LABELS[w]}
-        </button>
-      ))}
+    <div className="tl-right">
+      {/* Header */}
+      <div className="impact-panel-header">
+        <div className="impact-panel-event-row">
+          <div className="impact-panel-event-icon">{icon}</div>
+          <div style={{ flex: 1 }}>
+            <div className="impact-panel-event-title">{event.title}</div>
+            <div className="impact-panel-event-meta">
+              <span>{formatDayMonth(event.date)}</span>
+              <span style={{ color: 'var(--border-strong)' }}>·</span>
+              <span>{formatRelativeDate(event.date)}</span>
+            </div>
+            {event.source && (
+              <div className="impact-panel-source">
+                <Cpu size={11} />
+                {event.source}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="impact-panel-body">
+        {/* Section title */}
+        <div className="impact-section-title">
+          <span className="impact-section-heading">Потенциально затронутые метрики</span>
+          <span className="impact-beta-badge">Beta</span>
+        </div>
+
+        <p className="impact-explain-text">
+          Оцените KPI ДО и ПОСЛЕ изменения, чтобы понять его влияние. Используйте переключатель
+          диапазона, чтобы увидеть значения ключевых метрик в разных временных окнах.
+        </p>
+
+        {impact ? (
+          <>
+            {/* Period labels */}
+            <div className="impact-period-row">
+              <span className="impact-period-label">До:</span>
+              <span className="impact-period-value">
+                {impact.before_period.start} — {impact.before_period.end}
+              </span>
+              <span className="impact-period-label" style={{ marginLeft: 8 }}>После:</span>
+              <span className="impact-period-value">
+                {impact.after_period.start} — {impact.after_period.end}
+              </span>
+            </div>
+
+            {/* Window tabs */}
+            <WindowTabs active={activeWindow} onChange={onWindowChange} />
+
+            {/* Metrics grid */}
+            <div className="impact-metrics-grid">
+              {impact.metrics.map((m) => (
+                <MetricCompareCard key={m.metric_id} metric={m} />
+              ))}
+            </div>
+
+            {/* Add chart */}
+            <div className="impact-add-chart-row">
+              <select className="impact-add-chart-select" defaultValue="">
+                <option value="" disabled>Выберите метрику...</option>
+                <option>Lying time per cow, per day</option>
+                <option>Steps per cow, per day</option>
+                <option>SCC individual</option>
+                <option>Body condition score</option>
+                <option>Feed push frequency</option>
+              </select>
+              <button className="impact-add-chart-btn" type="button">
+                <Plus size={12} />
+                Добавить
+              </button>
+            </div>
+
+            {/* Other changes */}
+            {impact.other_changes.length > 0 && (
+              <div className="impact-other-section">
+                <div className="impact-other-title">Что ещё случилось?</div>
+                <div className="impact-other-subtitle">
+                  Другие изменения в метриках, которые могут быть связаны с этим событием
+                </div>
+                <OtherChangesTable changes={impact.other_changes} />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="empty-state" style={{ padding: '32px 0', textAlign: 'center' }}>
+            <div style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 13 }}>
+              Данные анализа ещё не готовы
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Impact analysis появится автоматически после накопления достаточного количества данных
+            </div>
+          </div>
+        )}
+      </div>
     </div>
-  );
-}
-
-function MetricCardItem({ card }: { card: MetricCard }) {
-  return (
-    <div style={{
-      padding: '8px 12px',
-      borderRadius: 6,
-      border: '1px solid rgba(0,0,0,0.08)',
-      background: 'rgba(0,0,0,0.02)',
-      minWidth: 80,
-    }}>
-      <div style={{ fontSize: 10, opacity: 0.55, marginBottom: 2 }}>{card.label}</div>
-      <div style={{ fontSize: 16, fontWeight: 700 }}>
-        {card.value}
-        {card.unit ? <span style={{ fontSize: 11, fontWeight: 400, marginLeft: 2 }}>{card.unit}</span> : null}
-      </div>
-      {card.delta ? (
-        <div style={{
-          fontSize: 11,
-          color: card.delta.startsWith('+') ? '#22c55e' : card.delta.startsWith('-') ? '#ef4444' : '#6b7280',
-          marginTop: 1,
-        }}>
-          {card.delta}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-export function ImpactPanel({ event, metrics = [], farmId = 'demo-farm-v1', defaultWindow = '1w' }: Props) {
-  const [window, setWindow] = useState<ImpactWindow>(defaultWindow);
-  const [narrative, setNarrative] = useState<ImpactNarrative | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadNarrative = (w: ImpactWindow) => {
-    setLoading(true);
-    setError(null);
-    void fetchImpactNarrative({
-      event_id: event.timeline_event_id,
-      window: w,
-      farm_id: farmId,
-    })
-      .then(setNarrative)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    loadNarrative(window);
-  }, [event.timeline_event_id]);
-
-  const handleWindowChange = (w: ImpactWindow) => {
-    setWindow(w);
-    loadNarrative(w);
-  };
-
-  return (
-    <section style={{
-      padding: '14px 16px',
-      borderRadius: 8,
-      border: '1px solid rgba(0,0,0,0.08)',
-      background: 'var(--card-bg, #fff)',
-    }}>
-      {/* Event header */}
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 11, opacity: 0.5, marginBottom: 2 }}>
-          {event.date} · {event.event_type}
-        </div>
-        <div style={{ fontWeight: 600, fontSize: 15, lineHeight: 1.3 }}>
-          {event.title}
-        </div>
-        {event.body && (
-          <div style={{ fontSize: 12, opacity: 0.75, marginTop: 4, lineHeight: 1.5 }}>
-            {event.body}
-          </div>
-        )}
-      </div>
-
-      {/* Metric cards */}
-      {metrics.length > 0 && (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-          {metrics.map((m, i) => (
-            <MetricCardItem key={i} card={m} />
-          ))}
-        </div>
-      )}
-
-      {/* Что ещё случилось section would be injected by parent */}
-
-      {/* AI interpretation */}
-      <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', paddingTop: 12, marginTop: 4 }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 8,
-          flexWrap: 'wrap',
-          gap: 6,
-        }}>
-          <span style={{ fontSize: 12, opacity: 0.55 }}>Окно анализа</span>
-          <WindowSelector value={window} onChange={handleWindowChange} />
-        </div>
-
-        {loading && (
-          <div style={{ opacity: 0.5, fontSize: 13, padding: '8px 0' }}>
-            Генерирую интерпретацию…
-          </div>
-        )}
-
-        {error && !loading && (
-          <div style={{ color: '#ef4444', fontSize: 12, padding: '4px 0' }}>
-            Ошибка: {error}
-            <button
-              type="button"
-              onClick={() => loadNarrative(window)}
-              style={{ marginLeft: 8, fontSize: 11, textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
-            >
-              Повторить
-            </button>
-          </div>
-        )}
-
-        {narrative && !loading && (
-          <ImpactNarrativeSection narrative={narrative} />
-        )}
-      </div>
-    </section>
   );
 }
