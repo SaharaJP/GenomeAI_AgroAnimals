@@ -802,6 +802,85 @@ def api_release_metadata():
     return dict(release_metadata, stamp=release_stamp)
 
 
+# ── Timeline API (demo mode — seeded data) ────────────────────────────────────
+
+_TIMELINE_EVENTS_PATH = Path(__file__).parent.parent / "data" / "demo" / "investor_v1" / "timeline_events_seeded.json"
+_IMPACT_ANALYSES_PATH = Path(__file__).parent.parent / "data" / "demo" / "investor_v1" / "impact_analyses_seeded.json"
+
+
+def _load_timeline_events() -> list:
+    if _TIMELINE_EVENTS_PATH.exists():
+        return json.loads(_TIMELINE_EVENTS_PATH.read_text(encoding="utf-8"))
+    return []
+
+
+def _load_impact_analyses() -> list:
+    if _IMPACT_ANALYSES_PATH.exists():
+        return json.loads(_IMPACT_ANALYSES_PATH.read_text(encoding="utf-8"))
+    return []
+
+
+@app.get("/api/timeline/events")
+def api_timeline_events(
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    event_type: Optional[str] = None,
+    user=Depends(get_current_user),
+):
+    events = _load_timeline_events()
+    if start:
+        events = [e for e in events if e.get("date", "") >= start]
+    if end:
+        events = [e for e in events if e.get("date", "") <= end]
+    if event_type:
+        events = [e for e in events if e.get("event_type") == event_type]
+    return {"events": events, "total": len(events), "demo": True}
+
+
+@app.get("/api/timeline/events/{event_id}/impact")
+def api_timeline_event_impact(
+    event_id: str,
+    window: str = "3d",
+    user=Depends(get_current_user),
+):
+    analyses = _load_impact_analyses()
+    matched = [a for a in analyses if a.get("timeline_event_id") == event_id]
+    return {
+        "event_id": event_id,
+        "window": window,
+        "analyses": matched,
+        "demo": True,
+    }
+
+
+@app.post("/api/timeline/events")
+async def api_timeline_event_create(
+    request: Request,
+    user=Depends(get_current_user),
+):
+    body = await request.json()
+    required = {"event_type", "title", "date"}
+    missing = required - set(body.keys())
+    if missing:
+        raise HTTPException(status_code=422, detail=f"Missing fields: {missing}")
+    new_event = {
+        "timeline_event_id": f"TL_{utc_timestamp_compact()}",
+        "date": body["date"],
+        "event_type": body["event_type"],
+        "title": body["title"],
+        "body": body.get("body", ""),
+        "animal_ids": body.get("animal_ids", []),
+        "impact": None,
+        "impact_value": None,
+    }
+    write_audit(
+        "timeline_event_created",
+        actor=user.get("username", "unknown"),
+        details={"event_id": new_event["timeline_event_id"], "event_type": new_event["event_type"]},
+    )
+    return {"event": new_event, "demo": True, "note": "Demo mode — event not persisted"}
+
+
 def _web_primary_url(request: Request) -> str:
     override = str(os.environ.get("GENOMEAI_WEB_PUBLIC_URL") or "").strip()
     if override:
