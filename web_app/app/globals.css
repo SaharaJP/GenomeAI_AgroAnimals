@@ -1082,3 +1082,46 @@ button, input, select, textarea { font: inherit; }
   .overview-columns { grid-template-columns: 1fr; }
   .col-card { min-height: auto; }
 }
+
+/* ── Evidence chips (insight detail) ───────────── */
+.evidence-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-muted);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
+  letter-spacing: 0.02em;
+}
+.evidence-chip:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.evidence-chip:active {
+  background: var(--accent);
+  color: white;
+}
+
+/* ── Chart tooltip ──────────────────────────────── */
+.insight-chart-tooltip {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
