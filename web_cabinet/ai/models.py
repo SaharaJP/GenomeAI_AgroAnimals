@@ -80,22 +80,57 @@ class MorningBrief(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Weekly Brief
+# Weekly Brief (MVP-N17)
 # ---------------------------------------------------------------------------
 
+class DateRange(BaseModel):
+    start: str  # ISO date "2026-04-14"
+    end: str    # ISO date "2026-04-21"
+
+
+class BriefSection(BaseModel):
+    heading: str
+    narrative: str
+    highlights: list[str] = []
+    evidence_ids: list[str] = []
+
+
+class KeyRecommendation(BaseModel):
+    recommendation: str
+    priority: Literal["high", "medium", "low"]
+    rationale: str
+    expected_outcome: str
+    affected_entities: list[str] = []
+
+
+class Anomaly(BaseModel):
+    description: str
+    severity: Literal["critical", "warning", "info"]
+    evidence_id: str = ""
+
+
+class WeeklyBriefRequest(BaseModel):
+    farm_id: str = "demo-farm-v1"
+    start_date: str = ""
+    end_date: str = ""
+    language: str = "ru"
+    deliver_email: bool = False
+    force_regenerate: bool = False
+
+
 class WeeklyBrief(BaseModel):
-    week_start: str
-    week_end: str
+    brief_id: str = Field(default_factory=lambda: f"wb_{uuid.uuid4().hex[:12]}")
     farm_id: str
+    period: DateRange
+    generated_at_utc: datetime = Field(default_factory=datetime.utcnow)
+    title: str
     executive_summary: str
-    kpi_analysis: str
-    top_insights: list[Insight] = []
-    recommendations: list[str] = []
-    trend_summary: str = ""
-    model: str
-    generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    input_tokens: int = 0
-    output_tokens: int = 0
+    sections: list[BriefSection] = []
+    key_recommendations: list[KeyRecommendation] = []
+    anomalies_detected: list[Anomaly] = []
+    kpi_table: dict = Field(default_factory=dict)
+    generation_model: str
+    generation_tokens: dict = Field(default_factory=dict)
 
 
 class ImpactAnalysis(BaseModel):

@@ -602,6 +602,12 @@ def _startup() -> None:
         except Exception as _cron_exc:
             import logging as _logging
             _logging.getLogger("genomeai.startup").warning(f"insight_scanner cron start failed: {_cron_exc}")
+        try:
+            from web_cabinet.ai.background.weekly_brief_cron import start_cron as start_weekly_brief_cron
+            start_weekly_brief_cron()
+        except Exception as _cron_exc:
+            import logging as _logging
+            _logging.getLogger("genomeai.startup").warning(f"weekly_brief cron start failed: {_cron_exc}")
 
 
 def _shutdown() -> None:
@@ -621,6 +627,12 @@ def _shutdown() -> None:
     try:
         from web_cabinet.ai.background.insight_scanner_cron import stop_cron as stop_scanner_cron
         stop_scanner_cron()
+    except Exception:
+        pass
+
+    try:
+        from web_cabinet.ai.background.weekly_brief_cron import stop_cron as stop_weekly_brief_cron
+        stop_weekly_brief_cron()
     except Exception:
         pass
 
