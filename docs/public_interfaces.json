@@ -1706,6 +1706,34 @@
       }
     ]
   },
+  "analytics_api": {
+    "routes": [
+      {
+        "path": "/api/analytics/production",
+        "methods": ["GET"],
+        "permission": "kpi.view",
+        "query_params": ["start_date", "end_date", "farm_id", "group_id"],
+        "response_schema": "genomeai.api.analytics.production.v1",
+        "contract": "packages/contracts/analytics_v1.py:ProductionResponse"
+      },
+      {
+        "path": "/api/analytics/reproduction",
+        "methods": ["GET"],
+        "permission": "kpi.view",
+        "query_params": ["start_date", "end_date", "farm_id", "group_id"],
+        "response_schema": "genomeai.api.analytics.reproduction.v1",
+        "contract": "packages/contracts/analytics_v1.py:ReproductionResponse"
+      },
+      {
+        "path": "/api/analytics/health",
+        "methods": ["GET"],
+        "permission": "kpi.view",
+        "query_params": ["start_date", "end_date", "farm_id", "group_id"],
+        "response_schema": "genomeai.api.analytics.health.v1",
+        "contract": "packages/contracts/analytics_v1.py:HealthResponse"
+      }
+    ]
+  },
   "deprecations": [
     {
       "kind": "cli_alias",

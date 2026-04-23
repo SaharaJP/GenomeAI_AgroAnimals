@@ -173,6 +173,7 @@ from core.ops.production_lockdown import production_lockdown_report, internal_we
 from core.ops.production_operability import build_production_operability_report, metrics_contract
 from .rendering import render_template
 from .api_boundary_v1 import router as api_boundary_v1_router
+from .analytics_v1 import router as analytics_v1_router
 from core.security import PermissionDenied as CorePermissionDenied, ensure_permissions as core_ensure_permissions, has_any_permission as core_has_any_permission, permission_denied_detail
 from core.observability import (
     correlation_scope,
@@ -651,6 +652,7 @@ web_logger = get_structured_logger("web.api")
 
 app.include_router(auth_boundary_v1_router)
 app.include_router(api_boundary_v1_router)
+app.include_router(analytics_v1_router)
 
 from web_cabinet.ai.endpoints import register_ai_routes
 register_ai_routes(app)
