@@ -1,4 +1,8 @@
-"""SSE endpoint POST /api/ai/ask-farm — интерактивный Q&A с фермой."""
+"""SSE endpoint POST /api/ai/ask-farm — интерактивный Q&A с фермой.
+
+Evidence IDs верифицируются против known event IDs из farm context (MVP-N12/N13).
+Непроверенные ссылки помечаются verified=False в SSE evidence event.
+"""
 from __future__ import annotations
 
 import asyncio
@@ -15,12 +19,13 @@ from pydantic import BaseModel, Field
 
 from ..config import get_ai_settings
 from ..guardrails import GuardrailError, input_sanitize, rate_limit_check
+from ..models import AskFarmEvidence
 
 logger = logging.getLogger("genomeai.ai.ask_farm")
 
 router = APIRouter()
 
-_EVIDENCE_RE = re.compile(r"\[evidence:\s*(\w+)\]")
+_EVIDENCE_RE = re.compile(r"\[evidence:\s*([\w_\-]+)\]", re.IGNORECASE)
 
 _PRESET_QUESTION_MAP = {
     "почему упал удой у звёздочки": "why_star_milk_drop",
@@ -57,6 +62,47 @@ def _sse_event(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+def _extract_known_event_ids(ctx: dict) -> set[str]:
+    """Извлекает все known event_id из farm context dict."""
+    ids: set[str] = set()
+    for event in ctx.get("recent_events", []):
+        eid = str(event.get("evidence_id", "")).strip()
+        if eid and eid != "nan":
+            ids.add(eid)
+    for profile in ctx.get("full_profiles", {}).values():
+        for he in profile.get("health_events", []):
+            eid = str(he.get("event_id", "")).strip()
+            if eid and eid != "nan":
+                ids.add(eid)
+        for tr in profile.get("treatments", []):
+            eid = str(tr.get("treatment_id", "")).strip()
+            if eid and eid != "nan":
+                ids.add(eid)
+    return ids
+
+
+def parse_evidence_from_response(answer: str, known_ids: set[str]) -> list[AskFarmEvidence]:
+    """Парсит [evidence: id] из ответа AI и верифицирует против known_ids.
+
+    Дедуплицирует. Непроверенные: verified=False, description = «⚠ unverified: <id>».
+    """
+    seen: set[str] = set()
+    result: list[AskFarmEvidence] = []
+    for eid in _EVIDENCE_RE.findall(answer):
+        if eid in seen:
+            continue
+        seen.add(eid)
+        if eid in known_ids:
+            result.append(AskFarmEvidence(event_id=eid, description=eid, verified=True))
+        else:
+            result.append(AskFarmEvidence(
+                event_id=eid,
+                description=f"⚠ unverified: {eid}",
+                verified=False,
+            ))
+    return result
+
+
 async def _stream_preset(preset: dict, session_id: str) -> AsyncIterator[str]:
     """Стримит preset-ответ пословно, имитируя токен-стриминг."""
     model = preset.get("model", "claude-sonnet-4-6")
@@ -65,7 +111,6 @@ async def _stream_preset(preset: dict, session_id: str) -> AsyncIterator[str]:
 
     yield _sse_event("start", {"session_id": session_id, "model": model})
 
-    # Разбиваем по словам, чтобы имитировать потоковый вывод
     words = answer.split(" ")
     collected = ""
 
@@ -74,13 +119,10 @@ async def _stream_preset(preset: dict, session_id: str) -> AsyncIterator[str]:
         yield _sse_event("token", {"text": token})
         collected += token
 
-        # Небольшая задержка — имитация streaming (~50 слов/с)
         await asyncio.sleep(0.02)
 
-        # Проверяем, не завершился ли evidence-маркер
         for match in _EVIDENCE_RE.finditer(collected):
             ev_id = match.group(1)
-            # Ищем данные evidence в списке
             ev_data = next((e for e in evidence_items if e.get("id") == ev_id), None)
             if ev_data:
                 yield _sse_event("evidence", {
@@ -90,11 +132,10 @@ async def _stream_preset(preset: dict, session_id: str) -> AsyncIterator[str]:
                     "description": ev_data.get("description", ""),
                     "cow_id": ev_data.get("cow_id"),
                     "cow_name": ev_data.get("cow_name"),
+                    "verified": True,
                 })
-        # Сбрасываем уже обработанные маркеры, чтобы не дублировать
         collected = _EVIDENCE_RE.sub("", collected)
 
-    # Примерные токены для preset-ответа
     approx_output = len(answer) // 4
     yield _sse_event("done", {
         "total_tokens": {"input": 1200, "output": approx_output},
@@ -108,11 +149,12 @@ async def _stream_live(
     question: str,
     session_id: str,
     user_id: str,
+    farm_id: str,
     messages_history: list[dict],
 ) -> AsyncIterator[str]:
-    """Стримит живой ответ от Claude через AnthropicClient."""
+    """Стримит живой ответ от Claude, верифицирует evidence против farm context."""
     from ..client import get_client
-    from ..context import build_demo_farm_context
+    from ..context import build_farm_context
     from ..prompts.ask_farm import ASK_FARM_SYSTEM, build_ask_farm_message
     from ..session_memory import get_session_memory
 
@@ -121,11 +163,17 @@ async def _stream_live(
 
     yield _sse_event("start", {"session_id": session_id, "model": model})
 
-    # Строим контекст фермы (демо или реальный)
-    ctx = build_demo_farm_context()
+    farm_ctx_text = ""
+    known_event_ids: set[str] = set()
+    try:
+        farm_ctx = build_farm_context(farm_id)
+        farm_ctx_text = json.dumps(farm_ctx, ensure_ascii=False, default=str)
+        known_event_ids = _extract_known_event_ids(farm_ctx)
+    except Exception as exc:
+        logger.warning(f"farm_context build failed farm={farm_id}: {exc}")
+
     user_message = build_ask_farm_message(question)
 
-    # Добавляем историю сессии
     history_messages = [
         {"role": m["role"], "content": m["content"]}
         for m in messages_history
@@ -137,33 +185,37 @@ async def _stream_live(
     output_tokens = 0
 
     try:
-        # Стримим токены
         async for chunk in client.astream(
             user_message=user_message,
             system_prompt=ASK_FARM_SYSTEM,
-            farm_context=ctx.to_text(),
+            farm_context=farm_ctx_text or None,
             task_type="ask_farm",
             user_id=user_id,
         ):
             full_text += chunk
             yield _sse_event("token", {"text": chunk})
 
-        # Извлекаем evidence из полного ответа
-        seen: set[str] = set()
-        for match in _EVIDENCE_RE.finditer(full_text):
-            ev_id = match.group(1)
-            if ev_id not in seen:
-                seen.add(ev_id)
-                yield _sse_event("evidence", {
-                    "type": "event",
-                    "id": ev_id,
-                    "name": ev_id.replace("_", " "),
-                    "description": "",
-                })
+        evidences = parse_evidence_from_response(full_text, known_event_ids)
+        for ev in evidences:
+            yield _sse_event("evidence", {
+                "type": "event",
+                "id": ev.event_id,
+                "name": ev.event_id.replace("_", " "),
+                "description": ev.description,
+                "verified": ev.verified,
+            })
+
+        unverified = sum(1 for e in evidences if not e.verified)
+        if unverified:
+            logger.warning(json.dumps({
+                "event": "unverified_evidence_detected",
+                "farm_id": farm_id,
+                "user_id": user_id,
+                "unverified_ids": [e.event_id for e in evidences if not e.verified],
+            }))
 
         output_tokens = len(full_text) // 4
 
-        # Сохраняем сессию
         try:
             mem = get_session_memory()
             mem.append(session_id, "user", question)
@@ -173,8 +225,9 @@ async def _stream_live(
 
         yield _sse_event("done", {
             "total_tokens": {"input": input_tokens, "output": output_tokens},
-            "evidence_ids": list(seen),
-            "validated_evidence": bool(seen),
+            "evidence_ids": [e.event_id for e in evidences],
+            "validated_evidence": unverified == 0,
+            "unverified_count": unverified,
         })
 
     except Exception as exc:
@@ -197,7 +250,6 @@ async def ask_farm_stream(body: AskFarmStreamRequest, request: Request) -> Strea
     session_id = body.session_id or str(uuid.uuid4())
     user_id = body.user_id
 
-    # Санитизируем вопрос
     try:
         question = input_sanitize(body.question)
     except GuardrailError as exc:
@@ -205,7 +257,6 @@ async def ask_farm_stream(body: AskFarmStreamRequest, request: Request) -> Strea
             yield _sse_event("error", {"message": str(exc)})
         return StreamingResponse(_error_stream(), media_type="text/event-stream")
 
-    # Rate limiting (graceful degradation если Redis недоступен)
     try:
         from ..cache import get_cache
         cache = get_cache()
@@ -222,9 +273,8 @@ async def ask_farm_stream(body: AskFarmStreamRequest, request: Request) -> Strea
             yield _sse_event("error", {"message": str(exc)})
         return StreamingResponse(_rl_error(), media_type="text/event-stream")
     except Exception:
-        pass  # Redis недоступен — пропускаем rate limit
+        pass
 
-    # Demo mode: отдаём preset-ответы
     if settings.GENOMEAI_AI_DEMO_MODE:
         preset_key = _find_preset_key(question)
         if preset_key:
@@ -245,13 +295,11 @@ async def ask_farm_stream(body: AskFarmStreamRequest, request: Request) -> Strea
                     },
                 )
 
-    # Live mode: вызов Claude
     if not settings.is_configured:
         async def _not_configured():
             yield _sse_event("error", {"message": "AI-сервис не настроен. Установите ANTHROPIC_API_KEY."})
         return StreamingResponse(_not_configured(), media_type="text/event-stream")
 
-    # Загружаем историю сессии
     messages_history: list[dict] = []
     try:
         from ..session_memory import get_session_memory
@@ -267,7 +315,7 @@ async def ask_farm_stream(body: AskFarmStreamRequest, request: Request) -> Strea
     }))
 
     return StreamingResponse(
-        _stream_live(question, session_id, user_id, messages_history),
+        _stream_live(question, session_id, user_id, body.farm_id, messages_history),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",

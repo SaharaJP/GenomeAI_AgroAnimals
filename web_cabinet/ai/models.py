@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 class AskFarmEvidence(BaseModel):
     event_id: str
     description: str
+    verified: bool = True
 
 
 class AskFarmRequest(BaseModel):
@@ -29,6 +30,7 @@ class AskFarmResponse(BaseModel):
     output_tokens: int = 0
     cache_hit: bool = False
     latency_ms: float = 0.0
+    unverified_count: int = 0
 
 
 class Insight(BaseModel):
