@@ -1109,6 +1109,301 @@ button, input, select, textarea { font: inherit; }
   color: white;
 }
 
+/* ── Analytics BI Dashboard ─────────────────────── */
+
+.an-tab-bar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  overflow-x: auto;
+  border-bottom: 2px solid var(--border);
+  scrollbar-width: none;
+  flex-wrap: nowrap;
+}
+.an-tab-bar::-webkit-scrollbar { display: none; }
+
+.an-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 13px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--duration-fast);
+}
+.an-tab-btn:hover { color: var(--text); }
+.an-tab-btn-active { color: var(--accent-text); border-bottom-color: var(--accent); }
+
+.an-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  transition: background var(--duration-fast), color var(--duration-fast);
+  cursor: pointer;
+}
+.an-tab-close:hover { background: var(--border); color: var(--text); }
+
+.an-tab-add {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.an-tab-add:hover { color: var(--accent-text); }
+
+.an-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-bottom: 2px;
+}
+
+/* Chart card */
+.an-chart-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.an-chart-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 13px 13px 0;
+  gap: 6px;
+}
+
+.an-chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.an-chart-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.an-chart-action-btn {
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.an-chart-action-btn:hover { background: var(--bg-muted); color: var(--text); }
+
+.an-chart-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  flex-wrap: wrap;
+}
+
+.an-chart-body {
+  padding: 0 13px 13px;
+}
+
+/* Empty chart slot */
+.an-empty-slot {
+  background: var(--panel);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  min-height: 260px;
+  transition: border-color var(--duration-base), background var(--duration-base);
+  outline: none;
+}
+.an-empty-slot:hover, .an-empty-slot:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+}
+
+.an-empty-pictogram {
+  position: relative;
+  width: 96px;
+  height: 68px;
+  margin-bottom: 18px;
+}
+
+.an-empty-card-mock {
+  position: absolute;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-muted);
+}
+
+.an-empty-card-back {
+  width: 80px;
+  height: 58px;
+  top: 5px;
+  left: 10px;
+}
+
+.an-empty-card-front {
+  width: 80px;
+  height: 58px;
+  top: 0;
+  left: 8px;
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dialog */
+.an-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 24px 32px;
+  overflow-y: auto;
+}
+
+.an-dialog {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: min(780px, 100%);
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+.an-dialog-header {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.an-dialog-close {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--duration-fast);
+}
+.an-dialog-close:hover { background: var(--bg-muted); color: var(--text); }
+
+.an-dialog-body { padding: 16px 20px 28px; }
+
+.an-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 18px 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.an-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.an-metric-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 11px;
+  cursor: pointer;
+  text-align: left;
+  background: var(--panel);
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+}
+.an-metric-card:hover { border-color: var(--accent); background: var(--accent-subtle); }
+
+.an-metric-preview {
+  height: 38px;
+  background: var(--bg-muted);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.an-metric-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+
+.an-metric-card-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+/* Soon state */
+.an-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
 /* ── Chart tooltip ──────────────────────────────── */
 .insight-chart-tooltip {
   position: absolute;
