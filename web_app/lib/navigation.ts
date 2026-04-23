@@ -10,7 +10,7 @@ const sections: NavigationSection[] = [
       { label: 'Обзор', href: '/daily-summary' },
       { label: 'Инсайты', href: '/alerts', minPermissions: ['alerts.view', 'alerts.manage', 'alerts.read'] },
       { label: 'Аналитика', href: '/reports', minPermissions: ['reports.view', 'reports.read', 'reports.approve'] },
-      { label: 'Лента событий', href: '/planner', minPermissions: ['planner.view', 'planner.read'] },
+      { label: 'Лента событий', href: '/timeline', minPermissions: ['planner.view', 'planner.read'] },
       { label: 'Помощник', href: '/assistant', minPermissions: ['assistant.ask'] },
     ],
   },

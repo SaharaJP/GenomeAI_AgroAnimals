@@ -110,9 +110,26 @@ npm run build  (web_app)
 
 ---
 
+## Increment 2 (2026-04-23) — Navigation routing fix
+
+**Проблема:** Пункт "Лента событий" в навигации вёл на `/planner` вместо `/timeline`.
+
+**Исправлено:**
+| Файл | Изменение |
+|---|---|
+| `web_app/lib/navigation.ts` | href: `/planner` → `/timeline` |
+| `web_app/components/app/sidebar.tsx` | primaryIconMap: `/planner` → `/timeline` |
+| `web_app/components/app/mobile-tab-bar.tsx` | tab href: `/planner` → `/timeline` |
+
+**Проверка:** `npm run build` → Clean build, `/timeline` ✓ роут включён.  
+TypeScript ошибок в файлах timeline — 0 (`grep -i timeline` → no matches).  
+`pytest tests/test_a6_smoke.py` → 1 passed.
+
+---
+
 ## Net result
 
-Страница `/timeline` полностью реализована: двухколоночный layout, 8 demo-событий, интерактивный impact panel с before/after метриками, переключатель окон, таблица related changes, backend endpoints.
+Страница `/timeline` полностью реализована: двухколоночный layout, 8 demo-событий, интерактивный impact panel с before/after метриками, переключатель окон, таблица related changes, backend endpoints. Навигационная ссылка "Лента событий" в sidebar и mobile-tab-bar теперь корректно указывает на `/timeline`.
 
 Визуально соответствует Connecterra Farm Timeline reference (подтверждено сравнением с PNG).
 
@@ -130,6 +147,7 @@ npm run build  (web_app)
 - Все 8 компонентов/файлов существуют и содержательно полны (code review)
 - 5 метрик + 4 окна данных для DEMO_001
 - Design reference match: layout, цвета, типографика соответствуют Connecterra screenshot
+- Навигация sidebar + mobile-tab-bar ведёт на `/timeline` (исправлено в increment 2)
 
 **Не доказано:**
 - Браузерный end-to-end тест (headless browser) — нет в CI setup
