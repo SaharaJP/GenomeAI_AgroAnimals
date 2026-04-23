@@ -184,7 +184,7 @@ export function EvidenceDrawer({ item, open, onClose }: EvidenceDrawerProps) {
         >
           {item.cowId && (
             <Link
-              href={`/profiles/${item.cowId}`}
+              href={`/profiles/animal/${item.cowId}`}
               style={{
                 flex: 1,
                 display: 'block',

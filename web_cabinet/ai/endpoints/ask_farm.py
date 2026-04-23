@@ -35,7 +35,7 @@ def _load_preset_data() -> dict:
     global _PRESET_DATA
     if _PRESET_DATA is None:
         preset_path = (
-            Path(__file__).parents[4] / "data" / "demo" / "investor_v1" / "preset_ai_answers.json"
+            Path(__file__).parents[3] / "data" / "demo" / "investor_v1" / "preset_ai_answers.json"
         )
         try:
             _PRESET_DATA = json.loads(preset_path.read_text(encoding="utf-8"))
