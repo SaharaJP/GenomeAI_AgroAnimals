@@ -447,6 +447,100 @@ def _ensure_jobs_table_v2(conn: sqlite3.Connection) -> None:
     conn.execute('DROP TABLE jobs_legacy_v1')
 
 
+def _ensure_target_dm_schema(conn: sqlite3.Connection) -> None:
+    """Idempotent: create target DM tables needed for analytics endpoints (SQLite dev/test path)."""
+    conn.executescript(
+        """
+        CREATE TABLE IF NOT EXISTS dm_farms (
+          tenant_id TEXT NOT NULL DEFAULT 'default',
+          farm_id   TEXT NOT NULL,
+          farm_name TEXT NOT NULL,
+          country_code TEXT,
+          timezone TEXT,
+          currency TEXT DEFAULT 'EUR',
+          created_at TEXT,
+          updated_at TEXT,
+          PRIMARY KEY (tenant_id, farm_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS dm_animals (
+          tenant_id TEXT NOT NULL DEFAULT 'default',
+          animal_id TEXT NOT NULL,
+          farm_id TEXT NOT NULL,
+          site_id TEXT,
+          current_pen_id TEXT,
+          master_animal_id TEXT,
+          external_id TEXT,
+          sex TEXT,
+          birth_date TEXT,
+          breed TEXT,
+          status TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          PRIMARY KEY (tenant_id, animal_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS dm_lactations (
+          tenant_id TEXT NOT NULL DEFAULT 'default',
+          lactation_id TEXT NOT NULL,
+          animal_id TEXT NOT NULL,
+          lactation_no INTEGER NOT NULL,
+          calving_date TEXT NOT NULL,
+          dryoff_date TEXT,
+          milk_305d_kg REAL,
+          calving_outcome TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          PRIMARY KEY (tenant_id, lactation_id),
+          UNIQUE (tenant_id, animal_id, lactation_no)
+        );
+
+        CREATE TABLE IF NOT EXISTS dm_milkings_daily (
+          tenant_id TEXT NOT NULL DEFAULT 'default',
+          record_id TEXT NOT NULL,
+          animal_id TEXT NOT NULL,
+          lactation_id TEXT,
+          date TEXT NOT NULL,
+          milk_kg REAL NOT NULL,
+          milking_count INTEGER,
+          fat_pct REAL,
+          protein_pct REAL,
+          scc_cells_ml INTEGER,
+          created_at TEXT,
+          updated_at TEXT,
+          PRIMARY KEY (tenant_id, record_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS dm_health_events (
+          tenant_id TEXT NOT NULL DEFAULT 'default',
+          event_id TEXT NOT NULL,
+          animal_id TEXT NOT NULL,
+          event_date TEXT NOT NULL,
+          event_type TEXT NOT NULL,
+          severity TEXT,
+          notes TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          PRIMARY KEY (tenant_id, event_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS dm_repro_events (
+          tenant_id TEXT NOT NULL DEFAULT 'default',
+          repro_event_id TEXT NOT NULL,
+          animal_id TEXT NOT NULL,
+          event_date TEXT NOT NULL,
+          event_type TEXT NOT NULL,
+          bull_id TEXT,
+          result TEXT,
+          notes TEXT,
+          created_at TEXT,
+          updated_at TEXT,
+          PRIMARY KEY (tenant_id, repro_event_id)
+        );
+        """
+    )
+
+
 def init_db(conn: sqlite3.Connection) -> None:
     try:
         validate_schema_registry(conn)
@@ -1717,6 +1811,8 @@ END;
         """
     )
 
+
+    _ensure_target_dm_schema(conn)
 
     sync_runtime_schema_registry(
         conn,
