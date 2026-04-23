@@ -27,7 +27,7 @@ const primaryIconMap: Record<string, React.ReactNode> = {
   '/daily-summary': <LayoutDashboard size={18} strokeWidth={1.5} />,
   '/alerts':        <Lightbulb size={18} strokeWidth={1.5} />,
   '/reports':       <BarChart2 size={18} strokeWidth={1.5} />,
-  '/planner':       <Clock size={18} strokeWidth={1.5} />,
+  '/timeline':      <Clock size={18} strokeWidth={1.5} />,
   '/assistant':     <Bot size={18} strokeWidth={1.5} />,
 };
 
