@@ -1,0 +1,59 @@
+[
+  {
+    "insight_id": "ins_scan001",
+    "title": "Ночка: SCC 450k — восходящий тренд 7 дней",
+    "description": "СКК коровы 9002 (Ночка) вырос с 280k до 450k за 7 дней. Восходящий тренд. Ни одного протокола лечения не открыто. Активность снижена на 29%. Риск клинического мастита.",
+    "category": "health",
+    "priority": "high",
+    "affected_cow_ids": ["9002"],
+    "affected_group_ids": ["PEN_LACT"],
+    "evidence_ids": ["HE_9002_SCC", "MK_9002_7"],
+    "recommendations": [
+      {
+        "action": "Провести клинический осмотр вымени, назначить протокол лечения мастита",
+        "priority": "high",
+        "role": "vet",
+        "due_hint": "в течение 4 часов"
+      }
+    ],
+    "generator": "ai_scanner"
+  },
+  {
+    "insight_id": "ins_scan002",
+    "title": "Звёздочка: удой -17% за 7 дней после мастита",
+    "description": "Корова 4821 (Звёздочка) показывает устойчивое снижение удоя: с 30 кг/день до 25 кг/день (-17%) за последние 7 дней. Связано с перенесённым маститом 60 дней назад и переводом в группу 3. DMI также снизился на 14%.",
+    "category": "production",
+    "priority": "medium",
+    "affected_cow_ids": ["4821"],
+    "affected_group_ids": ["PEN_LACT"],
+    "evidence_ids": ["HE_4821_M1", "MK_4821_3"],
+    "recommendations": [
+      {
+        "action": "Оценить возможность возврата в высокопродуктивную группу, пересмотреть рацион",
+        "priority": "medium",
+        "role": "zootech",
+        "due_hint": "в течение 3 дней"
+      }
+    ],
+    "generator": "ai_scanner"
+  },
+  {
+    "insight_id": "ins_scan003",
+    "title": "Малина: отрицательный NPV, кандидат на выбраковку",
+    "description": "Корова 7001 (Малина), 3-я лактация, 285 DIM. NPV за последние 30 дней: -$180. Два эпизода мастита за 60 дней. Open 145 дней. Решение о выбраковке ещё не принято.",
+    "category": "economics",
+    "priority": "medium",
+    "affected_cow_ids": ["7001"],
+    "affected_group_ids": [],
+    "evidence_ids": ["DEC_001", "RE_001"],
+    "recommendations": [
+      {
+        "action": "Запланировать консилиум по выбраковке на ближайшую неделю",
+        "priority": "medium",
+        "role": "director",
+        "due_hint": "в течение 7 дней"
+      }
+    ],
+    "generator": "ai_scanner"
+  }
+]

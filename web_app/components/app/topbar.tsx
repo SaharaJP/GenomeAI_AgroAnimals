@@ -1,0 +1,82 @@
+'use client';
+
+import { usePathname, useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
+import { useAuth } from '@/components/auth/auth-provider';
+import { InsightNotificationBell } from '@/components/ai/insight-notification-bell';
+
+const pathLabels: Record<string, string> = {
+  '/daily-summary': 'Обзор',
+  '/alerts':        'Инсайты',
+  '/reports':       'Аналитика',
+  '/planner':       'Лента событий',
+  '/assistant':     'Помощник',
+  '/worklists':     'Рабочие списки',
+  '/reproduction':  'Воспроизводство',
+  '/vet':           'Ветеринария',
+  '/treatments':    'Лечение / каренция',
+  '/decisions':     'Решения',
+  '/economics':     'Экономика / сценарии',
+  '/support':       'Поддержка',
+  '/pilot':         'Пилот',
+  '/readiness':     'Готовность системы',
+  '/observability': 'Мониторинг',
+  '/admin':         'Администрирование',
+  '/design-system': 'Дизайн-система',
+};
+
+function getPageLabel(pathname: string): string {
+  if (pathLabels[pathname]) return pathLabels[pathname];
+  // match prefix for nested routes
+  const prefix = Object.keys(pathLabels).find((k) => pathname.startsWith(`${k}/`));
+  return prefix ? pathLabels[prefix] : 'Страница';
+}
+
+function getInitials(username: string | undefined): string {
+  if (!username) return 'ГА';
+  const parts = username.split(/[\s._-]/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return username.slice(0, 2).toUpperCase();
+}
+
+export function Topbar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { me } = useAuth() as { me: any; loading: boolean };
+  const pageLabel = getPageLabel(pathname);
+
+  async function handleExitDemo() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.replace('/login');
+    router.refresh();
+  }
+
+  return (
+    <header className="topbar" role="banner">
+      {/* Breadcrumb */}
+      <nav className="topbar-breadcrumb" aria-label="Хлебные крошки">
+        <span>Демо-ферма</span>
+        <span className="topbar-breadcrumb-sep">▸</span>
+        <span className="topbar-breadcrumb-current">{pageLabel}</span>
+      </nav>
+
+      {/* Right side */}
+      <div className="topbar-right">
+        <InsightNotificationBell />
+
+        <button className="topbar-btn-demo" onClick={handleExitDemo}>
+          <LogOut size={13} strokeWidth={2} />
+          <span>Выйти из демо-режима</span>
+        </button>
+
+        <div
+          className="topbar-avatar"
+          title={me?.user.username ?? 'Пользователь'}
+          aria-label={`Аватар пользователя ${me?.user.username ?? ''}`}
+        >
+          {getInitials(me?.user.username)}
+        </div>
+      </div>
+    </header>
+  );
+}

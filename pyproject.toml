@@ -18,6 +18,12 @@ dependencies = [
   "jinja2>=3.1",
   "python-multipart>=0.0.9",
   "itsdangerous>=2.2",
+  "anthropic>=0.40",
+  "redis>=5.0",
+  "tiktoken>=0.7",
+  "pydantic-settings>=2.0",
+  "apscheduler>=3.10",
+  "qrcode>=8.0",
 ]
 
 
@@ -37,3 +43,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]

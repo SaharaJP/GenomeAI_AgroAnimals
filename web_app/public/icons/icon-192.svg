@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="32" fill="#2dd4bf"/>
+  <!-- Leaf icon (Lucide-style outline on teal) -->
+  <g transform="translate(40, 36)" stroke="white" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M106 10 C106 10 100 80 56 104 C12 128 10 116 10 116 C10 116 10 104 32 80 C54 56 106 10 106 10Z" fill="white" fill-opacity="0.95"/>
+    <line x1="10" y1="116" x2="58" y2="68"/>
+  </g>
+  <!-- Wordmark -->
+  <text x="96" y="162" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" fill="white" text-anchor="middle" letter-spacing="-0.5">genomeai</text>
+</svg>

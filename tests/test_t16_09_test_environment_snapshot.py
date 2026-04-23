@@ -22,7 +22,7 @@ def test_t16_09_declared_dependencies_include_runtime_and_optional_groups() -> N
     declared = declared_dependency_specs()
     assert declared["pandas"]["group"] == "runtime"
     assert declared["fastapi"]["requirement"] == "fastapi>=0.110"
-    assert "streamlit" not in declared
+    assert declared["streamlit"]["group"] == "optional:ui"
 
 
 

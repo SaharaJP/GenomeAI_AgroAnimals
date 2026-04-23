@@ -307,6 +307,45 @@ class PilotResponse(BaseModel):
     items: list[PilotPackItem] = Field(default_factory=list)
 
 
+class InsightRecommendation(BaseModel):
+    id: str
+    text: str
+    deadline: Optional[str] = None
+
+
+class InsightItem(BaseModel):
+    insight_id: str
+    type: str
+    severity: str
+    status: str = 'to_check'
+    date: str
+    animal_ids: list[str] = Field(default_factory=list)
+    title: str
+    body: str
+    action: str = ''
+    tags: list[str] = Field(default_factory=list)
+    farm_id: Optional[str] = None
+    farm_label: Optional[str] = None
+    farm_pct: Optional[float] = None
+    holding_pct: Optional[float] = None
+    chart_data: list[float] = Field(default_factory=list)
+    chart_label: Optional[str] = None
+    chart_unit: Optional[str] = None
+    recommendations: list[InsightRecommendation] = Field(default_factory=list)
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class InsightsListResponse(BaseModel):
+    schema: str = 'genomeai.api.insights.list.v1'
+    total: int = 0
+    items: list[InsightItem] = Field(default_factory=list)
+
+
+class InsightTransitionRequest(BaseModel):
+    status: str
+
+
 class ReadinessCheck(BaseModel):
     check_id: str
     status: str

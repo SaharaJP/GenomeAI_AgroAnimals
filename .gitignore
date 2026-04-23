@@ -32,3 +32,17 @@ installers/releases/
 # React/Next.js web app
 web_app/node_modules/
 web_app/.next/
+next_task.md
+artifacts/
+_tmp/
+runtime/
+.claude/
+MVP_progress.md
+design_decisions.md
+.env.ai
+tests.backup.*
+
+# Smoke test artifacts — не коммитим
+tmp/smoke_*/
+*.db-journal
+src/core/web_cabinet/storage/web.db

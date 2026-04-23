@@ -588,6 +588,21 @@ def _startup() -> None:
     if os.environ.get("GENOMEAI_WEB_DISABLE_WORKER") != "1":
         worker.start()
 
+    # Start AI crons (disable via GENOMEAI_AI_CRON_ENABLED=false)
+    if os.environ.get("GENOMEAI_AI_CRON_ENABLED", "true").lower() == "true":
+        try:
+            from web_cabinet.ai.background.morning_brief_cron import start_cron
+            start_cron()
+        except Exception as _cron_exc:
+            import logging as _logging
+            _logging.getLogger("genomeai.startup").warning(f"morning_brief cron start failed: {_cron_exc}")
+        try:
+            from web_cabinet.ai.background.insight_scanner_cron import start_cron as start_scanner_cron
+            start_scanner_cron()
+        except Exception as _cron_exc:
+            import logging as _logging
+            _logging.getLogger("genomeai.startup").warning(f"insight_scanner cron start failed: {_cron_exc}")
+
 
 def _shutdown() -> None:
     if os.environ.get("GENOMEAI_WEB_DISABLE_WORKER") == "1":
@@ -596,6 +611,18 @@ def _shutdown() -> None:
         worker.stop()
     except Exception:
         return
+
+    try:
+        from web_cabinet.ai.background.morning_brief_cron import stop_cron
+        stop_cron()
+    except Exception:
+        pass
+
+    try:
+        from web_cabinet.ai.background.insight_scanner_cron import stop_cron as stop_scanner_cron
+        stop_scanner_cron()
+    except Exception:
+        pass
 
 
 @asynccontextmanager
@@ -624,6 +651,9 @@ web_logger = get_structured_logger("web.api")
 
 app.include_router(auth_boundary_v1_router)
 app.include_router(api_boundary_v1_router)
+
+from web_cabinet.ai.endpoints import register_ai_routes
+register_ai_routes(app)
 
 
 @app.middleware("http")

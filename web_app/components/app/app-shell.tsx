@@ -1,2 +1,27 @@
-'use client'; import Link from 'next/link'; import { usePathname,useRouter } from 'next/navigation'; import { Button } from '@/components/ui/button'; import { getNavigationSections } from '@/lib/navigation'; import { useAuth } from '@/components/auth/auth-provider';
-export function AppShell({children}:{children:React.ReactNode}){const pathname=usePathname();const router=useRouter();const {me,loading,refresh}=useAuth() as { me: any; loading: boolean; refresh: () => Promise<void> };const sections=getNavigationSections(me);return <div className="shell"><aside className="sidebar"><div className="brand"><div className="brand-title">GenomeAI AgroAnimals</div><div className="brand-subtitle">Daily operations parity shell</div></div>{sections.map(section=><div className="nav-section" key={section.title}><p className="nav-section-title">{section.title}</p><ul className="nav-list">{section.items.map(item=>{const active=pathname===item.href||pathname.startsWith(`${item.href}/`);return <li key={item.href}><Link className={`nav-link ${active?'nav-link-active':''}`.trim()} href={item.href}>{item.label}</Link></li>})}</ul></div>)}<div className="card" style={{marginTop:18}}><h3 className="card-title">Session</h3>{loading?<p className="card-subtitle">Loading…</p>:<div className="meta-list"><div className="meta-row"><span>User</span><strong>{me?.user.username||'anonymous'}</strong></div><div className="meta-row"><span>Role</span><strong>{me?.user.role||'—'}</strong></div><div className="meta-row"><span>Farm mode</span><strong>{me?.scope.active_farm_id||((me?.scope.allowed_farm_ids?.length||0)>1?'multi-site':'all')}</strong></div></div>}<div className="toolbar" style={{marginTop:14}}><Button className="button-secondary" onClick={()=>void refresh()}>Refresh</Button><Button className="button-danger" onClick={async()=>{await fetch('/api/auth/logout',{method:'POST'});router.replace('/login');router.refresh()}}>Sign out</Button></div></div></aside><main className="main">{children}</main></div>}
+'use client';
+
+import { useState } from 'react';
+import { Sidebar } from './sidebar';
+import { Topbar } from './topbar';
+import { FAB } from './fab';
+import { MobileTabBar } from './mobile-tab-bar';
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <div className={`shell ${collapsed ? 'shell-collapsed' : ''}`}>
+      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+
+      <div className="shell-body">
+        <Topbar />
+        <main className="shell-content">
+          {children}
+        </main>
+      </div>
+
+      <FAB />
+      <MobileTabBar />
+    </div>
+  );
+}

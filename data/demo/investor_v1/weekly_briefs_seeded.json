@@ -1,0 +1,28 @@
+[
+  {
+    "brief_id": "WBRIEF_20260421",
+    "week_end": "2026-04-21",
+    "week_start": "2026-04-15",
+    "farm_id": "INV_FARM_001",
+    "kpis": {
+      "avg_milk_yield_kg": 28.4,
+      "health_index_pct": 94,
+      "conceptions_confirmed": 5,
+      "calvings": 1
+    },
+    "summary": "Стабильная неделя. Мастит у Ночки на контроле. PR 24% — рекорд фермы."
+  },
+  {
+    "brief_id": "WBRIEF_20260414",
+    "week_end": "2026-04-14",
+    "week_start": "2026-04-08",
+    "farm_id": "INV_FARM_001",
+    "kpis": {
+      "avg_milk_yield_kg": 29.1,
+      "health_index_pct": 95,
+      "conceptions_confirmed": 7,
+      "calvings": 2
+    },
+    "summary": "Высокая продуктивность. 2 отёла. Heat detection волна: 11 осеменений."
+  }
+]
