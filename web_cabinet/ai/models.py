@@ -162,3 +162,26 @@ class ScanNowResponse(BaseModel):
     new_insights: list[ScannerInsight]
     message: str
     demo_mode: bool = True
+
+
+# ---------------------------------------------------------------------------
+# Impact Narrative (MVP-N16)
+# ---------------------------------------------------------------------------
+
+class ImpactNarrativeRequest(BaseModel):
+    event_id: str
+    window: Literal["3d", "1w", "2w", "4w"] = "1w"
+    language: str = "ru"
+    farm_id: str = "demo-farm-v1"
+
+
+class ImpactNarrative(BaseModel):
+    event_id: str
+    window: str
+    narrative: str
+    interpretation: Literal["positive", "negative", "neutral", "mixed"]
+    significance: Literal["major", "moderate", "minor", "insignificant"]
+    recommendations: list[str]
+    confidence: float = Field(..., ge=0.0, le=1.0)
+    generation_model: str
+    generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
