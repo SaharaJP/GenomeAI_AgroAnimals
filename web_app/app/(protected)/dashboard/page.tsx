@@ -5,6 +5,7 @@ import { AttentionCard } from '@/components/overview/attention-card';
 import { InsightsColumn } from '@/components/overview/insights-column';
 import { TimelineColumn } from '@/components/overview/timeline-column';
 import { DataColumn } from '@/components/overview/data-column';
+import { AskFarmWidget } from '@/components/ai/ask-farm-widget';
 
 export default function DashboardPage() {
   return (
@@ -23,6 +24,7 @@ export default function DashboardPage() {
         <InsightsColumn />
         <TimelineColumn />
         <DataColumn />
+        <AskFarmWidget />
       </div>
     </div>
   );
