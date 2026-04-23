@@ -158,7 +158,6 @@ class AnthropicClient:
                 )
                 if system_blocks:
                     kwargs["system"] = system_blocks
-                    kwargs["betas"] = ["prompt-caching-2024-07-31"]
 
                 response = client.messages.create(**kwargs)
                 latency_ms = (time.monotonic() - t0) * 1000
@@ -228,7 +227,6 @@ class AnthropicClient:
                 )
                 if system_blocks:
                     kwargs["system"] = system_blocks
-                    kwargs["betas"] = ["prompt-caching-2024-07-31"]
 
                 response = await client.messages.create(**kwargs)
                 latency_ms = (time.monotonic() - t0) * 1000
@@ -292,7 +290,6 @@ class AnthropicClient:
         )
         if system_blocks:
             kwargs["system"] = system_blocks
-            kwargs["betas"] = ["prompt-caching-2024-07-31"]
 
         async with client.messages.stream(**kwargs) as stream:
             async for text in stream.text_stream:
@@ -326,7 +323,6 @@ class AnthropicClient:
         )
         if system_blocks:
             kwargs["system"] = system_blocks
-            kwargs["betas"] = ["prompt-caching-2024-07-31"]
 
         response = await client.messages.create(**kwargs)
         latency_ms = (time.monotonic() - t0) * 1000

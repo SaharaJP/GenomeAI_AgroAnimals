@@ -99,7 +99,7 @@ def build_farm_context(
     if store is None:
         store = DemoDataStore()
 
-    as_of = datetime.date.today()
+    as_of = _detect_data_as_of(store) or datetime.date.today()
 
     # ---- farm_summary ----
     animals = store.animals()
@@ -168,6 +168,22 @@ def build_farm_context(
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
+
+def _detect_data_as_of(store: Any) -> Optional[datetime.date]:
+    """Returns max date found in milkings or health_events; None if data is empty."""
+    import pandas as pd
+    candidates: list[datetime.date] = []
+    for getter, col in [("milkings", "date"), ("health_events", "event_date")]:
+        try:
+            df = getattr(store, getter)()
+            if not df.empty and col in df.columns:
+                max_ts = pd.to_datetime(df[col], errors="coerce").max()
+                if pd.notna(max_ts):
+                    candidates.append(max_ts.date())
+        except Exception:
+            pass
+    return max(candidates) if candidates else None
+
 
 def _build_active_insights(store: Any) -> list[dict]:
     alerts = store.alerts()

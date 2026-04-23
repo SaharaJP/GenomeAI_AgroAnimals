@@ -6,7 +6,7 @@ from typing import Optional
 
 import pandas as pd
 
-_DEMO_DIR = Path(__file__).resolve().parents[4] / "data" / "demo" / "demo_farm_v1"
+_DEMO_DIR = Path(__file__).resolve().parents[3] / "data" / "demo" / "demo_farm_v1"
 
 
 class DemoDataStore:
