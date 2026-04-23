@@ -9,6 +9,7 @@ const pathLabels: Record<string, string> = {
   '/alerts':        'Инсайты',
   '/reports':       'Аналитика',
   '/planner':       'Лента событий',
+  '/copilot':       'Помощник',
   '/assistant':     'Помощник',
   '/worklists':     'Рабочие списки',
   '/reproduction':  'Воспроизводство',

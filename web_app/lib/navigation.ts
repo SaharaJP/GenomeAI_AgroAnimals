@@ -11,7 +11,7 @@ const sections: NavigationSection[] = [
       { label: 'Инсайты', href: '/alerts', minPermissions: ['alerts.view', 'alerts.manage', 'alerts.read'] },
       { label: 'Аналитика', href: '/reports', minPermissions: ['reports.view', 'reports.read', 'reports.approve'] },
       { label: 'Лента событий', href: '/timeline', minPermissions: ['planner.view', 'planner.read'] },
-      { label: 'Помощник', href: '/assistant', minPermissions: ['assistant.ask'] },
+      { label: 'Помощник', href: '/copilot', minPermissions: ['assistant.ask'] },
     ],
   },
   {
