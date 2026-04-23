@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { InsightNotificationBell } from '@/components/ai/insight-notification-bell';
 
 const pathLabels: Record<string, string> = {
   '/daily-summary': 'Обзор',
@@ -61,6 +62,8 @@ export function Topbar() {
 
       {/* Right side */}
       <div className="topbar-right">
+        <InsightNotificationBell />
+
         <button className="topbar-btn-demo" onClick={handleExitDemo}>
           <LogOut size={13} strokeWidth={2} />
           <span>Выйти из демо-режима</span>
