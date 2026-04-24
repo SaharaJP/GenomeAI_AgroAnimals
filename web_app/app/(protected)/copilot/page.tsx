@@ -34,19 +34,65 @@ export default function CopilotPage() {
   async function handleGenerate() {
     setIsGenerating(true);
     setBrief(null);
-    // Demo mode: seeded brief with <1s latency
-    await new Promise<void>((res) => setTimeout(res, 550));
-    setBrief(getSeededBrief());
+
+    try {
+      const res = await fetch('/api/ai/weekly-brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ week_start: dateStart, week_end: dateEnd }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as WeeklyBrief;
+        setBrief(data);
+      } else {
+        // Backend unavailable — local demo fallback
+        await new Promise<void>((r) => setTimeout(r, 400));
+        setBrief(getSeededBrief());
+      }
+    } catch {
+      await new Promise<void>((r) => setTimeout(r, 400));
+      setBrief(getSeededBrief());
+    }
+
     setIsGenerating(false);
-    setTimeout(() => document.getElementById('brief-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+    setTimeout(
+      () => document.getElementById('brief-preview')?.scrollIntoView({ behavior: 'smooth', block: 'start' }),
+      50,
+    );
   }
 
   function handleSendEmail() {
     showToast('Брифинг отправлен на email!');
   }
 
-  function handleDownloadPdf() {
+  async function handleDownloadPdf() {
     if (!brief) return;
+    showToast('Генерирую PDF…');
+
+    try {
+      const res = await fetch('/api/ai/weekly-brief/pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief }),
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `briefing-${brief.brief_id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('PDF скачан');
+        return;
+      }
+    } catch {
+      // fall through to text fallback
+    }
+
+    // Fallback: plain-text download when backend is unreachable
     const text = [
       `Брифинг фермы: ${brief.week_start} — ${brief.week_end}`,
       '',
@@ -69,7 +115,7 @@ export default function CopilotPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('PDF скачивается…');
+    showToast('Скачано как текст (PDF сервис недоступен)');
   }
 
   return (
