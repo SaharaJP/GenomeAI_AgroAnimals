@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { DEMO_TIMELINE_EVENTS } from '@/lib/api/timeline';
 import type { MetricWindow } from '@/lib/api/timeline';
 import { EventList } from '@/components/timeline/event-list';
+import { useAddEvent } from '@/components/app/add-event-context';
 
-// Lazy-load the heavy ImpactPanel (metrics charts, event detail)
 const ImpactPanel = dynamic(
   () => import('@/components/timeline/impact-panel').then((m) => m.ImpactPanel),
   {
@@ -20,33 +20,29 @@ const ImpactPanel = dynamic(
 );
 
 const DEFAULT_SELECTED = 'DEMO_001';
-const EVENT_IDS = DEMO_TIMELINE_EVENTS.map((e) => e.timeline_event_id);
 
 export default function TimelinePage() {
+  const { openDialog, userEvents } = useAddEvent();
+
+  const allEvents = [...userEvents, ...DEMO_TIMELINE_EVENTS];
+  const eventIds = allEvents.map((e) => e.timeline_event_id);
+
   const [selectedId, setSelectedId] = useState<string | null>(DEFAULT_SELECTED);
   const [typeFilter, setTypeFilter] = useState('all');
   const [activeWindow, setActiveWindow] = useState<MetricWindow>('3d');
-  const [toastVisible, setToastVisible] = useState(false);
   const [swipeStartX, setSwipeStartX] = useState<number | null>(null);
 
-  const selectedEvent =
-    DEMO_TIMELINE_EVENTS.find((e) => e.timeline_event_id === selectedId) ?? null;
-
-  function handleAddEvent() {
-    setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 3000);
-  }
+  const selectedEvent = allEvents.find((e) => e.timeline_event_id === selectedId) ?? null;
 
   function navigateRelative(delta: 1 | -1) {
-    const idx = selectedId ? EVENT_IDS.indexOf(selectedId) : -1;
-    const next = EVENT_IDS[Math.max(0, Math.min(EVENT_IDS.length - 1, idx + delta))];
+    const idx = selectedId ? eventIds.indexOf(selectedId) : -1;
+    const next = eventIds[Math.max(0, Math.min(eventIds.length - 1, idx + delta))];
     if (next) {
       setSelectedId(next);
       setActiveWindow('3d');
     }
   }
 
-  // Swipe left → next event, swipe right → previous event
   function handleTouchStart(e: React.TouchEvent) {
     setSwipeStartX(e.touches[0].clientX);
   }
@@ -54,9 +50,7 @@ export default function TimelinePage() {
   function handleTouchEnd(e: React.TouchEvent) {
     if (swipeStartX === null) return;
     const delta = swipeStartX - e.changedTouches[0].clientX;
-    if (Math.abs(delta) > 60) {
-      navigateRelative(delta > 0 ? 1 : -1);
-    }
+    if (Math.abs(delta) > 60) navigateRelative(delta > 0 ? 1 : -1);
     setSwipeStartX(null);
   }
 
@@ -73,7 +67,7 @@ export default function TimelinePage() {
         onTouchEnd={handleTouchEnd}
       >
         <EventList
-          events={DEMO_TIMELINE_EVENTS}
+          events={allEvents}
           selectedId={selectedId}
           onSelect={(id) => {
             setSelectedId(id);
@@ -81,7 +75,7 @@ export default function TimelinePage() {
           }}
           typeFilter={typeFilter}
           onTypeFilterChange={setTypeFilter}
-          onAddEvent={handleAddEvent}
+          onAddEvent={openDialog}
         />
 
         <ImpactPanel
@@ -90,12 +84,6 @@ export default function TimelinePage() {
           onWindowChange={setActiveWindow}
         />
       </div>
-
-      {toastVisible && (
-        <div className="toast" role="status" aria-live="polite">
-          Форма добавления события в разработке
-        </div>
-      )}
     </>
   );
 }

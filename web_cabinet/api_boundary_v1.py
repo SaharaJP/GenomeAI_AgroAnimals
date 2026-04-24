@@ -43,7 +43,7 @@ from packages.contracts.api_boundary_v1 import (
     WorklistItem,
     WorklistsListResponse,
 )
-from core.common.time import utc_date_str
+from core.common.time import utc_date_str, utc_timestamp_compact
 from core.infra.web_db import get_settings
 from core.infra.runtime_storage import resolve_runtime_storage_settings, runtime_storage_diagnostics
 from core.infra.runtime_state_storage import runtime_state_storage_diagnostics
@@ -921,3 +921,28 @@ def boundary_insights_transition(
     item = _transition_insight(insight_id, body.status)
     if item is None:
         raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or invalid status')
+
+
+@router.post('/timeline/events')
+async def boundary_timeline_event_create(
+    request: Request,
+    user=Depends(get_current_user),
+):
+    body = await request.json()
+    required = {'event_type', 'title', 'date'}
+    missing = required - set(body.keys())
+    if missing:
+        raise HTTPException(status_code=422, detail=f'Missing fields: {missing}')
+    event_id = f'TL_{utc_timestamp_compact()}'
+    new_event = {
+        'timeline_event_id': event_id,
+        'date': body['date'],
+        'event_type': body['event_type'],
+        'title': body['title'],
+        'body': body.get('description', ''),
+        'source': 'Добавлено вручную',
+        'has_impact': False,
+        'pending_analysis': True,
+        'affected_groups': body.get('affected_groups', []),
+    }
+    return {'event_id': event_id, 'event': new_event, 'status': 'pending_analysis', 'demo': True}

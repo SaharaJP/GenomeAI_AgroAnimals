@@ -2029,3 +2029,175 @@ button, input, select, textarea { font: inherit; }
   white-space: nowrap;
 }
 .pwa-install-btn:hover { background: var(--accent-hover); }
+
+/* ── Add Event FAB + Dialog (MVP-N07) ───────────── */
+
+/* FAB pulse on click */
+@keyframes fab-pulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+.fab--pulse { animation: fab-pulse 350ms var(--ease-standard) forwards; }
+
+/* Dialog overlay */
+.ae-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 48px 24px 32px;
+  overflow-y: auto;
+}
+
+/* Dialog container */
+@keyframes ae-slide-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ae-dialog {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  width: min(560px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: ae-slide-in 200ms var(--ease-standard);
+}
+
+.ae-dialog-header {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.ae-dialog-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ae-dialog-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ae-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+/* Form fields */
+.ae-field { display: flex; flex-direction: column; gap: 5px; }
+.ae-field--half { max-width: 200px; }
+.ae-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.ae-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+.ae-required { color: var(--danger); }
+.ae-textarea { resize: vertical; min-height: 72px; }
+.ae-error { font-size: 13px; color: var(--danger); margin: 0; }
+
+/* Event type grid */
+.ae-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+}
+
+.ae-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: border-color var(--duration-fast), background var(--duration-fast), color var(--duration-fast);
+  text-align: left;
+}
+.ae-type-btn:hover { border-color: var(--accent); background: var(--accent-subtle); }
+.ae-type-btn--active {
+  border-color: var(--accent);
+  background: var(--accent-subtle);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+.ae-type-emoji { font-size: 15px; line-height: 1; flex-shrink: 0; }
+.ae-type-label { line-height: 1.3; }
+
+/* Affected groups chips */
+.ae-groups { display: flex; flex-wrap: wrap; gap: 6px; }
+.ae-group-chip {
+  padding: 4px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--duration-fast), background var(--duration-fast);
+}
+.ae-group-chip:hover { border-color: var(--accent); background: var(--accent-subtle); }
+.ae-group-chip--active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* File attach stub */
+.ae-attach-stub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: not-allowed;
+  user-select: none;
+}
+
+/* Success toast override */
+.ae-toast-success { background: #0f766e; }
+
+/* Mobile: bottom drawer */
+@media (max-width: 768px) {
+  .ae-overlay {
+    align-items: flex-end;
+    padding: 0;
+    overflow-y: hidden;
+  }
+
+  @keyframes ae-slide-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .ae-dialog {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    width: 100%;
+    max-height: 90vh;
+    animation: ae-slide-up 280ms var(--ease-standard);
+  }
+
+  .ae-type-grid { grid-template-columns: repeat(2, 1fr); }
+  .ae-field--half { max-width: 100%; }
+}
