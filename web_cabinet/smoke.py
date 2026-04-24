@@ -77,9 +77,9 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
     app_module = importlib.reload(app_module)
 
     app = app_module.app
-    connect = db_module.connect
     get_settings = db_module.get_settings
     list_jobs = db_module.list_jobs
+    from core.infra.postgres_compat import connect_postgres_compat as connect
     JobWorker = worker_module.JobWorker
 
     settings = get_settings()
@@ -92,7 +92,7 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
         worker.run_until_empty(max_jobs=200)
 
     def last_kv(kind: str) -> dict[str, str]:
-        conn = connect(settings.db_path)
+        conn = connect()
         try:
             jobs = [j for j in list_jobs(conn, limit=500) if j["kind"] == kind]
             if not jobs:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 import uuid
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -20,7 +19,7 @@ class WhatIfScenarioCreate:
 
 
 def create_scenario(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,
@@ -46,12 +45,12 @@ def create_scenario(
     )
 
 
-def get_scenario(conn: sqlite3.Connection, *, tenant_id: str, scenario_id: str) -> Optional[dict[str, Any]]:
+def get_scenario(conn: Any, *, tenant_id: str, scenario_id: str) -> Optional[dict[str, Any]]:
     return WhatIfScenariosRepo(conn).get(tenant_id=tenant_id, scenario_id=scenario_id)
 
 
 def list_scenarios(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     status: str | None = None,
@@ -63,7 +62,7 @@ def list_scenarios(
 
 
 def update_scenario(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     scenario_id: str,
@@ -94,7 +93,7 @@ def update_scenario(
 
 
 def approve_scenario(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     scenario_id: str,
@@ -118,7 +117,7 @@ def approve_scenario(
 
 
 def reject_scenario(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     scenario_id: str,
@@ -142,7 +141,7 @@ def reject_scenario(
 
 
 def attach_last_run(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     scenario_id: str,
@@ -156,7 +155,7 @@ def attach_last_run(
 
 
 def clone_scenario(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     source_scenario_id: str,
@@ -194,7 +193,7 @@ def clone_scenario(
 
 
 def archive_scenario(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     scenario_id: str,

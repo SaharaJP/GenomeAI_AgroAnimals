@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -21,7 +20,7 @@ class WhatIfReportCreate:
 
 
 def create_report(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,
@@ -44,7 +43,7 @@ def create_report(
 
 
 def get_report(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     report_version: str,
@@ -53,7 +52,7 @@ def get_report(
 
 
 def list_reports(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     scenario_id: str | None = None,

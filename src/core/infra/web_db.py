@@ -137,7 +137,7 @@ def _maybe_enqueue_job_runtime(row: dict[str, Any]) -> None:
     try:
         broker = resolve_queue_runtime_broker()
         settings = resolve_queue_runtime_settings()
-        if str(settings.backend or "sqlite") != "redis":
+        if str(settings.backend or "postgres") != "redis":
             return
         envelope = _queue_envelope_from_job_row(row)
         broker.enqueue(envelope, idempotency_key=f"job:{envelope.public_job_id}")

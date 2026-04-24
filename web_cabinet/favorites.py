@@ -5,7 +5,6 @@ from __future__ import annotations
 Favorites are per-user. Storage only.
 """
 
-import sqlite3
 from typing import Any, Optional
 
 from core.infra import FavoritesRepo
@@ -14,7 +13,7 @@ from core.infra.web_db import utcnow_iso
 
 
 def add_favorite(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,
@@ -40,7 +39,7 @@ def add_favorite(
 
 
 def remove_favorite(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,
@@ -58,7 +57,7 @@ def remove_favorite(
 
 
 def is_favorite(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,
@@ -74,7 +73,7 @@ def is_favorite(
 
 
 def list_favorites(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,

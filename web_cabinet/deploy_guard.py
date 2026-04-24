@@ -132,7 +132,7 @@ def validate_runtime_config(*, settings: Any) -> dict[str, Any]:
     except QueueRuntimeConfigError as exc:
         raise DeployConfigError(f"queue runtime invalid: {exc}") from exc
 
-    if queue_runtime.adult_mode and str(queue_runtime.backend or "sqlite") == "redis" and os.environ.get("GENOMEAI_WEB_DISABLE_WORKER") != "1":
+    if queue_runtime.adult_mode and str(queue_runtime.backend or "postgres") == "redis" and os.environ.get("GENOMEAI_WEB_DISABLE_WORKER") != "1":
         raise DeployConfigError(
             "adult redis queue contour требует GENOMEAI_WEB_DISABLE_WORKER=1; backend/web process не должен исполнять background jobs сам"
         )

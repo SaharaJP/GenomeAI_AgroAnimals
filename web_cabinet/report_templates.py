@@ -2,12 +2,11 @@ from __future__ import annotations
 
 """T10-04: Report templates (sections + metrics selection).
 
-This module stores templates in web.db. No calculations here.
+This module stores templates in the database. No calculations here.
 Report generation from templates is implemented in offline-core (next sub-steps).
 """
 
 import json
-import sqlite3
 from typing import Any, Optional
 
 from core.infra import ReportTemplatesRepo
@@ -23,7 +22,7 @@ def _json(obj: Any, default: str) -> str:
 
 
 def create_template(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     template_id: str,
     tenant_id: str,
@@ -75,7 +74,7 @@ def create_template(
 
 
 def update_template(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     template_id: str,
@@ -111,18 +110,18 @@ def update_template(
     )
 
 
-def delete_template(conn: sqlite3.Connection, *, tenant_id: str, template_id: str) -> None:
+def delete_template(conn: Any, *, tenant_id: str, template_id: str) -> None:
     deleted = ReportTemplatesRepo(conn).delete(tenant_id=str(tenant_id), template_id=str(template_id))
     if deleted == 0:
         raise ValueError("template не найден")
 
 
-def get_template(conn: sqlite3.Connection, *, tenant_id: str, template_id: str) -> Optional[dict[str, Any]]:
+def get_template(conn: Any, *, tenant_id: str, template_id: str) -> Optional[dict[str, Any]]:
     return ReportTemplatesRepo(conn).get(tenant_id=str(tenant_id), template_id=str(template_id))
 
 
 def list_templates(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,

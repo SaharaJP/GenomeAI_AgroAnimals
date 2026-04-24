@@ -39,7 +39,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from .auth import authenticate, create_authenticated_session, get_current_user, get_db, hash_password, resolve_request_auth_context
 from .rbac import require_permissions
 from core.audit.events import write_audit, list_audit, aggregate_audit_facets, archive_old_audit, count_archivable_audit, load_audit_retention_config, retention_cutoff_ts, validate_audit_scope
-from core.infra.web_db import create_job, create_retry_job, ensure_default_users, ensure_default_users_v2, get_settings, init_db, get_job as db_get_job, get_user_by_username, list_jobs_filtered, list_users_v2, request_job_cancel, list_roles, get_user_v2_any_by_username, get_user_v2_any_by_id, update_user_v2_role, update_user_v2_password_hash, set_user_v2_active, count_active_users_by_role, create_user_v2, get_permissions_for_role
+from core.infra.web_db import create_job, create_retry_job, get_settings, get_job as db_get_job, get_user_by_username, list_jobs_filtered, list_users_v2, request_job_cancel, list_roles, get_user_v2_any_by_username, get_user_v2_any_by_id, update_user_v2_role, update_user_v2_password_hash, set_user_v2_active, count_active_users_by_role, create_user_v2, get_permissions_for_role
 from core.workflow import (
     AlertCreate,
     DecisionCreate,
@@ -570,26 +570,10 @@ def _startup() -> None:
 
     storage_cfg = (cfg or {}).get("runtime_storage") or {}
 
-    _active_backend = str(storage_cfg.get("backend") or getattr(settings, "runtime_storage_backend", "sqlite"))
-
-    if _active_backend == "sqlite":
-        # Init sqlite schema + default demo users only for compat/dev/test path.
-        from .db import connect as _connect
-        from .playbooks_v1 import ensure_default_playbooks
-
-        conn = _connect(settings.db_path)
-        try:
-            init_db(conn)
-            ensure_default_users(conn, hash_password_fn=hash_password)
-            ensure_default_users_v2(conn, tenant_id="default", hash_password_fn=hash_password)
-            # T12-03: seed default playbooks (idempotent)
-            ensure_default_playbooks(conn, tenant_id="default")
-        finally:
-            conn.close()
-
-    elif _active_backend == "postgres":
-        # Postgres startup: users already seeded via Alembic/bootstrap script.
-        pass
+    _active_backend = str(storage_cfg.get("backend") or getattr(settings, "runtime_storage_backend", "postgres"))
+    if _active_backend != "postgres":
+        raise RuntimeError(f"startup_blocked: runtime_storage_backend must be 'postgres', got '{_active_backend}'")
+    # Users/schema seeded via Alembic migrations + bootstrap scripts.
 
     # Start worker (disable via GENOMEAI_WEB_DISABLE_WORKER=1)
     if os.environ.get("GENOMEAI_WEB_DISABLE_WORKER") != "1":
@@ -767,12 +751,6 @@ def readyz() -> PlainTextResponse:
         "X-GenomeAI-Auth-Mode": str(_operability_snapshot().get("observability", {}).get("runtime_labels", {}).get("auth_mode") or "unknown"),
     }
     try:
-        if str(storage_snapshot.get("backend") or "sqlite") == "sqlite":
-            from .db import connect as _connect
-
-            conn = _connect(settings.db_path)
-            RunsRepo(conn).ping()
-            conn.close()
         # basic storage checks
         for p in [settings.storage_dir, settings.artifacts_root, settings.logs_dir]:
             p.mkdir(parents=True, exist_ok=True)
@@ -1087,7 +1065,7 @@ def _build_copilot_resolver_context(*, request: Request, user: dict, target: str
         data_version=dv,
         asof_date=asof_date,
         period=period,
-        web_db_path=(settings.storage_dir / "web.db") if str(settings.runtime_storage_backend or "sqlite") == "sqlite" else None,
+        web_db_path=None,
         max_rows=int(resolver_cfg.get("max_rows", 20)),
     )
     resolution = resolve_copilot_target_from_fact_pack(fact_pack=assistant_fact_pack, target=parsed)
@@ -1450,9 +1428,6 @@ def readyz(conn=Depends(get_db)) -> PlainTextResponse:
         "X-GenomeAI-Production-Lockdown": "1" if bool(lockdown_snapshot.get("lockdown_active")) else "0",
         "X-GenomeAI-Internal-Web-Login": str(lockdown_snapshot.get("internal_web_login_mode") or "unknown"),
     }
-    # Ensure sqlite responds on compat path only
-    if str(storage_snapshot.get("backend") or "sqlite") == "sqlite":
-        RunsRepo(conn).ping()
     # Ensure storage/artifacts roots exist
     settings.storage_dir.mkdir(parents=True, exist_ok=True)
     settings.artifacts_root.mkdir(parents=True, exist_ok=True)
@@ -6313,7 +6288,7 @@ def _generate_weekly_plan_payload(*, data_version: str, week_start: str, questio
         data_version=dv,
         asof_date=asof_date,
         period="weekly",
-        web_db_path=(settings.storage_dir / "web.db") if str(settings.runtime_storage_backend or "sqlite") == "sqlite" else None,
+        web_db_path=None,
     )
     plan = build_weekly_plan_from_fact_pack(
         fact_pack=fact_pack,

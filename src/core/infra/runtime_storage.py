@@ -110,7 +110,7 @@ def is_adult_runtime_profile(profile: str) -> bool:
 
 
 def default_runtime_backend_for_profile(profile: str) -> str:
-    return "postgres" if is_adult_runtime_profile(profile) else "sqlite"
+    return "postgres"
 
 
 def read_postgres_dsn() -> str | None:

@@ -10,13 +10,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 from core.infra.web_db import (
-    connect,
     create_retry_job,
     fetch_next_queued_job,
     get_job,
     get_job_by_public_id,
     get_settings,
-    init_db,
     mark_job_finished,
     mark_job_running,
 )
@@ -57,7 +55,7 @@ def parse_keyvals(text: str) -> dict[str, str]:
 class JobWorker:
     """Very small in-process queue worker.
 
-    - Jobs are stored in sqlite.
+    - Jobs are stored in postgres.
     - A single thread picks queued jobs and runs genomeai CLI via subprocess.
     - Stdout/stderr are appended to a per-job log file.
 
@@ -74,9 +72,9 @@ class JobWorker:
 
     def _queue_backend(self) -> str:
         try:
-            return str(resolve_queue_runtime_settings().backend or "sqlite")
+            return str(resolve_queue_runtime_settings().backend or "postgres")
         except Exception:
-            return "sqlite"
+            return "postgres"
 
     def _ensure_execution_model_allowed(self) -> None:
         settings = resolve_queue_runtime_settings()
@@ -106,8 +104,6 @@ class JobWorker:
         """
         conn = self._get_conn()
         try:
-            if str(getattr(self.settings, 'runtime_storage_backend', 'sqlite')) != 'postgres':
-                init_db(conn)
             if self._queue_backend() == "redis":
                 broker = resolve_queue_runtime_broker()
                 claimed = broker.claim(queue_name=self.cfg.queue_name_default, worker_id=self.worker_id)
@@ -136,18 +132,13 @@ class JobWorker:
         return ran
 
     def _get_conn(self):
-        backend = str(getattr(self.settings, 'runtime_storage_backend', None) or 'sqlite')
-        if backend == 'postgres':
-            from core.infra.postgres_compat import connect_postgres_compat
-            return connect_postgres_compat()
-        return connect(self.settings.db_path)
+        from core.infra.postgres_compat import connect_postgres_compat
+        return connect_postgres_compat()
 
     def _loop(self) -> None:
         while not self._stop.is_set():
             conn = self._get_conn()
             try:
-                if str(getattr(self.settings, 'runtime_storage_backend', 'sqlite')) != 'postgres':
-                    init_db(conn)
                 if self._queue_backend() == "redis":
                     broker = resolve_queue_runtime_broker()
                     claimed = broker.claim(queue_name=self.cfg.queue_name_default, worker_id=self.worker_id)

@@ -9,7 +9,7 @@ from typing import Any, Optional, Callable
 
 from fastapi import Depends, HTTPException, Request, status
 
-from core.infra.web_db import connect, get_settings, mark_expired_auth_sessions
+from core.infra.web_db import get_settings, mark_expired_auth_sessions
 from core.infra.runtime_auth_storage import (
     legacy_cookie_fallback_allowed,
     resolve_runtime_auth_storage,
@@ -105,24 +105,12 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 
 def get_db():
-    settings = get_settings()
-    backend = str(settings.runtime_storage_backend or 'sqlite')
-    if backend == 'sqlite':
-        conn = connect(settings.db_path)
-        try:
-            yield conn
-        finally:
-            conn.close()
-        return
-    if backend == 'postgres':
-        from core.infra.postgres_compat import connect_postgres_compat
-        conn = connect_postgres_compat()
-        try:
-            yield conn
-        finally:
-            conn.close()
-        return
-    yield None
+    from core.infra.postgres_compat import connect_postgres_compat
+    conn = connect_postgres_compat()
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def authenticate(*, conn, tenant_id: str, username: str, password: str) -> Optional[dict]:

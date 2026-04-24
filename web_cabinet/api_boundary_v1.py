@@ -630,7 +630,7 @@ def boundary_assistant_resolve_target(
         data_version=dv,
         asof_date=str(resolver_cfg.get('asof_date') or utc_date_str()),
         period=str(resolver_cfg.get('default_period') or 'daily'),
-        web_db_path=settings.storage_dir / 'web.db',
+        web_db_path=None,
         max_rows=int(resolver_cfg.get('max_rows') or 20),
     )
     resolution = resolve_copilot_target_from_fact_pack(fact_pack=fact_pack, target=parsed)
