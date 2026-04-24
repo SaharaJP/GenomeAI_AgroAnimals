@@ -2,31 +2,26 @@
 
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useAddEvent } from './add-event-context';
 
 export function FAB() {
-  const [visible, setVisible] = useState(false);
+  const { openDialog } = useAddEvent();
+  const [pulsing, setPulsing] = useState(false);
 
   function handleClick() {
-    setVisible(true);
-    setTimeout(() => setVisible(false), 3000);
+    setPulsing(true);
+    setTimeout(() => setPulsing(false), 350);
+    openDialog();
   }
 
   return (
-    <>
-      <button
-        className="fab"
-        onClick={handleClick}
-        aria-label="Добавить событие"
-        title="Добавить событие"
-      >
-        <Plus size={24} strokeWidth={2} />
-      </button>
-
-      {visible && (
-        <div className="toast" role="status" aria-live="polite">
-          Форма в разработке
-        </div>
-      )}
-    </>
+    <button
+      className={`fab${pulsing ? ' fab--pulse' : ''}`}
+      onClick={handleClick}
+      aria-label="Добавить событие"
+      title="Добавить событие"
+    >
+      <Plus size={24} strokeWidth={2} />
+    </button>
   );
 }

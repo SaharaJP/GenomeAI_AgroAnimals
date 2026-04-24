@@ -7,25 +7,30 @@ import { FAB } from './fab';
 import { MobileTabBar } from './mobile-tab-bar';
 import { InstallPrompt } from '@/components/pwa/install-prompt';
 import { UpdateAvailable } from '@/components/pwa/update-available';
+import { AddEventProvider } from './add-event-context';
+import { AddEventDialog } from './add-event-dialog';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className={`shell ${collapsed ? 'shell-collapsed' : ''}`}>
-      <UpdateAvailable />
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+    <AddEventProvider>
+      <div className={`shell ${collapsed ? 'shell-collapsed' : ''}`}>
+        <UpdateAvailable />
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
 
-      <div className="shell-body">
-        <Topbar />
-        <main className="shell-content">
-          {children}
-        </main>
+        <div className="shell-body">
+          <Topbar />
+          <main className="shell-content">
+            {children}
+          </main>
+        </div>
+
+        <FAB />
+        <MobileTabBar />
+        <InstallPrompt />
+        <AddEventDialog />
       </div>
-
-      <FAB />
-      <MobileTabBar />
-      <InstallPrompt />
-    </div>
+    </AddEventProvider>
   );
 }
