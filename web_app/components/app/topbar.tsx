@@ -23,6 +23,8 @@ const pathLabels: Record<string, string> = {
   '/readiness':     'Готовность системы',
   '/observability': 'Мониторинг',
   '/admin':         'Администрирование',
+  '/settings':      'Настройки',
+  '/connections':   'Мои подключения',
   '/design-system': 'Дизайн-система',
 };
 

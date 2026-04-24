@@ -2178,6 +2178,189 @@ button, input, select, textarea { font: inherit; }
 /* Success toast override */
 .ae-toast-success { background: #0f766e; }
 
+/* ── Toggle switch (MVP-N09) ─────────────────────── */
+.toggle-track {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--border-strong);
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--duration-fast) var(--ease-standard);
+  padding: 0;
+}
+.toggle-track.toggle-on { background: var(--accent); }
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: transform var(--duration-fast) var(--ease-standard);
+  pointer-events: none;
+}
+.toggle-on .toggle-thumb { transform: translateX(16px); }
+
+/* ── Settings page (MVP-N09) ─────────────────────── */
+.settings-section { margin-bottom: 28px; }
+.settings-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.settings-section-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+.settings-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.settings-field-row {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 4px;
+}
+.settings-field-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.settings-field-dropdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: default;
+}
+.settings-notif-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.settings-notif-table th {
+  padding: 9px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.settings-notif-table th:last-child { text-align: right; }
+.settings-notif-table td {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.settings-notif-table td:last-child { text-align: right; }
+.settings-notif-table tr:last-child td { border-bottom: none; }
+.settings-briefing-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px;
+}
+.settings-briefing-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.settings-briefing-badge {
+  font-size: 11px;
+  font-weight: 500;
+  background: #ede9fe;
+  color: #7c3aed;
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  vertical-align: middle;
+}
+.settings-briefing-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.settings-integrations-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.settings-integrations-table th {
+  padding: 9px 18px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.settings-integrations-table td {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.settings-integrations-table tr:last-child td { border-bottom: none; }
+.settings-soon-pictogram {
+  opacity: 0.3;
+  margin-bottom: 16px;
+  color: var(--text-muted);
+}
+
+/* ── Connections page (MVP-N09) ──────────────────── */
+.connections-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.btn-outline-teal {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  color: var(--accent-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--duration-fast) var(--ease-standard);
+  min-height: 36px;
+}
+.btn-outline-teal:hover { background: var(--accent-subtle); }
+
 /* Mobile: bottom drawer */
 @media (max-width: 768px) {
   .ae-overlay {

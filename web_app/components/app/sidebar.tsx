@@ -99,8 +99,8 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         </button>
 
         <Link
-          href="/readiness"
-          className={`nav-link ${isActive('/readiness') ? 'nav-link-active' : ''}`}
+          href="/connections"
+          className={`nav-link ${isActive('/connections') ? 'nav-link-active' : ''}`}
           title={collapsed ? 'Мои подключения' : undefined}
         >
           <span className="nav-link-icon"><Plug size={18} strokeWidth={1.5} /></span>
@@ -108,8 +108,8 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         </Link>
 
         <Link
-          href="/admin"
-          className={`nav-link ${isActive('/admin') ? 'nav-link-active' : ''}`}
+          href="/settings"
+          className={`nav-link ${isActive('/settings') ? 'nav-link-active' : ''}`}
           title={collapsed ? 'Настройки' : undefined}
         >
           <span className="nav-link-icon"><Settings size={18} strokeWidth={1.5} /></span>
