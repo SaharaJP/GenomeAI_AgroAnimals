@@ -1,12 +1,18 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { getSeededBrief, getAllSeededBriefs } from '@/lib/weekly-briefs';
 import type { WeeklyBrief } from '@/lib/weekly-briefs';
 import { CreateBriefCard } from '@/components/copilot/create-brief-card';
-import { BriefPreview } from '@/components/copilot/brief-preview';
 import { SettingsCard } from '@/components/copilot/settings-card';
 import { PastBriefingsList } from '@/components/copilot/past-briefings-list';
+
+// Lazy-load the rich BriefPreview panel (markdown renderer, charts)
+const BriefPreview = dynamic(
+  () => import('@/components/copilot/brief-preview').then((m) => m.BriefPreview),
+  { loading: () => <div className="card" style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>Загружаю брифинг…</div>, ssr: false },
+);
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10);

@@ -1,4 +1,17 @@
-import { AnalyticsTabs } from '@/components/analytics/analytics-tabs';
+import dynamic from 'next/dynamic';
+
+// Analytics charts are heavy — lazy-load to keep initial bundle small
+const AnalyticsTabs = dynamic(
+  () => import('@/components/analytics/analytics-tabs').then((m) => m.AnalyticsTabs),
+  {
+    loading: () => (
+      <div className="card" style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+        Загружаю графики…
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 export default function AnalyticsPage() {
   return (
