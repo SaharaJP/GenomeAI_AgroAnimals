@@ -1,3 +1,5 @@
+'use client';
+
 import dynamic from 'next/dynamic';
 
 // Analytics charts are heavy — lazy-load to keep initial bundle small

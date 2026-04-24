@@ -16,5 +16,7 @@ services:
       GENOMEAI_ENV: dev
       GENOMEAI_DEPLOY_PROFILE: dev
   web-frontend:
+    ports:
+      - "3000:3000"
     environment:
       NODE_ENV: production

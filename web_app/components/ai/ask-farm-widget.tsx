@@ -79,7 +79,9 @@ export function AskFarmWidget() {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const sessionId = useRef<string>(
-    typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+    typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2),
   );
 
   const submit = async (q: string) => {
@@ -128,7 +130,9 @@ export function AskFarmWidget() {
     setQuestion('');
     setEvidenceMap(new Map());
     sessionId.current =
-      typeof crypto !== 'undefined' ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+      typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
   };
 
   const handleCopy = () => {
