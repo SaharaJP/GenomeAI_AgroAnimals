@@ -1,5 +1,5 @@
-from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from __future__ import annotations
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 
 """T12-03: Playbooks loader for offline-core.
 
@@ -207,27 +207,25 @@ def list_active_playbooks(
     out: List[Dict[str, Any]] = []
 
     try:
-        if True:
-            conn = _pg_connect()
-            rows = conn.execute(
-                "SELECT v.* FROM playbooks_active a "
-                "JOIN playbook_versions v ON v.tenant_id=a.tenant_id AND v.version_id=a.active_version_id "
-                "WHERE a.tenant_id=? ORDER BY v.target_kind, v.target_type, v.farm_id LIMIT ?",
-                (str(tenant_id), int(limit)),
-            ).fetchall()
-            conn.close()
-            for r in rows or []:
-                d = dict(r)
-                try:
-                    d["steps"] = json.loads(d.get("steps_json") or "[]")
-                except Exception:
-                    d["steps"] = []
-                d.pop("steps_json", None)
-                d["source"] = "web_db"
-                d["sources"] = {"web_db": str(db_path.resolve()), "tables": "playbooks_active/playbook_versions"}
-                out.append(d)
-        except Exception:
-            out = []
+        conn = _pg_connect()
+        rows = conn.execute(
+            "SELECT v.* FROM playbooks_active a "
+            "JOIN playbook_versions v ON v.tenant_id=a.tenant_id AND v.version_id=a.active_version_id "
+            "WHERE a.tenant_id=? ORDER BY v.target_kind, v.target_type, v.farm_id LIMIT ?",
+            (str(tenant_id), int(limit)),
+        ).fetchall()
+        conn.close()
+        for r in rows or []:
+            d = dict(r)
+            try:
+                d["steps"] = json.loads(d.get("steps_json") or "[]")
+            except Exception:
+                d["steps"] = []
+            d.pop("steps_json", None)
+            d["source"] = "postgres"
+            out.append(d)
+    except Exception:
+        out = []
 
     if not out:
         idx = _defaults_index(defaults_path)

@@ -910,13 +910,8 @@ def _write_assistant_audit_best_effort(
         return
     try:
         from core.audit.events import write_audit
-        from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
-from core.infra.web_db import connect, init_db
-
-        db_path = Path(web_db_path)
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        conn = connect(db_path)
-        init_db(conn)
+        from core.infra.postgres_compat import connect_postgres_compat
+        conn = connect_postgres_compat()
         write_audit(
             conn,
             tenant_id="default",

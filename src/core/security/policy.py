@@ -490,10 +490,20 @@ def map_legacy_role(role: str) -> str:
     r = (role or '').lower()
     if r == 'admin':
         return ROLE_ADMIN
+    if r == 'director':
+        return ROLE_DIRECTOR
+    if r == 'zootech':
+        return ROLE_ZOOTECH
+    if r == 'vet':
+        return ROLE_VET
     if r == 'operator':
         return ROLE_OPERATOR
     if r == 'viewer':
         return ROLE_VIEWER
+    if r == 'consultant':
+        return ROLE_CONSULTANT
+    if r == 'partner':
+        return ROLE_PARTNER
     return role
 
 
