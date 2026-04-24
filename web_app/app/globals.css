@@ -1828,3 +1828,204 @@ button, input, select, textarea { font: inherit; }
   .tl-page { grid-template-columns: 1fr; }
   .impact-metrics-grid { grid-template-columns: 1fr; }
 }
+
+/* ── PWA / iOS / Touch / Safe area ──────────────── */
+
+/* Remove iOS blue tap highlight everywhere */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Prevent overscroll bounce on chrome of the shell */
+.topbar,
+.sidebar,
+.mobile-tab-bar { overscroll-behavior: none; }
+
+/* Safe-area padding for notch / home bar */
+.mobile-tab-bar {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 768px) {
+  .shell-content {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Compact FAB: 48×48 on mobile */
+  .fab {
+    width: 48px;
+    height: 48px;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+  /* Push toast above FAB safe area */
+  .toast {
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ── Touch target minimums (44×44px) ────────────── */
+.nav-link,
+.mobile-tab,
+.button,
+.triage-tab-btn,
+.timeline-add-btn,
+.topbar-btn-demo { min-height: 44px; }
+
+.topbar-avatar {
+  min-width: 44px;
+  min-height: 44px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Remove hover effects on touch-only devices ─── */
+@media (hover: none) and (pointer: coarse) {
+  .nav-link:hover { background: transparent; color: var(--text-secondary); }
+  .nav-link-active:hover { background: var(--sidebar-active); color: var(--sidebar-active-text); }
+  .button:hover { background: var(--panel); }
+  .button-primary:hover { background: var(--accent); border-color: var(--accent); }
+  .button-secondary:hover { background: var(--bg-muted); }
+  .fab:hover { background: var(--accent); transform: none; }
+  .table tbody tr:hover { background: transparent; }
+  .linked-action-card:hover { border-color: var(--border); background: var(--panel); }
+  .mobile-tab:hover { color: var(--text-muted); }
+  .mobile-tab-active:hover { color: var(--sidebar-active-text); }
+  .topbar-btn-demo:hover { background: transparent; }
+}
+
+/* ── Mobile topbar: compact (logo + avatar only) ─── */
+.topbar-mobile-logo {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+.topbar-mobile-logo-mark {
+  width: 28px;
+  height: 28px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .topbar-breadcrumb { display: none; }
+  .topbar-btn-demo { display: none; }
+  .topbar-mobile-logo { display: flex; }
+  .topbar { padding: 0 16px; }
+}
+
+/* ── Tablet: icon-only sidebar auto-collapse ─────── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .shell:not(.shell-collapsed) {
+    grid-template-columns: var(--sidebar-collapsed) 1fr;
+  }
+  .shell:not(.shell-collapsed) .sidebar-wordmark,
+  .shell:not(.shell-collapsed) .nav-link-label { display: none; }
+  .shell:not(.shell-collapsed) .sidebar-logo { justify-content: center; padding: 12px 8px; }
+  .shell:not(.shell-collapsed) .sidebar-nav { padding: 8px 6px 0; }
+  .shell:not(.shell-collapsed) .sidebar-bottom { padding: 4px 6px 12px; }
+  .shell:not(.shell-collapsed) .nav-link { justify-content: center; padding: 9px 8px; }
+}
+
+/* ── Large screen: constrain content width ───────── */
+@media (min-width: 1441px) {
+  .shell-content { max-width: 1440px; margin: 0 auto; }
+}
+
+/* ── PWA: update-available banner ────────────────── */
+.pwa-update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: var(--topbar-bg);
+  color: white;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.pwa-update-btn {
+  margin-left: auto;
+  padding: 5px 14px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 36px;
+  transition: background var(--duration-fast);
+}
+.pwa-update-btn:hover { background: var(--accent-hover); }
+
+.pwa-update-dismiss {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 8px;
+  min-height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--duration-fast);
+}
+.pwa-update-dismiss:hover { color: white; }
+
+/* ── PWA: install-prompt banner ──────────────────── */
+.pwa-install-banner {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  left: 12px;
+  right: 12px;
+  z-index: 90;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow-lg);
+  gap: 12px;
+}
+@media (max-width: 768px) {
+  .pwa-install-banner {
+    bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+  }
+}
+.pwa-install-content { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pwa-install-icon { font-size: 28px; line-height: 1; flex-shrink: 0; }
+.pwa-install-title { font-size: 13px; font-weight: 700; color: var(--text); }
+.pwa-install-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.pwa-install-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pwa-install-btn {
+  padding: 7px 16px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background var(--duration-fast);
+  white-space: nowrap;
+}
+.pwa-install-btn:hover { background: var(--accent-hover); }

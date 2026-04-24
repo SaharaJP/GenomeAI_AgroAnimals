@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { LogOut, Leaf } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { InsightNotificationBell } from '@/components/ai/insight-notification-bell';
 
@@ -54,7 +54,15 @@ export function Topbar() {
 
   return (
     <header className="topbar" role="banner">
-      {/* Breadcrumb */}
+      {/* Mobile: logo mark (hidden on desktop via CSS) */}
+      <div className="topbar-mobile-logo" aria-hidden="true">
+        <div className="topbar-mobile-logo-mark">
+          <Leaf size={14} strokeWidth={2} color="white" />
+        </div>
+        <span>GenomeAI</span>
+      </div>
+
+      {/* Desktop: Breadcrumb (hidden on mobile via CSS) */}
       <nav className="topbar-breadcrumb" aria-label="Хлебные крошки">
         <span>Демо-ферма</span>
         <span className="topbar-breadcrumb-sep">▸</span>
