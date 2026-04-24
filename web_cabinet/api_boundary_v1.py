@@ -921,6 +921,7 @@ def boundary_insights_transition(
     item = _transition_insight(insight_id, body.status)
     if item is None:
         raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or invalid status')
+    return item
 
 
 @router.post('/timeline/events')

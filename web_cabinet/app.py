@@ -570,7 +570,9 @@ def _startup() -> None:
 
     storage_cfg = (cfg or {}).get("runtime_storage") or {}
 
-    if str(storage_cfg.get("backend") or getattr(settings, "runtime_storage_backend", "sqlite")) == "sqlite":
+    _active_backend = str(storage_cfg.get("backend") or getattr(settings, "runtime_storage_backend", "sqlite"))
+
+    if _active_backend == "sqlite":
         # Init sqlite schema + default demo users only for compat/dev/test path.
         from .db import connect as _connect
         from .playbooks_v1 import ensure_default_playbooks
@@ -584,6 +586,10 @@ def _startup() -> None:
             ensure_default_playbooks(conn, tenant_id="default")
         finally:
             conn.close()
+
+    elif _active_backend == "postgres":
+        # Postgres startup: users already seeded via Alembic/bootstrap script.
+        pass
 
     # Start worker (disable via GENOMEAI_WEB_DISABLE_WORKER=1)
     if os.environ.get("GENOMEAI_WEB_DISABLE_WORKER") != "1":
@@ -898,6 +904,7 @@ def api_timeline_event_impact(
 async def api_timeline_event_create(
     request: Request,
     user=Depends(get_current_user),
+    conn=Depends(get_db),
 ):
     body = await request.json()
     required = {"event_type", "title", "date"}
@@ -915,9 +922,18 @@ async def api_timeline_event_create(
         "impact_value": None,
     }
     write_audit(
-        "timeline_event_created",
-        actor=user.get("username", "unknown"),
-        details={"event_id": new_event["timeline_event_id"], "event_type": new_event["event_type"]},
+        conn,
+        tenant_id=user.get("tenant_id", "default"),
+        user_id=int(user.get("id", 0)),
+        username=user.get("username", "unknown"),
+        role=user.get("role", ""),
+        action="timeline.event.create",
+        object_type="timeline_event",
+        object_id=new_event["timeline_event_id"],
+        after={"event_type": new_event["event_type"], "title": new_event["title"]},
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        request_id=getattr(request.state, "request_id", None),
     )
     return {"event": new_event, "demo": True, "note": "Demo mode — event not persisted"}
 

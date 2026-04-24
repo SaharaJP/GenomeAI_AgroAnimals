@@ -2,7 +2,7 @@
 """postgres runtime baseline for feedback/completion outcomes
 
 Revision ID: 20260418_04_runtime_feedback_completion_postgres
-Revises: 20260414_03_runtime_state_postgres_baseline
+Revises: 20260414_03_runtime_pg_base
 """
 
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision = '20260418_04_runtime_feedback_completion_postgres'
-down_revision = '20260414_03_runtime_state_postgres_baseline'
+down_revision = '20260414_03_runtime_pg_base'
 branch_labels = None
 depends_on = None
 

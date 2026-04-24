@@ -104,9 +104,10 @@ class JobWorker:
         Returns True if a job was processed, False if queue is empty.
         Useful for on-prem smoke tests and admin scripts.
         """
-        conn = connect(self.settings.db_path)
+        conn = self._get_conn()
         try:
-            init_db(conn)
+            if str(getattr(self.settings, 'runtime_storage_backend', 'sqlite')) != 'postgres':
+                init_db(conn)
             if self._queue_backend() == "redis":
                 broker = resolve_queue_runtime_broker()
                 claimed = broker.claim(queue_name=self.cfg.queue_name_default, worker_id=self.worker_id)
@@ -134,11 +135,19 @@ class JobWorker:
             ran += 1
         return ran
 
+    def _get_conn(self):
+        backend = str(getattr(self.settings, 'runtime_storage_backend', None) or 'sqlite')
+        if backend == 'postgres':
+            from core.infra.postgres_compat import connect_postgres_compat
+            return connect_postgres_compat()
+        return connect(self.settings.db_path)
+
     def _loop(self) -> None:
         while not self._stop.is_set():
-            conn = connect(self.settings.db_path)
+            conn = self._get_conn()
             try:
-                init_db(conn)
+                if str(getattr(self.settings, 'runtime_storage_backend', 'sqlite')) != 'postgres':
+                    init_db(conn)
                 if self._queue_backend() == "redis":
                     broker = resolve_queue_runtime_broker()
                     claimed = broker.claim(queue_name=self.cfg.queue_name_default, worker_id=self.worker_id)
