@@ -1,3 +1,4 @@
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from __future__ import annotations
 
 """T11-03: ROI панель — эффект от решений/задач (до/после, attribution).
@@ -25,7 +26,6 @@ from __future__ import annotations
 """
 
 import json
-import sqlite3
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
@@ -153,8 +153,7 @@ def _read_web_db_actions(web_db_path: Path, tenant_id: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     rows: list[dict[str, Any]] = []
-    conn = sqlite3.connect(str(web_db_path))
-    conn.row_factory = sqlite3.Row
+    conn = _pg_connect())
     try:
         # decisions v2
         try:

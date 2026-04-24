@@ -24,7 +24,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import sqlite3
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
@@ -291,8 +290,7 @@ def build_fact_pack_for_assistant(
     v2 = dict(base)
     if web_db_path and Path(web_db_path).exists():
         try:
-            conn = sqlite3.connect(str(web_db_path), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
+            conn = _pg_connect()
             rows = conn.execute(
                 "SELECT created_at, action, username, object_type, object_id, related_alert, data_version, model_version, report_version, reason "
                 "FROM decision_log_v2 ORDER BY id DESC LIMIT ?",
@@ -313,8 +311,7 @@ def build_fact_pack_for_assistant(
     tasks_v1 = dict(base)
     if web_db_path and Path(web_db_path).exists():
         try:
-            conn = sqlite3.connect(str(web_db_path), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
+            conn = _pg_connect()
             total_row = conn.execute("SELECT COUNT(1) AS c FROM tasks_v1").fetchone()
             rows = conn.execute(
                 "SELECT task_id, task_type, title, status, priority, domain, assignee_team, due_at, related_alert, object_type, object_id, qc_run, model_version, scoring_run, report_version, data_version, updated_at "
@@ -372,8 +369,7 @@ def build_fact_pack_for_assistant(
     feedback_block = dict(base)
     if web_db_path and Path(web_db_path).exists():
         try:
-            conn = sqlite3.connect(str(web_db_path), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
+            conn = _pg_connect()
             feedback_rows = [
                 dict(r)
                 for r in conn.execute(
@@ -914,7 +910,8 @@ def _write_assistant_audit_best_effort(
         return
     try:
         from core.audit.events import write_audit
-        from core.infra.web_db import connect, init_db
+        from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
+from core.infra.web_db import connect, init_db
 
         db_path = Path(web_db_path)
         db_path.parent.mkdir(parents=True, exist_ok=True)

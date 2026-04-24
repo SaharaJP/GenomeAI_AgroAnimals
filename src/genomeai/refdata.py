@@ -30,7 +30,6 @@ Notes
 import json
 import math
 import numbers
-import sqlite3
 import time
 import uuid
 from dataclasses import dataclass
@@ -42,7 +41,7 @@ def _utc_ts() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def ensure_refdata_schema(conn: sqlite3.Connection) -> None:
+def ensure_refdata_schema(conn: Any) -> None:
     """Idempotent schema init for refdata tables."""
     conn.executescript(
         """
@@ -114,7 +113,7 @@ def ensure_refdata_schema(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def _rowdicts(rows: Iterable[sqlite3.Row]) -> list[dict[str, Any]]:
+def _rowdicts(rows: Iterable[Any]) -> list[dict[str, Any]]:
     return [dict(r) for r in rows]
 
 
@@ -195,7 +194,7 @@ def _infer_data_type(value: Any) -> str:
         return "str"
 
 
-def _users_table(conn: sqlite3.Connection) -> str | None:
+def _users_table(conn: Any) -> str | None:
     """Return users table name (users_v2 preferred) if present in this sqlite."""
     try:
         row = conn.execute(
@@ -313,7 +312,7 @@ def _normalize_assumption_item(it: Dict[str, Any]) -> Dict[str, Any]:
 class RefdataStore:
     """A minimal facade over sqlite refdata tables."""
 
-    conn: sqlite3.Connection
+    conn: Any
 
     def ensure(self) -> None:
         ensure_refdata_schema(self.conn)
@@ -704,8 +703,6 @@ class RefdataStore:
         return out
 
 
-def connect_sqlite(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(str(db_path), check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys=ON;")
-    return conn
+def connect_sqlite(db_path: Path) -> Any:
+    from core.infra.postgres_compat import connect_postgres_compat
+    return connect_postgres_compat()

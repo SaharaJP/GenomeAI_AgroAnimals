@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import re
-import sqlite3
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -100,7 +99,7 @@ class WeeklyPlanCreate:
 
 
 def create_weekly_plan(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,
@@ -129,12 +128,12 @@ def create_weekly_plan(
     )
 
 
-def get_weekly_plan(conn: sqlite3.Connection, *, tenant_id: str, plan_id: str) -> Optional[dict[str, Any]]:
+def get_weekly_plan(conn: Any, *, tenant_id: str, plan_id: str) -> Optional[dict[str, Any]]:
     return WeeklyPlansRepo(conn).get(tenant_id=tenant_id, plan_id=plan_id)
 
 
 def list_weekly_plans(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     status: str | None = None,
@@ -146,7 +145,7 @@ def list_weekly_plans(
 
 
 def list_pending_approval_weekly_plans(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     limit: int = 100,
@@ -178,7 +177,7 @@ def summarize_weekly_plan(plan: dict[str, Any]) -> dict[str, Any]:
 
 
 def update_weekly_plan(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     plan_id: str,
@@ -213,7 +212,7 @@ def update_weekly_plan(
 
 
 def request_approval_weekly_plan(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     plan_id: str,
@@ -253,7 +252,7 @@ def get_weekly_plan_pdf_rel_path(*, plan: dict[str, Any]) -> str:
 
 
 def export_weekly_plan_pdf(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     artifacts_root: Path,
     tenant_id: str,
@@ -283,7 +282,7 @@ def export_weekly_plan_pdf(
 
 
 def reject_weekly_plan(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     plan_id: str,
@@ -306,12 +305,12 @@ def reject_weekly_plan(
     )
 
 
-def get_weekly_plan_tasks_map(conn: sqlite3.Connection, *, tenant_id: str, plan_id: str) -> dict[str, str]:
+def get_weekly_plan_tasks_map(conn: Any, *, tenant_id: str, plan_id: str) -> dict[str, str]:
     return WeeklyPlansRepo(conn).list_task_links(tenant_id=tenant_id, plan_id=plan_id)
 
 
 def approve_weekly_plan(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     plan_id: str,
@@ -403,7 +402,7 @@ def approve_weekly_plan(
 
 
 def archive_weekly_plan(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     plan_id: str,

@@ -10,7 +10,6 @@ Notes:
 """
 
 import json
-import sqlite3
 from dataclasses import dataclass
 from typing import Any, Optional
 
@@ -55,7 +54,7 @@ def _to_row(v: SavedView) -> tuple:
 
 
 def create_saved_view(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     view_id: str,
     tenant_id: str,
@@ -113,7 +112,7 @@ def create_saved_view(
 
 
 def update_saved_view(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     view_id: str,
@@ -159,18 +158,18 @@ def update_saved_view(
     )
 
 
-def delete_saved_view(conn: sqlite3.Connection, *, tenant_id: str, view_id: str) -> None:
+def delete_saved_view(conn: Any, *, tenant_id: str, view_id: str) -> None:
     deleted = SavedViewsRepo(conn).delete(tenant_id=str(tenant_id), view_id=str(view_id))
     if deleted == 0:
         raise ValueError("saved view не найден")
 
 
-def get_saved_view(conn: sqlite3.Connection, *, tenant_id: str, view_id: str) -> Optional[dict[str, Any]]:
+def get_saved_view(conn: Any, *, tenant_id: str, view_id: str) -> Optional[dict[str, Any]]:
     return SavedViewsRepo(conn).get(tenant_id=str(tenant_id), view_id=str(view_id))
 
 
 def list_saved_views(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     user_id: int,

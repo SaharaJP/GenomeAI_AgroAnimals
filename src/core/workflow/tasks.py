@@ -3,7 +3,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import sqlite3
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
@@ -193,7 +192,7 @@ def _validate_team(team: Optional[str]) -> Optional[str]:
 
 # ---- Workflow 2.0: assignee user display helpers ----
 
-def _attach_owner_usernames(conn: sqlite3.Connection, *, tenant_id: str, items: list[dict[str, Any]]) -> None:
+def _attach_owner_usernames(conn: Any, *, tenant_id: str, items: list[dict[str, Any]]) -> None:
     """Attach owner_username for UI friendliness.
 
     Keeps DB as source of truth: owner_user_id stores assignee user id.
@@ -220,7 +219,7 @@ def _attach_owner_usernames(conn: sqlite3.Connection, *, tenant_id: str, items: 
 
 
 
-def create_task(conn: sqlite3.Connection, *, tenant_id: str, t: TaskCreate) -> str:
+def create_task(conn: Any, *, tenant_id: str, t: TaskCreate) -> str:
     task_id = uuid.uuid4().hex
     now = utcnow_iso()
 
@@ -280,7 +279,7 @@ def create_task(conn: sqlite3.Connection, *, tenant_id: str, t: TaskCreate) -> s
     )
 
 
-def get_task(conn: sqlite3.Connection, *, tenant_id: str, task_id: str) -> Optional[dict[str, Any]]:
+def get_task(conn: Any, *, tenant_id: str, task_id: str) -> Optional[dict[str, Any]]:
     row = TasksRepo(conn).get_row(tenant_id=tenant_id, task_id=task_id)
     if not row:
         return None
@@ -298,7 +297,7 @@ def _is_overdue(t: dict[str, Any]) -> bool:
 
 
 def list_tasks(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     status: Optional[str] = None,
@@ -405,7 +404,7 @@ def list_tasks(
 
 
 def list_tasks_for_object(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     object_type: str,
@@ -455,7 +454,7 @@ def list_tasks_for_object(
     return {"total": int(repo_res["total"]), "tasks": items}
 
 
-def take_task(conn: sqlite3.Connection, *, tenant_id: str, task_id: str, user_id: int) -> None:
+def take_task(conn: Any, *, tenant_id: str, task_id: str, user_id: int) -> None:
     now = utcnow_iso()
     status = TasksRepo(conn).fetch_status(tenant_id=tenant_id, task_id=task_id)
     if status is None:
@@ -466,7 +465,7 @@ def take_task(conn: sqlite3.Connection, *, tenant_id: str, task_id: str, user_id
 
 
 def assign_task(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     task_id: str,
@@ -491,7 +490,7 @@ def assign_task(
 
 
 def update_task_fields(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     task_id: str,
@@ -696,7 +695,7 @@ def update_task_fields(
 
 
 def close_task(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     task_id: str,
@@ -782,7 +781,7 @@ def close_task(
 
 
 def upsert_tasks_from_alerts(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     catalog: dict[str, Any],
@@ -901,7 +900,7 @@ def _severity_for_alert(alert_type: str, why: dict[str, Any] | None) -> str:
 
 
 def auto_create_tasks_from_alerts(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     catalog: dict[str, Any],
@@ -1052,7 +1051,7 @@ def _load_metrics_defaults() -> tuple[int, tuple[int, ...]]:
 
 
 def compute_tasks_metrics(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     window_days: Optional[int] = None,
@@ -1083,7 +1082,7 @@ def compute_tasks_metrics(
 
 
 def compute_tasks_overdue_list(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     limit: int = 20,

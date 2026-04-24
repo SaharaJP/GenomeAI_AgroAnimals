@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 from types import SimpleNamespace
 from typing import Any, Optional
 
@@ -11,7 +10,7 @@ from core.workflow.tasks import list_tasks
 
 def workflow_listing_use_case(
     *,
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     status: Optional[str] = None,
     task_type: Optional[str] = None,

@@ -18,7 +18,7 @@ from core.infra.runtime_storage import (
     resolve_runtime_storage_settings,
     runtime_storage_diagnostics,
 )
-from core.infra.web_db import connect, get_settings, init_db
+from core.infra.web_db import get_settings
 
 
 RUNTIME_STATE_ENTITIES: tuple[str, ...] = (
@@ -123,12 +123,7 @@ class SqliteCompatRuntimeStateStorage:
         self.db_path = Path(db_path).resolve()
 
     def diagnostics(self) -> RuntimeStateDiagnostics:
-        conn = connect(self.db_path)
-        try:
-            init_db(conn)
-            counts = _sqlite_counts(conn)
-        finally:
-            conn.close()
+        counts: dict[str, int] = {entity: 0 for entity in RUNTIME_STATE_ENTITIES}
         settings = get_settings()
         runtime = runtime_storage_diagnostics(
             resolve_runtime_storage_settings(
@@ -255,7 +250,7 @@ def _sqlite_counts(conn: Any) -> dict[str, int]:
 
 def resolve_runtime_state_storage(*, conn: Any | None = None) -> SqliteCompatRuntimeStateStorage | PostgresRuntimeStateStorage:
     settings = get_settings()
-    backend = str(settings.runtime_storage_backend or 'sqlite')
+    backend = str(settings.runtime_storage_backend or 'postgres')
     if backend == 'postgres':
         runtime = resolve_runtime_storage_settings(
             project_root=settings.project_root,

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import sqlite3
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, Sequence
 
@@ -96,10 +95,9 @@ def _extract_links(result: Mapping[str, Any] | None) -> dict[str, str | None]:
 def _classify_transient(exc: Exception) -> bool:
     if isinstance(exc, (TimeoutError, ConnectionError)):
         return True
-    if isinstance(exc, sqlite3.OperationalError):
-        msg = str(exc).lower()
-        return any(tok in msg for tok in ('locked', 'busy', 'timeout', 'temporar', 'network', 'unable to open database file'))
     msg = str(exc).lower()
+    if any(tok in msg for tok in ('locked', 'busy', 'unable to open database file')):
+        return True
     return any(tok in msg for tok in ('timeout', 'timed out', 'temporar', 'connection reset', 'connection aborted', 'try again', 'locked'))
 
 

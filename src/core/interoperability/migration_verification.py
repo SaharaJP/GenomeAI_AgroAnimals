@@ -1,7 +1,7 @@
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from __future__ import annotations
 
 import json
-import sqlite3
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timezone
 from io import BytesIO
@@ -573,8 +573,7 @@ def run_migration_verification_toolkit(
     write_json(verification_dir / "verification_manifest.json", manifest)
 
     if db_path is not None:
-        conn = sqlite3.connect(str(Path(db_path).resolve()))
-        conn.row_factory = sqlite3.Row
+        conn = _pg_connect().resolve()))
         try:
             init_db(conn)
             write_audit(

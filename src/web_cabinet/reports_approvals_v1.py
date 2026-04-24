@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 from typing import Any, Optional
 
 from core.domain import ApprovalStatus
@@ -10,7 +9,7 @@ from core.infra.web_db import utcnow_iso
 
 
 def ensure_report_row(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     data_version: str,
@@ -26,7 +25,7 @@ def ensure_report_row(
 
 
 def get_report_approval(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     data_version: str,
@@ -36,7 +35,7 @@ def get_report_approval(
 
 
 def list_report_statuses(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     data_version: str,
@@ -53,7 +52,7 @@ def list_report_statuses(
 
 
 def approve_report(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     data_version: str,
@@ -79,7 +78,7 @@ def approve_report(
 
 
 def reject_report(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     data_version: str,
@@ -105,7 +104,7 @@ def reject_report(
 
 
 def archive_report(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     data_version: str,

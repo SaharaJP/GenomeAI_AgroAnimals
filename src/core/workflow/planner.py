@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import math
-import sqlite3
 from collections import Counter, defaultdict
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -297,7 +296,7 @@ def _load_open_alert_items(conn, *, tenant_id: str, today: date, data_version: s
     return items
 
 
-def _load_follow_up_items(conn: sqlite3.Connection, *, tenant_id: str, today: date, data_version: str | None = None) -> list[dict[str, Any]]:
+def _load_follow_up_items(conn: Any, *, tenant_id: str, today: date, data_version: str | None = None) -> list[dict[str, Any]]:
     rows = conn.execute(
         "SELECT * FROM animal_events_v1 WHERE tenant_id=? ORDER BY event_ts DESC, id DESC LIMIT 1000",
         (tenant_id,),

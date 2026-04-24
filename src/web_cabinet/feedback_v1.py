@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -67,7 +66,7 @@ def load_feedback_cfg() -> dict[str, Any]:
 
 
 def record_feedback(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     fc: FeedbackCreate,
@@ -171,7 +170,7 @@ def record_feedback(
 
 
 def list_feedback(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     recommendation_id: Optional[str] = None,
@@ -204,19 +203,19 @@ def list_feedback(
     )
 
 
-def _load_task_rows(conn: sqlite3.Connection, tenant_id: str) -> list[dict[str, Any]]:
+def _load_task_rows(conn: Any, tenant_id: str) -> list[dict[str, Any]]:
     return TasksRepo(conn).list_feedback_rows(tenant_id=tenant_id)
 
 
 def _load_outcome_rows(
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
 ) -> list[dict[str, Any]]:
     return CompletionOutcomesRepo(conn).list_feedback_rows(tenant_id=tenant_id)
 
 
 def _load_feedback_rows(
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     *,
     data_version: Optional[str] = None,
@@ -238,7 +237,7 @@ def _load_feedback_rows(
 
 
 def compute_feedback_metrics(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     window_days: Optional[int] = None,
@@ -276,7 +275,7 @@ def compute_feedback_metrics(
 
 
 def export_feedback_dataset(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     artifacts_root: Path,
     tenant_id: str,

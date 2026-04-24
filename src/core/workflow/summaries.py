@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlite3
 from typing import Any, Optional
 
 from core.workflow.alerts import list_alerts
@@ -10,7 +9,7 @@ from core.workflow.tasks import compute_tasks_metrics, compute_tasks_overdue_lis
 
 def tasks_metrics_use_case(
     *,
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     window_days: Optional[int] = None,
 ) -> dict[str, Any]:
@@ -28,7 +27,7 @@ def tasks_metrics_use_case(
 
 def overdue_tasks_use_case(
     *,
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     limit: int = 20,
     domain: Optional[str] = None,
@@ -54,7 +53,7 @@ def overdue_tasks_use_case(
 
 def operational_summary_use_case(
     *,
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     recent_tasks_limit: int = 15,
 ) -> dict[str, Any]:

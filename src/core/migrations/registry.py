@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Iterable
@@ -139,7 +138,7 @@ def registry_snapshot() -> dict[str, Any]:
     }
 
 
-def ensure_schema_registry_table(conn: sqlite3.Connection) -> None:
+def ensure_schema_registry_table(conn: Any) -> None:
     conn.execute(
         f"""
         CREATE TABLE IF NOT EXISTS {SCHEMA_REGISTRY_TABLE} (
@@ -152,17 +151,15 @@ def ensure_schema_registry_table(conn: sqlite3.Connection) -> None:
     )
 
 
-def load_schema_registry(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
+def load_schema_registry(conn: Any) -> dict[str, dict[str, Any]]:
     rows: dict[str, dict[str, Any]] = {}
-    cursor = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
-        (SCHEMA_REGISTRY_TABLE,),
-    )
-    if cursor.fetchone() is None:
+    try:
+        result = conn.execute(
+            f"SELECT component, version, updated_at, details_json FROM {SCHEMA_REGISTRY_TABLE}"
+        )
+    except Exception:
         return rows
-    for row in conn.execute(
-        f"SELECT component, version, updated_at, details_json FROM {SCHEMA_REGISTRY_TABLE}"
-    ).fetchall():
+    for row in result.fetchall() if hasattr(result, 'fetchall') else []:
         try:
             details = json.loads(str(row[3] or "{}"))
         except Exception:
@@ -177,7 +174,7 @@ def load_schema_registry(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
 
 
 def upsert_schema_version(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     component: str,
     version: int,
@@ -198,7 +195,7 @@ def upsert_schema_version(
 
 
 def sync_runtime_schema_registry(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     notes: dict[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
@@ -224,7 +221,7 @@ def _component_meta(component: str) -> MigrationComponent | None:
     return None
 
 
-def validate_schema_registry(conn: sqlite3.Connection) -> None:
+def validate_schema_registry(conn: Any) -> None:
     existing = load_schema_registry(conn)
     for component, row in existing.items():
         meta = _component_meta(component)

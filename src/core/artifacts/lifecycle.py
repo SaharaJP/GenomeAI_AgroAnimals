@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import shutil
-import sqlite3
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
@@ -557,39 +556,7 @@ def _latest_verify_report_dir(artifacts_root: Path) -> Optional[Path]:
 
 
 def _collect_web_db_summary(db_path: Path) -> dict[str, Any]:
-    summary: dict[str, Any] = {"db_path": str(db_path), "exists": db_path.exists()}
-    if not db_path.exists():
-        return summary
-    try:
-        conn = sqlite3.connect(str(db_path))
-        try:
-            tables = [
-                row[0]
-                for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").fetchall()
-            ]
-            summary["tables"] = tables
-            counts: dict[str, int] = {}
-            for table_name in ["jobs", "users_v2"]:
-                if table_name in tables:
-                    counts[table_name] = int(conn.execute(f"SELECT COUNT(*) FROM {table_name}").fetchone()[0])
-            summary["counts"] = counts
-            if "audit_log" in tables:
-                audit_rows = conn.execute(
-                    "SELECT action, status FROM audit_log WHERE action NOT LIKE 'artifact.%' ORDER BY id DESC LIMIT 10"
-                ).fetchall()
-                summary["recent_audit_non_lifecycle"] = [
-                    {"action": str(r[0]), "status": str(r[1])} for r in audit_rows
-                ]
-            if "jobs" in tables:
-                rows = conn.execute(
-                    "SELECT kind, status FROM jobs ORDER BY id DESC LIMIT 10"
-                ).fetchall()
-                summary["recent_jobs"] = [{"kind": str(r[0]), "status": str(r[1])} for r in rows]
-        finally:
-            conn.close()
-    except Exception as exc:
-        summary["error"] = f"{type(exc).__name__}: {exc}"
-    return summary
+    return {"backend": "postgres", "note": "sqlite not used"}
 
 
 def build_support_bundle(

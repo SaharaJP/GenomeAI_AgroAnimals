@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import os
-import sqlite3
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Any, Optional, Protocol
 
 
 class DbBackend(Protocol):
@@ -15,7 +14,7 @@ class DbBackend(Protocol):
 
 @dataclass(frozen=True)
 class InfraDbConfig:
-    backend: str = "sqlite"
+    backend: str = "postgres"
     dsn: Optional[str] = None
 
 
@@ -50,10 +49,8 @@ def resolve_db_backend(
     *,
     backend: str | None = None,
     dsn: str | None = None,
-    conn: sqlite3.Connection | None = None,
+    conn: Any | None = None,
 ) -> DbBackend:
-    if conn is not None:
-        return SQLiteBackend()
     cfg = resolve_db_config(backend=backend, dsn=dsn)
     if cfg.backend == "postgres":
         return PostgresBackend()

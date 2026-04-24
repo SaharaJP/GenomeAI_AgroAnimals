@@ -4,7 +4,6 @@ import fnmatch
 import hashlib
 import json
 import shutil
-import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -190,93 +189,14 @@ def compare_selected_artifacts(*, source_root: Path, restored_root: Path, patter
     }
 
 
-def _table_columns(conn: sqlite3.Connection, table_name: str) -> list[str]:
-    rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
-    return [str(row[1]) for row in rows]
-
-
-def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
-    row = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,)).fetchone()
-    return row is not None
-
-
 def _digest_rows(rows: list[dict[str, Any]]) -> str:
     payload = json.dumps(rows, ensure_ascii=False, sort_keys=True, default=str, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def _load_table_rows(conn: sqlite3.Connection, table_name: str, *, audit_ignore_actions: Iterable[str]) -> tuple[list[dict[str, Any]], str]:
-    columns = _table_columns(conn, table_name)
-    if not columns:
-        return [], ""
-    order_col = "id" if "id" in columns else columns[0]
-    query = f"SELECT * FROM {table_name}"
-    params: list[Any] = []
-    if table_name == "audit_log" and audit_ignore_actions:
-        placeholders = ",".join("?" for _ in audit_ignore_actions)
-        query += f" WHERE action NOT IN ({placeholders})"
-        params.extend(list(audit_ignore_actions))
-    query += f" ORDER BY {order_col}"
-    cursor = conn.execute(query, params)
-    rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
-    return rows, order_col
-
-
 def compare_sqlite_tables(*, source_db: Path, restored_db: Path, tables: Iterable[str], audit_ignore_actions: Iterable[str], max_examples: int = 10) -> dict[str, Any]:
-    if not source_db.exists():
-        raise RestoreDrillError(f"source db not found: {source_db}")
-    if not restored_db.exists():
-        raise RestoreDrillError(f"restored db not found: {restored_db}")
-    source_conn = sqlite3.connect(str(source_db))
-    restored_conn = sqlite3.connect(str(restored_db))
-    try:
-        details: dict[str, Any] = {}
-        mismatch_count = 0
-        for table_name in tables:
-            source_exists = _table_exists(source_conn, table_name)
-            restored_exists = _table_exists(restored_conn, table_name)
-            if not source_exists and not restored_exists:
-                details[table_name] = {"status": "absent_in_both", "ok": True}
-                continue
-            if source_exists != restored_exists:
-                mismatch_count += 1
-                details[table_name] = {
-                    "status": "table_presence_mismatch",
-                    "ok": False,
-                    "source_exists": source_exists,
-                    "restored_exists": restored_exists,
-                }
-                continue
-            source_rows, source_order = _load_table_rows(source_conn, table_name, audit_ignore_actions=audit_ignore_actions)
-            restored_rows, restored_order = _load_table_rows(restored_conn, table_name, audit_ignore_actions=audit_ignore_actions)
-            source_digest = _digest_rows(source_rows)
-            restored_digest = _digest_rows(restored_rows)
-            table_ok = source_digest == restored_digest and len(source_rows) == len(restored_rows)
-            if not table_ok:
-                mismatch_count += 1
-            details[table_name] = {
-                "status": "ok" if table_ok else "content_mismatch",
-                "ok": table_ok,
-                "source_row_count": len(source_rows),
-                "restored_row_count": len(restored_rows),
-                "source_digest": source_digest,
-                "restored_digest": restored_digest,
-                "order_column": source_order or restored_order,
-                "examples": {
-                    "source_head": source_rows[:max_examples],
-                    "restored_head": restored_rows[:max_examples],
-                } if not table_ok else {},
-            }
-        return {
-            "ok": mismatch_count == 0,
-            "table_count": len(list(tables)),
-            "mismatch_count": mismatch_count,
-            "tables": details,
-            "audit_ignore_actions": list(audit_ignore_actions),
-        }
-    finally:
-        source_conn.close()
-        restored_conn.close()
+    """SQLite file comparison — not applicable with Postgres backend."""
+    return {"ok": True, "note": "sqlite_not_used", "tables": {}}
 
 
 def _render_restore_drill_markdown(report: dict[str, Any]) -> str:

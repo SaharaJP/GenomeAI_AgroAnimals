@@ -1,3 +1,4 @@
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from __future__ import annotations
 
 """T12-03: Playbooks loader for offline-core.
@@ -16,7 +17,6 @@ Returned playbook is a dict with normalized fields and a "source" marker.
 
 import json
 import os
-import sqlite3
 from hashlib import sha1
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -109,17 +109,13 @@ def _db_fetch_active(
     target_type: str,
     farm_id: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    if not db_path.exists():
-        return None
-
     kind = _normalize_kind(target_kind)
     tp = _normalize_type(target_type)
     key = make_playbook_key(target_kind=kind, target_type=tp)
     fid = _normalize_farm_id(farm_id)
 
     try:
-        conn = sqlite3.connect(str(db_path), check_same_thread=False)
-        conn.row_factory = sqlite3.Row
+        conn = _pg_connect()
 
         rows = conn.execute(
             "SELECT active_version_id, farm_id FROM playbooks_active "
@@ -210,10 +206,9 @@ def list_active_playbooks(
     db_path = (web_db_path or _default_web_db_path()).resolve()
     out: List[Dict[str, Any]] = []
 
-    if db_path.exists():
-        try:
-            conn = sqlite3.connect(str(db_path), check_same_thread=False)
-            conn.row_factory = sqlite3.Row
+    try:
+        if True:
+            conn = _pg_connect()
             rows = conn.execute(
                 "SELECT v.* FROM playbooks_active a "
                 "JOIN playbook_versions v ON v.tenant_id=a.tenant_id AND v.version_id=a.active_version_id "

@@ -1,3 +1,4 @@
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from __future__ import annotations
 
 """Assistant query/answer logging (T8-02).
@@ -8,7 +9,6 @@ from __future__ import annotations
 """
 
 import json
-import sqlite3
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -16,7 +16,7 @@ from typing import Any, Dict, Optional
 from .ai_assistant_rag import AssistantResponse
 
 
-def _ensure_schema(conn: sqlite3.Connection) -> None:
+def _ensure_schema(conn: Any) -> None:
     conn.executescript(
         """
         CREATE TABLE IF NOT EXISTS assistant_log_v1 (
@@ -50,8 +50,7 @@ def append_assistant_log(
     response: AssistantResponse,
 ) -> int:
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(str(db_path), check_same_thread=False)
-    conn.row_factory = sqlite3.Row
+    conn = _pg_connect(), check_same_thread=False)
     try:
         _ensure_schema(conn)
         g = response.guardrails or {}
@@ -96,8 +95,7 @@ def list_assistant_logs(
 ) -> list[Dict[str, Any]]:
     if not db_path.exists():
         return []
-    conn = sqlite3.connect(str(db_path), check_same_thread=False)
-    conn.row_factory = sqlite3.Row
+    conn = _pg_connect(), check_same_thread=False)
     try:
         _ensure_schema(conn)
         rows = conn.execute(

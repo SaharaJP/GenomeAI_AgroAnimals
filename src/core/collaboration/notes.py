@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 from typing import Any, Mapping
 from uuid import uuid4
 
@@ -37,7 +36,7 @@ def _note_from_row(row: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def list_collaboration_notes(
-    conn: sqlite3.Connection,
+    conn: Any,
     *,
     tenant_id: str,
     object_type: str | None = None,
@@ -69,7 +68,7 @@ def list_collaboration_notes(
 
 def create_collaboration_note_use_case(
     *,
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     user: Mapping[str, Any],
     kind: str,
@@ -162,7 +161,7 @@ def create_collaboration_note_use_case(
 
 def review_collaboration_note_use_case(
     *,
-    conn: sqlite3.Connection,
+    conn: Any,
     tenant_id: str,
     user: Mapping[str, Any],
     note_id: str,
