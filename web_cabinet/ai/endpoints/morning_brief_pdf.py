@@ -142,8 +142,10 @@ def _render_pdf(brief: MorningBrief) -> bytes:
         story.append(Spacer(1, 0.2 * cm))
         story.append(Paragraph("Что изменилось за ночь", h2))
         for ch in brief.overnight_changes:
-            ev = f" <i>[{ch.evidence_id}]</i>" if ch.evidence_id else ""
-            story.append(Paragraph(f"• {ch.text}{ev}", body))
+            # Strip [evidence: ...] tags from display text
+            import re as _re
+            clean = _re.sub(r'\s*\[evidence:[^\]]*\]', '', ch.text).strip()
+            story.append(Paragraph(f"• {clean}", body))
         story.append(Spacer(1, 0.3 * cm))
 
     # Today actions
@@ -152,13 +154,20 @@ def _render_pdf(brief: MorningBrief) -> bytes:
         story.append(Spacer(1, 0.2 * cm))
         story.append(Paragraph("Требует внимания сегодня", h2))
         priority_color = {"high": colors.red, "medium": colors.orange, "low": colors.green}
-        table_data = [["Действие", "Приоритет", "До", "Ответственный"]]
+        cell = style("Cell", fontSize=9, textColor=dark, leading=13)
+        hdr = style("Hdr", bold=True, fontSize=9, textColor=colors.white, leading=13)
+        table_data = [[
+            Paragraph("Действие", hdr),
+            Paragraph("Приоритет", hdr),
+            Paragraph("До", hdr),
+            Paragraph("Ответственный", hdr),
+        ]]
         for act in brief.today_actions:
             table_data.append([
-                act.action,
-                act.priority,
-                act.due or "—",
-                act.role,
+                Paragraph(act.action, cell),
+                Paragraph(act.priority, cell),
+                Paragraph(act.due or "—", cell),
+                Paragraph(act.role, cell),
             ])
         tbl = Table(table_data, colWidths=[9 * cm, 2.5 * cm, 2.5 * cm, 2.5 * cm])
         tbl.setStyle(TableStyle([
@@ -183,22 +192,13 @@ def _render_pdf(brief: MorningBrief) -> bytes:
             story.append(Paragraph(f"• {note}", body))
         story.append(Spacer(1, 0.3 * cm))
 
-    # QR + footer
+    # QR footer
     story.append(HRFlowable(width="100%", thickness=2, color=teal, spaceBefore=8))
     story.append(Spacer(1, 0.2 * cm))
     qr_img = _make_qr(brief)
     if qr_img:
         from reportlab.platypus import Image as RLImage
-        story.append(
-            Table([[RLImage(qr_img, width=2.5 * cm, height=2.5 * cm),
-                    Paragraph("Открыть в браузере: /daily-summary", caption)]],
-                  colWidths=[3 * cm, None])
-        )
-    story.append(Paragraph(
-        f"Модель: {brief.generation_model} · "
-        f"Токены: {brief.generation_tokens.get('input', 0)}↑ / {brief.generation_tokens.get('output', 0)}↓",
-        caption,
-    ))
+        story.append(RLImage(qr_img, width=2.5 * cm, height=2.5 * cm))
 
     doc.build(story)
     return buf.getvalue()
