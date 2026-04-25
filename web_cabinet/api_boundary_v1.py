@@ -51,6 +51,42 @@ from core.infra.runtime_storage import resolve_runtime_storage_settings, runtime
 from core.infra.runtime_state_storage import runtime_state_storage_diagnostics
 from web_cabinet.deploy_guard import DeployConfigError, validate_runtime_config
 
+from core.observability import ensure_request_id
+from core.release import load_release_metadata
+from core.security import has_any_permission as core_has_any_permission
+from core.support_sla_incident import build_support_sla_incident_summary
+from core.workflow import list_alerts, list_decisions, list_tasks
+from core.workflow.alerts import list_alerts_for_object
+from core.workflow.decisions import list_decisions_for_object
+from core.workflow.summaries import operational_summary_use_case, overdue_tasks_use_case
+from core.workflow.tasks import list_tasks_for_object
+from genomeai.ai_assistant_rag import build_fact_pack_for_assistant, load_copilot_answer_config
+from genomeai.copilot_target_resolver import (
+    build_copilot_api_target,
+    build_copilot_detail_actions,
+    build_copilot_navigation_hints,
+    parse_copilot_target,
+    resolve_copilot_target_from_fact_pack,
+    summarize_target_resolution,
+)
+from genomeai.copilot_tools import load_copilot_tools_config, resolve_section_required_permission
+
+from .auth import get_current_user, get_db
+from .feedback_v1 import compute_feedback_metrics, list_feedback
+from .insights_v1 import (
+    get_insight as _get_insight,
+    list_insights as _list_insights,
+    transition_insight as _transition_insight,
+)
+from .observability import snapshot as obs_snapshot
+from .rbac import require_permissions
+from .reports_approvals_v1 import list_report_statuses
+from .utils import list_data_versions, list_report_versions
+from .weekly_plans_v1 import list_pending_approval_weekly_plans, list_weekly_plans, summarize_weekly_plan
+from .whatif_reports_v1 import list_reports as list_whatif_reports
+from .whatif_scenarios_v1 import list_scenarios
+
+# Demo constants for AI demo mode
 _DEMO_ANIMAL_ATTRS: dict[str, dict] = {
     "3142": dict(
         name="Ночка", breed="Голштинская", birth_date="2022-03-15",
@@ -93,41 +129,6 @@ def _build_demo_animal_fields(object_id: str) -> tuple:
     attrs = AnimalAttributes(**attrs_data) if attrs_data else None
     metrics = HealthMetrics(**metrics_data) if metrics_data else None
     return attrs, metrics
-
-from core.observability import ensure_request_id
-from core.release import load_release_metadata
-from core.security import has_any_permission as core_has_any_permission
-from core.support_sla_incident import build_support_sla_incident_summary
-from core.workflow import list_alerts, list_decisions, list_tasks
-from core.workflow.alerts import list_alerts_for_object
-from core.workflow.decisions import list_decisions_for_object
-from core.workflow.summaries import operational_summary_use_case, overdue_tasks_use_case
-from core.workflow.tasks import list_tasks_for_object
-from genomeai.ai_assistant_rag import build_fact_pack_for_assistant, load_copilot_answer_config
-from genomeai.copilot_target_resolver import (
-    build_copilot_api_target,
-    build_copilot_detail_actions,
-    build_copilot_navigation_hints,
-    parse_copilot_target,
-    resolve_copilot_target_from_fact_pack,
-    summarize_target_resolution,
-)
-from genomeai.copilot_tools import load_copilot_tools_config, resolve_section_required_permission
-
-from .auth import get_current_user, get_db
-from .feedback_v1 import compute_feedback_metrics, list_feedback
-from .insights_v1 import (
-    get_insight as _get_insight,
-    list_insights as _list_insights,
-    transition_insight as _transition_insight,
-)
-from .observability import snapshot as obs_snapshot
-from .rbac import require_permissions
-from .reports_approvals_v1 import list_report_statuses
-from .utils import list_data_versions, list_report_versions
-from .weekly_plans_v1 import list_pending_approval_weekly_plans, list_weekly_plans, summarize_weekly_plan
-from .whatif_reports_v1 import list_reports as list_whatif_reports
-from .whatif_scenarios_v1 import list_scenarios
 
 router = APIRouter(prefix='/api/app/v1', tags=['app-boundary-v1'])
 def _runtime_settings():
@@ -603,8 +604,9 @@ def boundary_profile(
         from web_cabinet.ai.config import get_ai_settings as _get_ai
         if _get_ai().GENOMEAI_AI_DEMO_MODE and object_type == 'animal':
             animal_attributes, health_metrics = _build_demo_animal_fields(object_id)
-    except Exception:
-        pass
+    except Exception as exc:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("demo animal fields failed: %s", exc)
 
     return ProfileResponse(
         entity=EntityRef(object_type=object_type, object_id=object_id),
