@@ -27,8 +27,8 @@ type Props = { collapsed: boolean; onToggle: () => void };
 const primaryIconMap: Record<string, React.ReactNode> = {
   '/dashboard':     <Home size={18} strokeWidth={1.5} />,
   '/daily-summary': <LayoutDashboard size={18} strokeWidth={1.5} />,
-  '/alerts':        <Lightbulb size={18} strokeWidth={1.5} />,
-  '/reports':       <BarChart2 size={18} strokeWidth={1.5} />,
+  '/insights':      <Lightbulb size={18} strokeWidth={1.5} />,
+  '/analytics':     <BarChart2 size={18} strokeWidth={1.5} />,
   '/timeline':      <Clock size={18} strokeWidth={1.5} />,
   '/assistant':     <Bot size={18} strokeWidth={1.5} />,
 };
