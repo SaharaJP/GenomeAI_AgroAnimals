@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Clock, Plus, FlaskConical, UserPlus, ArrowRightLeft, Salad, Syringe, Heart } from 'lucide-react';
 import { DEMO_TIMELINE_EVENTS, EVENT_TYPE_LABELS } from '@/lib/api/overview';
 import type { OverviewTimelineEvent } from '@/lib/api/overview';
+import { useAddEvent } from '@/components/app/add-event-context';
 
 const EVENT_ICON: Record<string, React.ReactNode> = {
   mastitis_outbreak: <FlaskConical size={14} />,
@@ -41,7 +42,7 @@ const ALL_TYPES = 'all';
 
 export function TimelineColumn() {
   const [typeFilter, setTypeFilter] = useState(ALL_TYPES);
-  const [toastVisible, setToastVisible] = useState(false);
+  const { openDialog } = useAddEvent();
 
   const uniqueTypes = Array.from(new Set(DEMO_TIMELINE_EVENTS.map(e => e.event_type)));
 
@@ -50,11 +51,6 @@ export function TimelineColumn() {
     : DEMO_TIMELINE_EVENTS.filter(e => e.event_type === typeFilter);
 
   const grouped = groupByMonth(filtered);
-
-  function handleAddEvent() {
-    setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 3000);
-  }
 
   return (
     <>
@@ -79,7 +75,7 @@ export function TimelineColumn() {
                 <option key={t} value={t}>{EVENT_TYPE_LABELS[t] ?? t}</option>
               ))}
             </select>
-            <button className="timeline-add-btn" onClick={handleAddEvent}>
+            <button className="timeline-add-btn" onClick={openDialog}>
               <Plus size={12} />
               Добавить событие
             </button>
@@ -128,11 +124,6 @@ export function TimelineColumn() {
         </div>
       </div>
 
-      {toastVisible && (
-        <div className="toast" role="status" aria-live="polite">
-          Форма добавления события в разработке
-        </div>
-      )}
     </>
   );
 }
