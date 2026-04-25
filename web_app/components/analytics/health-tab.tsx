@@ -14,16 +14,16 @@ export function HealthTab({ onAddChart }: Props) {
   return (
     <div className="grid grid-2">
       <ChartCard
-        title="Cows with mastitis (#)"
-        badges={[{ icon: '📊', label: 'Per farm' }]}
+        title="Коров с маститом (#)"
+        badges={[{ icon: '📊', label: 'По ферме' }]}
         legend={mastitis.series}
       >
         <BiChart type="line" series={mastitis.series} labels={mastitis.labels} unit="" />
       </ChartCard>
 
       <ChartCard
-        title="Cows with health issues (#)"
-        badges={[{ icon: '📊', label: 'Health issues' }]}
+        title="Коров с проблемами здоровья (#)"
+        badges={[{ icon: '📊', label: 'Проблемы здоровья' }]}
         legend={healthIssues.series}
       >
         <BiChart type="stacked-bar" series={healthIssues.series} labels={healthIssues.labels} unit="" />

@@ -28,7 +28,7 @@ function formatAssistantError(detail: unknown): string {
     if (typeof row.message === 'string' && row.message.trim()) return row.message;
     return JSON.stringify(row);
   }
-  return 'Assistant request failed';
+  return 'Ошибка запроса к ассистенту';
 }
 
 type AssistantInteractiveClientProps = {
@@ -51,9 +51,9 @@ export function AssistantInteractiveClient({
     <>
       <ExplainabilityBlock
         reasons={[
-          'Assistant behavior remains server-governed.',
-          'This shell only forwards intent to the backend boundary.',
-          'Shared payload semantics stay aligned with Android.',
+          'Поведение ассистента управляется сервером.',
+          'Этот интерфейс только передаёт запрос на бэкенд.',
+          'Семантика payload согласована с Android-клиентом.',
         ]}
       />
 
@@ -87,11 +87,11 @@ export function AssistantInteractiveClient({
                 }
                 setResult(JSON.stringify(body, null, 2));
               } catch (err) {
-                setError(err instanceof Error ? err.message : 'Assistant request failed');
+                setError(err instanceof Error ? err.message : 'Ошибка запроса к ассистенту');
               }
             }}
           >
-            Resolve target
+            Выполнить запрос
           </Button>
         </div>
       </Card>

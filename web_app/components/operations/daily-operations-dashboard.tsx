@@ -42,20 +42,20 @@ function SectionCard({ title, children }: { title: string; children: React.React
 
 function AlertsTable({ items }: { items: AlertVm[] }) {
   if (!items.length) {
-    return <SectionCard title="Priority alerts">Пока нет alert-записей для текущего runtime scope.</SectionCard>;
+    return <SectionCard title="Приоритетные алерты">Пока нет алертов для текущего контура.</SectionCard>;
   }
 
   return (
-    <SectionCard title="Priority alerts">
+    <SectionCard title="Приоритетные алерты">
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Severity</th>
-              <th>Object</th>
-              <th>Farm</th>
+              <th>Название</th>
+              <th>Статус</th>
+              <th>Серьёзность</th>
+              <th>Объект</th>
+              <th>Ферма</th>
             </tr>
           </thead>
           <tbody>
@@ -77,21 +77,21 @@ function AlertsTable({ items }: { items: AlertVm[] }) {
 
 function WorklistsTable({ items }: { items: WorklistVm[] }) {
   if (!items.length) {
-    return <SectionCard title="Priority worklists">Пока нет worklist/task-записей для текущего runtime scope.</SectionCard>;
+    return <SectionCard title="Приоритетные задачи">Пока нет задач для текущего контура.</SectionCard>;
   }
 
   return (
-    <SectionCard title="Priority worklists">
+    <SectionCard title="Приоритетные задачи">
       <div className="table-wrap">
         <table className="table">
           <thead>
             <tr>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Priority</th>
-              <th>Type</th>
-              <th>Object</th>
-              <th>Farm</th>
+              <th>Название</th>
+              <th>Статус</th>
+              <th>Приоритет</th>
+              <th>Тип</th>
+              <th>Объект</th>
+              <th>Ферма</th>
             </tr>
           </thead>
           <tbody>
@@ -115,28 +115,28 @@ function WorklistsTable({ items }: { items: WorklistVm[] }) {
 function EmptyState({ onRefresh }: { onRefresh: () => void }) {
   return (
     <section className="card">
-      <h3 className="card-title">Daily summary is empty, but the page is healthy</h3>
+      <h3 className="card-title">Сводка дня пуста, страница работает</h3>
       <div style={{ marginTop: 10 }}>
-        React surface отрисовался корректно, но runtime-данные для operational start-of-day пока пустые.
+        Страница отрисовалась корректно, но runtime-данные для начала рабочего дня пока отсутствуют.
       </div>
       <div style={{ marginTop: 8 }}>
-        Обычно это значит, что в runtime ещё нет записей в alerts/worklists/decision-feedback слоях.
+        Обычно это значит, что в runtime ещё нет записей в слоях алертов, задач или обратной связи.
       </div>
       <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <Link className="linked-action-card" href="/alerts">
           <div>
-            <div className="linked-action-title">Open alerts</div>
-            <div className="linked-action-caption">Проверить, что React route и backend contract работают.</div>
+            <div className="linked-action-title">Алерты</div>
+            <div className="linked-action-caption">Проверить алерты и контракт бэкенда.</div>
           </div>
         </Link>
         <Link className="linked-action-card" href="/worklists">
           <div>
-            <div className="linked-action-title">Open worklists</div>
-            <div className="linked-action-caption">Убедиться, что экран жив, но operational queue пока пуст.</div>
+            <div className="linked-action-title">Рабочие списки</div>
+            <div className="linked-action-caption">Убедиться, что очередь задач пуста.</div>
           </div>
         </Link>
         <button type="button" onClick={onRefresh} style={buttonStyle()}>
-          Refresh page data
+          Обновить
         </button>
       </div>
     </section>
@@ -162,7 +162,7 @@ export function DailyOperationsDashboard() {
       })
       .catch((err) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Failed to load daily summary');
+        setError(err instanceof Error ? err.message : 'Ошибка загрузки сводки дня');
       })
       .finally(() => {
         if (cancelled) return;
@@ -187,43 +187,43 @@ export function DailyOperationsDashboard() {
     <div className="grid">
       <div className="topbar" style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
         <div>
-          <h1 className="page-title">Home / daily summary</h1>
+          <h1 className="page-title">Главная / сводка дня</h1>
           <p className="page-subtitle">
-            React operational replacement surface for start-of-day workflow.
+            Операционная сводка для начала рабочего дня.
           </p>
-          {loadedAt ? <div style={{ opacity: 0.75 }}>Loaded at: {loadedAt}</div> : null}
+          {loadedAt ? <div style={{ opacity: 0.75 }}>Загружено: {loadedAt}</div> : null}
         </div>
         <button type="button" onClick={() => setRefreshKey((x) => x + 1)} style={buttonStyle()}>
-          Refresh
+          Обновить
         </button>
       </div>
 
-      <SectionCard title="Why this matters">
-        <div>The daily summary is assembled from canonical backend DTOs only.</div>
-        <div>Linked actions, decision hooks and feedback hooks remain server-governed.</div>
-        <div>Empty runtime is now treated as a valid operational state, not as a broken page.</div>
-        <div>Client fetches use no-store + cache-bust query params to reduce stale frontend behavior.</div>
+      <SectionCard title="Почему это важно">
+        <div>Сводка дня формируется только из канонических DTO бэкенда.</div>
+        <div>Связанные действия и хуки решений управляются сервером.</div>
+        <div>Пустой runtime — допустимое операционное состояние, не признак сбоя.</div>
+        <div>Запросы клиента используют no-store для минимизации устаревших данных.</div>
       </SectionCard>
 
       {error && !data ? (
         <section className="card error-text">
-          <div style={{ fontWeight: 700 }}>Daily summary request failed</div>
+          <div style={{ fontWeight: 700 }}>Ошибка загрузки сводки дня</div>
           <div style={{ marginTop: 8 }}>{error}</div>
           <div style={{ marginTop: 12 }}>
             <button type="button" onClick={() => setRefreshKey((x) => x + 1)} style={buttonStyle()}>
-              Retry
+              Повторить
             </button>
           </div>
         </section>
       ) : null}
 
-      {loading && !data ? <section className="card">Loading daily summary…</section> : null}
+      {loading && !data ? <section className="card">Загружаю сводку дня…</section> : null}
 
       {data ? (
         <>
           {data.partialErrors.length ? (
             <section className="card">
-              <h3 className="card-title">Partial backend warnings</h3>
+              <h3 className="card-title">Предупреждения бэкенда</h3>
               <ul style={{ marginTop: 10, paddingLeft: 18 }}>
                 {data.partialErrors.map((item) => (
                   <li key={item}>{item}</li>
@@ -233,12 +233,12 @@ export function DailyOperationsDashboard() {
           ) : null}
 
           <div className="grid grid-3">
-            <MetricCard title="Open alerts" value={data.totals.alertsOpen} />
-            <MetricCard title="Critical alerts" value={data.totals.alertsCritical} />
-            <MetricCard title="Open worklists" value={data.totals.worklistsOpen} />
-            <MetricCard title="Overdue worklists" value={data.totals.worklistsOverdue} />
-            <MetricCard title="Pending approvals" value={data.totals.pendingApprovals} />
-            <MetricCard title="Acceptance rate" value={`${Math.round(data.totals.feedbackAcceptanceRate * 100)}%`} />
+            <MetricCard title="Открытых алертов" value={data.totals.alertsOpen} />
+            <MetricCard title="Критических алертов" value={data.totals.alertsCritical} />
+            <MetricCard title="Открытых задач" value={data.totals.worklistsOpen} />
+            <MetricCard title="Просроченных задач" value={data.totals.worklistsOverdue} />
+            <MetricCard title="Ожидают подтверждения" value={data.totals.pendingApprovals} />
+            <MetricCard title="Принятие рекомендаций" value={`${Math.round(data.totals.feedbackAcceptanceRate * 100)}%`} />
           </div>
 
           <div className="grid grid-2">
@@ -247,13 +247,13 @@ export function DailyOperationsDashboard() {
               <div style={{ marginTop: 10, opacity: 0.8 }}>{data.brief.whyNow}</div>
             </SectionCard>
 
-            <SectionCard title="Scope summary">
-              <div>Tenant: {data.scope.tenantId}</div>
+            <SectionCard title="Область">
+              <div>Организация: {data.scope.tenantId}</div>
               <div style={{ marginTop: 8 }}>
-                Farms: {data.scope.farms.length ? data.scope.farms.map((item) => item.label).join(', ') : '—'}
+                Фермы: {data.scope.farms.length ? data.scope.farms.map((item) => item.label).join(', ') : '—'}
               </div>
               <div style={{ marginTop: 8 }}>
-                Sites: {data.scope.sites.length ? data.scope.sites.map((item) => item.label).join(', ') : '—'}
+                Сайты: {data.scope.sites.length ? data.scope.sites.map((item) => item.label).join(', ') : '—'}
               </div>
             </SectionCard>
           </div>
@@ -263,15 +263,15 @@ export function DailyOperationsDashboard() {
           ) : (
             <>
               {data.farms.length ? (
-                <SectionCard title="Farm/site visibility">
+                <SectionCard title="Фермы / сайты">
                   <div className="table-wrap">
                     <table className="table">
                       <thead>
                         <tr>
-                          <th>Farm</th>
-                          <th>Open alerts</th>
-                          <th>Open tasks</th>
-                          <th>Overdue</th>
+                          <th>Ферма</th>
+                          <th>Открытых алертов</th>
+                          <th>Открытых задач</th>
+                          <th>Просрочено</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -289,37 +289,37 @@ export function DailyOperationsDashboard() {
                 </SectionCard>
               ) : null}
 
-              <SectionCard title="Linked actions">
+              <SectionCard title="Связанные действия">
                 <div className="linked-actions-grid">
                   <Link className="linked-action-card" href="/alerts">
                     <div className="linked-action-count">{data.totals.alertsOpen}</div>
                     <div>
-                      <div className="linked-action-title">Alerts triage</div>
-                      <div className="linked-action-caption">Resolve daily deviations with explainability hooks.</div>
+                      <div className="linked-action-title">Триаж алертов</div>
+                      <div className="linked-action-caption">Разобрать ежедневные отклонения с объяснениями.</div>
                     </div>
                   </Link>
 
                   <Link className="linked-action-card" href="/worklists">
                     <div className="linked-action-count">{data.totals.worklistsOpen}</div>
                     <div>
-                      <div className="linked-action-title">Worklists</div>
-                      <div className="linked-action-caption">Open role queues and linked tasks.</div>
+                      <div className="linked-action-title">Рабочие списки</div>
+                      <div className="linked-action-caption">Открыть очереди ролей и связанные задачи.</div>
                     </div>
                   </Link>
 
                   <Link className="linked-action-card" href="/planner">
                     <div className="linked-action-count">{data.totals.pendingApprovals}</div>
                     <div>
-                      <div className="linked-action-title">Operational planner</div>
-                      <div className="linked-action-caption">Review weekly plans and overdue backlog.</div>
+                      <div className="linked-action-title">Планировщик</div>
+                      <div className="linked-action-caption">Просмотр недельных планов и просроченных задач.</div>
                     </div>
                   </Link>
 
                   <Link className="linked-action-card" href="/decisions">
                     <div className="linked-action-count">{data.totals.linkedDecisions}</div>
                     <div>
-                      <div className="linked-action-title">Decision / feedback trail</div>
-                      <div className="linked-action-caption">Open governance and feedback evidence.</div>
+                      <div className="linked-action-title">Журнал решений</div>
+                      <div className="linked-action-caption">Управление и доказательства обратной связи.</div>
                     </div>
                   </Link>
                 </div>

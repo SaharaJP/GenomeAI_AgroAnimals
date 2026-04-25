@@ -45,7 +45,7 @@ export function ReportViewSurface({ dataVersion, reportVersion }: { dataVersion:
       })
       .catch((err) => {
         if (!active) return;
-        setError(err instanceof Error ? err.message : 'Failed to load report view');
+        setError(err instanceof Error ? err.message : 'Ошибка загрузки отчёта');
       });
     return () => {
       active = false;
@@ -56,48 +56,48 @@ export function ReportViewSurface({ dataVersion, reportVersion }: { dataVersion:
   const canApprove = permissions.has('reports.approve') || permissions.has('reports.approve_all') || permissions.has('reports.review');
   const canArchive = permissions.has('reports.archive');
   const linkageSummary = [
-    { label: 'Data version', value: dataVersion },
-    { label: 'Report version', value: reportVersion },
-    { label: 'Approval status', value: approval?.status || status || 'draft' },
-    { label: 'Updated by', value: approval?.updated_by_username || '—' },
+    { label: 'Версия данных', value: dataVersion },
+    { label: 'Версия отчёта', value: reportVersion },
+    { label: 'Статус утверждения', value: approval?.status || status || 'черновик' },
+    { label: 'Кем обновлено', value: approval?.updated_by_username || '—' },
   ];
 
   return (
     <div className="grid">
       <div className="topbar">
         <div>
-          <h1 className="page-title">Report View</h1>
-          <p className="page-subtitle">Report detail, source linkage, governance hooks and assistant entry points in the new React shell.</p>
+          <h1 className="page-title">Просмотр отчёта</h1>
+          <p className="page-subtitle">Детали отчёта, привязка к источникам, управление и точки входа в ассистента.</p>
         </div>
       </div>
       <FactPackGuardrailNote />
       {error ? <div className="card error-text">{error}</div> : null}
       <div className="grid grid-3">
-        <MetricCard title="Report version" value={reportVersion} />
-        <MetricCard title="Data version" value={dataVersion} />
-        <MetricCard title="Current status" value={approval?.status || status} />
+        <MetricCard title="Версия отчёта" value={reportVersion} />
+        <MetricCard title="Версия данных" value={dataVersion} />
+        <MetricCard title="Текущий статус" value={approval?.status || status} />
       </div>
       <div className="grid grid-2">
         <SourceLinkagePanel items={linkageSummary} />
         <AssistantEntryPoints dataVersion={dataVersion} reportVersion={reportVersion} contextLabel="report_view" />
       </div>
       <ObjectExplainabilityPanel
-        title="Report explainability posture"
+        title="Объяснимость отчёта"
         reasons={[
-          { title: 'Fact-pack only', detail: 'Report interpretation must stay bounded by report_version/data_version linkage and backend guardrails.', source: 'decision' },
-          { title: 'Source linkage', detail: 'Every report action remains tied to version linkage rather than inferred frontend state.', source: 'worklist' },
-          { title: 'No invented factors', detail: 'React does not create new factors or explanations for report content.', source: 'alert' },
+          { title: 'Только fact-pack', detail: 'Интерпретация отчёта ограничена привязкой версий и гарантиями бэкенда.', source: 'decision' },
+          { title: 'Привязка источников', detail: 'Каждое действие с отчётом привязано к версии, а не выведено из состояния фронтенда.', source: 'worklist' },
+          { title: 'Без изобретённых факторов', detail: 'React не создаёт новых факторов или объяснений содержимого отчёта.', source: 'alert' },
         ]}
       />
       <Card>
-        <h3 className="card-title">Linked actions</h3>
+        <h3 className="card-title">Связанные действия</h3>
         <div className="linked-inline-actions">
-          <Link href={`/assistant?target=report&data_version=${encodeURIComponent(dataVersion)}&report_version=${encodeURIComponent(reportVersion)}`}>Explain in assistant</Link>
-          <Link href={`/decisions?report_version=${encodeURIComponent(reportVersion)}`}>Decision hook</Link>
-          <Link href={`/support?report_version=${encodeURIComponent(reportVersion)}`}>Feedback / support hook</Link>
-          <Link href="/reports">Back to report catalog</Link>
+          <Link href={`/assistant?target=report&data_version=${encodeURIComponent(dataVersion)}&report_version=${encodeURIComponent(reportVersion)}`}>Объяснить в ассистенте</Link>
+          <Link href={`/decisions?report_version=${encodeURIComponent(reportVersion)}`}>Решение</Link>
+          <Link href={`/support?report_version=${encodeURIComponent(reportVersion)}`}>Обратная связь / поддержка</Link>
+          <Link href="/reports">К каталогу отчётов</Link>
         </div>
-        {comment ? <p className="small-muted" style={{ marginTop: 12 }}>Catalog comment: {comment}</p> : null}
+        {comment ? <p className="small-muted" style={{ marginTop: 12 }}>Комментарий каталога: {comment}</p> : null}
       </Card>
       <ReportGovernancePanel dataVersion={dataVersion} reportVersion={reportVersion} approval={approval} canApprove={canApprove} canArchive={canArchive} />
       {decisionIntel ? <DecisionIntelligenceWidgets data={decisionIntel} /> : null}

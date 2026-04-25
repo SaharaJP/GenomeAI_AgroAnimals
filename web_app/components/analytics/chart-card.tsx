@@ -25,13 +25,13 @@ export function ChartCard({ title, badges, legend, onAlert, onDelete, onRename, 
           <Info size={12} color="var(--text-muted)" style={{ flexShrink: 0 }} />
         </div>
         <div className="an-chart-actions">
-          <button className="an-chart-action-btn" title="Alert" onClick={onAlert}>
+          <button className="an-chart-action-btn" title="Алерт" onClick={onAlert}>
             <AlertTriangle size={11} />
           </button>
-          <button className="an-chart-action-btn" title="Delete" onClick={onDelete}>
+          <button className="an-chart-action-btn" title="Удалить" onClick={onDelete}>
             <Trash2 size={11} />
           </button>
-          <button className="an-chart-action-btn" title="Rename" onClick={onRename}>
+          <button className="an-chart-action-btn" title="Переименовать" onClick={onRename}>
             <Pencil size={11} />
           </button>
         </div>

@@ -10,34 +10,34 @@ interface Metric {
 }
 
 const METRICS: Metric[] = [
-  // Production
-  { id: 'milk_ecm',         group: 'Production',    name: 'Milk yield and ECM',                    desc: 'Daily milk yield and energy-corrected milk' },
-  { id: 'fat_protein',      group: 'Production',    name: 'Fat & protein %',                       desc: 'Fat and protein percentage trends' },
-  { id: 'scc',              group: 'Production',    name: 'Somatic Cell Count (SCC)',              desc: 'SCC with 200k threshold' },
-  { id: 'fat_per_cow',      group: 'Production',    name: 'Fat yield per cow',                     desc: 'Daily fat yield per individual cow' },
-  { id: 'protein_per_cow',  group: 'Production',    name: 'Protein yield per cow',                 desc: 'Daily protein yield per individual cow' },
-  { id: 'milk_per_cow',     group: 'Production',    name: 'Milk yield per cow',                    desc: 'Average daily yield per cow' },
-  { id: 'milk_visits',      group: 'Production',    name: 'Milk visits per cow',                   desc: 'Average daily milking visits' },
-  // Feed
-  { id: 'dmi',              group: 'Feed',          name: 'Dry Matter Intake (DMI)',               desc: 'Average daily dry matter intake' },
-  { id: 'feed_cost',        group: 'Feed',          name: 'Feed cost',                             desc: 'Weekly feed cost per cow' },
-  { id: 'feed_efficiency',  group: 'Feed',          name: 'Feed efficiency',                       desc: 'Milk yield per kg of feed' },
-  // Reproduction
-  { id: 'repro_rates',      group: 'Reproduction',  name: 'Reproduction rates',                    desc: 'Conception, pregnancy, insemination rates' },
-  { id: 'days_open',        group: 'Reproduction',  name: 'Days open after calving',               desc: 'Days open by lactation number' },
-  { id: 'calving_interval', group: 'Reproduction',  name: 'Calving interval',                      desc: 'Average interval between calvings' },
-  { id: 'vwp',              group: 'Reproduction',  name: 'Calculated VWP',                        desc: 'Voluntary waiting period by lactation' },
-  // Health
-  { id: 'mastitis',         group: 'Health',        name: 'Cows with mastitis (#)',                desc: 'Weekly mastitis incidence count' },
-  { id: 'health_issues',    group: 'Health',        name: 'Cows with health issues (#)',           desc: 'Stacked breakdown by health condition' },
-  { id: 'culling_rate',     group: 'Health',        name: 'Culling rate',                          desc: 'Weekly culling rate percentage' },
-  { id: 'treatment_count',  group: 'Health',        name: 'Treatment count',                       desc: 'Number of treatments per week' },
-  // Behaviour
-  { id: 'rumination',       group: 'Behaviour',     name: 'Rumination time',                       desc: 'Average daily rumination minutes' },
-  { id: 'activity',         group: 'Behaviour',     name: 'Activity index',                        desc: 'Herd-level activity score trend' },
-  // Herd composition
-  { id: 'herd_size',        group: 'Herd comp.',    name: 'Herd size',                             desc: 'Total cows in herd over time' },
-  { id: 'dim_distribution', group: 'Herd comp.',    name: 'DIM distribution',                      desc: 'Days in milk distribution by week' },
+  // Продуктивность
+  { id: 'milk_ecm',         group: 'Продуктивность',   name: 'Надой и ECM',                         desc: 'Ежедневный надой и энергокорректированное молоко' },
+  { id: 'fat_protein',      group: 'Продуктивность',   name: 'Жир и белок %',                       desc: 'Тренды жира и белка' },
+  { id: 'scc',              group: 'Продуктивность',   name: 'Соматические клетки (СКК)',            desc: 'СКК с порогом 200k' },
+  { id: 'fat_per_cow',      group: 'Продуктивность',   name: 'Выход жира на корову',                desc: 'Ежедневный выход жира на корову' },
+  { id: 'protein_per_cow',  group: 'Продуктивность',   name: 'Выход белка на корову',               desc: 'Ежедневный выход белка на корову' },
+  { id: 'milk_per_cow',     group: 'Продуктивность',   name: 'Надой на корову',                     desc: 'Средний ежедневный надой на корову' },
+  { id: 'milk_visits',      group: 'Продуктивность',   name: 'Доений на корову',                    desc: 'Среднее число доений в день' },
+  // Кормление
+  { id: 'dmi',              group: 'Кормление',        name: 'Потребление сухого вещества (ПСВ)',   desc: 'Среднесуточное потребление СВ' },
+  { id: 'feed_cost',        group: 'Кормление',        name: 'Стоимость корма',                     desc: 'Недельная стоимость корма на корову' },
+  { id: 'feed_efficiency',  group: 'Кормление',        name: 'Эффективность кормления',             desc: 'Надой на кг корма' },
+  // Воспроизводство
+  { id: 'repro_rates',      group: 'Воспроизводство',  name: 'Показатели воспроизводства',          desc: 'Стельность, оплодотворяемость, осеменяемость' },
+  { id: 'days_open',        group: 'Воспроизводство',  name: 'Дней до осеменения после отёла',      desc: 'Дни открытого периода по лактации' },
+  { id: 'calving_interval', group: 'Воспроизводство',  name: 'Межотельный интервал',                desc: 'Средний интервал между отёлами' },
+  { id: 'vwp',              group: 'Воспроизводство',  name: 'Расчётный ДОС',                       desc: 'Добровольный ожидаемый срок по лактации' },
+  // Здоровье
+  { id: 'mastitis',         group: 'Здоровье',         name: 'Коров с маститом (#)',                desc: 'Недельная заболеваемость маститом' },
+  { id: 'health_issues',    group: 'Здоровье',         name: 'Коров с проблемами здоровья (#)',     desc: 'Разбивка по состояниям здоровья' },
+  { id: 'culling_rate',     group: 'Здоровье',         name: 'Выбраковка',                          desc: 'Недельный процент выбраковки' },
+  { id: 'treatment_count',  group: 'Здоровье',         name: 'Число лечений',                       desc: 'Количество лечений за неделю' },
+  // Поведение
+  { id: 'rumination',       group: 'Поведение',        name: 'Время жвачки',                        desc: 'Среднесуточное время жвачки (мин)' },
+  { id: 'activity',         group: 'Поведение',        name: 'Индекс активности',                   desc: 'Тренд активности стада' },
+  // Состав стада
+  { id: 'herd_size',        group: 'Состав стада',     name: 'Размер стада',                        desc: 'Общее число коров в стаде' },
+  { id: 'dim_distribution', group: 'Состав стада',     name: 'Распределение ДДМ',                   desc: 'Распределение дней доения за неделю' },
 ];
 
 const GROUPS = Array.from(new Set(METRICS.map(m => m.group)));

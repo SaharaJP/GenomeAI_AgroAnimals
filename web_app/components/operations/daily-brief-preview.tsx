@@ -23,29 +23,29 @@ export function buildDailyBriefPreview(bundle: any) {
 
     const headline = `Open tasks: ${tasksOpen}. Active alerts: ${alertsNew + alertsAck}. Overdue: ${overdueActive}.`;
     const whyNow = pendingApprovals > 0
-      ? `Pending approvals: ${pendingApprovals}.`
-      : "Planner is available and no blocking approval backlog was detected.";
+      ? `Ожидают подтверждения: ${pendingApprovals}.`
+      : "Планировщик доступен, блокирующих подтверждений не обнаружено.";
 
-    return { bullets: [], actions: [], facts: [], links: [],
-      title: "Daily brief",
-      heading: "Daily brief",
+    return { bullets: [], links: [],
+      title: "Сводка дня",
+      heading: "Сводка дня",
       summary: headline,
       primaryMessage: headline,
       primary_message: headline,
       whyNow,
       why_now: whyNow,
       facts: [
-        { key: "tasks_open", label: "Open tasks", value: String(tasksOpen) },
-        { key: "alerts_active", label: "Active alerts", value: String(alertsNew + alertsAck) },
-        { key: "overdue_active", label: "Overdue", value: String(overdueActive) },
-        { key: "acceptance_rate", label: "Acceptance rate", value: `${Math.round(acceptanceRate * 100)}%` },
+        { key: "tasks_open", label: "Открытых задач", value: String(tasksOpen) },
+        { key: "alerts_active", label: "Активных алертов", value: String(alertsNew + alertsAck) },
+        { key: "overdue_active", label: "Просроченных", value: String(overdueActive) },
+        { key: "acceptance_rate", label: "Принятие рекомендаций", value: `${Math.round(acceptanceRate * 100)}%` },
       ],
       keyFacts: [
-        { key: "tasks_open", label: "Open tasks", value: String(tasksOpen) },
-        { key: "alerts_active", label: "Active alerts", value: String(alertsNew + alertsAck) },
-        { key: "alerts_resolved", label: "Resolved alerts", value: String(alertsResolved) },
-        { key: "tasks_done", label: "Completed tasks", value: String(tasksDone) },
-        { key: "overdue_active", label: "Overdue", value: String(overdueActive) },
+        { key: "tasks_open", label: "Открытых задач", value: String(tasksOpen) },
+        { key: "alerts_active", label: "Активных алертов", value: String(alertsNew + alertsAck) },
+        { key: "alerts_resolved", label: "Решённых алертов", value: String(alertsResolved) },
+        { key: "tasks_done", label: "Выполненных задач", value: String(tasksDone) },
+        { key: "overdue_active", label: "Просроченных", value: String(overdueActive) },
       ],
       actions: [],
       suggestedActions: [],
@@ -53,13 +53,13 @@ export function buildDailyBriefPreview(bundle: any) {
     };
   } catch {
     return {
-      title: "Daily brief",
-      heading: "Daily brief",
-      summary: "Planner opened successfully.",
-      primaryMessage: "Planner opened successfully.",
-      primary_message: "Planner opened successfully.",
-      whyNow: "Fallback daily brief builder is active.",
-      why_now: "Fallback daily brief builder is active.",
+      title: "Сводка дня",
+      heading: "Сводка дня",
+      summary: "Планировщик открыт успешно.",
+      primaryMessage: "Планировщик открыт успешно.",
+      primary_message: "Планировщик открыт успешно.",
+      whyNow: "Резервный построитель сводки активен.",
+      why_now: "Резервный построитель сводки активен.",
       facts: [],
       keyFacts: [],
       actions: [],
