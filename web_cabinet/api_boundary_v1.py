@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from packages.contracts.api_boundary_v1 import (
     AlertItem,
     AlertsListResponse,
+    AnimalAttributes,
     ApiLinkage,
     AssistantResolveTargetRequest,
     AssistantResolveTargetResponse,
@@ -22,6 +23,7 @@ from packages.contracts.api_boundary_v1 import (
     FeedbackItem,
     FeedbackListResponse,
     FeedbackMetrics,
+    HealthMetrics,
     InsightItem,
     InsightsListResponse,
     InsightTransitionRequest,
@@ -48,6 +50,50 @@ from core.infra.web_db import get_settings
 from core.infra.runtime_storage import resolve_runtime_storage_settings, runtime_storage_diagnostics
 from core.infra.runtime_state_storage import runtime_state_storage_diagnostics
 from web_cabinet.deploy_guard import DeployConfigError, validate_runtime_config
+
+_DEMO_ANIMAL_ATTRS: dict[str, dict] = {
+    "3142": dict(
+        name="Ночка", breed="Голштинская", birth_date="2022-03-15",
+        lactation_number=3, days_in_milk=45, last_calving_date="2026-03-12",
+        total_calvings=3, reproduction_status="Ожидает",
+        group_label="Группа 2", farm_label="Ферма Восток",
+    ),
+    "4821": dict(
+        name="Звёздочка", breed="Айрширская", birth_date="2021-11-20",
+        lactation_number=4, days_in_milk=120, last_calving_date="2026-01-05",
+        total_calvings=4, reproduction_status="Стельная",
+        next_calving_expected="2026-10-12",
+        group_label="Группа 1", farm_label="Ферма Восток",
+    ),
+    "3887": dict(
+        name="Роза", breed="Голштинская", birth_date="2023-01-10",
+        lactation_number=2, days_in_milk=10, last_calving_date="2026-04-16",
+        total_calvings=2, reproduction_status="Осеменена",
+        group_label="Группа 3", farm_label="Ферма Запад",
+    ),
+    "4012": dict(
+        name="Ива", breed="Джерсейская", birth_date="2022-07-04",
+        lactation_number=2, days_in_milk=10, last_calving_date="2026-04-16",
+        total_calvings=2, reproduction_status="Осеменена",
+        group_label="Группа 3", farm_label="Ферма Запад",
+    ),
+}
+
+_DEMO_HEALTH_METRICS: dict[str, dict] = {
+    "3142": dict(activity_score=18.0, scc=450, scc_trend="↑", daily_milk_yield_kg=18.2),
+    "4821": dict(activity_score=72.0, scc=95, scc_trend="→", daily_milk_yield_kg=24.5, body_condition_score=3.2),
+    "3887": dict(activity_score=65.0, scc=120, scc_trend="↓", daily_milk_yield_kg=12.0, body_condition_score=2.8),
+    "4012": dict(activity_score=68.0, scc=85, scc_trend="→", daily_milk_yield_kg=11.5, body_condition_score=3.0),
+}
+
+
+def _build_demo_animal_fields(object_id: str) -> tuple:
+    attrs_data = _DEMO_ANIMAL_ATTRS.get(object_id)
+    metrics_data = _DEMO_HEALTH_METRICS.get(object_id)
+    attrs = AnimalAttributes(**attrs_data) if attrs_data else None
+    metrics = HealthMetrics(**metrics_data) if metrics_data else None
+    return attrs, metrics
+
 from core.observability import ensure_request_id
 from core.release import load_release_metadata
 from core.security import has_any_permission as core_has_any_permission
@@ -549,12 +595,25 @@ def boundary_profile(
     decisions = [_map_decision(dict(row), request=request) for row in list(decisions_payload.get('decisions') or [])]
     alerts_open = sum(1 for item in alerts if item.status in {'new', 'acknowledged'})
     worklists_open = sum(1 for item in worklists if item.status in {'open', 'in_progress'})
+
+    # Demo animal attributes
+    animal_attributes = None
+    health_metrics = None
+    try:
+        from web_cabinet.ai.config import get_ai_settings as _get_ai
+        if _get_ai().GENOMEAI_AI_DEMO_MODE and object_type == 'animal':
+            animal_attributes, health_metrics = _build_demo_animal_fields(object_id)
+    except Exception:
+        pass
+
     return ProfileResponse(
         entity=EntityRef(object_type=object_type, object_id=object_id),
         summary=ProfileSummary(alerts_open=alerts_open, worklists_open=worklists_open, decisions_total=len(decisions)),
         alerts=alerts,
         worklists=worklists,
         decisions=decisions,
+        animal_attributes=animal_attributes,
+        health_metrics=health_metrics,
     )
 
 
