@@ -227,6 +227,29 @@ class EconomicsListResponse(BaseModel):
     report_items: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class AnimalAttributes(BaseModel):
+    name: Optional[str] = None
+    breed: Optional[str] = None
+    birth_date: Optional[str] = None         # YYYY-MM-DD
+    lactation_number: Optional[int] = None
+    days_in_milk: Optional[int] = None
+    last_calving_date: Optional[str] = None  # YYYY-MM-DD
+    total_calvings: Optional[int] = None
+    reproduction_status: Optional[str] = None
+    next_calving_expected: Optional[str] = None
+    group_label: Optional[str] = None
+    farm_label: Optional[str] = None
+
+
+class HealthMetrics(BaseModel):
+    activity_score: Optional[float] = None
+    activity_norm: Optional[float] = 60.0
+    scc: Optional[int] = None
+    scc_trend: Optional[str] = None
+    body_condition_score: Optional[float] = None
+    daily_milk_yield_kg: Optional[float] = None
+
+
 class ProfileSummary(BaseModel):
     alerts_open: int = 0
     worklists_open: int = 0
@@ -240,6 +263,8 @@ class ProfileResponse(BaseModel):
     alerts: list[AlertItem] = Field(default_factory=list)
     worklists: list[WorklistItem] = Field(default_factory=list)
     decisions: list[DecisionItem] = Field(default_factory=list)
+    animal_attributes: Optional[AnimalAttributes] = None
+    health_metrics: Optional[HealthMetrics] = None
 
 
 class AssistantResolveTargetRequest(BaseModel):
