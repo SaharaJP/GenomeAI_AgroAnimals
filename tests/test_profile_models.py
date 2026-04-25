@@ -1,5 +1,4 @@
 """Tests for animal profile Pydantic models."""
-import pytest
 from packages.contracts.api_boundary_v1 import (
     AnimalAttributes,
     HealthMetrics,
