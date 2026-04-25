@@ -206,18 +206,10 @@ def _parse_response(
 # ---------------------------------------------------------------------------
 # Approve endpoint
 # ---------------------------------------------------------------------------
-import logging as _logging
-from typing import List as _List
 
-_approve_logger = _logging.getLogger("genomeai.ai.endpoint.morning_brief.approve")
+_approve_logger = logging.getLogger("genomeai.ai.endpoint.morning_brief.approve")
 
 _PRIORITY_MAP = {"high": 1, "medium": 2, "low": 3}
-_ROLE_MAP = {
-    "vet": "vet",
-    "zootech": "zootech",
-    "operator": "operator",
-    "director": "director",
-}
 
 
 class _ApproveAction(_BaseModel):
@@ -229,7 +221,7 @@ class _ApproveAction(_BaseModel):
 
 class ApproveBriefRequest(_BaseModel):
     farm_id: str
-    actions: _List[_ApproveAction]
+    actions: list[_ApproveAction]
 
 
 class ApproveBriefResponse(_BaseModel):
@@ -254,13 +246,25 @@ def _create_tasks_for_actions(actions: list, *, brief_id: str, farm_id: str) -> 
                 task_type="morning_brief_action",
                 title=act.action,
                 priority=_PRIORITY_MAP.get(act.priority, 2),
-                assignee_team=_ROLE_MAP.get(act.role),
+                assignee_team=None,  # role stored in why dict; teams catalog uses different keys
                 due_at=act.due,
-                why={"source": "morning_brief", "brief_id": brief_id, "farm_id": farm_id},
+                why={
+                    "source": "morning_brief",
+                    "brief_id": brief_id,
+                    "farm_id": farm_id,
+                    "role": act.role,
+                },
             )
+            # TODO: resolve tenant_id from request context for multi-tenant support (MVP: default)
             create_task(conn, tenant_id="default", t=t)
             created += 1
         conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        raise
     finally:
         conn.close()
     return created
@@ -268,6 +272,7 @@ def _create_tasks_for_actions(actions: list, *, brief_id: str, farm_id: str) -> 
 
 @router.post("/morning-brief/{brief_id}/approve", response_model=ApproveBriefResponse)
 async def approve_morning_brief(brief_id: str, body: ApproveBriefRequest) -> ApproveBriefResponse:
+    """Согласовать брифинг: поставить задачи на специалистов и разблокировать PDF."""
     tasks_created = 0
     try:
         tasks_created = _create_tasks_for_actions(
