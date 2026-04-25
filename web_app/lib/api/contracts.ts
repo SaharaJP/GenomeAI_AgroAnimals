@@ -183,6 +183,29 @@ export type ReportsListResponse = {
   items: ReportItem[];
 };
 
+export type AnimalAttributes = {
+  name?: string | null;
+  breed?: string | null;
+  birth_date?: string | null;
+  lactation_number?: number | null;
+  days_in_milk?: number | null;
+  last_calving_date?: string | null;
+  total_calvings?: number | null;
+  reproduction_status?: string | null;
+  next_calving_expected?: string | null;
+  group_label?: string | null;
+  farm_label?: string | null;
+};
+
+export type HealthMetrics = {
+  activity_score?: number | null;
+  activity_norm?: number | null;
+  scc?: number | null;
+  scc_trend?: string | null;
+  body_condition_score?: number | null;
+  daily_milk_yield_kg?: number | null;
+};
+
 export type ProfileResponse = {
   schema: string;
   entity: EntityRef;
@@ -194,6 +217,8 @@ export type ProfileResponse = {
   alerts: AlertItem[];
   worklists: WorklistItem[];
   decisions: DecisionItem[];
+  animal_attributes?: AnimalAttributes | null;
+  health_metrics?: HealthMetrics | null;
 };
 
 export type DecisionIntelligenceResponse = {
