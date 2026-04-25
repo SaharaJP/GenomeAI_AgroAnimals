@@ -43,8 +43,7 @@ export function renderWithEntityLinks(text: string): ReactNode {
             <Link
               key={`token-${i}`}
               href={`/profiles/animal/${token.id}`}
-              className="badge badge-info"
-              style={{ textDecoration: 'none', cursor: 'pointer', marginInline: 2 }}
+              className="badge badge-info badge-animal-link"
               title={`Открыть карточку животного №${token.id}`}
             >
               🐄 №{token.id}
@@ -56,15 +55,7 @@ export function renderWithEntityLinks(text: string): ReactNode {
             <Link
               key={`token-${i}`}
               href={`/worklists`}
-              className="badge"
-              style={{
-                background: '#f5f3ff',
-                color: '#7c3aed',
-                border: '1px solid #ddd6fe',
-                textDecoration: 'none',
-                cursor: 'pointer',
-                marginInline: 2,
-              }}
+              className="badge-task"
               title={`Открыть задачу #${token.id}`}
             >
               ⚙ #{token.id}

@@ -37,10 +37,11 @@ interface ActionRowProps {
   index: number;
   onUpdate: (index: number, updated: TodayAction) => void;
   onDelete: (index: number) => void;
+  initialEditing?: boolean;
 }
 
-function ActionRow({ action, index, onUpdate, onDelete }: ActionRowProps) {
-  const [editing, setEditing] = useState(false);
+function ActionRow({ action, index, onUpdate, onDelete, initialEditing = false }: ActionRowProps) {
+  const [editing, setEditing] = useState(initialEditing);
   const [draft, setDraft] = useState<TodayAction>(action);
 
   function save() {
@@ -56,7 +57,7 @@ function ActionRow({ action, index, onUpdate, onDelete }: ActionRowProps) {
     <div className={`brief-action-row${editing ? ' brief-action-row--editing' : ''}`}>
       {!editing && (
         <div className="brief-action-view">
-          <span className={PRIORITY_CLASS[action.priority]} style={{ flexShrink: 0, marginTop: 2 }}>
+          <span className={`${PRIORITY_CLASS[action.priority]} brief-action-badge`}>
             {PRIORITY_LABEL[action.priority]}
           </span>
           <span className="brief-action-text">
@@ -103,15 +104,14 @@ function ActionRow({ action, index, onUpdate, onDelete }: ActionRowProps) {
             </select>
             <input
               type="time"
-              className="brief-edit-select"
-              style={{ width: 84 }}
+              className="brief-edit-select brief-edit-time"
               value={draft.due ?? ''}
               onChange={(e) => setDraft({ ...draft, due: e.target.value || null })}
             />
           </div>
           <div className="brief-edit-actions">
-            <button type="button" className="button button-primary" style={{ fontSize: 12, padding: '5px 12px' }} onClick={save}>Сохранить</button>
-            <button type="button" className="button" style={{ fontSize: 12, padding: '5px 10px' }} onClick={cancel}>Отмена</button>
+            <button type="button" className="button button-primary brief-edit-btn" onClick={save}>Сохранить</button>
+            <button type="button" className="button brief-edit-btn--cancel" onClick={cancel}>Отмена</button>
           </div>
         </div>
       )}
@@ -142,8 +142,8 @@ function BriefEmpty({ onGenerate, generating }: { onGenerate: () => void; genera
   return (
     <section className="card">
       <div className="brief-ai-label"><span className="brief-ai-dot" /> ИИ-брифинг</div>
-      <div className="card-title" style={{ marginTop: 10 }}>Брифинг будет готов в 06:00</div>
-      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '6px 0 12px' }}>
+      <div className="card-title brief-empty-title">Брифинг будет готов в 06:00</div>
+      <p className="brief-empty-desc">
         Ежедневный брифинг генерируется автоматически каждое утро в 06:00 МСК.
       </p>
       <button type="button" className="button button-primary" onClick={onGenerate} disabled={generating}>
@@ -161,6 +161,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editedActions, setEditedActions] = useState<TodayAction[]>([]);
+  const [newActionIndex, setNewActionIndex] = useState<number | null>(null);
   const [approved, setApproved] = useState(false);
   const [approving, setApproving] = useState(false);
   const [tasksCreated, setTasksCreated] = useState(0);
@@ -189,15 +190,18 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
 
   function updateAction(index: number, updated: TodayAction) {
     setEditedActions((prev) => prev.map((a, i) => (i === index ? updated : a)));
+    setNewActionIndex(null);
   }
   function deleteAction(index: number) {
     setEditedActions((prev) => prev.filter((_, i) => i !== index));
+    setNewActionIndex(null);
   }
   function addAction() {
-    setEditedActions((prev) => [
-      ...prev,
-      { action: '', priority: 'low', due: null, role: 'operator' },
-    ]);
+    setEditedActions((prev) => {
+      const next = [...prev, { action: '', priority: 'low' as const, due: null, role: 'operator' as const }];
+      setNewActionIndex(next.length - 1);
+      return next;
+    });
   }
 
   async function handleApprove() {
@@ -230,7 +234,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
     return (
       <section className="card">
         <div className="brief-ai-label"><span className="brief-ai-dot" /> ИИ-брифинг</div>
-        <div style={{ marginTop: 10, color: 'var(--text-muted)', fontSize: 13 }}>Загрузка брифинга…</div>
+        <div className="brief-loading">Загрузка брифинга…</div>
       </section>
     );
   }
@@ -247,7 +251,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
         </div>
         <div className="brief-header-right">
           {updatedAgo && <span className="brief-meta">обновлено {updatedAgo}</span>}
-          <button type="button" className="button" style={{ fontSize: 12, padding: '4px 10px' }}
+          <button type="button" className="button brief-refresh-btn"
             onClick={handleRegenerate} disabled={generating}>
             {generating ? '…' : '↺ Обновить'}
           </button>
@@ -272,7 +276,14 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
           </div>
         )}
         {editedActions.map((act, i) => (
-          <ActionRow key={i} action={act} index={i} onUpdate={updateAction} onDelete={deleteAction} />
+          <ActionRow
+            key={i}
+            action={act}
+            index={i}
+            onUpdate={updateAction}
+            onDelete={deleteAction}
+            initialEditing={i === newActionIndex}
+          />
         ))}
         <button type="button" className="brief-add-btn" onClick={addAction}>
           ＋ Добавить задачу вручную
@@ -287,7 +298,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
         </CollapsibleSection>
       )}
 
-      {error && <div style={{ marginTop: 8, color: 'var(--danger)', fontSize: 12 }}>{error}</div>}
+      {error && <div className="brief-error">{error}</div>}
 
       <div className="brief-footer-meta">
         Брифинг сгенерирован {new Date(brief.generated_at_utc + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} в 06:00
@@ -317,8 +328,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
             href={morningBriefPdfUrl(brief.brief_id, farmId)}
             target="_blank"
             rel="noreferrer"
-            className="button"
-            style={{ color: 'var(--accent-text)', borderColor: 'var(--accent)', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
+            className="button brief-pdf-link"
           >
             ⬇ Скачать PDF
           </a>
