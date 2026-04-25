@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   approveMorningBrief,
@@ -35,27 +35,29 @@ const ROLE_LABEL: Record<TodayAction['role'], string> = {
 interface ActionRowProps {
   action: TodayAction;
   index: number;
+  isEditing: boolean;
+  onEdit: (index: number) => void;
   onUpdate: (index: number, updated: TodayAction) => void;
   onDelete: (index: number) => void;
-  initialEditing?: boolean;
 }
 
-function ActionRow({ action, index, onUpdate, onDelete, initialEditing = false }: ActionRowProps) {
-  const [editing, setEditing] = useState(initialEditing);
+function ActionRow({ action, index, isEditing, onEdit, onUpdate, onDelete }: ActionRowProps) {
   const [draft, setDraft] = useState<TodayAction>(action);
+
+  // Keep draft in sync when action changes from parent (e.g., after save)
+  useEffect(() => { setDraft(action); }, [action]);
 
   function save() {
     onUpdate(index, draft);
-    setEditing(false);
   }
   function cancel() {
     setDraft(action);
-    setEditing(false);
+    onEdit(-1); // signal "close editing" (parent sets editingIndex to null)
   }
 
   return (
-    <div className={`brief-action-row${editing ? ' brief-action-row--editing' : ''}`}>
-      {!editing && (
+    <div className={`brief-action-row${isEditing ? ' brief-action-row--editing' : ''}`}>
+      {!isEditing && (
         <div className="brief-action-view">
           <span className={`${PRIORITY_CLASS[action.priority]} brief-action-badge`}>
             {PRIORITY_LABEL[action.priority]}
@@ -66,12 +68,12 @@ function ActionRow({ action, index, onUpdate, onDelete, initialEditing = false }
           </span>
           <span className="brief-action-role">{ROLE_LABEL[action.role]}</span>
           <div className="brief-action-controls">
-            <button type="button" className="brief-icon-btn" title="Редактировать" onClick={() => setEditing(true)}>✏</button>
+            <button type="button" className="brief-icon-btn" title="Редактировать" onClick={() => onEdit(index)}>✏</button>
             <button type="button" className="brief-icon-btn brief-icon-btn--danger" title="Удалить задачу" onClick={() => onDelete(index)}>✕</button>
           </div>
         </div>
       )}
-      {editing && (
+      {isEditing && (
         <div className="brief-edit-form">
           <input
             className="brief-edit-input"
@@ -111,7 +113,7 @@ function ActionRow({ action, index, onUpdate, onDelete, initialEditing = false }
           </div>
           <div className="brief-edit-actions">
             <button type="button" className="button button-primary brief-edit-btn" onClick={save}>Сохранить</button>
-            <button type="button" className="button brief-edit-btn--cancel" onClick={cancel}>Отмена</button>
+            <button type="button" className="button brief-edit-btn brief-edit-btn--cancel" onClick={cancel}>Отмена</button>
           </div>
         </div>
       )}
@@ -161,12 +163,12 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editedActions, setEditedActions] = useState<TodayAction[]>([]);
-  const [newActionIndex, setNewActionIndex] = useState<number | null>(null);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [approved, setApproved] = useState(false);
   const [approving, setApproving] = useState(false);
   const [tasksCreated, setTasksCreated] = useState(0);
 
-  function loadBrief() {
+  const loadBrief = useCallback(() => {
     setLoading(true);
     setError(null);
     setApproved(false);
@@ -174,9 +176,9 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
       .then((b) => { setBrief(b); setEditedActions(b.today_actions); })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }
+  }, [farmId]);
 
-  useEffect(() => { loadBrief(); }, [farmId]);
+  useEffect(() => { loadBrief(); }, [loadBrief]);
 
   function handleRegenerate() {
     setGenerating(true);
@@ -190,16 +192,16 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
 
   function updateAction(index: number, updated: TodayAction) {
     setEditedActions((prev) => prev.map((a, i) => (i === index ? updated : a)));
-    setNewActionIndex(null);
+    setEditingIndex(null);
   }
   function deleteAction(index: number) {
     setEditedActions((prev) => prev.filter((_, i) => i !== index));
-    setNewActionIndex(null);
+    setEditingIndex((prev) => (prev === index ? null : prev !== null && prev > index ? prev - 1 : prev));
   }
   function addAction() {
     setEditedActions((prev) => {
       const next = [...prev, { action: '', priority: 'low' as const, due: null, role: 'operator' as const }];
-      setNewActionIndex(next.length - 1);
+      setEditingIndex(next.length - 1);
       return next;
     });
   }
@@ -280,9 +282,10 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
             key={i}
             action={act}
             index={i}
+            isEditing={i === editingIndex}
+            onEdit={(idx) => setEditingIndex(idx === -1 ? null : idx)}
             onUpdate={updateAction}
             onDelete={deleteAction}
-            initialEditing={i === newActionIndex}
           />
         ))}
         <button type="button" className="brief-add-btn" onClick={addAction}>
