@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel as _BaseModel
 
 from ..cache import get_cache
 from ..client import get_client
@@ -200,6 +201,81 @@ def _parse_response(
         generation_model=model,
         generation_tokens={"input": input_tokens, "output": output_tokens},
     )
+
+
+# ---------------------------------------------------------------------------
+# Approve endpoint
+# ---------------------------------------------------------------------------
+import logging as _logging
+from typing import List as _List
+
+_approve_logger = _logging.getLogger("genomeai.ai.endpoint.morning_brief.approve")
+
+_PRIORITY_MAP = {"high": 1, "medium": 2, "low": 3}
+_ROLE_MAP = {
+    "vet": "vet",
+    "zootech": "zootech",
+    "operator": "operator",
+    "director": "director",
+}
+
+
+class _ApproveAction(_BaseModel):
+    action: str
+    priority: str  # 'high' | 'medium' | 'low'
+    due: Optional[str]
+    role: str  # 'vet' | 'zootech' | 'operator' | 'director'
+
+
+class ApproveBriefRequest(_BaseModel):
+    farm_id: str
+    actions: _List[_ApproveAction]
+
+
+class ApproveBriefResponse(_BaseModel):
+    approved: bool
+    tasks_created: int
+
+
+def _create_tasks_for_actions(actions: list, *, brief_id: str, farm_id: str) -> int:
+    """Create worklist tasks for each approved action. Returns count created."""
+    try:
+        from core.infra.postgres_compat import connect_postgres_compat
+        from core.workflow.tasks import TaskCreate, create_task
+    except ImportError:
+        _approve_logger.warning("task creation unavailable: core.workflow not importable")
+        return 0
+
+    conn = connect_postgres_compat()
+    created = 0
+    try:
+        for act in actions:
+            t = TaskCreate(
+                task_type="morning_brief_action",
+                title=act.action,
+                priority=_PRIORITY_MAP.get(act.priority, 2),
+                assignee_team=_ROLE_MAP.get(act.role),
+                due_at=act.due,
+                why={"source": "morning_brief", "brief_id": brief_id, "farm_id": farm_id},
+            )
+            create_task(conn, tenant_id="default", t=t)
+            created += 1
+        conn.commit()
+    finally:
+        conn.close()
+    return created
+
+
+@router.post("/morning-brief/{brief_id}/approve", response_model=ApproveBriefResponse)
+async def approve_morning_brief(brief_id: str, body: ApproveBriefRequest) -> ApproveBriefResponse:
+    tasks_created = 0
+    try:
+        tasks_created = _create_tasks_for_actions(
+            body.actions, brief_id=brief_id, farm_id=body.farm_id
+        )
+    except Exception as exc:
+        _approve_logger.warning("approve: task creation failed (graceful): %s", exc)
+    return ApproveBriefResponse(approved=True, tasks_created=tasks_created)
 
 
 def _save_to_db(brief: MorningBrief) -> None:
