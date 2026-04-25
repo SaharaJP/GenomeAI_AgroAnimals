@@ -40,3 +40,19 @@ export async function regenerateMorningBrief(farmId = 'demo-farm-v1'): Promise<M
 export function morningBriefPdfUrl(briefId: string, farmId = 'demo-farm-v1'): string {
   return `/api/backend/api/ai/morning-brief/${briefId}/pdf?farm_id=${encodeURIComponent(farmId)}`;
 }
+
+export interface ApproveBriefResult {
+  approved: boolean;
+  tasks_created: number;
+}
+
+export async function approveMorningBrief(
+  briefId: string,
+  actions: TodayAction[],
+  farmId = 'demo-farm-v1',
+): Promise<ApproveBriefResult> {
+  return apiFetch<ApproveBriefResult>(`/api/ai/morning-brief/${encodeURIComponent(briefId)}/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ farm_id: farmId, actions }),
+  });
+}
