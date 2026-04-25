@@ -7,6 +7,7 @@ const sections: NavigationSection[] = [
   {
     title: 'Основное',
     items: [
+      { label: 'Главная', href: '/dashboard' },
       { label: 'Обзор', href: '/daily-summary' },
       { label: 'Инсайты', href: '/alerts', minPermissions: ['alerts.view', 'alerts.manage', 'alerts.read'] },
       { label: 'Аналитика', href: '/reports', minPermissions: ['reports.view', 'reports.read', 'reports.approve'] },

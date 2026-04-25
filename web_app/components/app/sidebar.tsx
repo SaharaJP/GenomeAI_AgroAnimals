@@ -16,6 +16,7 @@ import {
   MessageCircle,
   LogOut,
   Leaf,
+  Home,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getNavigationSections } from '@/lib/navigation';
@@ -24,6 +25,7 @@ type Props = { collapsed: boolean; onToggle: () => void };
 
 // Maps href → Lucide icon for primary nav items
 const primaryIconMap: Record<string, React.ReactNode> = {
+  '/dashboard':     <Home size={18} strokeWidth={1.5} />,
   '/daily-summary': <LayoutDashboard size={18} strokeWidth={1.5} />,
   '/alerts':        <Lightbulb size={18} strokeWidth={1.5} />,
   '/reports':       <BarChart2 size={18} strokeWidth={1.5} />,
@@ -51,15 +53,15 @@ export function Sidebar({ collapsed, onToggle }: Props) {
 
   return (
     <aside className="sidebar">
-      {/* Logo */}
-      <div className="sidebar-logo">
+      {/* Logo — links to home */}
+      <Link href="/dashboard" className="sidebar-logo" style={{ textDecoration: 'none' }}>
         <div className="sidebar-logo-mark">
           <Leaf size={16} strokeWidth={2} color="white" />
         </div>
         {!collapsed && (
           <span className="sidebar-wordmark">genomeai агро</span>
         )}
-      </div>
+      </Link>
 
       {/* Primary nav */}
       <nav className="sidebar-nav" aria-label="Основная навигация">
