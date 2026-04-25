@@ -41,7 +41,7 @@ export function renderWithEntityLinks(text: string): ReactNode {
         if (token.type === 'animal') {
           return (
             <Link
-              key={i}
+              key={`token-${i}`}
               href={`/profiles/animal/${token.id}`}
               className="badge badge-info"
               style={{ textDecoration: 'none', cursor: 'pointer', marginInline: 2 }}
@@ -54,7 +54,7 @@ export function renderWithEntityLinks(text: string): ReactNode {
         if (token.type === 'task') {
           return (
             <Link
-              key={i}
+              key={`token-${i}`}
               href={`/worklists`}
               className="badge"
               style={{
@@ -71,7 +71,7 @@ export function renderWithEntityLinks(text: string): ReactNode {
             </Link>
           );
         }
-        return <span key={i}>{token.value}</span>;
+        return <span key={`token-${i}`}>{token.value}</span>;
       })}
     </>
   );
