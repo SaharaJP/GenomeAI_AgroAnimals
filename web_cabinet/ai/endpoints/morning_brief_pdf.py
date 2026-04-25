@@ -21,6 +21,10 @@ _LOGO_PATH = Path(__file__).parents[4] / "web_cabinet" / "static" / "logo.png"
 _BRAND_TEAL = (0, 150, 136)  # teal accent
 _BRAND_DARK = (30, 30, 30)
 
+_FONT_REGULAR = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
+_FONT_BOLD = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
+_FONT_MONO = Path("/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf")
+
 
 @router.get("/morning-brief/{brief_id}/pdf")
 async def export_morning_brief_pdf(brief_id: str, farm_id: str = "demo-farm-v1") -> StreamingResponse:
@@ -79,6 +83,19 @@ def _render_pdf(brief: MorningBrief) -> bytes:
     except ImportError as exc:
         raise RuntimeError("reportlab not installed") from exc
 
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+
+    if _FONT_REGULAR.exists():
+        pdfmetrics.registerFont(TTFont("DejaVu", str(_FONT_REGULAR)))
+        pdfmetrics.registerFont(TTFont("DejaVu-Bold", str(_FONT_BOLD)))
+        pdfmetrics.registerFont(TTFont("DejaVu-Mono", str(_FONT_MONO)))
+        _font = "DejaVu"
+        _font_bold = "DejaVu-Bold"
+    else:
+        _font = "Helvetica"
+        _font_bold = "Helvetica-Bold"
+
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf,
@@ -94,14 +111,15 @@ def _render_pdf(brief: MorningBrief) -> bytes:
     teal = colors.Color(_BRAND_TEAL[0] / 255, _BRAND_TEAL[1] / 255, _BRAND_TEAL[2] / 255)
     dark = colors.Color(_BRAND_DARK[0] / 255, _BRAND_DARK[1] / 255, _BRAND_DARK[2] / 255)
 
-    def style(name: str, **kw: object) -> ParagraphStyle:
+    def style(name: str, bold: bool = False, **kw: object) -> ParagraphStyle:
         base = styles["Normal"].clone(name)
+        base.fontName = _font_bold if bold else _font
         for k, v in kw.items():
             setattr(base, k, v)
         return base
 
-    h1 = style("H1", fontSize=20, textColor=teal, spaceAfter=4, leading=24)
-    h2 = style("H2", fontSize=14, textColor=dark, spaceAfter=2, leading=18)
+    h1 = style("H1", bold=True, fontSize=20, textColor=teal, spaceAfter=4, leading=24)
+    h2 = style("H2", bold=True, fontSize=14, textColor=dark, spaceAfter=2, leading=18)
     body = style("Body", fontSize=10, textColor=dark, spaceAfter=4, leading=14)
     caption = style("Caption", fontSize=8, textColor=colors.grey, spaceAfter=2)
 
@@ -146,6 +164,8 @@ def _render_pdf(brief: MorningBrief) -> bytes:
         tbl.setStyle(TableStyle([
             ("BACKGROUND", (0, 0), (-1, 0), teal),
             ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTNAME", (0, 0), (-1, 0), _font_bold),
+            ("FONTNAME", (0, 1), (-1, -1), _font),
             ("FONTSIZE", (0, 0), (-1, -1), 9),
             ("GRID", (0, 0), (-1, -1), 0.25, colors.lightgrey),
             ("VALIGN", (0, 0), (-1, -1), "TOP"),
