@@ -30,6 +30,11 @@ const ROLE_LABEL: Record<TodayAction['role'], string> = {
   director: 'Директор',
 };
 
+function parseGeneratedAt(ts: string): Date {
+  if (ts.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(ts)) return new Date(ts);
+  return new Date(ts + 'Z');
+}
+
 // ── Editable action row ──────────────────────────────────────────────────────
 
 interface ActionRowProps {
@@ -223,7 +228,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
   const updatedAgo = (() => {
     if (!brief) return '';
     try {
-      const ms = Date.now() - new Date(brief.generated_at_utc + 'Z').getTime();
+      const ms = Date.now() - parseGeneratedAt(brief.generated_at_utc).getTime();
       const h = Math.floor(ms / 3600000);
       const m = Math.floor((ms % 3600000) / 60000);
       if (h > 0) return `${h} ч назад`;
@@ -304,7 +309,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
       {error && <div className="brief-error">{error}</div>}
 
       <div className="brief-footer-meta">
-        Брифинг сгенерирован {new Date(brief.generated_at_utc + 'Z').toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} в 06:00
+        Брифинг сгенерирован {parseGeneratedAt(brief.generated_at_utc).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} в 06:00
       </div>
 
       {!approved ? (
