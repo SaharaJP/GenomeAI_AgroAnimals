@@ -15,6 +15,7 @@ const TABS: { key: Tab; label: string }[] = [
 function calcAge(birthDate: string | null | undefined): string {
   if (!birthDate) return '—';
   const birth = new Date(birthDate);
+  if (isNaN(birth.getTime())) return '—';
   const now = new Date();
   const years = now.getFullYear() - birth.getFullYear() -
     (now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate()) ? 1 : 0);
@@ -24,6 +25,7 @@ function calcAge(birthDate: string | null | undefined): string {
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
   return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
 }
 
@@ -122,7 +124,7 @@ function TabHealth({ metrics, alerts }: { metrics: HealthMetrics | null | undefi
             <p className="profile-alert-meta">
               {alert.severity ? `Серьёзность: ${alert.severity}` : ''}
               {alert.deadline ? ` · Срок: ${alert.deadline}` : ''}
-              {alert.assignee_team ? ` · ${alert.assignee_team}` : ''}
+              {alert.owner_username ? ` · ${alert.owner_username}` : ''}
             </p>
           </div>
         ))}
@@ -283,6 +285,7 @@ export function ProfileSurface({ objectType, objectId }: { objectType: string; o
           <div className="profile-tab-bar">
             {TABS.map(tab => (
               <button
+                type="button"
                 key={tab.key}
                 className={`profile-tab${activeTab === tab.key ? ' profile-tab--active' : ''}`}
                 onClick={() => setActiveTab(tab.key)}
