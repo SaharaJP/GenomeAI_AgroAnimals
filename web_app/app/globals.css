@@ -2891,6 +2891,8 @@ button, input, select, textarea { font: inherit; }
   margin: 0 0 8px;
 }
 
+.profile-kv-title--spaced { margin-top: 12px; }
+
 .profile-kv-row {
   display: flex;
   justify-content: space-between;

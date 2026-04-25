@@ -100,7 +100,7 @@ function TabHealth({ metrics, alerts }: { metrics: HealthMetrics | null | undefi
         <MetricCard
           label="Активность"
           value={metrics?.activity_score ?? null}
-          sub={`норма >${metrics?.activity_norm ?? 60}${metrics?.scc_trend ? ` · ${metrics.scc_trend}` : ''}`}
+          sub={`норма >${metrics?.activity_norm ?? 60}`}
           valueClass={actClass}
         />
         <MetricCard
@@ -235,7 +235,7 @@ function TabHistory({ decisions, alerts }: { decisions: DecisionItem[]; alerts: 
       )}
       {resolved.length > 0 && (
         <>
-          <p className="profile-kv-title" style={{ marginTop: recent.length > 0 ? '12px' : undefined }}>Закрытые алерты</p>
+          <p className={`profile-kv-title${recent.length > 0 ? ' profile-kv-title--spaced' : ''}`}>Закрытые алерты</p>
           {resolved.map(a => (
             <div key={a.alert_id} className="profile-history-row">
               <div className="profile-history-dot profile-history-dot--resolved" />
