@@ -72,7 +72,7 @@ export function AddEventDialog() {
     setFieldError('');
     setSubmitting(true);
     try {
-      const res = await fetch('/api/backend/timeline/events', {
+      const res = await fetch('/api/backend/api/timeline/events', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

@@ -38,7 +38,7 @@ export default function TimelinePage() {
 
   const fetchDbEvents = useCallback(async () => {
     try {
-      const res = await fetch('/api/backend/timeline/events', { cache: 'no-store' });
+      const res = await fetch('/api/backend/api/timeline/events', { cache: 'no-store' });
       if (!res.ok) return;
       const data = await res.json();
       // Берём только user-события из БД (не DEMO_ из локального ts-файла)
