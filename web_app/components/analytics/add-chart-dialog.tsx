@@ -9,7 +9,7 @@ interface Metric {
   desc: string;
 }
 
-const METRICS: Metric[] = [
+export const METRICS: Metric[] = [
   // Продуктивность
   { id: 'milk_ecm',         group: 'Продуктивность',   name: 'Надой и ECM',                         desc: 'Ежедневный надой и энергокорректированное молоко' },
   { id: 'fat_protein',      group: 'Продуктивность',   name: 'Жир и белок %',                       desc: 'Тренды жира и белка' },

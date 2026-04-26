@@ -138,6 +138,153 @@ export function getReproductionVwpYoungstock(): AnalyticsData {
   };
 }
 
+// ── Feed ─────────────────────────────────────────────────────────────────────
+
+export function getFeedDmi(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'DMI', color: '#3B82F6', data: walk(mulberry32(9001), 22, 1.8, N, 1) },
+    ],
+  };
+}
+
+export function getFeedCost(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Стоимость корма', color: '#F59E0B', data: walk(mulberry32(9002), 48, 4, N, 0) },
+    ],
+  };
+}
+
+export function getFeedEfficiency(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Эффективность', color: '#10B981', data: walk(mulberry32(9003), 1.38, 0.09, N, 2) },
+    ],
+  };
+}
+
+// ── Behavior ─────────────────────────────────────────────────────────────────
+
+export function getBehaviorRumination(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Жвачка', color: '#3B82F6', data: walk(mulberry32(9101), 480, 35, N, 0) },
+    ],
+  };
+}
+
+export function getBehaviorActivity(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Активность', color: '#10B981', data: walk(mulberry32(9102), 68, 8, N, 0, 0, 100) },
+    ],
+  };
+}
+
+export function getBehaviorLying(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Лёжка', color: '#F59E0B', data: walk(mulberry32(9103), 11.2, 0.8, N, 1) },
+    ],
+  };
+}
+
+// ── Herd ─────────────────────────────────────────────────────────────────────
+
+export function getHerdSize(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Поголовье', color: '#3B82F6', data: walk(mulberry32(9201), 240, 6, N, 0) },
+    ],
+  };
+}
+
+export function getHerdDimDistribution(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Свежие (0–60 ДДМ)',   color: '#3B82F6', data: walk(mulberry32(9202), 48,  4, N, 0) },
+      { name: 'Средние (61–200 ДДМ)', color: '#10B981', data: walk(mulberry32(9203), 112, 7, N, 0) },
+      { name: 'Поздние (201+ ДДМ)',   color: '#F59E0B', data: walk(mulberry32(9204), 80,  5, N, 0) },
+    ],
+  };
+}
+
+export function getHerdCalvings(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Отёлы', color: '#8B5CF6', data: walk(mulberry32(9205), 4.5, 2, N, 1, 0, 20) },
+    ],
+  };
+}
+
+// ── Weather ───────────────────────────────────────────────────────────────────
+
+export function getWeatherThi(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'ТГИ', color: '#EF4444', data: walk(mulberry32(9301), 58, 12, N, 0, 20, 95) },
+    ],
+  };
+}
+
+export function getWeatherTemp(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Температура', color: '#F59E0B', data: walk(mulberry32(9302), 8, 6, N, 1, -15, 35) },
+    ],
+  };
+}
+
+export function getWeatherHumidity(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Влажность', color: '#3B82F6', data: walk(mulberry32(9303), 68, 10, N, 0, 20, 100) },
+    ],
+  };
+}
+
+// ── Finance ───────────────────────────────────────────────────────────────────
+
+export function getFinanceRevenue(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Выручка', color: '#10B981', data: walk(mulberry32(9401), 12500, 800, N, 0) },
+    ],
+  };
+}
+
+export function getFinanceFeedCost(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Затраты на корм', color: '#EF4444', data: walk(mulberry32(9402), 4800, 350, N, 0) },
+    ],
+  };
+}
+
+export function getFinanceMargin(): AnalyticsData {
+  return {
+    labels: WEEK_LABELS,
+    series: [
+      { name: 'Маржа', color: '#3B82F6', data: walk(mulberry32(9403), 7700, 600, N, 0) },
+    ],
+  };
+}
+
 // ── Health ──────────────────────────────────────────────────────────────────
 
 export function getHealthMastitis(): AnalyticsData {

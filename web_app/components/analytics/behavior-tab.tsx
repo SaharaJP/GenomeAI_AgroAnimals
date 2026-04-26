@@ -1,11 +1,12 @@
-import { getHealthMastitis, getHealthIssues } from '@/lib/api/analytics';
+import { getBehaviorRumination, getBehaviorActivity, getBehaviorLying } from '@/lib/api/analytics';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { METRICS } from './add-chart-dialog';
 
-const mastitis     = getHealthMastitis();
-const healthIssues = getHealthIssues();
+const rumination = getBehaviorRumination();
+const activity   = getBehaviorActivity();
+const lying      = getBehaviorLying();
 
 interface Props {
   onAddChart: () => void;
@@ -13,23 +14,31 @@ interface Props {
   onRemoveChart?: (id: string) => void;
 }
 
-export function HealthTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
+export function BehaviorTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
   return (
     <div className="grid grid-2">
       <ChartCard
-        title="Коров с маститом (#)"
-        badges={[{ icon: '📊', label: 'По ферме' }]}
-        legend={mastitis.series}
+        title="Время жвачки"
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'мин/день' }]}
+        legend={rumination.series}
       >
-        <BiChart type="line" series={mastitis.series} labels={mastitis.labels} unit="" />
+        <BiChart type="line" series={rumination.series} labels={rumination.labels} unit=" мин" />
       </ChartCard>
 
       <ChartCard
-        title="Коров с проблемами здоровья (#)"
-        badges={[{ icon: '📊', label: 'Проблемы здоровья' }]}
-        legend={healthIssues.series}
+        title="Индекс активности"
+        badges={[{ icon: '📊', label: 'По ферме' }]}
+        legend={activity.series}
       >
-        <BiChart type="stacked-bar" series={healthIssues.series} labels={healthIssues.labels} unit="" />
+        <BiChart type="line" series={activity.series} labels={activity.labels} unit="" />
+      </ChartCard>
+
+      <ChartCard
+        title="Время лёжки"
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'ч/день' }]}
+        legend={lying.series}
+      >
+        <BiChart type="line" series={lying.series} labels={lying.labels} unit=" ч" />
       </ChartCard>
 
       {addedMetricIds.map(id => {
@@ -49,7 +58,6 @@ export function HealthTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Pr
       })}
 
       <EmptyChartSlot onAdd={onAddChart} />
-      {addedMetricIds.length === 0 && <EmptyChartSlot onAdd={onAddChart} />}
     </div>
   );
 }

@@ -1,11 +1,12 @@
-import { getHealthMastitis, getHealthIssues } from '@/lib/api/analytics';
+import { getFeedDmi, getFeedCost, getFeedEfficiency } from '@/lib/api/analytics';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { METRICS } from './add-chart-dialog';
 
-const mastitis     = getHealthMastitis();
-const healthIssues = getHealthIssues();
+const dmi        = getFeedDmi();
+const cost       = getFeedCost();
+const efficiency = getFeedEfficiency();
 
 interface Props {
   onAddChart: () => void;
@@ -13,23 +14,31 @@ interface Props {
   onRemoveChart?: (id: string) => void;
 }
 
-export function HealthTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
+export function FeedTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
   return (
     <div className="grid grid-2">
       <ChartCard
-        title="Коров с маститом (#)"
+        title="Потребление сухого вещества (ПСВ)"
         badges={[{ icon: '📊', label: 'По ферме' }]}
-        legend={mastitis.series}
+        legend={dmi.series}
       >
-        <BiChart type="line" series={mastitis.series} labels={mastitis.labels} unit="" />
+        <BiChart type="line" series={dmi.series} labels={dmi.labels} unit=" кг" />
       </ChartCard>
 
       <ChartCard
-        title="Коров с проблемами здоровья (#)"
-        badges={[{ icon: '📊', label: 'Проблемы здоровья' }]}
-        legend={healthIssues.series}
+        title="Стоимость корма на корову"
+        badges={[{ icon: '📊', label: 'Неделя' }]}
+        legend={cost.series}
       >
-        <BiChart type="stacked-bar" series={healthIssues.series} labels={healthIssues.labels} unit="" />
+        <BiChart type="line" series={cost.series} labels={cost.labels} unit=" ₽" />
+      </ChartCard>
+
+      <ChartCard
+        title="Эффективность кормления"
+        badges={[{ icon: '📊', label: 'кг молока / кг корма' }]}
+        legend={efficiency.series}
+      >
+        <BiChart type="line" series={efficiency.series} labels={efficiency.labels} unit=" кг/кг" />
       </ChartCard>
 
       {addedMetricIds.map(id => {
@@ -49,7 +58,6 @@ export function HealthTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Pr
       })}
 
       <EmptyChartSlot onAdd={onAddChart} />
-      {addedMetricIds.length === 0 && <EmptyChartSlot onAdd={onAddChart} />}
     </div>
   );
 }

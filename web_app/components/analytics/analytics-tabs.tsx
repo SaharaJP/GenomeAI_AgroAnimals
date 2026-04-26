@@ -4,6 +4,11 @@ import { X, Plus, GitCompare, PenLine, Copy, BarChart2 } from 'lucide-react';
 import { ProductionTab } from './production-tab';
 import { ReproductionTab } from './reproduction-tab';
 import { HealthTab } from './health-tab';
+import { FeedTab } from './feed-tab';
+import { BehaviorTab } from './behavior-tab';
+import { HerdTab } from './herd-tab';
+import { WeatherTab } from './weather-tab';
+import { FinanceTab } from './finance-tab';
 import { AddChartDialog } from './add-chart-dialog';
 
 interface Tab {
@@ -14,13 +19,13 @@ interface Tab {
 
 const INITIAL_TABS: Tab[] = [
   { id: 'production',   label: 'Продуктивность' },
-  { id: 'feed',         label: 'Корм',          soon: true },
+  { id: 'feed',         label: 'Корм' },
   { id: 'reproduction', label: 'Воспроизводство' },
   { id: 'health',       label: 'Здоровье' },
-  { id: 'behavior',     label: 'Поведение',     soon: true },
-  { id: 'herd',         label: 'Состав стада',  soon: true },
-  { id: 'weather',      label: 'Погода',        soon: true },
-  { id: 'finance',      label: 'Финансы',       soon: true },
+  { id: 'behavior',     label: 'Поведение' },
+  { id: 'herd',         label: 'Состав стада' },
+  { id: 'weather',      label: 'Погода' },
+  { id: 'finance',      label: 'Финансы' },
 ];
 
 function SoonState() {
@@ -40,6 +45,7 @@ export function AnalyticsTabs() {
   const [activeId, setActiveId] = useState('production');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [addedCharts, setAddedCharts] = useState<Record<string, string[]>>({});
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -61,8 +67,19 @@ export function AnalyticsTabs() {
 
   const handleMetricAdd = useCallback((metricId: string) => {
     setDialogOpen(false);
-    showToast(`График «${metricId}» добавлен на панель`);
-  }, [showToast]);
+    setAddedCharts(prev => ({
+      ...prev,
+      [activeId]: [...(prev[activeId] ?? []), metricId],
+    }));
+    showToast('График добавлен на панель');
+  }, [showToast, activeId]);
+
+  const handleRemoveChart = useCallback((tabId: string, metricId: string) => {
+    setAddedCharts(prev => ({
+      ...prev,
+      [tabId]: (prev[tabId] ?? []).filter(id => id !== metricId),
+    }));
+  }, []);
 
   const stubAction = (label: string) => showToast(`${label} — скоро`);
 
@@ -132,11 +149,49 @@ export function AnalyticsTabs() {
         ) : activeTab.soon ? (
           <SoonState />
         ) : activeTab.id === 'production' ? (
-          <ProductionTab onAddChart={handleAddChart} />
+          <ProductionTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['production'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('production', id)}
+          />
+        ) : activeTab.id === 'feed' ? (
+          <FeedTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['feed'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('feed', id)}
+          />
         ) : activeTab.id === 'reproduction' ? (
           <ReproductionTab />
         ) : activeTab.id === 'health' ? (
-          <HealthTab onAddChart={handleAddChart} />
+          <HealthTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['health'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('health', id)}
+          />
+        ) : activeTab.id === 'behavior' ? (
+          <BehaviorTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['behavior'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('behavior', id)}
+          />
+        ) : activeTab.id === 'herd' ? (
+          <HerdTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['herd'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('herd', id)}
+          />
+        ) : activeTab.id === 'weather' ? (
+          <WeatherTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['weather'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('weather', id)}
+          />
+        ) : activeTab.id === 'finance' ? (
+          <FinanceTab
+            onAddChart={handleAddChart}
+            addedMetricIds={addedCharts['finance'] ?? []}
+            onRemoveChart={(id) => handleRemoveChart('finance', id)}
+          />
         ) : (
           <SoonState />
         )}
