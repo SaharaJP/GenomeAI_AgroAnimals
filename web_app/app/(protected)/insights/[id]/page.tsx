@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { use, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { DEMO_INSIGHTS, InsightStatus } from '@/lib/api/insights';
 import { InsightDetail } from '@/components/insights/insight-detail';
 
-export default function InsightDetailPage({ params }: { params: { id: string } }) {
-  const insight = DEMO_INSIGHTS.find((i) => i.insight_id === params.id);
+export default function InsightDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
+  const insight = DEMO_INSIGHTS.find((i) => i.insight_id === id);
   const [status, setStatus] = useState<InsightStatus>(insight?.status ?? 'to_check');
 
   if (!insight) {
@@ -28,7 +29,7 @@ export default function InsightDetailPage({ params }: { params: { id: string } }
           </Link>
         </div>
         <h1 className="page-title">Инсайт не найден</h1>
-        <p className="page-subtitle">Инсайт {params.id} не существует или был удалён.</p>
+        <p className="page-subtitle">Инсайт {id} не существует или был удалён.</p>
       </div>
     );
   }

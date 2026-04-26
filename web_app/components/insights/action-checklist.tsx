@@ -8,7 +8,7 @@ type Props = {
 };
 
 export function ActionChecklist({ recommendations }: Props) {
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [checked, setChecked] = useState<Set<string>>(new Set<string>());
 
   const toggle = (id: string) => {
     const next = new Set(checked);

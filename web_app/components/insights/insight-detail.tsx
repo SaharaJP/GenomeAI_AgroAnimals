@@ -132,9 +132,15 @@ export function InsightDetail({ insight, status, onStatusChange }: Props) {
               <span>
                 Животные:{' '}
                 {insight.animal_ids.map((id) => (
-                  <span key={id} className="badge badge-info" style={{ fontSize: 11, marginLeft: 4 }}>
+                  <Link
+                    key={id}
+                    href={`/profiles/animal/${id}`}
+                    className="badge badge-info"
+                    style={{ fontSize: 11, marginLeft: 4, textDecoration: 'none', cursor: 'pointer' }}
+                    title={`Открыть карточку животного ID ${id}`}
+                  >
                     ID {id}
-                  </span>
+                  </Link>
                 ))}
               </span>
             </>
@@ -166,7 +172,17 @@ export function InsightDetail({ insight, status, onStatusChange }: Props) {
         <p className="insight-detail-body">{insight.body}</p>
         {insight.action && (
           <div style={{ marginTop: 12 }}>
-            <span className="insight-action">→ {insight.action}</span>
+            {insight.animal_ids.length > 0 ? (
+              <Link
+                href={`/profiles/animal/${insight.animal_ids[0]}`}
+                className="insight-action"
+                style={{ textDecoration: 'none', cursor: 'pointer' }}
+              >
+                → {insight.action}
+              </Link>
+            ) : (
+              <span className="insight-action">→ {insight.action}</span>
+            )}
           </div>
         )}
       </div>

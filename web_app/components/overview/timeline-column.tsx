@@ -42,13 +42,24 @@ const ALL_TYPES = 'all';
 
 export function TimelineColumn() {
   const [typeFilter, setTypeFilter] = useState(ALL_TYPES);
-  const { openDialog } = useAddEvent();
+  const { openDialog, userEvents } = useAddEvent();
 
-  const uniqueTypes = Array.from(new Set(DEMO_TIMELINE_EVENTS.map(e => e.event_type)));
+  const allEvents: OverviewTimelineEvent[] = [
+    ...userEvents.map((ev) => ({
+      timeline_event_id: ev.timeline_event_id,
+      date: ev.date,
+      event_type: ev.event_type,
+      title: ev.title,
+      body: ev.body,
+    })),
+    ...DEMO_TIMELINE_EVENTS,
+  ];
+
+  const uniqueTypes = Array.from(new Set(allEvents.map(e => e.event_type)));
 
   const filtered = typeFilter === ALL_TYPES
-    ? DEMO_TIMELINE_EVENTS
-    : DEMO_TIMELINE_EVENTS.filter(e => e.event_type === typeFilter);
+    ? allEvents
+    : allEvents.filter(e => e.event_type === typeFilter);
 
   const grouped = groupByMonth(filtered);
 

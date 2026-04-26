@@ -1,3 +1,12 @@
+export type DailyBriefPreviewModel = {
+  headline?: string;
+  statusLine?: string;
+  summary?: string;
+  bullets?: string[];
+  actions?: Array<{ href: string; count: number; label: string; caption: string }>;
+  [key: string]: unknown;
+};
+
 export type DailyOperationsBundle = {
   alerts: Record<string, unknown>;
   worklists: Record<string, unknown>;
