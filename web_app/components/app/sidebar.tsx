@@ -78,6 +78,14 @@ export function Sidebar({ collapsed, onToggle }: Props) {
             <span className="nav-link-label">{item.label}</span>
           </Link>
         ))}
+        <Link
+          href="/timeline"
+          className={`nav-link ${isActive('/timeline') ? 'nav-link-active' : ''}`}
+          title={collapsed ? 'Лента событий' : undefined}
+        >
+          <span className="nav-link-icon"><Clock size={18} strokeWidth={1.5} /></span>
+          <span className="nav-link-label">Лента событий</span>
+        </Link>
       </nav>
 
       {/* Spacer */}

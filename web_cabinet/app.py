@@ -851,15 +851,39 @@ def api_timeline_events(
     end: Optional[str] = None,
     event_type: Optional[str] = None,
     user=Depends(get_current_user),
+    conn=Depends(get_db),
 ):
-    events = _load_timeline_events()
+    tenant_id = user.get("tenant_id", "default")
+    db_events = []
+    try:
+        rows = conn.execute(
+            "SELECT timeline_event_id, event_type, title, body, event_date, source, affected_groups "
+            "FROM timeline_events WHERE tenant_id = ? ORDER BY event_date DESC, id DESC",
+            (tenant_id,),
+        ).fetchall()
+        for r in rows:
+            db_events.append({
+                "timeline_event_id": r[0],
+                "event_type": r[1],
+                "title": r[2],
+                "body": r[3] or "",
+                "date": r[4],
+                "source": r[5] or "Добавлено вручную",
+                "has_impact": False,
+            })
+    except Exception:
+        pass
+
+    demo_events = _load_timeline_events()
+    events = db_events + demo_events
+
     if start:
         events = [e for e in events if e.get("date", "") >= start]
     if end:
         events = [e for e in events if e.get("date", "") <= end]
     if event_type:
         events = [e for e in events if e.get("event_type") == event_type]
-    return {"events": events, "total": len(events), "demo": True}
+    return {"events": events, "total": len(events)}
 
 
 @app.get("/api/timeline/events/{event_id}/impact")
@@ -889,31 +913,57 @@ async def api_timeline_event_create(
     missing = required - set(body.keys())
     if missing:
         raise HTTPException(status_code=422, detail=f"Missing fields: {missing}")
+
+    tenant_id = user.get("tenant_id", "default")
+    event_id = f"TL_{utc_timestamp_compact()}"
+    created_at = utc_date_str()
+    user_id = int(user.get("id", 0))
+    username = user.get("username", "unknown")
+
+    conn.execute(
+        "INSERT INTO timeline_events "
+        "(timeline_event_id, tenant_id, event_type, title, body, event_date, "
+        " animal_ids, affected_groups, source, created_at, created_by, created_by_username) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?, ?)",
+        (
+            event_id,
+            tenant_id,
+            body["event_type"],
+            body["title"],
+            body.get("body", body.get("description", "")),
+            body["date"],
+            json.dumps(body.get("animal_ids", [])),
+            json.dumps(body.get("affected_groups", [])),
+            created_at,
+            user_id,
+            username,
+        ),
+    )
+
     new_event = {
-        "timeline_event_id": f"TL_{utc_timestamp_compact()}",
+        "timeline_event_id": event_id,
         "date": body["date"],
         "event_type": body["event_type"],
         "title": body["title"],
-        "body": body.get("body", ""),
-        "animal_ids": body.get("animal_ids", []),
-        "impact": None,
-        "impact_value": None,
+        "body": body.get("body", body.get("description", "")),
+        "source": "Добавлено вручную",
+        "has_impact": False,
     }
     write_audit(
         conn,
-        tenant_id=user.get("tenant_id", "default"),
-        user_id=int(user.get("id", 0)),
-        username=user.get("username", "unknown"),
+        tenant_id=tenant_id,
+        user_id=user_id,
+        username=username,
         role=user.get("role", ""),
         action="timeline.event.create",
         object_type="timeline_event",
-        object_id=new_event["timeline_event_id"],
+        object_id=event_id,
         after={"event_type": new_event["event_type"], "title": new_event["title"]},
         ip=request.client.host if request.client else None,
         user_agent=request.headers.get("user-agent"),
         request_id=getattr(request.state, "request_id", None),
     )
-    return {"event": new_event, "demo": True, "note": "Demo mode — event not persisted"}
+    return {"event": new_event}
 
 
 def _web_primary_url(request: Request) -> str:

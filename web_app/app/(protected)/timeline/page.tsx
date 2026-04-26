@@ -1,9 +1,9 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { DEMO_TIMELINE_EVENTS } from '@/lib/api/timeline';
-import type { MetricWindow } from '@/lib/api/timeline';
+import type { MetricWindow, TimelineEvent } from '@/lib/api/timeline';
 import { EventList } from '@/components/timeline/event-list';
 import { useAddEvent } from '@/components/app/add-event-context';
 
@@ -21,10 +21,51 @@ const ImpactPanel = dynamic(
 
 const DEFAULT_SELECTED = 'DEMO_001';
 
+function dedup(events: TimelineEvent[]): TimelineEvent[] {
+  const seen = new Set<string>();
+  return events.filter((e) => {
+    if (seen.has(e.timeline_event_id)) return false;
+    seen.add(e.timeline_event_id);
+    return true;
+  });
+}
+
 export default function TimelinePage() {
   const { openDialog, userEvents } = useAddEvent();
 
-  const allEvents = [...userEvents, ...DEMO_TIMELINE_EVENTS];
+  const [dbEvents, setDbEvents] = useState<TimelineEvent[]>([]);
+  const prevUserEventsLen = useRef(0);
+
+  const fetchDbEvents = useCallback(async () => {
+    try {
+      const res = await fetch('/api/backend/timeline/events', { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      // Берём только user-события из БД (не DEMO_ из локального ts-файла)
+      const events: TimelineEvent[] = (data.events ?? []).filter(
+        (e: TimelineEvent) => !e.timeline_event_id.startsWith('DEMO_'),
+      );
+      setDbEvents(events);
+    } catch {
+      // сеть недоступна — молча показываем демо
+    }
+  }, []);
+
+  // Загружаем из БД при монтировании
+  useEffect(() => { fetchDbEvents(); }, [fetchDbEvents]);
+
+  // Рефетчим из БД после оптимистичного добавления через контекст
+  useEffect(() => {
+    if (userEvents.length > prevUserEventsLen.current) {
+      prevUserEventsLen.current = userEvents.length;
+      const t = setTimeout(() => fetchDbEvents(), 400);
+      return () => clearTimeout(t);
+    }
+    prevUserEventsLen.current = userEvents.length;
+  }, [userEvents.length, fetchDbEvents]);
+
+  // Объединяем: оптимистичные → БД → демо-события с impact-анализом
+  const allEvents = dedup([...userEvents, ...dbEvents, ...DEMO_TIMELINE_EVENTS]);
   const eventIds = allEvents.map((e) => e.timeline_event_id);
 
   const [selectedId, setSelectedId] = useState<string | null>(DEFAULT_SELECTED);
