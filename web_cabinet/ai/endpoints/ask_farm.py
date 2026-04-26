@@ -62,9 +62,27 @@ def _sse_event(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+# Структурные ключи farm context — валидные источники для [evidence: ...]
+_CONTEXT_KEY_LABELS: dict[str, str] = {
+    "farm_summary":    "Сводка фермы",
+    "today_kpi":       "KPI сегодня",
+    "period_trends":   "Тренды за период",
+    "active_insights": "Активные инсайты",
+    "recent_events":   "Недавние события",
+    "attention_cows":  "Коровы под наблюдением",
+    "groups_summary":  "Сводка по группам",
+}
+
+
 def _extract_known_event_ids(ctx: dict) -> set[str]:
-    """Извлекает все known event_id из farm context dict."""
+    """Извлекает все known event_id из farm context dict.
+
+    Включает структурные ключи верхнего уровня (farm_summary, today_kpi и т.д.)
+    как валидные anchors — Claude вправе на них ссылаться.
+    """
     ids: set[str] = set()
+    # Структурные ключи context всегда валидны
+    ids.update(_CONTEXT_KEY_LABELS.keys())
     for event in ctx.get("recent_events", []):
         eid = str(event.get("evidence_id", "")).strip()
         if eid and eid != "nan":
@@ -79,6 +97,30 @@ def _extract_known_event_ids(ctx: dict) -> set[str]:
             if eid and eid != "nan":
                 ids.add(eid)
     return ids
+
+
+def _build_context_key_description(eid: str, farm_ctx: dict) -> str:
+    """Строит читаемое описание для структурного ключа farm context."""
+    if eid == "farm_summary":
+        fs = farm_ctx.get("farm_summary", {})
+        total = fs.get("total_cows", "?")
+        name = fs.get("name", "")
+        as_of = fs.get("date_as_of", "")
+        parts = [f"Поголовье: {total} гол."]
+        if name:
+            parts.append(f"Ферма: {name}")
+        if as_of:
+            parts.append(f"На дату: {as_of}")
+        return " · ".join(parts)
+    if eid == "today_kpi":
+        kpi = farm_ctx.get("today_kpi", {})
+        parts = []
+        if "avg_milk_kg" in kpi:
+            parts.append(f"Надой: {kpi['avg_milk_kg']} кг")
+        if "scc_avg" in kpi:
+            parts.append(f"СКК: {kpi['scc_avg']}")
+        return " · ".join(parts) or "KPI текущего дня"
+    return _CONTEXT_KEY_LABELS.get(eid, eid.replace("_", " "))
 
 
 def parse_evidence_from_response(answer: str, known_ids: set[str]) -> list[AskFarmEvidence]:
@@ -163,6 +205,7 @@ async def _stream_live(
 
     yield _sse_event("start", {"session_id": session_id, "model": model})
 
+    farm_ctx: dict = {}
     farm_ctx_text = ""
     known_event_ids: set[str] = set()
     try:
@@ -197,11 +240,19 @@ async def _stream_live(
 
         evidences = parse_evidence_from_response(full_text, known_event_ids)
         for ev in evidences:
+            is_ctx_key = ev.event_id in _CONTEXT_KEY_LABELS
+            name = _CONTEXT_KEY_LABELS.get(ev.event_id, ev.event_id.replace("_", " "))
+            description = (
+                _build_context_key_description(ev.event_id, farm_ctx)
+                if is_ctx_key
+                else ev.description
+            )
+            ev_type = "farm_context" if is_ctx_key else "event"
             yield _sse_event("evidence", {
-                "type": "event",
+                "type": ev_type,
                 "id": ev.event_id,
-                "name": ev.event_id.replace("_", " "),
-                "description": ev.description,
+                "name": name,
+                "description": description,
                 "verified": ev.verified,
             })
 

@@ -17,6 +17,14 @@ const TYPE_LABELS: Record<string, string> = {
   culling_candidate: 'Кандидат на выбраковку',
   reproduction_event: 'Событие воспроизводства',
   event: 'Событие',
+  farm_context: 'Данные фермы',
+  farm_summary: 'Данные фермы',
+  today_kpi: 'KPI фермы',
+  period_trends: 'Тренды',
+  active_insights: 'Инсайты',
+  recent_events: 'События',
+  attention_cows: 'Коровы под наблюдением',
+  groups_summary: 'Группы',
 };
 
 export function EvidenceDrawer({ item, open, onClose }: EvidenceDrawerProps) {
