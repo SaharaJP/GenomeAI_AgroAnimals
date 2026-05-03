@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
+from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
@@ -574,7 +573,7 @@ def run_migration_verification_toolkit(
     write_json(verification_dir / "verification_manifest.json", manifest)
 
     if db_path is not None:
-        conn = _pg_connect()
+        conn = _pg_connect().resolve()))
         try:
             init_db(conn)
             write_audit(

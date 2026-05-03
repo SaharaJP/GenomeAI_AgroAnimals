@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
+from __future__ import annotations
 
 """T11-03: ROI панель — эффект от решений/задач (до/после, attribution).
 
@@ -154,7 +153,7 @@ def _read_web_db_actions(web_db_path: Path, tenant_id: str) -> pd.DataFrame:
         return pd.DataFrame()
 
     rows: list[dict[str, Any]] = []
-    conn = _pg_connect()
+    conn = _pg_connect())
     try:
         # decisions v2
         try:
