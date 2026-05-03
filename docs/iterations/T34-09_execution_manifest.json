@@ -1,0 +1,25 @@
+{
+  "task": "T34-09 Production operability / supportability / maintainability hardening",
+  "status": "partially_proven",
+  "deliverables": [
+    "docs/production_operability_and_supportability.md",
+    "configs/ops/metrics_contract_v1.json",
+    "configs/ops/release_checklist_v1.json",
+    "configs/ops/rollback_checklist_v1.json",
+    "configs/ops/incident_first_troubleshooting_v1.json",
+    "src/core/ops/production_operability.py",
+    "scripts/check_production_operability.py",
+    "scripts/check_docs_to_code_consistency.py",
+    "tests/test_t34_09_production_operability.py",
+    "tests/web/test_t34_09_operability_endpoints.py",
+    "tests/test_t34_09_docs_to_code_consistency.py"
+  ],
+  "checks": {
+    "targeted_tests_passed": 4,
+    "regression_tests_passed": 12,
+    "scripts_executed": [
+      "PYTHONPATH=src python scripts/check_production_operability.py",
+      "python scripts/check_docs_to_code_consistency.py"
+    ]
+  }
+}

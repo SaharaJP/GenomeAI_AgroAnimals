@@ -1,0 +1,3 @@
+AnimalID,FarmID,EarTag,Breed,Sex,Birth,Alive,Status
+A001,F001,12345,Holstein,F,2021-05-20,true,LACTATING
+A002,F001,12346,Holstein,F,2021-13-99,true,LACTATING

@@ -1,0 +1,24 @@
+version: 1
+actions:
+  upload:
+    title: Загрузка данных
+    permissions:
+      - upload.create
+  run:
+    title: Запуск job/pipeline
+    permissions:
+      - pipeline.run
+  export:
+    title: Экспорт/скачивание
+    permissions:
+      - export.download
+  approve:
+    title: Утверждение артефактов
+    permissions:
+      - weekly_plans.approve
+      - reports.approve
+      - whatif.scenarios.approve
+  config:
+    title: Управление конфигами
+    permissions:
+      - configs.manage

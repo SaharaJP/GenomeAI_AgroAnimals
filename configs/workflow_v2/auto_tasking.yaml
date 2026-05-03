@@ -1,0 +1,32 @@
+version: 1
+
+# T12-02 Auto-tasking: автоматическая нарезка задач из критичных алертов и QC-проблем.
+# Важно: web-слой НЕ считает метрики, он лишь превращает уже сформированные alerts_v2 в worklist/tasks.
+
+enabled: true
+
+# Какие алерты считаем "критичными" по severity из configs/alerts_v2/catalog.yaml.
+# Если alert_type отсутствует в каталоге, severity пытаемся взять из alert.why.severity.
+critical_severities: ["HIGH", "CRITICAL"]
+
+# Дополнительные условия, которые делают алерт eligible даже если severity не распознан.
+# По умолчанию: любые QC-алерты должны порождать задачу.
+force_sources: ["QC"]
+force_prefixes: ["QC."]
+force_alert_types:
+  # legacy / dm_alerts
+  - "health_risk"
+
+# Лимит, чтобы не создавать слишком много задач за один запуск.
+max_tasks_per_generate: 500
+
+# Если для алерта нет правила в configs/tasks_v1/catalog.yaml, используем fallback.
+fallback_task:
+  task_type: "alert_followup"
+  title_prefix: "Разобрать алерт: "
+  priority_by_severity:
+    CRITICAL: 1
+    HIGH: 1
+    MEDIUM: 2
+    LOW: 3
+    UNKNOWN: 3

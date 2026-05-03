@@ -1,0 +1,302 @@
+{
+  "schema": "genomeai.post_removal.streamlit_legacy_cleanup_report.v1",
+  "gate_id": "T32-12A",
+  "status": "pass",
+  "streamlit_contour_fully_removed": true,
+  "required_absent_failures": [],
+  "dependency_hits": [],
+  "runtime_import_hits": [],
+  "disallowed_operational_refs": [],
+  "allowed_historical_ref_count": 81,
+  "allowed_historical_refs_sample": [
+    {
+      "path": "README.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/public_interfaces.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/daily_worklists_by_role.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/treatment_journal_withdrawal.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/operational_report_builder.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/operational_sla_and_gates.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/commercial_packaging_and_editions.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/api_contracts_web_mobile.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/react_daily_operations_parity.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/react_profiles_reports_assistant_parity.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/react_extended_surface_parity.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/android_field_app_foundation.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/web_cutover_and_rollback_runbook.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/streamlit_removal_and_cleanup.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/streamlit_legacy_cleanup_gate.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T1-04.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-02_01_targets_plan_fact.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-02_04_targets_editor_ui.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-02_05_dashboard_reports_list.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-02_06_audit_downloads.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-02_DONE.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-02_step7_trend_exceptions.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-03_DONE.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-03_step1_drilldown_base.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-03_step2_drilldown_links_actions.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-03_step3_timeline_overlay.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-03_step4_entity_aliases_tests.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-03_step6_rbac_audit_timeline_tests.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-04_DONE.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-04_step2_template_report_generation.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-04_step3_director_saved_views_and_dashboard_favorites.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-04_step4_report_builder_focus_and_role_filtered_favorites.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T10-04_step5_saved_views_state_and_pen_id.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-01_DONE.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-01_step1_economics_v2.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-01_step3_economics_director_panel.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-04_DONE.md",
+      "tokens": [
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-04_step1_saved_scenarios.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-04_step2_compare_scenarios.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    },
+    {
+      "path": "docs/iterations/T11-04_step3_whatif_pdf_report.md",
+      "tokens": [
+        "STREAMLIT_",
+        "streamlit"
+      ]
+    }
+  ],
+  "checks": {
+    "required_absent_paths": true,
+    "dependency_files_clean": true,
+    "runtime_imports_clean": true,
+    "operational_refs_clean": true,
+    "docs_gate_exists": true,
+    "manifest_exists": true
+  },
+  "archive_manifest": {
+    "active_product_contours": [
+      "web_app",
+      "mobile_android",
+      "web_cabinet",
+      "src/core",
+      "packages/contracts",
+      "deploy/adult"
+    ],
+    "historical_evidence_contours": [
+      "docs/iterations",
+      "configs/cutover",
+      "configs/post_removal",
+      "installers/releases"
+    ]
+  },
+  "notes": [
+    "Historical/evidence references are allowed only by explicit manifest allowlist.",
+    "Active product/deployment/config paths must remain free of Streamlit tails.",
+    "Validator checks absence paths, dependency files, runtime imports and disallowed operational references."
+  ]
+}

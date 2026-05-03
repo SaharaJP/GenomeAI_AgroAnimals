@@ -1,0 +1,30 @@
+{
+  "repro": {
+    "repro_event_id": "RE_001",
+    "farm_id": "farm-1",
+    "animal_id": "A-100",
+    "lactation_id": "L-1",
+    "event_date": "2026-03-01T08:00:00+00:00",
+    "event_type": "insemination",
+    "bull_id": "BULL-77",
+    "result": "done"
+  },
+  "treatment": {
+    "treatment_id": "TR_001",
+    "farm_id": "farm-1",
+    "animal_id": "A-100",
+    "lactation_id": "L-1",
+    "start_date": "2026-03-02T09:30:00+00:00",
+    "treatment_type": "antibiotic",
+    "reason_event_id": "HE_10"
+  },
+  "pen_move": {
+    "move_id": "PM_001",
+    "farm_id": "farm-1",
+    "animal_id": "A-100",
+    "move_date": "2026-03-03T06:15:00+00:00",
+    "from_pen_id": "PEN-1",
+    "to_pen_id": "PEN-2",
+    "reason": "hospital"
+  }
+}

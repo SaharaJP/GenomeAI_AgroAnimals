@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://genomeai.local/specs/android_offline_sync_contract_v1.json",
+  "title": "Android Offline Sync Contract v1",
+  "type": "object",
+  "required": ["queue_item"],
+  "properties": {
+    "queue_item": {
+      "type": "object",
+      "required": [
+        "id",
+        "action_type",
+        "scope",
+        "payload_json",
+        "audit",
+        "idempotency",
+        "lineage",
+        "status"
+      ],
+      "properties": {
+        "id": {"type": "string"},
+        "action_type": {
+          "type": "string",
+          "enum": [
+            "QuickEventEntry",
+            "TaskCompletion",
+            "ShiftHandover",
+            "FeedbackSubmission",
+            "AssistantLinkedAction"
+          ]
+        },
+        "scope": {
+          "type": "object",
+          "required": ["tenant_id", "farm_id"],
+          "properties": {
+            "tenant_id": {"type": "string"},
+            "farm_id": {"type": "string"},
+            "site_id": {"type": ["string", "null"]}
+          }
+        },
+        "payload_json": {"type": "string"},
+        "audit": {
+          "type": "object",
+          "required": [
+            "actor_user_id",
+            "actor_role",
+            "mobile_session_id",
+            "device_id",
+            "queued_at_iso",
+            "client_observed_at_iso",
+            "requires_server_audit_ack"
+          ],
+          "properties": {
+            "actor_user_id": {"type": "string"},
+            "actor_role": {"type": "string"},
+            "mobile_session_id": {"type": "string"},
+            "device_id": {"type": "string"},
+            "queued_at_iso": {"type": "string"},
+            "client_observed_at_iso": {"type": "string"},
+            "requires_server_audit_ack": {"type": "boolean"}
+          }
+        },
+        "idempotency": {
+          "type": "object",
+          "required": ["idempotency_key", "semantic_key"],
+          "properties": {
+            "idempotency_key": {"type": "string"},
+            "semantic_key": {"type": "string"},
+            "dedupe_window_hours": {"type": "integer", "minimum": 1}
+          }
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["client_action_id", "queue_schema_version"],
+          "properties": {
+            "client_action_id": {"type": "string"},
+            "queue_schema_version": {"type": "string"},
+            "related_object_type": {"type": ["string", "null"]},
+            "related_object_id": {"type": ["string", "null"]},
+            "related_task_id": {"type": ["string", "null"]},
+            "related_alert_id": {"type": ["string", "null"]},
+            "related_assistant_action_id": {"type": ["string", "null"]}
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pending",
+            "ReadyToSync",
+            "InFlight",
+            "AwaitingConflictResolution",
+            "Synced",
+            "FailedRetryable",
+            "FailedTerminal",
+            "Cancelled"
+          ]
+        }
+      }
+    }
+  }
+}

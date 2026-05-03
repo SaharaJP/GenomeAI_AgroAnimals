@@ -1,0 +1,14 @@
+{
+  "data_version": "dv_refactor_qc_issues",
+  "llm_used": false,
+  "mode_requested": "fallback",
+  "model_version": "model_refactor_qc_issues",
+  "outputs": {
+    "report_docx_exists": true,
+    "report_pdf_exists": false
+  },
+  "qc_run": "qc_refactor_qc_issues",
+  "report_version": "report_refactor_qc_issues",
+  "schema": "genomeai.report_summary.v1",
+  "scoring_run": "score_refactor_qc_issues"
+}

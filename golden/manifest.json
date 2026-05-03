@@ -1,0 +1,233 @@
+{
+  "generated_at_utc": "2026-03-11T20:03:38+00:00",
+  "golden_root": "/mnt/data/t15repo/golden",
+  "scenario_count": 2,
+  "scenarios": [
+    {
+      "description": "Базовый smoke-сценарий без QC-ошибок.",
+      "expected_qc_status": "PASS",
+      "inputs": {
+        "file_count": 6,
+        "files": [
+          {
+            "path": "external/animals_ext.csv",
+            "sha256": "ad5c2c682141cd8b141e0510405c9cc2a7daed12b523ccd49c594b575075c1b5",
+            "size_bytes": 158
+          },
+          {
+            "path": "external/farms_ext.csv",
+            "sha256": "6bae655cd27178fa8bfd6a9f4f0d6b9750b5b73339a8be194c109d026a52853b",
+            "size_bytes": 164
+          },
+          {
+            "path": "external/health_events_ext.csv",
+            "sha256": "a99f4b9f5aca77ca599b7297393d8a645c1032743209ff55424c74b27b0789f6",
+            "size_bytes": 148
+          },
+          {
+            "path": "external/lactations_ext.csv",
+            "sha256": "7e1d9eb66a77d6ec2b3177f0bc6610d865bf82bae3c8eff2c30ba72ceb11a57b",
+            "size_bytes": 148
+          },
+          {
+            "path": "external/testday_ext.csv",
+            "sha256": "f66d6fd911bbd23af7a72a2537f40b159498c4e7a6181cba40749c373b58df26",
+            "size_bytes": 115
+          },
+          {
+            "path": "external/treatments_ext.csv",
+            "sha256": "fe1059c0468de40cc3bdf2b8faf90d8659619f9eaab591bce1e49ddd3a398ea0",
+            "size_bytes": 162
+          }
+        ],
+        "root": "scenarios/standard/inputs",
+        "total_bytes": 895
+      },
+      "scenario": "standard",
+      "scenario_total_bytes": 11504,
+      "snapshot": {
+        "file_count": 11,
+        "files": [
+          {
+            "path": "artifact_presence.json",
+            "sha256": "a4da5c3a2e67efe8abd5205b92211c99331865d50f89ec595967d2b0ebcc8ab4",
+            "size_bytes": 275
+          },
+          {
+            "path": "audit.json",
+            "sha256": "80c06c2621f303b784195d101f2c8d5a2f8085d1864fd132ac11c058c484d9c2",
+            "size_bytes": 661
+          },
+          {
+            "path": "decision_log.csv",
+            "sha256": "e41f23816379a13eeffba8f73ac5237ea5184cda81cd9908fdbdda37f2896bf2",
+            "size_bytes": 245
+          },
+          {
+            "path": "fact_pack.json",
+            "sha256": "eed3f175a3bd2cdb2179259c2df4e6a511135fe8bbd528533faec2b6f3830f7f",
+            "size_bytes": 5158
+          },
+          {
+            "path": "lineage.json",
+            "sha256": "cab51631c1fb17c5a6bf080562f8d944da1fc664d47c17aa2fb882021be249cf",
+            "size_bytes": 357
+          },
+          {
+            "path": "qc_summary.json",
+            "sha256": "24b2aeec824db5669e3767bf55b885aef7268189c2e3dd4314606079ebf47418",
+            "size_bytes": 1090
+          },
+          {
+            "path": "report_narrative.json",
+            "sha256": "0c70ac63cd12a19e3add8b474e3acb7a5d10e0682cc3aa84126d6aad245f0908",
+            "size_bytes": 1714
+          },
+          {
+            "path": "report_summary.json",
+            "sha256": "50db64e994b7657c2d403e38a5e0f6502862fead206ff8129ad9c695943c3de6",
+            "size_bytes": 397
+          },
+          {
+            "path": "scored_latest.csv",
+            "sha256": "ff83ecc11f9f9728641005d3ca6e066adc79307ce43633a87ec6e68e34cbf41a",
+            "size_bytes": 372
+          },
+          {
+            "path": "scoring_summary.json",
+            "sha256": "73d54e15be523ba7436c130d5b4f5d90f5612a29b9527148253262d37d39ed9e",
+            "size_bytes": 337
+          },
+          {
+            "path": "tasks.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+            "size_bytes": 3
+          }
+        ],
+        "root": "scenarios/standard/snapshot",
+        "total_bytes": 10609
+      },
+      "versions": {
+        "data_version": "dv_refactor_standard",
+        "model_version": "model_refactor_standard",
+        "qc_run": "qc_refactor_standard",
+        "report_version": "report_refactor_standard",
+        "scoring_run": "score_refactor_standard"
+      }
+    },
+    {
+      "description": "Сценарий с QC warnings, но без блокировки train/score/report.",
+      "expected_qc_status": "WARN",
+      "inputs": {
+        "file_count": 6,
+        "files": [
+          {
+            "path": "external/animals_ext.csv",
+            "sha256": "d5719e8b123cf6dbd4a54a5a07dd7f55b5006bd45c8b2359d3768266cf5460bf",
+            "size_bytes": 211
+          },
+          {
+            "path": "external/farms_ext.csv",
+            "sha256": "6bae655cd27178fa8bfd6a9f4f0d6b9750b5b73339a8be194c109d026a52853b",
+            "size_bytes": 164
+          },
+          {
+            "path": "external/health_events_ext.csv",
+            "sha256": "a99f4b9f5aca77ca599b7297393d8a645c1032743209ff55424c74b27b0789f6",
+            "size_bytes": 148
+          },
+          {
+            "path": "external/lactations_ext.csv",
+            "sha256": "83648ca75a1e9cc16ff91fd9f0736c3800ae6c2f4d542479007240189bbdc230",
+            "size_bytes": 149
+          },
+          {
+            "path": "external/testday_ext.csv",
+            "sha256": "f66d6fd911bbd23af7a72a2537f40b159498c4e7a6181cba40749c373b58df26",
+            "size_bytes": 115
+          },
+          {
+            "path": "external/treatments_ext.csv",
+            "sha256": "fe1059c0468de40cc3bdf2b8faf90d8659619f9eaab591bce1e49ddd3a398ea0",
+            "size_bytes": 162
+          }
+        ],
+        "root": "scenarios/qc_issues/inputs",
+        "total_bytes": 949
+      },
+      "scenario": "qc_issues",
+      "scenario_total_bytes": 12656,
+      "snapshot": {
+        "file_count": 11,
+        "files": [
+          {
+            "path": "artifact_presence.json",
+            "sha256": "a4da5c3a2e67efe8abd5205b92211c99331865d50f89ec595967d2b0ebcc8ab4",
+            "size_bytes": 275
+          },
+          {
+            "path": "audit.json",
+            "sha256": "827c53bb1a8939017e74850b241eff228d013efc10c98fc092924b427d6bdaf4",
+            "size_bytes": 666
+          },
+          {
+            "path": "decision_log.csv",
+            "sha256": "6bf3863c271312a2599dfe15f8c73a991e1cb61251d3eb045b2d09ccdfd86570",
+            "size_bytes": 247
+          },
+          {
+            "path": "fact_pack.json",
+            "sha256": "7e933b2fae1e6a44644e8d4a6cd61646ae50ee9523a15bbd0d41788eb76bf84c",
+            "size_bytes": 5303
+          },
+          {
+            "path": "lineage.json",
+            "sha256": "20af5390ce5e061f07482e7cb5e7bf2b74209f261354fc32cbaaa073a4a8bb12",
+            "size_bytes": 387
+          },
+          {
+            "path": "qc_summary.json",
+            "sha256": "4446c154b3366a70982c0d997d75b401e998ca7326df2a28ee989e456d3be619",
+            "size_bytes": 1092
+          },
+          {
+            "path": "report_narrative.json",
+            "sha256": "3e31f05e38521a86db3d35c1a1eb8e21741b6a13defc5616a460ed3b82b4bf43",
+            "size_bytes": 2615
+          },
+          {
+            "path": "report_summary.json",
+            "sha256": "4a0df1a395e0f03e604aa35b77db6900596cf14763f086f220b55f0fd7c7d8cb",
+            "size_bytes": 402
+          },
+          {
+            "path": "scored_latest.csv",
+            "sha256": "ab1b94b9405ed18a34ca09ce62d27f9183f235bb2b6279d0a27d17d93e478fc6",
+            "size_bytes": 377
+          },
+          {
+            "path": "scoring_summary.json",
+            "sha256": "9f59bae0c043e4d1e58a54740372fffe3b4a7a5d56f41e6d3aac79cfa3b24130",
+            "size_bytes": 340
+          },
+          {
+            "path": "tasks.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+            "size_bytes": 3
+          }
+        ],
+        "root": "scenarios/qc_issues/snapshot",
+        "total_bytes": 11707
+      },
+      "versions": {
+        "data_version": "dv_refactor_qc_issues",
+        "model_version": "model_refactor_qc_issues",
+        "qc_run": "qc_refactor_qc_issues",
+        "report_version": "report_refactor_qc_issues",
+        "scoring_run": "score_refactor_qc_issues"
+      }
+    }
+  ],
+  "schema": "genomeai.golden_manifest.v1",
+  "total_bytes": 24160
+}

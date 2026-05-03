@@ -1,0 +1,42 @@
+{
+  "backward_compatibility_rules": [
+    "Additive fields MAY be introduced within /api/app/v1 when they are optional or have safe defaults.",
+    "Field removal, field rename, enum narrowing, requiredness increase, semantic payload change or path removal is BREAKING.",
+    "BREAKING changes require a new path namespace such as /api/app/v2 and parallel contract snapshots.",
+    "Web and Android MUST consume the same backend payload semantics; client-specific payload forks are forbidden.",
+    "Artifact/run/version-lineage fields remain backward-compatible and must not be repurposed silently."
+  ],
+  "breaking_change_detection": {
+    "jsonschema_snapshot": "specs/jsonschema/genomeai_app_api_v1.schemas.json",
+    "openapi_snapshot": "specs/openapi/genomeai_app_api_v1.openapi.json",
+    "tests": [
+      "tests/test_t32_03a_canonical_api_contracts.py",
+      "tests/web/test_t32_03a_openapi_boundary.py"
+    ]
+  },
+  "contract_set": "genomeai.app_boundary",
+  "current_major_version": 1,
+  "current_semver": "1.0.0",
+  "path_prefix": "/api/app/v1",
+  "required_paths": [
+    "/api/app/v1/auth/login",
+    "/api/app/v1/auth/refresh",
+    "/api/app/v1/auth/me",
+    "/api/app/v1/auth/logout",
+    "/api/app/v1/auth/sessions",
+    "/api/app/v1/auth/sessions/{session_id}/revoke",
+    "/api/app/v1/alerts",
+    "/api/app/v1/worklists",
+    "/api/app/v1/planner",
+    "/api/app/v1/profiles/{object_type}/{object_id}",
+    "/api/app/v1/reports",
+    "/api/app/v1/assistant/resolve-target",
+    "/api/app/v1/decisions",
+    "/api/app/v1/decision-intelligence",
+    "/api/app/v1/feedback",
+    "/api/app/v1/economics",
+    "/api/app/v1/support",
+    "/api/app/v1/pilot",
+    "/api/app/v1/readiness"
+  ]
+}

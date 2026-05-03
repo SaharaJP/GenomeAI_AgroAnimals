@@ -1,0 +1,66 @@
+{
+  "dataset_id": "demo_farm_v1",
+  "synthetic": true,
+  "synthetic_note": "Synthetic but realistic demo farm dataset for sales/pilot/UAT. Never mix with production evidence.",
+  "generated_at": "2026-04-05",
+  "generator": "core.demo_farm.build_demo_farm_dataset",
+  "dataset_dir": "/mnt/data/t31_01work/genomeai_agroanimals_clean/data/demo/demo_farm_v1",
+  "default_data_version": "dv_demo_farm_v1",
+  "default_asof_date": "2025-04-05",
+  "farms": [
+    "DEMO_FARM_001",
+    "DEMO_FARM_002"
+  ],
+  "sites": [
+    "DEMO_SITE_001",
+    "DEMO_SITE_002",
+    "DEMO_SITE_003"
+  ],
+  "role_logins": {
+    "Admin": "demo_admin",
+    "Director": "demo_director",
+    "Operator": "demo_operator",
+    "Zootech": "demo_zootech",
+    "Vet": "demo_vet"
+  },
+  "scenario_focus": [
+    "daily_operator_flow",
+    "reproduction_review",
+    "vet_triage",
+    "reports_and_brief",
+    "economics_delta",
+    "admin_rollout",
+    "mobile_cowside",
+    "enterprise_benchmark_compare"
+  ],
+  "row_counts": {
+    "dm_farms": 2,
+    "dm_sites": 3,
+    "dm_pens": 6,
+    "dm_animals": 9,
+    "dm_lactations": 9,
+    "dm_milkings_daily": 27,
+    "dm_testday": 27,
+    "dm_sensors_daily": 27,
+    "dm_bulls": 3,
+    "dm_repro_events": 5,
+    "dm_health_events": 4,
+    "dm_treatments": 3,
+    "dm_pen_moves": 3,
+    "dm_feed_rations": 3,
+    "dm_feed_deliveries": 6,
+    "dm_prices": 3,
+    "dm_economics_daily": 4,
+    "dm_alerts": 6,
+    "dm_decisions": 3,
+    "dm_reports": 3,
+    "dm_cull_events": 1,
+    "dm_users": 5,
+    "dm_roles": 5,
+    "dm_user_roles": 5
+  },
+  "artifacts_hint": [
+    "artifacts/dv_demo_farm_v1/reports/run_demo_daily_001/daily_brief.md",
+    "artifacts/_ci/demo_farm_v1/demo_farm_report.json"
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "task": "T34-03",
+  "date": "2026-04-14",
+  "status": "partially_proven",
+  "executed_checks": [
+    {
+      "name": "targeted_regression_suite",
+      "command": "pytest -q tests/test_t34_03_runtime_state_storage_foundation.py tests/web/test_t34_03_runtime_state_observability.py tests/test_t34_03_support_bundle_runtime_state.py tests/test_t34_02_auth_storage_foundation.py tests/web/test_t34_02_auth_admin_diagnostics.py tests/test_t34_01_postgres_cutover_foundation.py tests/web/test_t34_01_runtime_storage_observability.py tests/web/test_t32_03_auth_boundary.py tests/web/test_nfr_controls.py tests/test_t17_04_artifact_lifecycle.py",
+      "result": {
+        "passed": 29,
+        "warnings": 26
+      }
+    }
+  ],
+  "deliverables": [
+    "src/core/infra/runtime_state_storage.py",
+    "src/core/migrations/alembic/versions/20260414_03_runtime_state_postgres_baseline.py",
+    "scripts/runtime_state_backfill_postgres.py",
+    "scripts/runtime_state_verify_postgres_cutover.py",
+    "deploy/adult/ops/diagnostic_sql/runtime_state_checks.sql",
+    "docs/postgres_runtime_state_cutover.md",
+    "docs/iterations/T34-03_execution_proof.md"
+  ],
+  "proven": [
+    "runtime-state diagnostics/support posture baseline",
+    "support bundle no longer defaults to web.db summary for postgres runtime state",
+    "targeted regression for T34/T32 related paths is green"
+  ],
+  "not_proven": [
+    "live postgres runtime read/write proof for migrated entities",
+    "end-to-end adult worker/jobs/workflow/admin postgres contour",
+    "verified production backfill parity on real postgres"
+  ]
+}

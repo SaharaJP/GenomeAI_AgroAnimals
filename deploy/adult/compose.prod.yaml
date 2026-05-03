@@ -1,0 +1,52 @@
+services:
+  reverse-proxy:
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: ["ALL"]
+  web-frontend:
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: ["ALL"]
+  backend-api:
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: ["ALL"]
+    environment:
+      GENOMEAI_ENV: prod
+      GENOMEAI_DEPLOY_PROFILE: prod
+      GENOMEAI_WEB_SECRET_FILE: ${GENOMEAI_WEB_SECRET_FILE:-/run/secrets/genomeai_web_secret}
+  worker:
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: ["ALL"]
+    environment:
+      GENOMEAI_ENV: prod
+      GENOMEAI_DEPLOY_PROFILE: prod
+  scheduler:
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: ["ALL"]
+    environment:
+      GENOMEAI_ENV: prod
+      GENOMEAI_DEPLOY_PROFILE: prod
+  postgres:
+    environment:
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+  redis:
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1000", "--requirepass", "${REDIS_PASSWORD:-redis-change-me}"]

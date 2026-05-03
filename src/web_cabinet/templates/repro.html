@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Reproduction · KPI + Worklists (T5-01)</h2>
+
+<div class="card">
+  <form method="get" action="/repro">
+    <div class="row">
+      <div>
+        <label>data_version</label>
+        <select name="dv" onchange="this.form.submit()">
+          <option value="">-- выберите --</option>
+          {% for dv in data_versions %}
+            <option value="{{ dv }}" {% if dv==selected_dv %}selected{% endif %}>{{ dv }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>asof_date</label>
+        <input type="text" name="asof" value="{{ asof_date }}" placeholder="YYYY-MM-DD" />
+      </div>
+      <div style="display:flex; align-items:flex-end;">
+        <button type="submit">Обновить</button>
+      </div>
+    </div>
+  </form>
+
+  <form method="post" action="/repro/run" style="margin-top:12px;">
+    <input type="hidden" name="data_version" value="{{ selected_dv }}" />
+    <input type="hidden" name="asof_date" value="{{ asof_date }}" />
+    <button class="primary" type="submit" {% if not selected_dv or user.role=='viewer' %}disabled{% endif %}>Запустить repro</button>
+    {% if user.role=='viewer' %}<span class="muted">Viewer не может запускать пайплайны</span>{% endif %}
+  </form>
+</div>
+
+<div class="card">
+  <h3>Runs для {{ selected_dv }}</h3>
+  {% if repro_runs %}
+    <ul>
+      {% for rr in repro_runs[::-1] %}
+        <li>
+          <strong>{{ rr }}</strong>
+          · <a href="/download?path=artifacts/{{ selected_dv }}/repro/runs/{{ rr }}/repro_kpi_worklists.xlsx">xlsx</a>
+          · <a href="/download?path=artifacts/{{ selected_dv }}/repro/runs/{{ rr }}/repro_kpis_farm.csv">kpis.csv</a>
+          · <a href="/download?path=artifacts/{{ selected_dv }}/repro/runs/{{ rr }}/repro_worklists.csv">worklists.csv</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="muted">Нет запусков repro для выбранного data_version.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>Текущие KPI (последний run)</h3>
+  {% if kpis_preview %}
+    <table>
+      <thead><tr><th>kpi_id</th><th>value</th><th>unit</th><th>notes</th></tr></thead>
+      <tbody>
+        {% for r in kpis_preview %}
+          <tr>
+            <td>{{ r.kpi_id }}</td>
+            <td>{{ r.value }}</td>
+            <td>{{ r.unit }}</td>
+            <td class="muted">{{ r.notes }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="muted">Нет KPI для предпросмотра.</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3>Worklists (последний run)</h3>
+  {% if worklists_preview %}
+    <table>
+      <thead><tr><th>type</th><th>priority</th><th>animal_id</th><th>DIM</th><th>reason</th><th>action</th><th>due</th></tr></thead>
+      <tbody>
+        {% for r in worklists_preview %}
+          <tr>
+            <td>{{ r.worklist_type }}</td>
+            <td>{{ r.priority }}</td>
+            <td>{{ r.animal_id }}</td>
+            <td>{{ r.days_in_milk }}</td>
+            <td>{{ r.reason }}</td>
+            <td>{{ r.next_action }}</td>
+            <td>{{ r.due_date }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="muted">Показаны первые {{ worklists_preview|length }} строк (для полного списка скачайте CSV/XLSX).</div>
+  {% else %}
+    <div class="muted">Нет worklist для предпросмотра.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

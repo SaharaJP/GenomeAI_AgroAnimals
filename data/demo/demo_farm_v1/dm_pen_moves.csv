@@ -1,0 +1,4 @@
+tenant_id,move_id,animal_id,from_pen_id,to_pen_id,move_date,reason
+default,PM_001,DEMO_COW_1002,PEN_N1_LACT,PEN_N1_FRESH,2025-04-04,fresh transition
+default,PM_002,DEMO_COW_2002,PEN_N2_REPRO,PEN_N2_HOSP,2025-04-03,vet treatment
+default,PM_003,DEMO_COW_3003,PEN_S1_LACT,PEN_S1_DRY,2025-03-30,dry-off prep

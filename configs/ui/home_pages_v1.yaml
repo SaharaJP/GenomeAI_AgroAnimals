@@ -1,0 +1,138 @@
+version: 1
+roles:
+  Director:
+    preferred_kpis:
+      - margin_rub_7d
+      - milk_total_kg_7d
+      - alerts_open_count
+      - decisions_accept_rate_90d
+      - milk_revenue_rub_7d
+    actions:
+      - daily_worklists_by_role
+      - operational_planner
+      - reproduction_cockpit
+      - calving_forecast_inventory
+      - repro_mating_integration
+      - treatment_journal_withdrawal
+      - drug_use_compliance
+      - health_episode_timeline
+      - approvals_center
+      - director_summary
+      - report_ops
+      - weekly_plans_platform
+    focus_title: Управленческий фокус дня
+    focus_hint: Проверьте главный инсайт, затем перейдите в approvals, summary и отчёты.
+  Zootech:
+    preferred_kpis:
+      - milk_avg_kg_per_cow_1d
+      - fat_pct_avg_7d
+      - protein_pct_avg_7d
+      - alerts_open_count
+      - milk_total_kg_7d
+    actions:
+      - daily_worklists_by_role
+      - operational_planner
+      - reproduction_worklists
+      - reproduction_cockpit
+      - calving_forecast_inventory
+      - repro_mating_integration
+      - vet_triage_queues
+      - vet_protocol_engine
+      - treatment_journal_withdrawal
+      - health_episode_timeline
+      - score_ops
+      - zootech
+      - decisions_ops
+      - alert_center
+    focus_title: Приоритет по продуктивности
+    focus_hint: Используйте скоринг и рабочие списки как основной вход в действия по стаду.
+  Vet:
+    preferred_kpis:
+      - scc_avg_7d
+      - mastitis_events_30d
+      - severe_health_events_30d
+      - alerts_open_count
+      - health_events_30d
+    actions:
+      - daily_worklists_by_role
+      - operational_planner
+      - reproduction_worklists
+      - reproduction_cockpit
+      - calving_forecast_inventory
+      - repro_mating_integration
+      - vet_triage_queues
+      - vet_protocol_engine
+      - treatment_journal_withdrawal
+      - vet
+      - alert_center
+      - report_ops
+      - decisions_ops
+    focus_title: Медицинский фокус смены
+    focus_hint: Начинайте с high-risk кейсов и новых alerts, затем переходите в задачи.
+  Operator:
+    preferred_kpis:
+      - alerts_open_count
+      - milk_total_kg_1d
+      - milk_total_kg_7d
+      - decisions_accept_rate_90d
+    actions:
+      - daily_worklists_by_role
+      - operational_planner
+      - vet_triage_queues
+      - upload_ingest_wizard
+      - jobs_center
+      - qc_ops
+      - vet_protocol_engine
+      - treatment_journal_withdrawal
+      - health_episode_timeline
+      - score_ops
+    focus_title: Следующий шаг pipeline
+    focus_hint: Выполняйте процесс последовательно и контролируйте статусы через раздел «Задания и логи».
+  Admin:
+    preferred_kpis:
+      - alerts_open_count
+      - milk_total_kg_7d
+      - decisions_accept_rate_90d
+      - margin_rub_7d
+    actions:
+      - admin_console
+      - admin_users_security
+      - admin_configs_audit
+      - admin_observability_release
+      - jobs_center
+    focus_title: Системная диагностика
+    focus_hint: Для ежедневной admin-работы используйте новый web frontend и internal admin/support surface при необходимости.
+  Viewer:
+    preferred_kpis:
+      - milk_total_kg_7d
+      - milk_avg_kg_per_cow_1d
+      - alerts_open_count
+      - decisions_accept_rate_90d
+    actions:
+      - reports
+      - director_summary
+      - contracts_data_catalog
+      - glossary
+    focus_title: Краткая ориентировка
+    focus_hint: Откройте отчёт и summary, затем переходите к справочным разделам.
+
+  Consultant:
+    preferred_kpis:
+      - alerts_open_count
+      - milk_total_kg_7d
+    actions:
+      - daily_worklists_by_role
+      - enterprise_benchmark_views
+      - operational_planner
+    focus_title: External consultant workspace
+    focus_hint: Работайте только в пределах разрешённого farm/site scope и оставляйте traceable recommendations.
+  Partner:
+    preferred_kpis:
+      - alerts_open_count
+      - milk_total_kg_7d
+    actions:
+      - daily_worklists_by_role
+      - enterprise_benchmark_views
+      - operational_planner
+    focus_title: Partner workspace
+    focus_hint: Используйте bounded collaboration mode без cross-farm доступа и без скрытых действий.

@@ -1,0 +1,17 @@
+{
+  "schema": "genomeai.security.onprem_checklist.v1",
+  "items": [
+    "default secrets replaced",
+    "stage/prod use *_FILE secrets",
+    "tls cert and key mounted",
+    "postgres password sourced from file secret",
+    "redis password configured",
+    "artifact storage password rotated",
+    "only reverse proxy has public ports",
+    "backup tested",
+    "restore tested",
+    "auth refresh/logout/revoke flows verified",
+    "incident rotation procedure documented",
+    "release approval gate executed"
+  ]
+}

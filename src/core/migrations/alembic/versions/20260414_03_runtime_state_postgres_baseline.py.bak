@@ -1,0 +1,411 @@
+"""postgres runtime state baseline for jobs/workflow/admin entities
+
+Revision ID: 20260414_03_runtime_state_postgres_baseline
+Revises: 20260414_02_auth_runtime_postgres_baseline
+"""
+from alembic import op
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
+
+revision = '20260414_03_runtime_state_postgres_baseline'
+down_revision = '20260414_02_auth_runtime_postgres_baseline'
+branch_labels = None
+depends_on = None
+
+JSONB = postgresql.JSONB(astext_type=sa.Text())
+
+
+def upgrade() -> None:
+    op.create_table(
+        'jobs',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('public_job_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('queue_name', sa.Text(), nullable=False),
+        sa.Column('pipeline_key', sa.Text(), nullable=False),
+        sa.Column('kind', sa.Text(), nullable=False),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('started_at', sa.Text(), nullable=True),
+        sa.Column('finished_at', sa.Text(), nullable=True),
+        sa.Column('cancel_requested_at', sa.Text(), nullable=True),
+        sa.Column('cancelled_at', sa.Text(), nullable=True),
+        sa.Column('attempt_no', sa.Integer(), nullable=False, server_default='0'),
+        sa.Column('max_attempts', sa.Integer(), nullable=False, server_default='1'),
+        sa.Column('retry_of_job_id', sa.BigInteger(), nullable=True),
+        sa.Column('next_attempt_at', sa.Text(), nullable=True),
+        sa.Column('retry_source', sa.Text(), nullable=True),
+        sa.Column('user', sa.Text(), nullable=False),
+        sa.Column('command', sa.Text(), nullable=False),
+        sa.Column('args_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('log_path', sa.Text(), nullable=False),
+        sa.Column('artifacts_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('result_json', JSONB, nullable=True),
+        sa.Column('error_text', sa.Text(), nullable=True),
+        sa.Column('exit_code', sa.Integer(), nullable=True),
+        sa.Column('tenant_id', sa.Text(), nullable=True),
+        sa.Column('user_id', sa.Integer(), nullable=True),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('run_id', sa.Text(), nullable=True),
+        sa.Column('qc_run', sa.Text(), nullable=True),
+        sa.Column('model_version', sa.Text(), nullable=True),
+        sa.Column('scoring_run', sa.Text(), nullable=True),
+        sa.Column('report_version', sa.Text(), nullable=True),
+    )
+    op.create_index('idx_jobs_status_created', 'jobs', ['status', sa.text('created_at DESC')])
+    op.create_index('idx_jobs_run_id', 'jobs', ['run_id'])
+    op.create_index('idx_jobs_data_version', 'jobs', ['data_version'])
+
+    op.create_table(
+        'audit_log',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('ts', sa.Text(), nullable=False),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('username', sa.Text(), nullable=False),
+        sa.Column('role', sa.Text(), nullable=False),
+        sa.Column('action', sa.Text(), nullable=False),
+        sa.Column('action_group', sa.Text(), nullable=True),
+        sa.Column('object_type', sa.Text(), nullable=True),
+        sa.Column('object_id', sa.Text(), nullable=True),
+        sa.Column('object_ref', sa.Text(), nullable=True),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('run_id', sa.Text(), nullable=True),
+        sa.Column('before_json', JSONB, nullable=True),
+        sa.Column('after_json', JSONB, nullable=True),
+        sa.Column('ip', sa.Text(), nullable=True),
+        sa.Column('user_agent', sa.Text(), nullable=True),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('error', sa.Text(), nullable=True),
+        sa.Column('request_id', sa.Text(), nullable=True),
+        sa.Column('schema_version', sa.Integer(), nullable=False, server_default='2'),
+        sa.Column('archived_at', sa.Text(), nullable=True),
+        sa.Column('archive_reason', sa.Text(), nullable=True),
+        sa.Column('archive_batch_id', sa.Text(), nullable=True),
+    )
+    op.create_index('idx_audit_log_tenant_ts', 'audit_log', ['tenant_id', sa.text('ts DESC')])
+    op.create_index('idx_audit_log_tenant_action', 'audit_log', ['tenant_id', 'action', sa.text('ts DESC')])
+    op.create_index('idx_audit_log_tenant_object', 'audit_log', ['tenant_id', 'object_type', 'object_id', sa.text('ts DESC')])
+    op.create_index('idx_audit_log_tenant_run', 'audit_log', ['tenant_id', 'run_id', sa.text('ts DESC')])
+
+    op.create_table(
+        'alerts_v2',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('alert_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('updated_at', sa.Text(), nullable=False),
+        sa.Column('alert_type', sa.Text(), nullable=False),
+        sa.Column('title', sa.Text(), nullable=False),
+        sa.Column('source', sa.Text(), nullable=False),
+        sa.Column('cause', sa.Text(), nullable=False),
+        sa.Column('confidence', sa.Float(), nullable=True),
+        sa.Column('object_type', sa.Text(), nullable=False),
+        sa.Column('object_id', sa.Text(), nullable=False),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('deadline', sa.Text(), nullable=True),
+        sa.Column('owner_user_id', sa.Integer(), nullable=True),
+        sa.Column('attachments_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('why_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('what_to_do_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('qc_run', sa.Text(), nullable=True),
+        sa.Column('model_version', sa.Text(), nullable=True),
+        sa.Column('scoring_run', sa.Text(), nullable=True),
+        sa.Column('report_version', sa.Text(), nullable=True),
+        sa.Column('acknowledged_at', sa.Text(), nullable=True),
+        sa.Column('acknowledged_by', sa.Integer(), nullable=True),
+        sa.Column('resolved_at', sa.Text(), nullable=True),
+        sa.Column('resolved_by', sa.Integer(), nullable=True),
+        sa.Column('resolved_reason', sa.Text(), nullable=True),
+        sa.Column('dedupe_key', sa.Text(), nullable=True),
+    )
+    op.create_index('idx_alerts_v2_tenant_status', 'alerts_v2', ['tenant_id', 'status'])
+    op.create_index('idx_alerts_v2_type', 'alerts_v2', ['alert_type'])
+    op.create_index('idx_alerts_v2_tenant_object', 'alerts_v2', ['tenant_id', 'object_type', 'object_id'])
+
+    op.create_table(
+        'decision_log_v2',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('decision_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('recommendation_id', sa.Text(), nullable=True),
+        sa.Column('action', sa.Text(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('username', sa.Text(), nullable=False),
+        sa.Column('reason', sa.Text(), nullable=True),
+        sa.Column('comment', sa.Text(), nullable=True),
+        sa.Column('related_alert', sa.Text(), nullable=True),
+        sa.Column('object_type', sa.Text(), nullable=True),
+        sa.Column('object_id', sa.Text(), nullable=True),
+        sa.Column('farm_id', sa.Text(), nullable=True),
+        sa.Column('group_id', sa.Text(), nullable=True),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('model_version', sa.Text(), nullable=True),
+        sa.Column('report_version', sa.Text(), nullable=True),
+        sa.Column('qc_run', sa.Text(), nullable=True),
+        sa.Column('scoring_run', sa.Text(), nullable=True),
+        sa.Column('metadata_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+    )
+    op.create_index('idx_decision_v2_tenant_created', 'decision_log_v2', ['tenant_id', sa.text('created_at DESC')])
+    op.create_index('idx_decision_v2_object', 'decision_log_v2', ['tenant_id', 'object_type', 'object_id'])
+    op.create_index('idx_decision_v2_alert', 'decision_log_v2', ['tenant_id', 'related_alert'])
+
+    op.create_table(
+        'tasks_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('task_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('updated_at', sa.Text(), nullable=False),
+        sa.Column('task_type', sa.Text(), nullable=False),
+        sa.Column('title', sa.Text(), nullable=False),
+        sa.Column('domain', sa.Text(), nullable=True),
+        sa.Column('priority', sa.Integer(), nullable=False, server_default='3'),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('due_at', sa.Text(), nullable=True),
+        sa.Column('owner_user_id', sa.Integer(), nullable=True),
+        sa.Column('assignee_team', sa.Text(), nullable=True),
+        sa.Column('sla_hours', sa.Integer(), nullable=True),
+        sa.Column('sla_source', sa.Text(), nullable=True),
+        sa.Column('stage', sa.Text(), nullable=True),
+        sa.Column('related_alert', sa.Text(), nullable=True),
+        sa.Column('object_type', sa.Text(), nullable=True),
+        sa.Column('object_id', sa.Text(), nullable=True),
+        sa.Column('worklist_type', sa.Text(), nullable=True),
+        sa.Column('confidence', sa.Float(), nullable=True),
+        sa.Column('linked_decision_id', sa.Text(), nullable=True),
+        sa.Column('linked_task_id', sa.Text(), nullable=True),
+        sa.Column('linked_source_facts_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('attachments_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('why_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('what_to_do_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('qc_run', sa.Text(), nullable=True),
+        sa.Column('model_version', sa.Text(), nullable=True),
+        sa.Column('scoring_run', sa.Text(), nullable=True),
+        sa.Column('report_version', sa.Text(), nullable=True),
+        sa.Column('started_at', sa.Text(), nullable=True),
+        sa.Column('closed_at', sa.Text(), nullable=True),
+        sa.Column('closed_by', sa.Integer(), nullable=True),
+        sa.Column('closed_reason', sa.Text(), nullable=True),
+        sa.Column('closed_comment', sa.Text(), nullable=True),
+        sa.Column('dedupe_key', sa.Text(), nullable=True),
+    )
+    op.create_index('idx_tasks_v1_tenant_status', 'tasks_v1', ['tenant_id', 'status'])
+    op.create_index('idx_tasks_v1_due', 'tasks_v1', ['tenant_id', 'due_at'])
+    op.create_index('idx_tasks_v1_linked_decision', 'tasks_v1', ['tenant_id', 'linked_decision_id'])
+
+    op.create_table(
+        'saved_views_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('view_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('updated_at', sa.Text(), nullable=False),
+        sa.Column('created_by', sa.Integer(), nullable=False),
+        sa.Column('created_by_username', sa.Text(), nullable=False),
+        sa.Column('scope', sa.Text(), nullable=False),
+        sa.Column('name', sa.Text(), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('page_key', sa.Text(), nullable=False),
+        sa.Column('state_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('run_id', sa.Text(), nullable=True),
+    )
+    op.create_index('idx_saved_views_v1_tenant_page', 'saved_views_v1', ['tenant_id', 'page_key'])
+    op.create_index('idx_saved_views_v1_tenant_creator', 'saved_views_v1', ['tenant_id', 'created_by'])
+
+    op.create_table(
+        'report_templates_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('template_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('updated_at', sa.Text(), nullable=False),
+        sa.Column('created_by', sa.Integer(), nullable=False),
+        sa.Column('created_by_username', sa.Text(), nullable=False),
+        sa.Column('scope', sa.Text(), nullable=False),
+        sa.Column('name', sa.Text(), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('sections_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('metrics_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('options_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+    )
+    op.create_index('idx_templates_v1_tenant_creator', 'report_templates_v1', ['tenant_id', 'created_by'])
+
+    op.create_table(
+        'favorites_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('user_id', sa.Integer(), nullable=False),
+        sa.Column('object_type', sa.Text(), nullable=False),
+        sa.Column('object_id', sa.Text(), nullable=False),
+        sa.Column('label', sa.Text(), nullable=True),
+        sa.Column('metadata_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.UniqueConstraint('tenant_id', 'user_id', 'object_type', 'object_id', name='uq_favorites_v1_scope'),
+    )
+    op.create_index('idx_favorites_v1_tenant_user', 'favorites_v1', ['tenant_id', 'user_id'])
+    op.create_index('idx_favorites_v1_object', 'favorites_v1', ['object_type', 'object_id'])
+
+    op.create_table(
+        'whatif_scenarios_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('scenario_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('updated_at', sa.Text(), nullable=False),
+        sa.Column('name', sa.Text(), nullable=False),
+        sa.Column('description', sa.Text(), nullable=True),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('created_by', sa.Integer(), nullable=False),
+        sa.Column('created_by_username', sa.Text(), nullable=False),
+        sa.Column('approval_requested_at', sa.Text(), nullable=True),
+        sa.Column('approval_requested_by', sa.Integer(), nullable=True),
+        sa.Column('approval_requested_by_username', sa.Text(), nullable=True),
+        sa.Column('approval_request_comment', sa.Text(), nullable=True),
+        sa.Column('approved_at', sa.Text(), nullable=True),
+        sa.Column('approved_by', sa.Integer(), nullable=True),
+        sa.Column('approved_by_username', sa.Text(), nullable=True),
+        sa.Column('approval_comment', sa.Text(), nullable=True),
+        sa.Column('pdf_exported_at', sa.Text(), nullable=True),
+        sa.Column('pdf_exported_by', sa.Integer(), nullable=True),
+        sa.Column('pdf_exported_by_username', sa.Text(), nullable=True),
+        sa.Column('pdf_rel_path', sa.Text(), nullable=True),
+        sa.Column('rejected_at', sa.Text(), nullable=True),
+        sa.Column('rejected_by', sa.Integer(), nullable=True),
+        sa.Column('rejected_by_username', sa.Text(), nullable=True),
+        sa.Column('rejection_comment', sa.Text(), nullable=True),
+        sa.Column('cloned_from_scenario_id', sa.Text(), nullable=True),
+        sa.Column('archived_at', sa.Text(), nullable=True),
+        sa.Column('archived_by', sa.Integer(), nullable=True),
+        sa.Column('archived_by_username', sa.Text(), nullable=True),
+        sa.Column('archive_comment', sa.Text(), nullable=True),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('params_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('summary_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('last_run_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+    )
+    op.create_index('idx_whatif_scenarios_tenant_status', 'whatif_scenarios_v1', ['tenant_id', 'status'])
+    op.create_index('idx_whatif_scenarios_tenant_created', 'whatif_scenarios_v1', ['tenant_id', sa.text('created_at DESC')])
+
+    op.create_table(
+        'whatif_reports_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('created_by', sa.Integer(), nullable=False),
+        sa.Column('created_by_username', sa.Text(), nullable=False),
+        sa.Column('scenario_id', sa.Text(), nullable=False),
+        sa.Column('report_version', sa.Text(), nullable=False),
+        sa.Column('data_version', sa.Text(), nullable=False),
+        sa.Column('base_economics_run', sa.Text(), nullable=False),
+        sa.Column('scenario_economics_run', sa.Text(), nullable=False),
+        sa.Column('pdf_rel_path', sa.Text(), nullable=False),
+        sa.Column('params_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.UniqueConstraint('tenant_id', 'report_version', name='uq_whatif_reports_tenant_report_version'),
+    )
+    op.create_index('idx_whatif_reports_tenant_scenario', 'whatif_reports_v1', ['tenant_id', 'scenario_id'])
+    op.create_index('idx_whatif_reports_tenant_created', 'whatif_reports_v1', ['tenant_id', sa.text('created_at DESC')])
+
+    op.create_table(
+        'report_approvals_v1',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('data_version', sa.Text(), nullable=False),
+        sa.Column('report_version', sa.Text(), nullable=False),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('updated_at', sa.Text(), nullable=False),
+        sa.Column('approved_at', sa.Text(), nullable=True),
+        sa.Column('approved_by', sa.Integer(), nullable=True),
+        sa.Column('approved_by_username', sa.Text(), nullable=True),
+        sa.Column('approval_comment', sa.Text(), nullable=True),
+        sa.Column('rejected_at', sa.Text(), nullable=True),
+        sa.Column('rejected_by', sa.Integer(), nullable=True),
+        sa.Column('rejected_by_username', sa.Text(), nullable=True),
+        sa.Column('rejection_comment', sa.Text(), nullable=True),
+        sa.Column('archived_at', sa.Text(), nullable=True),
+        sa.Column('archived_by', sa.Integer(), nullable=True),
+        sa.Column('archived_by_username', sa.Text(), nullable=True),
+        sa.Column('archive_comment', sa.Text(), nullable=True),
+        sa.UniqueConstraint('tenant_id', 'data_version', 'report_version', name='uq_report_approvals_tenant_report'),
+    )
+    op.create_index('idx_report_approvals_dv', 'report_approvals_v1', ['tenant_id', 'data_version'])
+    op.create_index('idx_report_approvals_status', 'report_approvals_v1', ['tenant_id', 'status'])
+
+    op.create_table(
+        'connector_runs',
+        sa.Column('id', sa.BigInteger(), primary_key=True, autoincrement=True),
+        sa.Column('connector_run_id', sa.Text(), nullable=False, unique=True),
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('connector_id', sa.Text(), nullable=False),
+        sa.Column('kind', sa.Text(), nullable=False),
+        sa.Column('trigger_type', sa.Text(), nullable=False),
+        sa.Column('schedule_slot', sa.Text(), nullable=True),
+        sa.Column('status', sa.Text(), nullable=False),
+        sa.Column('created_at', sa.Text(), nullable=False),
+        sa.Column('started_at', sa.Text(), nullable=False),
+        sa.Column('finished_at', sa.Text(), nullable=True),
+        sa.Column('data_version', sa.Text(), nullable=True),
+        sa.Column('message', sa.Text(), nullable=True),
+        sa.Column('config_path', sa.Text(), nullable=True),
+        sa.Column('outputs_json', JSONB, nullable=False, server_default=sa.text("'{}'::jsonb")),
+        sa.Column('selected_files_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('ingest_summaries_json', JSONB, nullable=False, server_default=sa.text("'[]'::jsonb")),
+        sa.Column('error_text', sa.Text(), nullable=True),
+    )
+    op.create_index('idx_connector_runs_connector', 'connector_runs', ['tenant_id', 'connector_id', sa.text('started_at DESC')])
+    op.create_index('idx_connector_runs_status', 'connector_runs', ['status', sa.text('started_at DESC')])
+
+    op.create_table(
+        'connector_schedule_state',
+        sa.Column('tenant_id', sa.Text(), nullable=False),
+        sa.Column('connector_id', sa.Text(), nullable=False),
+        sa.Column('last_slot', sa.Text(), nullable=True),
+        sa.Column('last_enqueued_at', sa.Text(), nullable=True),
+        sa.Column('last_job_id', sa.BigInteger(), nullable=True),
+        sa.PrimaryKeyConstraint('tenant_id', 'connector_id', name='pk_connector_schedule_state'),
+    )
+
+
+def downgrade() -> None:
+    for index_name, table_name in [
+        ('idx_connector_runs_status', 'connector_runs'),
+        ('idx_connector_runs_connector', 'connector_runs'),
+        ('idx_report_approvals_status', 'report_approvals_v1'),
+        ('idx_report_approvals_dv', 'report_approvals_v1'),
+        ('idx_whatif_reports_tenant_created', 'whatif_reports_v1'),
+        ('idx_whatif_reports_tenant_scenario', 'whatif_reports_v1'),
+        ('idx_whatif_scenarios_tenant_created', 'whatif_scenarios_v1'),
+        ('idx_whatif_scenarios_tenant_status', 'whatif_scenarios_v1'),
+        ('idx_favorites_v1_object', 'favorites_v1'),
+        ('idx_favorites_v1_tenant_user', 'favorites_v1'),
+        ('idx_templates_v1_tenant_creator', 'report_templates_v1'),
+        ('idx_saved_views_v1_tenant_creator', 'saved_views_v1'),
+        ('idx_saved_views_v1_tenant_page', 'saved_views_v1'),
+        ('idx_tasks_v1_linked_decision', 'tasks_v1'),
+        ('idx_tasks_v1_due', 'tasks_v1'),
+        ('idx_tasks_v1_tenant_status', 'tasks_v1'),
+        ('idx_decision_v2_alert', 'decision_log_v2'),
+        ('idx_decision_v2_object', 'decision_log_v2'),
+        ('idx_decision_v2_tenant_created', 'decision_log_v2'),
+        ('idx_alerts_v2_tenant_object', 'alerts_v2'),
+        ('idx_alerts_v2_type', 'alerts_v2'),
+        ('idx_alerts_v2_tenant_status', 'alerts_v2'),
+        ('idx_audit_log_tenant_run', 'audit_log'),
+        ('idx_audit_log_tenant_object', 'audit_log'),
+        ('idx_audit_log_tenant_action', 'audit_log'),
+        ('idx_audit_log_tenant_ts', 'audit_log'),
+        ('idx_jobs_data_version', 'jobs'),
+        ('idx_jobs_run_id', 'jobs'),
+        ('idx_jobs_status_created', 'jobs'),
+    ]:
+        op.drop_index(index_name, table_name=table_name)
+    for table in [
+        'connector_schedule_state', 'connector_runs', 'report_approvals_v1', 'whatif_reports_v1',
+        'whatif_scenarios_v1', 'favorites_v1', 'report_templates_v1', 'saved_views_v1',
+        'tasks_v1', 'decision_log_v2', 'alerts_v2', 'audit_log', 'jobs'
+    ]:
+        op.drop_table(table)

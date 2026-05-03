@@ -1,0 +1,11 @@
+{
+  "description": "Сценарий с QC warnings, но без блокировки train/score/report.",
+  "scenario": "qc_issues",
+  "versions": {
+    "data_version": "dv_refactor_qc_issues",
+    "model_version": "model_refactor_qc_issues",
+    "qc_run": "qc_refactor_qc_issues",
+    "report_version": "report_refactor_qc_issues",
+    "scoring_run": "score_refactor_qc_issues"
+  }
+}

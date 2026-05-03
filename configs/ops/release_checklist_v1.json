@@ -1,0 +1,19 @@
+{
+  "schema": "genomeai.release_checklist.v1",
+  "steps": [
+    "verify migrations are explicit and reviewed",
+    "run targeted prod-path pytest gate",
+    "collect production lockdown report",
+    "collect support bundle completeness report",
+    "collect evidence bundle required for release",
+    "record compatibility window and rollback plan"
+  ],
+  "evidence_requirements": [
+    "production_lockdown",
+    "operability_report",
+    "support_bundle",
+    "backup_restore_verify",
+    "adult_runtime_verification_when_applicable"
+  ],
+  "compatibility_window_rule": "compatibility paths may remain only in dev/test unless explicitly listed and justified"
+}

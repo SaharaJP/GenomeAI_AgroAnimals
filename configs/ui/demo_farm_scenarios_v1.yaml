@@ -1,0 +1,266 @@
+version: 1
+dataset:
+  id: demo_farm_v1
+  path: data/demo/demo_farm_v1
+  marker_file: demo_farm_manifest.json
+roles:
+  Operator:
+    login_hint: demo_operator
+    summary: >-
+      Synthetic operator demo day: открыть home → daily worklists → mobile worklists → cowside entry → object profile,
+      не импровизируя по шагам и объектам.
+    scenarios:
+      - scenario_id: daily_operator_flow
+        title: Daily operator flow
+        summary: >-
+          Показывает start-of-day queue, приоритетные сигналы, переход в профиль животного и fast follow-up action.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/demo_farm_manifest.json
+          - artifacts/_ci/demo_farm_v1/demo_farm_report.md
+        expected_outcomes:
+          - Оператор открывает today queue без поиска по меню.
+          - Может перейти от worklist к животному и обратно без потери контекста.
+          - Может показать bounded fast execution flow на synthetic data.
+        steps:
+          - title: Start from role home
+            page_key: home
+            why: Показать start-of-day overview и bounded in-product references.
+            object_refs: {farm_id: DEMO_FARM_001, site_id: DEMO_SITE_001}
+            checklist:
+              - Убедиться, что active data_version = dv_demo_farm_v1.
+              - Показать compact onboarding/help blocks, но не уходить в training-only narration.
+            expected_effect: Быстрый переход в daily execution surface.
+            diagnostics:
+              - Если данные не видны, проверить dataset path и active data_version.
+          - title: Open daily worklists
+            page_key: daily_worklists_by_role
+            why: Основной рабочий сценарий оператора на день.
+            object_refs: {animal_id: DEMO_COW_1002, alert_id: AL_DEMO_001}
+            checklist:
+              - Отфильтровать farm/site до DEMO_FARM_001 / DEMO_SITE_001.
+              - Найти fresh cow risk / vet follow-up item.
+            expected_effect: Пользователь видит, что делать сейчас и почему.
+            diagnostics:
+              - Если queue пустая, показать synthetic scenario refs из manifest.
+          - title: Switch to mobile worklists
+            page_key: mobile_worklists
+            why: Показать cowside-ready компактный сценарий.
+            object_refs: {animal_id: DEMO_COW_1002}
+            checklist:
+              - Открыть компактную карточку и linked facts.
+              - Показать safe next-step without hidden automation.
+            expected_effect: Sales/UAT видит mobile/cowside parity.
+          - title: Open animal profile
+            page_key: animal_profile
+            why: Зафиксировать объяснимый переход к объекту.
+            object_refs: {animal_id: DEMO_COW_1002, pen_id: PEN_N1_FRESH}
+            checklist:
+              - Показать location, health/repro context и explainability block.
+            expected_effect: Нет ручной реконструкции логики.
+          - title: Cowside event entry
+            page_key: cowside_event_entry
+            why: Показать bounded fast entry flow на synthetic animal.
+            object_refs: {animal_id: DEMO_COW_1002}
+            checklist:
+              - Не вводить production-only payloads; использовать synthetic marker.
+            expected_effect: Демонстрируется runnable daily-use execution.
+      - scenario_id: mobile_cowside
+        title: Mobile / cowside round
+        summary: Compact operator demo для поля / коровника.
+        expected_outcomes:
+          - Можно показать mobile steps за 2–3 минуты.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/README_SYNTHETIC.md
+        steps:
+          - title: Mobile queue
+            page_key: mobile_worklists
+            why: Открыть cowside card stack.
+            object_refs: {site_id: DEMO_SITE_001}
+            checklist:
+              - Показать compact cards, linked facts и open object.
+            expected_effect: Mobile parity scenario covered.
+  Zootech:
+    login_hint: demo_zootech
+    summary: >-
+      Synthetic zootech demo covers reproduction due actions, mating context, benchmark compare and drilldown to objects.
+    scenarios:
+      - scenario_id: reproduction_review
+        title: Reproduction review
+        summary: >-
+          Показать due actions по воспроизводству, переход в cockpit и decision surfaces.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/dm_repro_events.csv
+        expected_outcomes:
+          - Видна очередь по reproduction without manual spreadsheet reconstruction.
+          - Есть переход в cockpit и обратно к объектам.
+        steps:
+          - title: Reproduction worklists
+            page_key: reproduction_worklists
+            why: Основной parity surface по reproduction due actions.
+            object_refs: {animal_id: DEMO_COW_2001, repro_event_id: RE_001}
+            checklist:
+              - Найти heat / insemination / preg-check due scenario.
+            expected_effect: Ясно, что делать сейчас по reproduction.
+          - title: Reproduction cockpit
+            page_key: reproduction_cockpit
+            why: Показать KPI + explainable drilldown.
+            object_refs: {site_id: DEMO_SITE_002}
+            checklist:
+              - Показать due buckets и linked worklists.
+            expected_effect: KPI связаны с execution flow.
+          - title: Mating plan context
+            page_key: mating_plan
+            why: Связать reproduction demo с breeding use case.
+            object_refs: {animal_id: DEMO_COW_2003, bull_id: BULL_9002}
+            checklist:
+              - Показать benchmark-safe breeding context без скрытой автоматики.
+            expected_effect: Cross-scenario continuity.
+      - scenario_id: enterprise_benchmark_compare
+        title: "Benchmark demo: farm → site"
+        summary: >-
+          Холдинговое сравнение synthetic sites с drilldown в operational surfaces.
+        benchmark_demo: true
+        linked_artifacts:
+          - data/demo/demo_farm_v1/demo_farm_manifest.json
+          - data/demo/demo_farm_v1/dm_alerts.csv
+        expected_outcomes:
+          - Видно, какой site отклоняется и куда переходить дальше.
+          - Benchmark assumptions прозрачны.
+        steps:
+          - title: Enterprise benchmark view
+            page_key: enterprise_benchmark_views
+            why: Показать benchmark compare по multi-site synthetic dataset.
+            object_refs: {farm_id: DEMO_FARM_001, site_id: DEMO_SITE_003}
+            checklist:
+              - Открыть site comparison.
+              - Перейти из deviations в action surfaces.
+            expected_effect: Benchmark demo ready for network/holding UAT.
+            diagnostics:
+              - Если benchmark пуст, показать multi-site synthetic ids из manifest.
+  Vet:
+    login_hint: demo_vet
+    summary: >-
+      Vet demo показывает triage, profile drilldown, treatment / withdrawal context и explainable alert handling.
+    scenarios:
+      - scenario_id: vet_triage
+        title: Vet triage
+        summary: >-
+          Объяснимый vet сценарий: alert → profile → treatment context → mobile queue.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/dm_health_events.csv
+          - data/demo/demo_farm_v1/dm_treatments.csv
+        expected_outcomes:
+          - Видно why this alert and what to do now.
+          - Treatment / withdrawal context не теряется.
+        steps:
+          - title: Alert Center
+            page_key: alert_center
+            why: Старт vet triage from governed alerts.
+            object_refs: {animal_id: DEMO_COW_2002, alert_id: AL_DEMO_002}
+            checklist:
+              - Показать severity, linked facts и next action.
+            expected_effect: Fast triage from alert surface.
+          - title: Animal profile
+            page_key: animal_profile
+            why: Показать event/treatment explainability by object.
+            object_refs: {animal_id: DEMO_COW_2002, treatment_id: TR_002}
+            checklist:
+              - Показать health events, treatment, withdrawal and notes.
+            expected_effect: Vet can explain the focus object.
+          - title: Mobile worklists
+            page_key: mobile_worklists
+            why: Vet cowside follow-up in compact mode.
+            object_refs: {animal_id: DEMO_COW_2002}
+            checklist:
+              - Открыть compact card и показать next step.
+            expected_effect: Cowside vet flow covered.
+  Director:
+    login_hint: demo_director
+    summary: >-
+      Director demo opens with benchmark and daily brief, then goes into reports and economics delta with linked actions.
+    scenarios:
+      - scenario_id: reports_and_brief
+        title: "Reports + daily brief"
+        summary: >-
+          Start-of-day director narrative driven only by facts, versions and linked actions.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/dm_reports.csv
+        expected_outcomes:
+          - Руководитель за 2–3 минуты видит top issues и next actions.
+        steps:
+          - title: Home
+            page_key: home
+            why: Start-of-day entry without separate AI shell.
+            object_refs: {farm_id: DEMO_FARM_001}
+            checklist:
+              - Показать compact daily brief preview.
+            expected_effect: Brief drives action, not chat.
+          - title: Report view
+            page_key: report_view
+            why: Связать brief с reproducible report artifact.
+            object_refs: {report_id: RP_DEMO_001, data_version: dv_demo_farm_v1}
+            checklist:
+              - Показать version-linked report and explainability.
+            expected_effect: Reproducible report demo.
+      - scenario_id: economics_delta
+        title: Economics delta review
+        benchmark_demo: true
+        summary: >-
+          Показать why this economics delta и linked action surfaces.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/dm_economics_daily.csv
+          - data/demo/demo_farm_v1/dm_cull_events.csv
+        expected_outcomes:
+          - Руководитель видит expected effect и action economics.
+        steps:
+          - title: Economics per action
+            page_key: economics_per_action
+            why: Показывает action-level economics surface.
+            object_refs: {farm_id: DEMO_FARM_002, animal_id: DEMO_COW_3003}
+            checklist:
+              - Показать economics delta и linked decisions.
+            expected_effect: Economics scenario is runnable on synthetic data.
+          - title: Enterprise benchmark view
+            page_key: enterprise_benchmark_views
+            why: Связать economics gap с multi-site compare.
+            object_refs: {site_id: DEMO_SITE_003}
+            checklist:
+              - Показать site gap и drilldown дальше.
+            expected_effect: Director sees where deviation happens.
+  Admin:
+    login_hint: demo_admin
+    summary: >-
+      Admin demo focuses on rollout diagnostics, observability, training handoff and governed system readiness for pilot/UAT.
+    scenarios:
+      - scenario_id: admin_rollout
+        title: "Admin / rollout / training"
+        summary: >-
+          Показать, что demo farm быстро разворачивается, диагностируется и пригоден для customer training.
+        linked_artifacts:
+          - data/demo/demo_farm_v1/demo_farm_manifest.json
+          - artifacts/_ci/demo_farm_v1/demo_farm_report.json
+        expected_outcomes:
+          - Администратор показывает rollout diagnostics и training handoff без импровизации.
+        steps:
+          - title: Admin observability
+            page_key: admin_observability_release
+            why: Показывает rollout diagnostics surface.
+            object_refs: {dataset_id: demo_farm_v1}
+            checklist:
+              - Открыть diagnostics reports.
+              - Показать, что demo smoke report сохранён как artifact.
+            expected_effect: Deployment/demoability trust.
+          - title: Training by role
+            page_key: training_onboarding_by_role
+            why: Связать demo dataset с customer onboarding.
+            object_refs: {role: Operator}
+            checklist:
+              - Открыть role kit и export markdown/json.
+            expected_effect: Training handoff ready.
+          - title: Admin console
+            page_key: admin_console
+            why: Показать bounded admin surface for setup/demo/UAT.
+            object_refs: {user_id: USR_ADMIN_DEMO}
+            checklist:
+              - Не использовать production credentials или реальные farms.
+            expected_effect: Safe synthetic admin demo.

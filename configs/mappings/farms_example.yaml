@@ -1,0 +1,15 @@
+# Пример мэппинга для dm_farms
+# columns: имя_колонки_в_исходнике -> имя_колонки_в_каноне
+# constants: добавить константные значения (опционально)
+# sheet_name: имя листа или индекс (для XLSX)
+
+dataset: farms
+columns:
+  FarmID: farm_id
+  Name: farm_name
+  Reg: region
+  Country: country
+  Latitude: lat
+  Longitude: lon
+  Created: created_at
+  Active: is_active

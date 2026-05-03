@@ -1,0 +1,41 @@
+version: 1
+profiles:
+  ci:
+    startup:
+      enabled: true
+      budget_sec: 12.0
+      steps:
+        import_app: 10.0
+        startup: 4.0
+    pipeline_smoke:
+      enabled: true
+      budget_sec: 12.0
+      steps:
+        ingest_total: 4.0
+        qc: 3.0
+        train: 4.0
+        score: 3.0
+        report: 4.0
+        decision_log: 2.0
+        pack: 3.0
+    web_smoke:
+      enabled: true
+      budget_sec: 35.0
+      steps:
+        rbac: 3.0
+        ingest_all: 12.0
+        qc: 6.0
+        train: 6.0
+        score: 5.0
+        report: 6.0
+        decisions: 6.0
+        pack: 4.0
+    verify_refactor:
+      enabled: true
+      budget_sec: 20.0
+      scenarios:
+        - standard
+        - qc_issues
+      steps:
+        standard: 12.0
+        qc_issues: 12.0

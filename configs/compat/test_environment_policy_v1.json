@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "description": "Минимальная policy для воспроизводимого test environment. Это не lockfile и не триггер для автоматических upgrades.",
+  "upgrade_policy": {
+    "separate_controlled_change_required": true,
+    "project_refactor_must_not_change_dependencies": true,
+    "lockfile_optional": true,
+    "notes": [
+      "Если нужен upgrade зависимости, он делается отдельным коммитом/PR с own regression run.",
+      "Этот файл фиксирует, какие пакеты и роли мы отслеживаем в CI artifacts."
+    ]
+  },
+  "packages": [
+    {"name": "pandas", "role": "runtime-dataframe", "upgrade_strategy": "controlled", "notes": "Чувствителен к FutureWarning/SettingWithCopy."},
+    {"name": "numpy", "role": "runtime-ml", "upgrade_strategy": "controlled", "notes": "Чувствителен к RuntimeWarning и статистическим edge-cases."},
+    {"name": "scikit-learn", "distribution": "scikit-learn", "role": "runtime-ml", "upgrade_strategy": "controlled", "notes": "Влияет на train/score/model_card контракты."},
+    {"name": "fastapi", "role": "runtime-web", "upgrade_strategy": "controlled", "notes": "Влияет на lifespan/events/API routing."},
+    {"name": "starlette", "role": "runtime-web", "upgrade_strategy": "controlled", "notes": "Влияет на TemplateResponse и web contracts."},
+    {"name": "jinja2", "role": "runtime-web", "upgrade_strategy": "controlled", "notes": "Влияет на шаблонный рендеринг web-cabinet."},
+    {"name": "python-multipart", "distribution": "python-multipart", "role": "runtime-web-upload", "upgrade_strategy": "controlled", "notes": "Исторически связан с legacy multipart warning surface."},
+    {"name": "ddtrace", "role": "dependency-observability", "upgrade_strategy": "document-or-upgrade-separately", "notes": "Сторонняя observability dependency; warnings отделяются audit-ом."},
+    {"name": "pytest", "role": "test-runner", "upgrade_strategy": "controlled", "notes": "Определяет формат warning summary и CI gates."},
+    {"name": "httpx", "role": "test-web-client", "upgrade_strategy": "controlled", "notes": "Используется в web/TestClient сценариях."},
+    {"name": "uvicorn", "role": "runtime-web-server", "upgrade_strategy": "controlled", "notes": "Запуск web cabinet вне pytest."}
+  ]
+}

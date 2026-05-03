@@ -1,0 +1,11 @@
+# Workflow 2.0 metrics defaults
+# Used by Web Cabinet and UI when user does not specify overrides.
+
+window_days: 30
+lead_time_percentiles: [50, 90]
+
+# Optional extended breakdowns (computed in offline-core)
+breakdowns: [domain, team, stage, priority]
+
+# SLA adherence: for closed tasks with due_at in the selected window
+include_sla_adherence: true

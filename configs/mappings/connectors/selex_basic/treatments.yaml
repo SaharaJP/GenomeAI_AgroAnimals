@@ -1,0 +1,8 @@
+dataset: treatments
+columns:
+  TreatmentID: treatment_id
+  AnimalID: animal_id
+  StartDate: start_date
+  EndDate: end_date
+  TreatmentType: treatment_type
+  WithdrawalEndDate: withdrawal_end_date

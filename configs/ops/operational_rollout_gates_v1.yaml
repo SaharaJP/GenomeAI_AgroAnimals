@@ -1,0 +1,44 @@
+version: 1
+profiles:
+  enterprise_ci:
+    compile_daily_pages:
+      enabled: true
+      budget_sec: 8.0
+      pages:
+        - web_app/app/(protected)/daily-summary/page.tsx
+        - web_app/app/(protected)/alerts/page.tsx
+        - web_app/app/(protected)/planner/page.tsx
+        - web_app/app/(protected)/reports/page.tsx
+        - web_app/app/(protected)/observability/page.tsx
+    role_scenarios:
+      enabled: true
+      budget_sec: 12.0
+    mobile_views:
+      enabled: true
+      budget_sec: 12.0
+      pages:
+        - mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/ui/screens/TodayWorklistsScreen.kt
+        - mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/ui/screens/AlertsNowScreen.kt
+      scripts:
+        - scripts/smoke_t32_08_android_field_app.sh
+    worklists_profiles_reports:
+      enabled: true
+      budget_sec: 16.0
+      pages:
+        - web_app/app/(protected)/daily-summary/page.tsx
+        - web_app/app/(protected)/profiles/[objectType]/[objectId]/page.tsx
+        - web_app/app/(protected)/reports/page.tsx
+      scripts:
+        - scripts/smoke_t32_05_react_daily_operations.sh
+        - scripts/smoke_t32_06_react_profiles_reports_assistant.sh
+    rollout_diagnostics:
+      enabled: true
+      budget_sec: 5.0
+      required_files:
+        - docs/operational_sla_and_gates.md
+        - docs/server_deployment_baseline.md
+        - web_app/app/(protected)/observability/page.tsx
+        - mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/domain/sync/OfflineSyncService.kt
+      expected_reports:
+        - operational_rollout_gates_report.json
+        - warning_governance_report.json

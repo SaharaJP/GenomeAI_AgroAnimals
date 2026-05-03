@@ -1,0 +1,6 @@
+tenant_id,repro_event_id,animal_id,event_date,event_type,bull_id,result,notes
+default,RE_001,DEMO_COW_2001,2025-03-18,heat,BULL_9002,candidate,heat watch high
+default,RE_002,DEMO_COW_2001,2025-03-20,insemination,BULL_9002,done,AI after heat
+default,RE_003,DEMO_COW_2003,2025-04-01,preg_check_due,BULL_9001,due,preg check this week
+default,RE_004,DEMO_COW_1002,2025-04-04,fresh,BULL_9003,event,fresh cow monitoring
+default,RE_005,DEMO_COW_3003,2025-03-30,dry_off_due,BULL_9001,due,dry-off queue

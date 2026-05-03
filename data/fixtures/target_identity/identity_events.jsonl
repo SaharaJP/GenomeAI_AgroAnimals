@@ -1,0 +1,1 @@
+{"event_id": "evt_demo", "event_ts": "2025-01-01T00:00:00Z", "event_type": "RESOLVE", "tenant_id": "default", "actor": "demo", "run_id": "id_demo", "source_system": "registry", "source_animal_id": "A1001", "master_animal_id": "MA_demo_1", "created_new_master": true, "conflicts": []}

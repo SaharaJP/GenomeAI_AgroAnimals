@@ -1,0 +1,26 @@
+{
+  "dataset": "dm_health_events",
+  "contract_version": "1.0.0",
+  "description": "Фактические события здоровья (учёт). 1 строка = 1 событие (осмотр/симптом/факт).",
+  "primary_key": ["tenant_id", "event_id"],
+  "foreign_keys": [
+    {
+      "fields": ["animal_id"],
+      "ref_dataset": "dm_animals",
+      "ref_fields": ["animal_id"],
+      "enforced": false
+    }
+  ],
+  "fields": [
+    {"name": "tenant_id", "type": "string", "required": true, "description": "Идентификатор тенанта/фермы (логический)"},
+    {"name": "event_id", "type": "string", "required": true, "description": "Уникальный идентификатор события"},
+    {"name": "animal_id", "type": "string", "required": true, "description": "Идентификатор животного"},
+    {"name": "event_date", "type": "date", "required": true, "description": "Дата события"},
+    {"name": "event_type", "type": "string", "required": true, "description": "Код типа события (из справочника)"},
+    {"name": "severity", "type": "string", "required": false, "allowed_values": ["low", "medium", "high", "critical"], "description": "Опциональная тяжесть (не диагноз)"},
+    {"name": "notes", "type": "string", "required": false, "description": "Комментарий оператора/ветврача"}
+  ],
+  "notes": [
+    "Это учёт фактов. Никаких диагнозов от ИИ."
+  ]
+}

@@ -1,0 +1,1 @@
+export function EmptyState({title,description}:{title:string;description:string}){return <section className="card empty-state"><h3 className="card-title">{title}</h3><p className="card-subtitle">{description}</p></section>}

@@ -1,0 +1,25 @@
+connector_id: demo_file_pull
+kind: file
+enabled: true
+description: Demo file connector for regular folder-based pulls into canonical layer.
+source_system: Generic farm file export
+system_family: file_batch
+export_mode: scheduled_folder_pull
+diagnostics_profile: file_batch_common
+schedule_hint: Batch-only connector; freshness follows source folder drops.
+source_dir: data/examples/external
+schedule: "0 6 * * *"
+data_version_template: "dv_demo_file_%Y%m%d_%H%M%S"
+datasets:
+  - dataset_key: farms
+    pattern: "farms*"
+    mapping: configs/mappings/farms_example.yaml
+    required: false
+  - dataset_key: animals
+    pattern: "animals*"
+    mapping: configs/mappings/animals_example.yaml
+    required: true
+  - dataset_key: lactations
+    pattern: "lactations*"
+    mapping: configs/mappings/lactations_example.yaml
+    required: true

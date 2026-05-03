@@ -1,0 +1,30 @@
+version: economics_per_action_v1
+label: Economics per action / decision / worklist v1
+horizon_days: 30
+default_confidence_weight: 0.7
+default_action_cost_rub: 400.0
+default_delay_window_days: 7
+culling_review_action_cost_rub: 550.0
+milk_quality_action_cost_rub: 750.0
+reproduction_action_cost_rub: 900.0
+health_action_cost_rub: 1100.0
+movement_action_cost_rub: 450.0
+data_cleanup_action_cost_rub: 300.0
+manager_review_action_cost_rub: 500.0
+manual_review_action_cost_rub: 400.0
+repro_expected_gain_base_rub: 5200.0
+repro_repeat_penalty_rub: 1800.0
+repro_day_open_cost_rub: 120.0
+health_expected_gain_base_rub: 4800.0
+health_event_penalty_rub: 900.0
+health_active_treatment_penalty_rub: 1200.0
+health_delay_cost_rub: 260.0
+movement_expected_gain_rub: 1400.0
+data_cleanup_expected_gain_rub: 800.0
+manager_review_expected_gain_rub: 1000.0
+manual_review_expected_gain_rub: 600.0
+due_bucket_delay_multiplier:
+  overdue: 1.5
+  today: 1.0
+  upcoming: 0.5
+  undated: 0.75

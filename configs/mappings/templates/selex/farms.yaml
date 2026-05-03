@@ -1,0 +1,10 @@
+dataset: farms
+columns:
+  FarmCode: farm_id
+  FarmName: farm_name
+  RegionName: region
+  CountryCode: country
+  Latitude: lat
+  Longitude: lon
+  CreateDate: created_at
+  ActiveFlag: is_active

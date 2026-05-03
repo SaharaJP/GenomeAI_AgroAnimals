@@ -1,0 +1,81 @@
+# T11-03: ROI attribution config
+# IMPORTANT: This is attribution, not proven causality.
+
+roi:
+  window_days: 14
+  include_action_day: false
+  min_coverage: 0.6   # fraction of days available in each window (treated)
+  eps_cost: 1.0e-9
+
+  # Attribution method:
+  # - before_after: сравнение маржи до/после вокруг даты действия
+  # - diff_in_diff: difference-in-differences (для animal): (treated_after - treated_before) - (control_after - control_before)
+  #   контрольная группа подбирается по scope (по умолчанию pen на дату действия)
+  method: diff_in_diff
+
+  control:
+    enabled: true
+    scope: pen           # pen|site|farm
+    min_control_animals: 3
+    min_coverage: 0.5    # fraction of days for control averages
+    # Exclude animals that had other actions within the combined window around action_date.
+    exclude_any_action_in_window: true
+    # Additionally, exclude animals that had the same action_type within the window.
+    exclude_same_action_type_in_window: true
+
+    # Optional: baseline matching to reduce selection bias.
+    # Controls are sorted by |before_margin_avg(control) - before_margin_avg(treated)| and top_k are used.
+    matching:
+      enabled: false
+      top_k: 10
+
+  # Diff-in-diff for group objects (pen/site) based on unit_economics_group_daily.
+  # This is still attribution, not causality.
+  group_did:
+    enabled: true
+    # For treated pen: choose control pens within the same site (or farm).
+    pen_control_scope: site   # site|farm
+    # For treated site: choose control sites within the same farm.
+    site_control_scope: farm  # farm
+    min_control_groups: 3
+    min_coverage: 0.5
+    exclude_any_action_in_window: true
+    exclude_same_action_type_in_window: true
+
+    matching:
+      enabled: false
+      top_k: 10
+
+  # Optional detail outputs for UI drill-down.
+  # IMPORTANT: UI does not compute attribution; these are precomputed series/components.
+  outputs:
+    action_series: true
+    action_components: true
+    # Limit detailed artifacts size: only the most recent N actions get per-day series & component breakdown.
+    details_max_actions: 500
+
+sources:
+  decision_log_csv:
+    enabled: true
+    accepted_values: ["accept", "accepted", "approve", "approved", "yes", "y", "ok", "done", "true", "1"]
+  web_db:
+    enabled: true
+    # If provided, ROI pipeline can read tasks_v1 (done) and decision_log_v2.
+
+cost_mapping:
+  # Map action types to economics_v2 cost model parameter names (formulas_catalog.json -> cost_models).
+  # If not matched -> 0.
+  rules:
+    - match_any: ["insemination", "ai", "осемен", "инсем"]
+      cost_param: "insemination_cost_rub"
+    - match_any: ["mastitis", "treat", "леч", "вет", "antibi"]
+      cost_param: "vet_cost_per_treatment_event_rub"
+
+ui:
+  default_days_back: 90
+
+limitations:
+  - "ROI-панель показывает attribution (до/после или diff-in-diff при наличии контроля) и не доказывает причинность (возможны конфаундеры, сезонность, регрессия к среднему)."
+  - "Diff-in-diff используется для object_type=animal (контроль по scope: pen/site/farm) и для object_type=pen/site (контрольные группы по group_did.*). При отсутствии достаточного контроля выполняется fallback на before/after."
+  - "Эффект оценивается по марже unit_economics (доход-расход) в окнах вокруг даты решения/закрытия задачи; при неполных данных качество снижается и выставляются флаги качества."
+  - "Стоимость действий — best-effort по тарифам economics_v2 и простому маппингу типов; если тип не распознан — cost=0 и ROI может быть не рассчитан."

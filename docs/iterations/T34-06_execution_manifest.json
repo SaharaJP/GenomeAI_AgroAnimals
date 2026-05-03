@@ -1,0 +1,25 @@
+{
+  "task": "T34-06",
+  "status": "partially_proven",
+  "commands": [
+    "bash -n scripts/smoke_t34_06_android_auth_runtime.sh",
+    "python -m py_compile web_cabinet/auth_boundary_v1.py src/web_cabinet/auth_boundary_v1.py",
+    "pytest -q tests/test_t34_06_android_auth_runtime_integration.py tests/web/test_t34_06_mobile_runtime_proof_hook.py",
+    "pytest -q tests/web/test_t32_03_auth_boundary.py tests/test_t34_02_auth_storage_foundation.py tests/web/test_t34_02_auth_admin_diagnostics.py"
+  ],
+  "results": {
+    "t34_06_targeted": "4 passed",
+    "auth_regression": "6 passed"
+  },
+  "proven": [
+    "android auth runtime repository/session store layer added",
+    "mobile runtime proof endpoint available",
+    "android login no longer relies on local role picker",
+    "server auth boundary regression still passes"
+  ],
+  "not_proven": [
+    "real Android device/emulator proof",
+    "live offline sync replay proof on production-like contour",
+    "full mobile protected workflow proof end-to-end"
+  ]
+}

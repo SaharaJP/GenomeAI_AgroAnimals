@@ -1,0 +1,28 @@
+weekly_plan_pdf_v1:
+  theme_name: genomeai_weekly_plan_v1
+  brand_name: GenomeAI AgroAnimals
+  brand_tagline: Weekly Action Plan - fact-based planning for dairy operations
+  logo_label: GAI
+  charts:
+    max_domains: 6
+    max_source_runs: 6
+    max_teams: 6
+  palette:
+    primary: "#17324D"
+    secondary: "#2E5B88"
+    accent: "#2AA876"
+    accent_soft: "#DDF4EC"
+    info: "#DCEAF7"
+    warning: "#FFF2D6"
+    danger: "#FDE2E4"
+    neutral: "#F7F9FC"
+    border: "#D6DFEA"
+    text: "#203041"
+    muted: "#66778A"
+    white: "#FFFFFF"
+    chart_1: "#2E5B88"
+    chart_2: "#2AA876"
+    chart_3: "#F0A202"
+    chart_4: "#5C6BC0"
+    chart_5: "#D96C75"
+    chart_6: "#7BC4C4"

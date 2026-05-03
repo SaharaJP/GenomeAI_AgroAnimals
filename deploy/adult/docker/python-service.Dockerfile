@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY pyproject.toml README.md alembic.ini /app/
+COPY src /app/src
+COPY packages /app/packages
+COPY configs /app/configs
+COPY docs /app/docs
+COPY data /app/data
+COPY web_cabinet /app/web_cabinet
+COPY web_app /app/web_app
+COPY deploy /app/deploy
+COPY scripts /app/scripts
+
+RUN pip install --no-cache-dir -U pip && pip install --no-cache-dir . "psycopg[binary]" "alembic" "sqlalchemy"
+
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+EXPOSE 8000

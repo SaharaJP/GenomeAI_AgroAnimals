@@ -1,0 +1,107 @@
+[
+  {
+    "animal_id": "3891",
+    "name": "Малина",
+    "recommendation": "SELL",
+    "score": 82,
+    "reason": "recurrent_mastitis_open_cow_negative_npv"
+  },
+  {
+    "animal_id": "3055",
+    "name": "Бурёнка-1",
+    "recommendation": "SELL",
+    "score": 78,
+    "reason": "chronic_lameness"
+  },
+  {
+    "animal_id": "3099",
+    "name": "Зорька-1",
+    "recommendation": "SELL",
+    "score": 75,
+    "reason": "low_production_4th_lact"
+  },
+  {
+    "animal_id": "3180",
+    "name": "Ночка-3",
+    "recommendation": "SELL",
+    "score": 71,
+    "reason": "mastitis_recurrence"
+  },
+  {
+    "animal_id": "3220",
+    "name": "Ласточка-4",
+    "recommendation": "SELL",
+    "score": 70,
+    "reason": "open_180d"
+  },
+  {
+    "animal_id": "3007",
+    "name": "Бурёнка",
+    "recommendation": "WATCH",
+    "score": 58,
+    "reason": "borderline_production"
+  },
+  {
+    "animal_id": "3033",
+    "name": "Зорька",
+    "recommendation": "WATCH",
+    "score": 55,
+    "reason": "scc_trending_up"
+  },
+  {
+    "animal_id": "3071",
+    "name": "Ласточка",
+    "recommendation": "WATCH",
+    "score": 52,
+    "reason": "slow_conception"
+  },
+  {
+    "animal_id": "3145",
+    "name": "Звёздочка-2",
+    "recommendation": "WATCH",
+    "score": 50,
+    "reason": "yield_below_benchmark"
+  },
+  {
+    "animal_id": "3199",
+    "name": "Милка-3",
+    "recommendation": "WATCH",
+    "score": 48,
+    "reason": "lameness_history"
+  },
+  {
+    "animal_id": "3010",
+    "name": "Умница",
+    "recommendation": "KEEP",
+    "score": 22,
+    "reason": "high_producer_good_health"
+  },
+  {
+    "animal_id": "3025",
+    "name": "Красавица",
+    "recommendation": "KEEP",
+    "score": 18,
+    "reason": "pregnant_good_yield"
+  },
+  {
+    "animal_id": "3060",
+    "name": "Белянка",
+    "recommendation": "KEEP",
+    "score": 15,
+    "reason": "strong_2nd_lact"
+  },
+  {
+    "animal_id": "3090",
+    "name": "Пеструха",
+    "recommendation": "KEEP",
+    "score": 12,
+    "reason": "excellent_conception_rate"
+  },
+  {
+    "animal_id": "3130",
+    "name": "Роза",
+    "recommendation": "KEEP",
+    "score": 8,
+    "reason": "top_quartile_milk"
+  }
+]

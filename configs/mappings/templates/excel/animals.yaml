@@ -1,0 +1,10 @@
+dataset: animals
+columns:
+  Animal_ID: animal_id
+  Farm_ID: farm_id
+  Ear_Tag: ear_tag
+  Breed: breed
+  Sex: sex
+  Birth_Date: birth_date
+  Is_Alive: is_alive
+  Status: status

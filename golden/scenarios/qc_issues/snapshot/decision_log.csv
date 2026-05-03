@@ -1,0 +1,3 @@
+user,animal_id,lactation_id,recommendation_type,decision,comment,lactation_no,farm_id,scoring_run
+verify_refactor,A001,A001__1,OBSERVE,,,1.0,F001,score_refactor_qc_issues
+verify_refactor,A002,A002__1,OBSERVE,,,1.0,F001,score_refactor_qc_issues

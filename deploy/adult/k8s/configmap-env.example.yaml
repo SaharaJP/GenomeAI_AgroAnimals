@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: genomeai-env-example
+  namespace: genomeai
+data:
+  GENOMEAI_ENV: prod
+  GENOMEAI_DEPLOY_PROFILE: prod
+  GENOMEAI_API_BASE_URL: http://backend-api:8000
+  GENOMEAI_WEB_BASE_URL: https://genomeai.example.invalid

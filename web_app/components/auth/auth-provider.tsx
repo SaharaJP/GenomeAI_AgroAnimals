@@ -1,0 +1,4 @@
+'use client'; import { createContext,useContext,useEffect,useMemo,useState } from 'react'; import type { AuthMeResponse } from '@/lib/api/contracts'; import { authFetch } from '@/lib/api/client';
+type AuthContextValue={me:AuthMeResponse|null;loading:boolean;refresh:()=>Promise<void>};const AuthContext=createContext<AuthContextValue>({me:null,loading:true,refresh:async()=>undefined});
+export function AuthProvider({children}:{children:React.ReactNode}){const [me,setMe]=useState<AuthMeResponse|null>(null);const [loading,setLoading]=useState(true);const refresh=async()=>{setLoading(true);try{setMe(await authFetch<AuthMeResponse>('/me'))}catch{setMe(null)}finally{setLoading(false)}};useEffect(()=>{void refresh()},[]);const value=useMemo(()=>({me,loading,refresh}),[me,loading]);return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>}
+export function useAuth(){return useContext(AuthContext)}

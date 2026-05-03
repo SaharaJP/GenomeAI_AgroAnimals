@@ -1,0 +1,7 @@
+tenant_id,pen_id,site_id,pen_name,pen_type,capacity_head
+default,PEN_N1_LACT,DEMO_SITE_001,North A Lactating,lactating,120
+default,PEN_N1_FRESH,DEMO_SITE_001,North A Fresh,fresh,40
+default,PEN_N2_REPRO,DEMO_SITE_002,North B Repro,repro,70
+default,PEN_N2_HOSP,DEMO_SITE_002,North B Hospital,hospital,25
+default,PEN_S1_LACT,DEMO_SITE_003,South Lactating,lactating,110
+default,PEN_S1_DRY,DEMO_SITE_003,South Dry,dry,55

@@ -1,0 +1,2 @@
+tenant_id,testday_id,animal_id,lactation_id,test_date,dim,milk_kg,fat_pct,protein_pct,scc_cells_ml
+default,TD_001,A1001,LAC_A1001_1,2025-02-01,184,28.5,4.0,3.2,210000

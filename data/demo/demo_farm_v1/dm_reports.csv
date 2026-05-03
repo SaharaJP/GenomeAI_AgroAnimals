@@ -1,0 +1,4 @@
+tenant_id,report_id,farm_id,report_date,report_type,data_version,run_id,storage_path
+default,RP_DEMO_001,DEMO_FARM_001,2025-04-05,daily_ops,dv_demo_farm_v1,run_demo_daily_001,artifacts/dv_demo_farm_v1/reports/run_demo_daily_001/daily_brief.md
+default,RP_DEMO_002,DEMO_FARM_001,2025-04-05,repro,dv_demo_farm_v1,run_demo_repro_001,artifacts/dv_demo_farm_v1/reports/run_demo_repro_001/report.md
+default,RP_DEMO_003,DEMO_FARM_002,2025-04-05,economics,dv_demo_farm_v1,run_demo_econ_001,artifacts/dv_demo_farm_v1/reports/run_demo_econ_001/report.md

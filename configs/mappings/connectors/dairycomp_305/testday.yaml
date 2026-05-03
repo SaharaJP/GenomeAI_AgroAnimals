@@ -1,0 +1,9 @@
+dataset: testday
+columns:
+  CowID: animal_id
+  FarmID: farm_id
+  TestDate: test_date
+  DIM: days_in_milk
+  MilkKg: milk_kg
+  FatPct: fat_pct
+  ProteinPct: protein_pct

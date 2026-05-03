@@ -1,0 +1,239 @@
+version: 1
+roles:
+  Director:
+    summary: "Start-of-day kit for director: network summary → deviations → approvals → actions."
+    restrictions_note: Director работает через governed summary/actions и не должен вручную обходить продукт как оператор.
+    start_of_day:
+      - title: Проверить daily brief и главное отклонение
+        page: pages/69_AI_Daily_Brief.py
+        checklist:
+          - Проверьте 3–5 ключевых пунктов brief.
+          - Откройте linked actions только для приоритетных отклонений.
+          - Сверьте brief_version и data_version перед обсуждением.
+        do:
+          - Используйте brief как старт дня, а не как финальный approval сам по себе.
+          - Переходите в Director Summary и benchmark view для уточнения масштаба проблемы.
+        dont:
+          - Не принимайте решение без linked facts и версии данных.
+        diagnostics:
+          - Если brief пустой или слишком общий, откройте report view и benchmark view.
+      - title: Сравнить site performance и top issues
+        page_key: enterprise_benchmark_views
+        checklist:
+          - Найдите sites с наибольшим deviation score.
+          - Откройте top issues across sites.
+          - Перейдите в worklists/planner для исполнения.
+        do:
+          - Используйте compare как повод для перехода в action surfaces.
+        dont:
+          - Не читать benchmark как отдельный BI-отчёт без drilldown.
+        diagnostics:
+          - Если сравнение не объясняется, проверьте explainability panel и linked facts.
+      - title: Утвердить или эскалировать решения
+        page_key: approvals_center
+        checklist:
+          - Проверьте approval queue.
+          - Зафиксируйте approval/archive там, где это уже поддерживается.
+          - Оставьте traceable note, если нужен follow-up.
+        do:
+          - Держите governance в Approvals/Decision Log.
+        dont:
+          - Не подтверждайте действия устно без записи в системе.
+        diagnostics:
+          - Если approval flow не виден, проверьте роли/права через admin.
+    key_pages:
+      - director_summary
+      - enterprise_benchmark_views
+      - daily_worklists_by_role
+      - operational_planner
+      - approvals_center
+      - report_view
+  Zootech:
+    summary: "Start-of-day kit for zootech: today queue → reproduction context → group/animal drilldown."
+    restrictions_note: Zootech работает из daily-use queues и profiles, а не из freeform отчётов без action context.
+    start_of_day:
+      - title: Открыть очередь "что делать сегодня"
+        page_key: daily_worklists_by_role
+        checklist:
+          - Отфильтруйте farm/site/team при необходимости.
+          - Откройте high-priority items.
+          - Используйте decision intelligence и explainability перед действием.
+        do:
+          - Начинайте день с queue, а не с ручного поиска animals.
+        dont:
+          - Не закрывайте item без linked object и причины.
+        diagnostics:
+          - Если queue пуста, проверьте planner и alerts.
+      - title: Проверить reproduction / calving context
+        page_key: reproduction_cockpit
+        checklist:
+          - Посмотрите due actions и ключевые KPI.
+          - Откройте repro worklists при отклонении.
+          - Сравните группы перед эскалацией.
+        do:
+          - Используйте cockpit как объясняющий слой, а не только KPI board.
+        dont:
+          - Не интерпретируйте KPI без due lists.
+        diagnostics:
+          - Если KPI не сходятся, откройте report builder или group profile.
+      - title: Перейти в group/animal detail только по сигналу
+        page: pages/14_Group_Profile.py
+        checklist:
+          - Откройте профиль из worklist/alert/report.
+          - Проверьте explainability, recent events и linked tasks.
+          - Зафиксируйте действие через существующий workflow.
+        do:
+          - Используйте profiles как детализацию, а не стартовую точку дня.
+        dont:
+          - Не реконструируйте логику вручную без explainability блока.
+        diagnostics:
+          - Если профиль не объясняет попадание в фокус, проверьте linked alert/worklist/report_version.
+    key_pages:
+      - daily_worklists_by_role
+      - operational_planner
+      - reproduction_worklists
+      - reproduction_cockpit
+      - group_profile
+      - animal_profile
+      - alert_center
+  Vet:
+    summary: "Start-of-day kit for vet: triage queue → treatments/withdrawal → alert follow-up."
+    restrictions_note: Vet получает приоритет из triage queue и treatment journal, а не из свободного просмотра отчётов.
+    start_of_day:
+      - title: Начать с vet triage queue
+        page_key: vet_triage_queues
+        checklist:
+          - Проверьте high-risk queues.
+          - Откройте только top severity / confidence сначала.
+          - Назначьте/подтвердите follow-up через существующие workflows.
+        do:
+          - Используйте triage queue как главный вход в день.
+        dont:
+          - Не переходите сразу в animal cards без triage priority.
+        diagnostics:
+          - Если high-risk queue неожиданно пуста, проверьте alerts и health episode timeline.
+      - title: Проверить treatments и withdrawal
+        page_key: treatment_journal_withdrawal
+        checklist:
+          - Найдите активные treatment courses.
+          - Проверьте milk/meat withdrawal окна.
+          - Убедитесь, что follow-up не просрочен.
+        do:
+          - Используйте journal как source of truth по treatment execution.
+        dont:
+          - Не вести notes вне системы без linkage.
+        diagnostics:
+          - Если есть расхождения, откройте Drug use & compliance.
+      - title: Закрыть clinical follow-up через alerts / episodes
+        page_key: health_episode_timeline
+        checklist:
+          - Откройте episode из alert или queue.
+          - Проверьте linked events/treatments/outcomes.
+          - Эскалируйте chronic/re-treatment кейсы.
+        do:
+          - Смотрите episode как цельную clinical историю.
+        dont:
+          - Не оценивать событие в отрыве от episode timeline.
+        diagnostics:
+          - Если episode linkage не ясен, проверьте source facts и worklist linkage.
+    key_pages:
+      - vet_triage_queues
+      - treatment_journal_withdrawal
+      - drug_use_compliance
+      - health_episode_timeline
+      - alert_center
+      - animal_profile
+  Operator:
+    summary: "Start-of-day kit for operator: jobs → QC → upload/score/report path → execution queue."
+    restrictions_note: Operator отвечает за воспроизводимый pipeline и не должен обходить QC/diagnostics ради "быстрого результата".
+    start_of_day:
+      - title: Проверить jobs и observability
+        page_key: jobs_center
+        checklist:
+          - Посмотрите упавшие или pending jobs.
+          - Проверьте последние артефакты.
+          - Убедитесь, что data_version выбран корректно.
+        do:
+          - Начинайте с jobs/logs при любом operational сбое.
+        dont:
+          - Не перезапускать pipeline без понимания предыдущего статуса.
+        diagnostics:
+          - Для rollout/regression signal откройте Admin Observability.
+      - title: Проверить QC перед train/score/report
+        page_key: qc_ops
+        checklist:
+          - Откройте последний QC report.
+          - Проверьте blocker issues и bad rows.
+          - Только затем переходите к score/report.
+        do:
+          - Фиксируйте data quality до следующего шага pipeline.
+        dont:
+          - Не пропускайте QC ради скорости.
+        diagnostics:
+          - Если QC не сходится, вернитесь в Upload & Ingest Wizard.
+      - title: Поддержать daily execution queue
+        page_key: daily_worklists_by_role
+        checklist:
+          - Проверьте открытые operational items.
+          - Убедитесь, что linked objects открываются.
+          - Передайте handover/override только traceable способом.
+        do:
+          - Держите pipeline и execution queue синхронизированными.
+        dont:
+          - Не закрывайте item без traceable comment/reason.
+        diagnostics:
+          - Если queue не объясняется, проверьте explainability и decision intelligence.
+    key_pages:
+      - upload_ingest_wizard
+      - jobs_center
+      - qc_ops
+      - train_ops
+      - score_ops
+      - report_ops
+      - daily_worklists_by_role
+  Admin:
+    summary: "Start-of-day kit for admin: access/governance → observability/release → rollout diagnostics."
+    restrictions_note: Admin не должен выполнять ежедневную работу за business roles; его задача — доступ, governance и readiness контура.
+    start_of_day:
+      - title: Проверить observability / release / gates
+        page_key: admin_observability_release
+        checklist:
+          - Откройте rollout diagnostics и competitive acceptance.
+          - Проверьте warnings/performance/restore status.
+          - Сохраните diagnostics report при отклонении.
+        do:
+          - Используйте diagnostics как основной admin start-of-day flow.
+        dont:
+          - Не полагайтесь только на пользовательские жалобы без отчёта диагностики.
+        diagnostics:
+          - Если gate падает, откройте соответствующий artifact report и CI log.
+      - title: Проверить роли и доступ
+        page_key: admin_users_security
+        checklist:
+          - Посмотрите изменения пользователей/ролей.
+          - Убедитесь, что external scopes ограничены.
+          - Проверьте governance по collaboration/access requests.
+        do:
+          - Любые access changes проводить только через governed surface.
+        dont:
+          - Не выдавать права ad hoc вне RBAC/policy.
+        diagnostics:
+          - Если пользователь не видит нужную страницу, сверяйте role/permissions и IA.
+      - title: Проверить configs / audit / rollout readiness
+        page_key: admin_configs_audit
+        checklist:
+          - Просмотрите последние critical audit events.
+          - Проверьте config changes и archive operations.
+          - Убедитесь, что rollout notes traceable.
+        do:
+          - Используйте audit как главный след для расследования.
+        dont:
+          - Не редактировать конфиги без traceable причины.
+        diagnostics:
+          - При спорном состоянии сверяйте audit + release diagnostics вместе.
+    key_pages:
+      - admin_console
+      - admin_users_security
+      - admin_configs_audit
+      - admin_observability_release
+      - jobs_center

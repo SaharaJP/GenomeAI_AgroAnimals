@@ -1,0 +1,49 @@
+"""Versioned contracts shared by backend API, web and Android clients."""
+
+from .api_boundary_v1 import (
+    AlertsListResponse,
+    AlertItem,
+    ApiLinkage,
+    AssistantResolveTargetRequest,
+    AssistantResolveTargetResponse,
+    DecisionIntelligenceResponse,
+    DecisionItem,
+    DecisionsListResponse,
+    EconomicsListResponse,
+    EconomicsScenarioItem,
+    EntityRef,
+    FeedbackItem,
+    FeedbackListResponse,
+    PilotPackItem,
+    PilotResponse,
+    PlannerResponse,
+    ProfileResponse,
+    ReadinessResponse,
+    ReportItem,
+    ReportsListResponse,
+    SupportResponse,
+    SupportSummary,
+    WorklistItem,
+    WorklistsListResponse,
+)
+from .auth_boundary_v1 import (
+    AuthLoginRequest,
+    AuthLoginResponse,
+    AuthLogoutRequest,
+    AuthLogoutResponse,
+    AuthMeResponse,
+    AuthRefreshRequest,
+    AuthRefreshResponse,
+    AuthSessionRevokeResponse,
+    AuthSessionsListResponse,
+)
+
+__all__ = [
+    'AlertsListResponse', 'AlertItem', 'ApiLinkage', 'AssistantResolveTargetRequest', 'AssistantResolveTargetResponse',
+    'DecisionIntelligenceResponse', 'DecisionItem', 'DecisionsListResponse', 'EconomicsListResponse', 'EconomicsScenarioItem',
+    'EntityRef', 'FeedbackItem', 'FeedbackListResponse', 'PilotPackItem', 'PilotResponse', 'PlannerResponse',
+    'ProfileResponse', 'ReadinessResponse', 'ReportItem', 'ReportsListResponse', 'SupportResponse', 'SupportSummary',
+    'WorklistItem', 'WorklistsListResponse',
+    'AuthLoginRequest', 'AuthLoginResponse', 'AuthLogoutRequest', 'AuthLogoutResponse', 'AuthMeResponse',
+    'AuthRefreshRequest', 'AuthRefreshResponse', 'AuthSessionRevokeResponse', 'AuthSessionsListResponse',
+]

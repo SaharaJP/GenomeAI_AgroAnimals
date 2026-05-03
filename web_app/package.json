@@ -1,0 +1,24 @@
+{
+  "name": "genomeai-web-app",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "next dev -H 127.0.0.1",
+    "build": "next build --experimental-build-mode compile",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "node scripts/validate-foundation.mjs",
+    "smoke": "npm run typecheck && npm run test"
+  },
+  "dependencies": {
+    "lucide-react": "^0.511.0",
+    "next": "15.3.5",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.0",
+    "@types/react": "19.2.14",
+    "typescript": "5.8.3"
+  }
+}

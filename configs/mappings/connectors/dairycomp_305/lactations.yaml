@@ -1,0 +1,9 @@
+dataset: lactations
+columns:
+  CowID: animal_id
+  FarmID: farm_id
+  LactationNo: lactation_no
+  CalvingDate: calving_date
+  Milk305Kg: milk_305d_kg
+  FatPct: fat_pct
+  ProteinPct: protein_pct

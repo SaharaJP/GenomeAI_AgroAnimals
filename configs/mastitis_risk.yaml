@@ -1,0 +1,60 @@
+# T4-02 Mastitis risk configuration (offline-core)
+horizon_days: 7
+
+# Known mastitis condition codes in dm_health_events.condition_code
+# Matching rules:
+# - case-insensitive
+# - exact match OR substring contains
+mastitis_codes:
+  - MASTITIS
+  - MAST
+  - CLIN_MAST
+  - SUBCLIN_MAST
+
+# Fallback label proxy when condition codes are missing / empty:
+# a future SCC spike above threshold in next horizon_days
+fallback_scc_high: 500000
+
+# Business alert threshold (risk score >= threshold => alert candidate)
+risk_threshold: 0.70
+
+# Optional "facts" thresholds to attach why_facts tags in scoring output
+scc_attention: 300000
+milk_low_kg: 15.0
+rumination_low_min: 350
+temp_high_c: 39.5
+
+# Simple cost placeholders (for threshold tuning narrative)
+cost_false_alert: 1.0
+cost_missed_case: 10.0
+
+
+# Explainability 2.0 (T14-04 / step 1)
+explainability:
+  top_k: 3
+  counterfactual:
+    max_counterfactuals: 2
+    abs_step_default: 1.0
+    pct_step_default: 0.10
+    feature_steps:
+      scc_cells_ml: 50000
+      scc_cells_ml_mean_3d: 50000
+      milk_kg: 1.0
+      milk_kg_mean_3d: 1.0
+      rumination_min: 30
+      rumination_min_mean_3d: 30
+      body_temp_c: 0.2
+      body_temp_c_mean_3d: 0.2
+  feature_rules:
+    scc_cells_ml: higher_increases_risk
+    scc_cells_ml_mean_3d: higher_increases_risk
+    scc_cells_ml_mean_7d: higher_increases_risk
+    milk_kg: lower_increases_risk
+    milk_kg_mean_3d: lower_increases_risk
+    milk_kg_mean_7d: lower_increases_risk
+    rumination_min: lower_increases_risk
+    rumination_min_mean_3d: lower_increases_risk
+    rumination_min_mean_7d: lower_increases_risk
+    body_temp_c: higher_increases_risk
+    body_temp_c_mean_3d: higher_increases_risk
+    body_temp_c_mean_7d: higher_increases_risk

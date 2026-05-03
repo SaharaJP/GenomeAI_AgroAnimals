@@ -1,0 +1,6 @@
+treatment_type,description
+antibiotic,антибиотик (категория)
+anti-inflammatory,противовоспалительное (категория)
+antiparasitic,антипаразитарное (категория)
+vitamin,витамины (категория)
+other,прочее (категория)

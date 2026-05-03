@@ -1,0 +1,27 @@
+version: fresh_cows_transition_economics_v1
+label: Fresh cows / transition economics v1
+fresh_days: 30
+weekly_bucket_days: 7
+repro_watch_dim_start: 14
+min_avg_milk_7d_kg: 28.0
+warning_scc_threshold: 200000
+critical_scc_threshold: 400000
+base_transition_risk_cost_rub: 1800.0
+low_milk_penalty_rub: 2800.0
+health_event_penalty_rub: 1100.0
+active_treatment_penalty_rub: 2200.0
+high_scc_penalty_rub: 1600.0
+high_parity_penalty_rub: 700.0
+vet_action_cost_rub: 1200.0
+repro_action_cost_rub: 700.0
+quality_action_cost_rub: 850.0
+monitor_action_cost_rub: 450.0
+vet_mitigation_rate: 0.55
+repro_mitigation_rate: 0.40
+quality_mitigation_rate: 0.35
+monitor_mitigation_rate: 0.20
+delay_window_days: 7
+high_risk_threshold: 0.65
+medium_risk_threshold: 0.40
+group_high_risk_share_threshold_pct: 25.0
+followup_due_days: 2

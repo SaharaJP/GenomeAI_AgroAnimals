@@ -1,0 +1,8 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'>
+  <rect width='512' height='512' rx='96' fill='#0f766e'/>
+  <circle cx='256' cy='214' r='118' fill='#ffffff' opacity='0.96'/>
+  <path d='M160 316c24-34 63-56 96-56s72 22 96 56' fill='none' stroke='#0f766e' stroke-width='26' stroke-linecap='round'/>
+  <circle cx='214' cy='208' r='16' fill='#0f766e'/>
+  <circle cx='298' cy='208' r='16' fill='#0f766e'/>
+  <text x='256' y='430' font-family='Arial,sans-serif' font-size='56' text-anchor='middle' fill='#ffffff'>GA</text>
+</svg>

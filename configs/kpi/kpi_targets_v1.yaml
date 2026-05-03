@@ -1,0 +1,59 @@
+version: "1"
+
+# KPI goals/targets for plan-fact dashboards (Director 3.0).
+#
+# Notes:
+# - Targets can be overridden per farm/site via Web Cabinet:
+#     /configs/upload  -> web_storage/config_overrides/configs/kpi/kpi_targets_v1.yaml
+# - Scope matching picks the most specific rule (farm+site > farm > defaults).
+# - warn_pct/alert_pct are relative deviations from target (positive numbers).
+#   Example (higher_better):
+#     WARN  if actual <= target*(1-warn_pct)
+#     ALERT if actual <= target*(1-alert_pct)
+#   Example (lower_better):
+#     WARN  if actual >= target*(1+warn_pct)
+#     ALERT if actual >= target*(1+alert_pct)
+
+defaults:
+  kpis:
+    milk_total_kg_7d:
+      target: 100000
+      unit: kg
+      direction: higher_better
+      warn_pct: 0.05
+      alert_pct: 0.10
+    milk_avg_kg_per_cow_1d:
+      target: 28
+      unit: kg/cow/day
+      direction: higher_better
+      warn_pct: 0.05
+      alert_pct: 0.10
+    fat_pct_avg_7d:
+      target: 3.8
+      unit: "%"
+      direction: higher_better
+      warn_pct: 0.03
+      alert_pct: 0.06
+    protein_pct_avg_7d:
+      target: 3.2
+      unit: "%"
+      direction: higher_better
+      warn_pct: 0.03
+      alert_pct: 0.06
+    scc_avg_7d:
+      target: 200000
+      unit: cells/ml
+      direction: lower_better
+      warn_pct: 0.10
+      alert_pct: 0.25
+
+# Optional per-farm/site overrides.
+targets:
+  - scope:
+      tenant_id: default
+      farm_id: FARM_001
+    kpis:
+      milk_total_kg_7d:
+        target: 120000
+        warn_pct: 0.04
+        alert_pct: 0.08

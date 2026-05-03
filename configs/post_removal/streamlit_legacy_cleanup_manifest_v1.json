@@ -1,0 +1,92 @@
+{
+  "schema": "genomeai.post_removal.streamlit_legacy_cleanup_manifest.v1",
+  "gate_id": "T32-12A",
+  "required_absent_paths": [
+    "streamlit_app",
+    ".streamlit",
+    "scripts/run_streamlit.sh"
+  ],
+  "dependency_files": [
+    "pyproject.toml",
+    "deploy/Dockerfile",
+    "deploy/docker-compose.yml",
+    "deploy/adult/docker/python-service.Dockerfile",
+    "deploy/adult/compose.yaml"
+  ],
+  "runtime_import_roots": [
+    "src",
+    "web_cabinet",
+    "genomeai",
+    "scripts",
+    "web_app",
+    "mobile_android",
+    "apps",
+    "packages"
+  ],
+  "operational_scan_roots": [
+    "README.md",
+    "docs",
+    "configs",
+    "deploy",
+    "scripts",
+    "web_cabinet",
+    "web_app",
+    "mobile_android",
+    "apps",
+    "packages",
+    "static"
+  ],
+  "allowed_historical_globs": [
+    "docs/iterations/**",
+    "docs/streamlit_removal_and_cleanup.md",
+    "docs/streamlit_legacy_cleanup_gate.md",
+    "docs/web_cutover_and_rollback_runbook.md",
+    "docs/react_*parity.md",
+    "docs/api_contracts_web_mobile.md",
+    "docs/android_field_app_foundation.md",
+    "docs/architecture/streamlit_transitional_policy.md",
+    "docs/architecture/target_architecture_v2.md",
+    "docs/public_interfaces.md",
+    "docs/target/**",
+    "docs/commercial_packaging_and_editions.md",
+    "docs/operational_report_builder.md",
+    "docs/operational_sla_and_gates.md",
+    "docs/daily_worklists_by_role.md",
+    "docs/treatment_journal_withdrawal.md",
+    "docs/mobile_worklists.md",
+    "apps/web/README.md",
+    "packages/contracts/README.md",
+    "configs/post_removal/**",
+    "configs/cutover/**",
+    "configs/parity/react_daily_operations_parity_v1.json",
+    "installers/releases/**",
+    "data/demo/demo_farm_v1/demo_farm_manifest.json",
+    "tests/test_t32_05_react_daily_operations_parity.py",
+    "tests/test_t32_06_react_profiles_reports_assistant_parity.py",
+    "tests/test_t32_12_streamlit_removal_and_cleanup.py",
+    "tests/test_t32_12a_streamlit_legacy_cleanup_gate.py",
+    "ci/pytest_gate.txt",
+    "scripts/validate_t32_12_streamlit_removal.py",
+    "scripts/smoke_t32_12_streamlit_removal.sh",
+    "README.md",
+    "scripts/validate_t32_12a_streamlit_legacy_cleanup.py",
+    "scripts/smoke_t32_12a_streamlit_legacy_cleanup.sh",
+    "configs/ops/competitive_acceptance_set_v1.yaml"
+  ],
+  "archive_manifest": {
+    "active_product_contours": [
+      "web_app",
+      "mobile_android",
+      "web_cabinet",
+      "src/core",
+      "packages/contracts",
+      "deploy/adult"
+    ],
+    "historical_evidence_contours": [
+      "docs/iterations",
+      "configs/cutover",
+      "configs/post_removal",
+      "installers/releases"
+    ]
+  }
+}

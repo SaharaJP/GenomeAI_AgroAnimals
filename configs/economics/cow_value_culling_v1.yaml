@@ -1,0 +1,25 @@
+version: cow_value_culling_v1
+label: Cow value / culling decision engine v1
+horizon_days: 30
+milk_price_per_kg_rub: 18.0
+daily_feed_cost_rub: 135.0
+daily_other_cost_rub: 55.0
+high_scc_threshold: 200000
+high_scc_penalty_rub: 1800.0
+health_event_penalty_rub: 900.0
+active_treatment_penalty_rub: 2500.0
+treatment_followup_cost_rub: 3500.0
+treatment_recovery_bonus_rub: 4800.0
+repro_open_penalty_rub: 1600.0
+repeat_breeder_penalty_rub: 2600.0
+breed_expected_bonus_rub: 3200.0
+insemination_cost_rub: 750.0
+defer_penalty_rub: 1200.0
+high_parity_threshold: 4
+high_parity_penalty_rub: 1100.0
+cull_salvage_value_rub: 28000.0
+cull_transaction_cost_rub: 4000.0
+replacement_purchase_cost_rub: 72000.0
+replacement_expected_daily_margin_rub: 380.0
+cull_min_advantage_rub: 5000.0
+max_days_open_for_penalty: 120

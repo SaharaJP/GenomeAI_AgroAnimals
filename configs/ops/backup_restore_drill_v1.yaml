@@ -1,0 +1,25 @@
+version: 1
+report_dir: artifacts/restore_drills
+smoke_check: true
+keep_restore_snapshot_on_success: false
+keep_restore_snapshot_on_failure: true
+selected_artifact_globs:
+  - "**/manifest.json"
+  - "**/report*.json"
+  - "**/report*.md"
+  - "**/fact_pack*.json"
+  - "**/fact_pack*.md"
+  - "**/decision*.json"
+  - "**/tasks*.json"
+db_tables:
+  - audit_log
+  - jobs
+  - decision_log_v2
+  - tasks_v1
+audit_ignore_actions:
+  - backup.restore
+  - backup.drill
+  - backup.drill.start
+  - backup.drill.complete
+  - backup.drill.failed
+max_examples: 10

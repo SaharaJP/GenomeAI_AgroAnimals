@@ -1,0 +1,24 @@
+metrics:
+  default_window_days: 30
+  latency_buckets_hours: [4, 24, 72]
+reason_codes:
+  accepted:
+    - CONFIRMED_BY_SPECIALIST
+    - CONFIRMED_BY_MANAGER
+    - ALREADY_ACTIONED
+    - ACCEPTED_OTHER
+  rejected:
+    - FALSE_POSITIVE
+    - LOW_CONFIDENCE
+    - DATA_ISSUE
+    - NOT_FEASIBLE
+    - CONTRADICTS_FIELD_OBSERVATION
+    - DUPLICATE_RECOMMENDATION
+    - REJECTED_OTHER
+dataset:
+  default_sample_weight: 1.0
+  sample_weight_by_reason:
+    LOW_CONFIDENCE: 0.7
+    DATA_ISSUE: 0.5
+    FALSE_POSITIVE: 1.2
+    CONFIRMED_BY_SPECIALIST: 1.1

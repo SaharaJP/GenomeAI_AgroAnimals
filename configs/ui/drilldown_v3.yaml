@@ -1,0 +1,10 @@
+# UI defaults for Drill-down v3 (T10-03)
+
+timeline:
+  days_back_default: 60
+  max_rows: 300
+  show_filters: true
+
+navigation:
+  # When we cannot infer asof_date from metadata we fall back to today.
+  fallback_to_today: true

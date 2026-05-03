@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "genomeai.android.offline.sync.model.v1",
+  "title": "Android Offline Sync Model v1",
+  "type": "object",
+  "properties": {
+    "queue_item": {
+      "type": "object",
+      "required": [
+        "action_type",
+        "status",
+        "audit",
+        "idempotency",
+        "lineage"
+      ],
+      "properties": {
+        "action_type": {
+          "type": "string",
+          "enum": [
+            "QuickEventEntry",
+            "TaskCompletion",
+            "ShiftHandover",
+            "FeedbackSubmission",
+            "AssistantLinkedAction"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "Pending",
+            "ReadyToSync",
+            "InFlight",
+            "AwaitingConflictResolution",
+            "Synced",
+            "FailedRetryable",
+            "FailedTerminal",
+            "Cancelled"
+          ]
+        },
+        "audit": {
+          "type": "object",
+          "required": ["actor_user_id", "actor_role", "mobile_session_id", "device_id", "requires_server_audit_ack"]
+        },
+        "idempotency": {
+          "type": "object",
+          "required": ["idempotency_key", "semantic_key"]
+        },
+        "lineage": {
+          "type": "object",
+          "required": ["client_action_id", "queue_schema_version"],
+          "properties": {
+            "object_linkage": {"type": ["object", "null"]},
+            "ownership_linkage": {"type": ["object", "null"]},
+            "handover_linkage": {"type": ["object", "null"]}
+          }
+        },
+        "server_ack": {
+          "type": ["object", "null"],
+          "required": ["server_audit_id", "accepted_at_iso"]
+        },
+        "conflict": {
+          "type": ["object", "null"],
+          "required": ["resolution_mode", "reason_code", "summary"]
+        }
+      }
+    },
+    "incident": {
+      "type": "object",
+      "required": ["severity", "category", "reason_code", "summary", "retry_eligible"],
+      "properties": {
+        "severity": {"type": "string", "enum": ["Info", "Warning", "Error"]},
+        "category": {"type": "string"},
+        "retry_eligible": {"type": "boolean"}
+      }
+    }
+  },
+  "required": ["queue_item", "incident"]
+}

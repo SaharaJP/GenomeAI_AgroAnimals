@@ -1,0 +1,2815 @@
+from __future__ import annotations
+
+import json
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Iterable, Optional
+
+import pandas as pd
+import yaml
+
+from core.infra.database import DbBackend, resolve_db_backend
+
+
+@dataclass
+class BaseSqlRepo:
+    conn: Any
+    backend: DbBackend | None = None
+
+    def __post_init__(self) -> None:
+        if self.backend is None:
+            self.backend = resolve_db_backend(conn=self.conn)
+
+    def _ph(self, count: int) -> str:
+        return self.backend.placeholders(count)
+
+    def ping(self) -> bool:
+        self.conn.execute("SELECT 1").fetchone()
+        return True
+
+
+class DecisionsRepo(BaseSqlRepo):
+    def append(self, *, tenant_id: str, decision_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO decision_log_v2(
+              decision_id, tenant_id, created_at,
+              recommendation_id, action, user_id, username, reason, comment,
+              related_alert,
+              object_type, object_id, farm_id, group_id,
+              data_version, model_version, report_version, qc_run, scoring_run,
+              metadata_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                decision_id,
+                tenant_id,
+                created_at,
+                payload.get("recommendation_id"),
+                payload.get("action"),
+                int(payload.get("user_id") or 0),
+                str(payload.get("username") or ""),
+                payload.get("reason"),
+                payload.get("comment"),
+                payload.get("related_alert"),
+                payload.get("object_type"),
+                payload.get("object_id"),
+                payload.get("farm_id"),
+                payload.get("group_id"),
+                payload.get("data_version"),
+                payload.get("model_version"),
+                payload.get("report_version"),
+                payload.get("qc_run"),
+                payload.get("scoring_run"),
+                json.dumps(payload.get("metadata") or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+        return decision_id
+
+    @staticmethod
+    def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        d["metadata"] = json.loads(d.get("metadata_json") or "{}")
+        d.pop("metadata_json", None)
+        return d
+
+    def get(self, *, tenant_id: str, decision_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM decision_log_v2 WHERE tenant_id=? AND decision_id=?",
+            (tenant_id, decision_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def list(self, *, tenant_id: str, filters: dict[str, Any], limit: int, offset: int) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+
+        def add(cond: str, val: Any) -> None:
+            where.append(cond)
+            args.append(val)
+
+        for key in ("farm_id", "group_id", "object_type", "object_id", "related_alert", "recommendation_id", "action", "data_version", "model_version", "report_version"):
+            value = filters.get(key)
+            if value:
+                add(f"{key}=?", value)
+        if filters.get("user_id") is not None:
+            add("user_id=?", int(filters.get("user_id")))
+        q = filters.get("q")
+        if q:
+            where.append("(action LIKE ? OR reason LIKE ? OR comment LIKE ? OR username LIKE ?)")
+            qq = f"%{q}%"
+            args.extend([qq, qq, qq, qq])
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM decision_log_v2 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM decision_log_v2
+            WHERE {where_sql}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "decisions": [self._row_to_dict(r) for r in rows if r]}
+
+    def list_for_object(self, *, tenant_id: str, object_id: str, object_types: list[str], limit: int, offset: int) -> dict[str, Any]:
+        if not object_id or not object_types:
+            return {"total": 0, "decisions": []}
+        ph = self._ph(len(object_types))
+        where_sql = f"tenant_id=? AND object_id=? AND object_type IN ({ph})"
+        args: list[Any] = [tenant_id, object_id] + list(object_types)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM decision_log_v2 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM decision_log_v2
+            WHERE {where_sql}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "decisions": [self._row_to_dict(r) for r in rows if r]}
+
+
+class AlertsRepo(BaseSqlRepo):
+    @staticmethod
+    def row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        for key in ("attachments_json", "why_json", "what_to_do_json"):
+            try:
+                d[key] = json.loads(d.get(key) or ("[]" if key != "why_json" else "{}"))
+            except Exception:
+                d[key] = [] if key != "why_json" else {}
+        d["attachments"] = d.pop("attachments_json")
+        d["why"] = d.pop("why_json")
+        d["what_to_do"] = d.pop("what_to_do_json")
+        return d
+
+    def list(self, *, tenant_id: str, filters: dict[str, Any], limit: int, offset: int) -> dict[str, Any]:
+        wh = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        for key in ("status", "alert_type", "source", "object_type", "object_id"):
+            value = filters.get(key)
+            if value:
+                wh.append(f"{key}=?")
+                args.append(value)
+        if filters.get("owner_user_id") is not None:
+            wh.append("owner_user_id=?")
+            args.append(int(filters.get("owner_user_id")))
+        q = filters.get("q")
+        if q:
+            wh.append("(title LIKE ? OR cause LIKE ? OR alert_type LIKE ?)")
+            args.extend([f"%{q}%", f"%{q}%", f"%{q}%"])
+        where = " AND ".join(wh)
+        rows = self.conn.execute(
+            f"SELECT * FROM alerts_v2 WHERE {where} ORDER BY id DESC LIMIT ? OFFSET ?",
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        total = self.conn.execute(f"SELECT COUNT(1) AS n FROM alerts_v2 WHERE {where}", tuple(args)).fetchone()[0]
+        return {"total": int(total), "alerts": [self.row_to_dict(r) for r in rows if r]}
+
+    def list_for_object(self, *, tenant_id: str, object_id: str, object_types: list[str], status: str | None, limit: int, offset: int) -> dict[str, Any]:
+        if not object_id or not object_types:
+            return {"total": 0, "alerts": []}
+        ph = self._ph(len(object_types))
+        wh = ["tenant_id=?", "object_id=?", f"object_type IN ({ph})"]
+        args: list[Any] = [tenant_id, object_id] + list(object_types)
+        if status:
+            wh.append("status=?")
+            args.append(status)
+        where = " AND ".join(wh)
+        total = self.conn.execute(f"SELECT COUNT(1) AS n FROM alerts_v2 WHERE {where}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"SELECT * FROM alerts_v2 WHERE {where} ORDER BY id DESC LIMIT ? OFFSET ?",
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "alerts": [self.row_to_dict(r) for r in rows if r]}
+
+    def get(self, *, tenant_id: str, alert_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM alerts_v2 WHERE tenant_id=? AND alert_id=?",
+            (tenant_id, alert_id),
+        ).fetchone()
+        return self.row_to_dict(row)
+
+    def create(self, *, tenant_id: str, alert_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO alerts_v2(
+              alert_id, tenant_id, created_at, updated_at,
+              alert_type, title, source, cause, confidence,
+              object_type, object_id,
+              status, deadline, owner_user_id,
+              attachments_json, why_json, what_to_do_json,
+              data_version, qc_run, model_version, scoring_run, report_version,
+              dedupe_key
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                alert_id,
+                tenant_id,
+                created_at,
+                created_at,
+                payload.get("alert_type"),
+                payload.get("title"),
+                payload.get("source"),
+                payload.get("cause"),
+                payload.get("confidence"),
+                payload.get("object_type"),
+                payload.get("object_id"),
+                payload.get("status") or "new",
+                payload.get("deadline"),
+                payload.get("owner_user_id"),
+                json.dumps(payload.get("attachments") or [], ensure_ascii=False),
+                json.dumps(payload.get("why") or {}, ensure_ascii=False),
+                json.dumps(payload.get("what_to_do") or [], ensure_ascii=False),
+                payload.get("data_version"),
+                payload.get("qc_run"),
+                payload.get("model_version"),
+                payload.get("scoring_run"),
+                payload.get("report_version"),
+                payload.get("dedupe_key"),
+            ),
+        )
+        self.conn.commit()
+        return alert_id
+
+    def find_open_by_dedupe(self, *, tenant_id: str, dedupe_key: str, open_statuses_sql: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            f"""
+            SELECT * FROM alerts_v2
+            WHERE tenant_id=? AND dedupe_key=? AND status IN ({open_statuses_sql})
+            ORDER BY id DESC LIMIT 1
+            """,
+            (tenant_id, dedupe_key),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def update_generated(self, *, row_id: int, updated_at: str, payload: dict[str, Any]) -> None:
+        self.conn.execute(
+            """
+            UPDATE alerts_v2 SET
+              updated_at=?,
+              title=?, source=?, cause=?, confidence=?,
+              deadline=?, owner_user_id=?,
+              attachments_json=?, why_json=?, what_to_do_json=?,
+              data_version=?, qc_run=?, model_version=?, scoring_run=?, report_version=?
+            WHERE id=?
+            """,
+            (
+                updated_at,
+                payload.get("title"),
+                payload.get("source"),
+                payload.get("cause"),
+                payload.get("confidence"),
+                payload.get("deadline"),
+                payload.get("owner_user_id"),
+                json.dumps(payload.get("attachments") or [], ensure_ascii=False),
+                json.dumps(payload.get("why") or {}, ensure_ascii=False),
+                json.dumps(payload.get("what_to_do") or [], ensure_ascii=False),
+                payload.get("data_version"),
+                payload.get("qc_run"),
+                payload.get("model_version"),
+                payload.get("scoring_run"),
+                payload.get("report_version"),
+                int(row_id),
+            ),
+        )
+        self.conn.commit()
+
+    def get_status(self, *, tenant_id: str, alert_id: str) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT status FROM alerts_v2 WHERE tenant_id=? AND alert_id=?",
+            (tenant_id, alert_id),
+        ).fetchone()
+        return str(row["status"]) if row else None
+
+    def acknowledge(self, *, tenant_id: str, alert_id: str, user_id: int, now: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE alerts_v2 SET
+              status='acknowledged',
+              acknowledged_at=?,
+              acknowledged_by=?,
+              updated_at=?
+            WHERE tenant_id=? AND alert_id=?
+            """,
+            (now, int(user_id), now, tenant_id, alert_id),
+        )
+        self.conn.commit()
+
+    def resolve(self, *, tenant_id: str, alert_id: str, user_id: int, reason: str, now: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE alerts_v2 SET
+              status='resolved',
+              resolved_at=?,
+              resolved_by=?,
+              resolved_reason=?,
+              updated_at=?
+            WHERE tenant_id=? AND alert_id=?
+            """,
+            (now, int(user_id), reason, now, tenant_id, alert_id),
+        )
+        self.conn.commit()
+
+    def resolve_username(self, *, tenant_id: str, user_id: int) -> str:
+        try:
+            row = self.conn.execute(
+                "SELECT username FROM users_v2 WHERE tenant_id=? AND id=?",
+                (tenant_id, int(user_id)),
+            ).fetchone()
+            if row and row[0]:
+                return str(row[0])
+        except Exception:
+            pass
+        try:
+            row = self.conn.execute("SELECT username FROM users WHERE id=?", (int(user_id),)).fetchone()
+            if row and row[0]:
+                return str(row[0])
+        except Exception:
+            pass
+        return f"user_{user_id}"
+
+    def list_open_candidates_for_tasking(self, *, tenant_id: str, open_statuses_sql: str, data_version: str | None, limit_alerts: int) -> list[dict[str, Any]]:
+        where = ["tenant_id=?", f"status IN ({open_statuses_sql})"]
+        args: list[Any] = [tenant_id]
+        if data_version:
+            where.append("data_version=?")
+            args.append(data_version)
+        rows = self.conn.execute(
+            f"""
+            SELECT alert_id, alert_type, title, source, cause, confidence,
+                   object_type, object_id,
+                   deadline, owner_user_id,
+                   attachments_json, why_json, what_to_do_json,
+                   data_version, qc_run, model_version, scoring_run, report_version, dedupe_key
+            FROM alerts_v2
+            WHERE {' AND '.join(where)}
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            tuple(args + [int(limit_alerts)]),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+class TasksRepo(BaseSqlRepo):
+    def insert(self, *, tenant_id: str, task_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO tasks_v1(
+              task_id, tenant_id, created_at, updated_at,
+              task_type, title, domain, priority,
+              status, due_at, owner_user_id,
+              assignee_team, sla_hours, sla_source, stage,
+              related_alert, object_type, object_id,
+              worklist_type, confidence, linked_decision_id, linked_task_id, linked_source_facts_json,
+              attachments_json, why_json, what_to_do_json,
+              data_version, qc_run, model_version, scoring_run, report_version,
+              dedupe_key
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                task_id,
+                tenant_id,
+                created_at,
+                created_at,
+                payload.get("task_type"),
+                payload.get("title"),
+                payload.get("domain"),
+                int(payload.get("priority") or 3),
+                payload.get("status") or "open",
+                payload.get("due_at"),
+                payload.get("owner_user_id"),
+                payload.get("assignee_team"),
+                payload.get("sla_hours"),
+                payload.get("sla_source"),
+                payload.get("stage"),
+                payload.get("related_alert"),
+                payload.get("object_type"),
+                payload.get("object_id"),
+                payload.get("worklist_type"),
+                payload.get("confidence"),
+                payload.get("linked_decision_id"),
+                payload.get("linked_task_id"),
+                json.dumps(payload.get("linked_source_facts") or [], ensure_ascii=False),
+                json.dumps(payload.get("attachments") or [], ensure_ascii=False),
+                json.dumps(payload.get("why") or {}, ensure_ascii=False),
+                json.dumps(payload.get("what_to_do") or [], ensure_ascii=False),
+                payload.get("data_version"),
+                payload.get("qc_run"),
+                payload.get("model_version"),
+                payload.get("scoring_run"),
+                payload.get("report_version"),
+                payload.get("dedupe_key"),
+            ),
+        )
+        self.conn.commit()
+        return task_id
+
+    def get_row(self, *, tenant_id: str, task_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM tasks_v1 WHERE tenant_id=? AND task_id=?",
+            (tenant_id, task_id),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def fetch_status(self, *, tenant_id: str, task_id: str) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT status FROM tasks_v1 WHERE tenant_id=? AND task_id=?",
+            (tenant_id, task_id),
+        ).fetchone()
+        return str(row["status"]) if row else None
+
+    def list_rows(self, *, tenant_id: str, filters: dict[str, Any], limit: int, offset: int) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        def add(cond: str, val: Any) -> None:
+            where.append(cond)
+            args.append(val)
+        for key in ("status", "task_type", "related_alert", "object_type", "object_id", "worklist_type", "linked_decision_id", "linked_task_id"):
+            value = filters.get(key)
+            if value:
+                add(f"{key}=?", value)
+        if filters.get("owner_user_id") is not None:
+            add("owner_user_id=?", int(filters.get("owner_user_id")))
+        if filters.get("due_before"):
+            add("due_at<=?", filters.get("due_before"))
+        if filters.get("stage"):
+            add("stage=?", filters.get("stage"))
+        if filters.get("domain"):
+            add("domain=?", filters.get("domain"))
+        if filters.get("assignee_team"):
+            add("assignee_team=?", str(filters.get("assignee_team")).strip())
+        if filters.get("overdue_only"):
+            where.append("status IN ('open','in_progress')")
+            where.append("due_at IS NOT NULL")
+            where.append("due_at < ?")
+            args.append(filters.get("overdue_ts"))
+        q = filters.get("q")
+        if q:
+            where.append("(title LIKE ? OR task_type LIKE ? OR closed_reason LIKE ?)")
+            qq = f"%{q}%"
+            args.extend([qq, qq, qq])
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM tasks_v1 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM tasks_v1
+            WHERE {where_sql}
+            ORDER BY
+              CASE status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'done' THEN 2 ELSE 3 END,
+              due_at IS NULL,
+              due_at ASC,
+              priority ASC,
+              id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "rows": [dict(r) for r in rows]}
+
+    def list_rows_for_object(self, *, tenant_id: str, object_id: str, object_types: list[str], limit: int, offset: int) -> dict[str, Any]:
+        if not object_id or not object_types:
+            return {"total": 0, "rows": []}
+        ph = self._ph(len(object_types))
+        where_sql = f"tenant_id=? AND object_id=? AND object_type IN ({ph})"
+        args: list[Any] = [tenant_id, object_id] + list(object_types)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM tasks_v1 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM tasks_v1
+            WHERE {where_sql}
+            ORDER BY
+              CASE status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 1 WHEN 'done' THEN 2 ELSE 3 END,
+              due_at IS NULL,
+              due_at ASC,
+              priority ASC,
+              id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "rows": [dict(r) for r in rows]}
+
+    def take(self, *, tenant_id: str, task_id: str, user_id: int, now: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE tasks_v1 SET
+              status='in_progress',
+              owner_user_id=?,
+              assigned_at=COALESCE(assigned_at, ?),
+              started_at=COALESCE(started_at, ?),
+              updated_at=?
+            WHERE tenant_id=? AND task_id=?
+            """,
+            (int(user_id), now, now, now, tenant_id, task_id),
+        )
+        self.conn.commit()
+
+    def assign(self, *, tenant_id: str, task_id: str, owner_user_id: int | None, assignee_team: str | None, now: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE tasks_v1 SET
+              owner_user_id=COALESCE(?, owner_user_id),
+              assignee_team=COALESCE(?, assignee_team),
+              assigned_at=COALESCE(assigned_at, ?),
+              updated_at=?
+            WHERE tenant_id=? AND task_id=?
+            """,
+            (owner_user_id, assignee_team, now, now, tenant_id, task_id),
+        )
+        self.conn.commit()
+
+    def update_fields(self, *, tenant_id: str, task_id: str, sets: list[str], args: list[Any]) -> None:
+        self.conn.execute(
+            f"UPDATE tasks_v1 SET {', '.join(sets)} WHERE tenant_id=? AND task_id=?",
+            tuple(args + [tenant_id, task_id]),
+        )
+        self.conn.commit()
+
+    def close(self, *, tenant_id: str, task_id: str, status: str, stage: str, user_id: int, reason: str, comment: str | None, now: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE tasks_v1 SET
+              status=?,
+              stage=?,
+              closed_at=?,
+              closed_by=?,
+              closed_reason=?,
+              closed_comment=?,
+              updated_at=?
+            WHERE tenant_id=? AND task_id=?
+            """,
+            (status, stage, now, int(user_id), reason, comment, now, tenant_id, task_id),
+        )
+        self.conn.commit()
+
+    def exists_active_dedupe(self, *, tenant_id: str, dedupe_key: str) -> bool:
+        row = self.conn.execute(
+            """
+            SELECT 1 FROM tasks_v1
+            WHERE tenant_id=? AND dedupe_key=? AND status IN ('open','in_progress')
+            LIMIT 1
+            """,
+            (tenant_id, dedupe_key),
+        ).fetchone()
+        return bool(row)
+
+    def list_metric_rows(self, *, tenant_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """
+            SELECT status, domain, assignee_team, stage, priority, created_at, closed_at, due_at
+            FROM tasks_v1
+            WHERE tenant_id=?
+            """,
+            (tenant_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def list_overdue_rows(self, *, tenant_id: str, domain: str | None, assignee_team: str | None) -> list[dict[str, Any]]:
+        where = ["tenant_id=?", "status IN ('open','in_progress')", "due_at IS NOT NULL"]
+        args: list[Any] = [tenant_id]
+        if domain:
+            where.append("domain=?")
+            args.append(domain)
+        if assignee_team:
+            where.append("assignee_team=?")
+            args.append(assignee_team)
+        rows = self.conn.execute(
+            f"""
+            SELECT task_id, title, status, domain, priority, assignee_team, stage, created_at, due_at
+            FROM tasks_v1
+            WHERE {' AND '.join(where)}
+            """,
+            tuple(args),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def list_feedback_rows(self, *, tenant_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT task_id, related_alert, object_type, object_id, status, closed_reason, closed_at, updated_at FROM tasks_v1 WHERE tenant_id=?",
+            (tenant_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+
+
+class CompletionOutcomesRepo(BaseSqlRepo):
+    @staticmethod
+    def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["metrics"] = json.loads(d.get("metrics_json") or "{}")
+        except Exception:
+            d["metrics"] = {}
+        try:
+            d["auto_actions"] = json.loads(d.get("auto_actions_json") or "{}")
+        except Exception:
+            d["auto_actions"] = {}
+        d.pop("metrics_json", None)
+        d.pop("auto_actions_json", None)
+        return d
+
+    def append(self, *, tenant_id: str, outcome_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO completion_outcomes_v1(
+              outcome_id, tenant_id, created_at,
+              worklist_id, task_id, linked_decision_id, related_alert,
+              object_type, object_id,
+              owner_user_id, assignee_team, worklist_type, priority, confidence, due_at,
+              outcome_status, reason_code, comment,
+              outcome_by, outcome_by_username, outcome_role,
+              request_id, data_version, qc_run, model_version, scoring_run, report_version,
+              metrics_json, auto_actions_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                outcome_id, tenant_id, created_at,
+                payload.get('worklist_id'), payload.get('task_id'), payload.get('linked_decision_id'), payload.get('related_alert'),
+                payload.get('object_type'), payload.get('object_id'),
+                payload.get('owner_user_id'), payload.get('assignee_team'), payload.get('worklist_type'), payload.get('priority'), payload.get('confidence'), payload.get('due_at'),
+                payload.get('outcome_status'), payload.get('reason_code'), payload.get('comment'),
+                payload.get('outcome_by'), payload.get('outcome_by_username'), payload.get('outcome_role'),
+                payload.get('request_id'), payload.get('data_version'), payload.get('qc_run'), payload.get('model_version'), payload.get('scoring_run'), payload.get('report_version'),
+                json.dumps(payload.get('metrics') or {}, ensure_ascii=False),
+                json.dumps(payload.get('auto_actions') or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+        return outcome_id
+
+    def get(self, *, tenant_id: str, outcome_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM completion_outcomes_v1 WHERE tenant_id=? AND outcome_id=?",
+            (tenant_id, outcome_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def get_latest_for_task(self, *, tenant_id: str, task_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM completion_outcomes_v1 WHERE tenant_id=? AND task_id=? ORDER BY id DESC LIMIT 1",
+            (tenant_id, task_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def list_rows(self, *, tenant_id: str, filters: dict[str, Any], limit: int, offset: int) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        def add(cond: str, val: Any) -> None:
+            where.append(cond)
+            args.append(val)
+        for key in ('task_id', 'worklist_id', 'linked_decision_id', 'related_alert', 'object_type', 'object_id', 'outcome_status', 'worklist_type', 'assignee_team', 'outcome_role'):
+            value = filters.get(key)
+            if value not in (None, ''):
+                add(f"{key}=?", value)
+        if filters.get('owner_user_id') is not None:
+            add('owner_user_id=?', int(filters.get('owner_user_id')))
+        if filters.get('created_from'):
+            add('created_at>=?', filters.get('created_from'))
+        if filters.get('created_to'):
+            add('created_at<=?', filters.get('created_to'))
+        q = filters.get('q')
+        if q:
+            where.append('(reason_code LIKE ? OR comment LIKE ? OR outcome_by_username LIKE ?)')
+            qq = f'%{q}%'
+            args.extend([qq, qq, qq])
+        where_sql = ' AND '.join(where)
+        total = self.conn.execute(f'SELECT COUNT(*) AS n FROM completion_outcomes_v1 WHERE {where_sql}', tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM completion_outcomes_v1
+            WHERE {where_sql}
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {'total': int(total), 'outcomes': [self._row_to_dict(r) for r in rows if r]}
+
+    def list_feedback_rows(self, *, tenant_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            """
+            SELECT outcome_id, task_id, worklist_id, linked_decision_id, related_alert, object_type, object_id,
+                   outcome_status, reason_code, created_at, outcome_role
+            FROM completion_outcomes_v1
+            WHERE tenant_id=?
+            ORDER BY created_at DESC, id DESC
+            """,
+            (tenant_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def metric_rows(self, *, tenant_id: str, filters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+        filters = dict(filters or {})
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        def add(cond: str, val: Any) -> None:
+            where.append(cond)
+            args.append(val)
+        for key in ('outcome_status', 'worklist_type', 'assignee_team', 'outcome_role'):
+            value = filters.get(key)
+            if value not in (None, ''):
+                add(f"{key}=?", value)
+        if filters.get('created_from'):
+            add('created_at>=?', filters.get('created_from'))
+        if filters.get('created_to'):
+            add('created_at<=?', filters.get('created_to'))
+        rows = self.conn.execute(
+            f"""
+            SELECT outcome_status, reason_code, related_alert, linked_decision_id, worklist_type, assignee_team, outcome_role, created_at, due_at, metrics_json, auto_actions_json
+            FROM completion_outcomes_v1
+            WHERE {' AND '.join(where)}
+            ORDER BY id DESC
+            """,
+            tuple(args),
+        ).fetchall()
+        return [self._row_to_dict(r) for r in rows]
+
+
+class WeeklyPlansRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["action_items"] = json.loads(d.get("action_items_json") or "[]")
+        except Exception:
+            d["action_items"] = []
+        d.pop("action_items_json", None)
+        return d
+
+    def create(
+        self,
+        *,
+        plan_id: str,
+        tenant_id: str,
+        created_at: str,
+        updated_at: str,
+        week_start: str,
+        name: str,
+        summary: str | None,
+        status: str,
+        farm_id: str | None,
+        data_version: str | None,
+        action_items: list[dict[str, Any]],
+        created_by: int,
+        created_by_username: str,
+    ) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO weekly_plans_v1(
+              plan_id, tenant_id, created_at, updated_at,
+              week_start, name, summary, status,
+              farm_id, data_version,
+              action_items_json,
+              created_by, created_by_username
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                str(plan_id), str(tenant_id), created_at, updated_at,
+                str(week_start), str(name), summary, str(status),
+                farm_id, data_version,
+                json.dumps(action_items or [], ensure_ascii=False),
+                int(created_by), str(created_by_username),
+            ),
+        )
+        self.conn.commit()
+        return str(plan_id)
+
+    def get(self, *, tenant_id: str, plan_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM weekly_plans_v1 WHERE tenant_id=? AND plan_id=?",
+            (tenant_id, plan_id),
+        ).fetchone()
+        return self._decode_row(row)
+
+    def list(self, *, tenant_id: str, status: str | None, q: str | None, limit: int, offset: int) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        if status:
+            where.append("status=?")
+            args.append(status)
+        if q:
+            qq = f"%{q}%"
+            where.append("(name LIKE ? OR summary LIKE ?)")
+            args.extend([qq, qq])
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM weekly_plans_v1 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM weekly_plans_v1
+            WHERE {where_sql}
+            ORDER BY week_start DESC, updated_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "weekly_plans": [self._decode_row(r) for r in rows if r]}
+
+    def list_pending_approval(self, *, tenant_id: str, limit: int, offset: int) -> dict[str, Any]:
+        total = self.conn.execute(
+            """
+            SELECT COUNT(*) AS n
+            FROM weekly_plans_v1
+            WHERE tenant_id=?
+              AND status=?
+              AND COALESCE(approval_requested_at, '') <> ''
+              AND COALESCE(approved_at, '') = ''
+              AND COALESCE(rejected_at, '') = ''
+            """,
+            (tenant_id, 'draft'),
+        ).fetchone()[0]
+        rows = self.conn.execute(
+            """
+            SELECT * FROM weekly_plans_v1
+            WHERE tenant_id=?
+              AND status=?
+              AND COALESCE(approval_requested_at, '') <> ''
+              AND COALESCE(approved_at, '') = ''
+              AND COALESCE(rejected_at, '') = ''
+            ORDER BY approval_requested_at DESC, updated_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            (tenant_id, 'draft', int(limit), int(offset)),
+        ).fetchall()
+        return {"total": int(total), "weekly_plans": [self._decode_row(r) for r in rows if r]}
+
+    def get_status(self, *, tenant_id: str, plan_id: str) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT status FROM weekly_plans_v1 WHERE tenant_id=? AND plan_id=?",
+            (tenant_id, plan_id),
+        ).fetchone()
+        return str(row[0]) if row else None
+
+    def update_draft(
+        self,
+        *,
+        tenant_id: str,
+        plan_id: str,
+        updated_at: str,
+        name: str | None,
+        summary: str | None,
+        farm_id: str | None,
+        data_version: str | None,
+        week_start: str | None,
+        action_items: list[dict[str, Any]] | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE weekly_plans_v1
+            SET updated_at=?,
+                name=COALESCE(?, name),
+                summary=COALESCE(?, summary),
+                farm_id=COALESCE(?, farm_id),
+                data_version=COALESCE(?, data_version),
+                week_start=COALESCE(?, week_start),
+                action_items_json=COALESCE(?, action_items_json)
+            WHERE tenant_id=? AND plan_id=?
+            """,
+            (
+                updated_at,
+                name,
+                summary,
+                farm_id,
+                data_version,
+                week_start,
+                (json.dumps(action_items, ensure_ascii=False) if action_items is not None else None),
+                tenant_id,
+                plan_id,
+            ),
+        )
+        self.conn.commit()
+
+    def request_approval(
+        self,
+        *,
+        tenant_id: str,
+        plan_id: str,
+        requested_at: str,
+        requested_by: int,
+        requested_by_username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE weekly_plans_v1
+            SET updated_at=?,
+                approval_requested_at=?,
+                approval_requested_by=?,
+                approval_requested_by_username=?,
+                approval_request_comment=?,
+                approved_at=NULL,
+                approved_by=NULL,
+                approved_by_username=NULL,
+                approval_comment=NULL,
+                rejected_at=NULL,
+                rejected_by=NULL,
+                rejected_by_username=NULL,
+                rejection_comment=NULL
+            WHERE tenant_id=? AND plan_id=?
+            """,
+            (requested_at, requested_at, int(requested_by), str(requested_by_username), comment, tenant_id, plan_id),
+        )
+        self.conn.commit()
+
+    def mark_pdf_exported(
+        self,
+        *,
+        tenant_id: str,
+        plan_id: str,
+        updated_at: str,
+        exported_by: int,
+        exported_by_username: str,
+        pdf_rel_path: str,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE weekly_plans_v1
+            SET updated_at=?,
+                pdf_exported_at=?,
+                pdf_exported_by=?,
+                pdf_exported_by_username=?,
+                pdf_rel_path=?
+            WHERE tenant_id=? AND plan_id=?
+            """,
+            (updated_at, updated_at, int(exported_by), str(exported_by_username), str(pdf_rel_path), tenant_id, plan_id),
+        )
+        self.conn.commit()
+
+    def reject(
+        self,
+        *,
+        tenant_id: str,
+        plan_id: str,
+        updated_at: str,
+        rejected_by: int,
+        rejected_by_username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE weekly_plans_v1
+            SET updated_at=?,
+                rejected_at=?,
+                rejected_by=?,
+                rejected_by_username=?,
+                rejection_comment=?
+            WHERE tenant_id=? AND plan_id=?
+            """,
+            (updated_at, updated_at, int(rejected_by), str(rejected_by_username), comment, tenant_id, plan_id),
+        )
+        self.conn.commit()
+
+    def list_task_links(self, *, tenant_id: str, plan_id: str) -> dict[str, str]:
+        rows = self.conn.execute(
+            "SELECT action_key, task_id FROM weekly_plan_tasks_v1 WHERE tenant_id=? AND plan_id=?",
+            (tenant_id, plan_id),
+        ).fetchall()
+        return {str(r[0]): str(r[1]) for r in rows}
+
+    def get_task_link(self, *, tenant_id: str, plan_id: str, action_key: str) -> Optional[str]:
+        row = self.conn.execute(
+            """
+            SELECT task_id FROM weekly_plan_tasks_v1
+            WHERE tenant_id=? AND plan_id=? AND action_key=?
+            LIMIT 1
+            """,
+            (tenant_id, plan_id, action_key),
+        ).fetchone()
+        return str(row[0]) if row else None
+
+    def link_task(self, *, tenant_id: str, plan_id: str, action_key: str, task_id: str, created_at: str) -> None:
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO weekly_plan_tasks_v1(
+              tenant_id, plan_id, action_key, task_id, created_at
+            ) VALUES (?,?,?,?,?)
+            """,
+            (tenant_id, plan_id, action_key, task_id, created_at),
+        )
+
+    def get_active_task_by_dedupe(self, *, tenant_id: str, dedupe_key: str) -> Optional[str]:
+        row = self.conn.execute(
+            """
+            SELECT task_id FROM tasks_v1
+            WHERE tenant_id=? AND dedupe_key=? AND status IN ('open','in_progress')
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+            """,
+            (tenant_id, dedupe_key),
+        ).fetchone()
+        return str(row[0]) if row else None
+
+    def approve(
+        self,
+        *,
+        tenant_id: str,
+        plan_id: str,
+        updated_at: str,
+        approved_by: int,
+        approved_by_username: str,
+        comment: str | None,
+        tasks_created_at: str | None,
+        tasks_created_run_id: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE weekly_plans_v1
+            SET updated_at=?,
+                status='approved',
+                approved_at=?,
+                approved_by=?,
+                approved_by_username=?,
+                approval_comment=?,
+                rejected_at=NULL,
+                rejected_by=NULL,
+                rejected_by_username=NULL,
+                rejection_comment=NULL,
+                tasks_created_at=COALESCE(tasks_created_at, ?),
+                tasks_created_run_id=COALESCE(tasks_created_run_id, ?)
+            WHERE tenant_id=? AND plan_id=?
+            """,
+            (
+                updated_at, updated_at, int(approved_by), str(approved_by_username), comment,
+                tasks_created_at, tasks_created_run_id, tenant_id, plan_id,
+            ),
+        )
+        self.conn.commit()
+
+    def archive(
+        self,
+        *,
+        tenant_id: str,
+        plan_id: str,
+        updated_at: str,
+        archived_by: int,
+        archived_by_username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE weekly_plans_v1
+            SET updated_at=?,
+                status='archived',
+                archived_at=?,
+                archived_by=?,
+                archived_by_username=?,
+                archive_comment=?
+            WHERE tenant_id=? AND plan_id=?
+            """,
+            (updated_at, updated_at, int(archived_by), str(archived_by_username), comment, tenant_id, plan_id),
+        )
+        self.conn.commit()
+
+
+class WhatIfScenariosRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["params"] = json.loads(d.get("params_json") or "{}")
+        except Exception:
+            d["params"] = {}
+        d.pop("params_json", None)
+        return d
+
+    def create(
+        self,
+        *,
+        scenario_id: str,
+        tenant_id: str,
+        created_at: str,
+        updated_at: str,
+        name: str,
+        description: str | None,
+        status: str,
+        created_by: int,
+        created_by_username: str,
+        data_version: str | None,
+        params: dict[str, Any],
+        cloned_from_scenario_id: str | None = None,
+    ) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO whatif_scenarios_v1(
+              scenario_id, tenant_id, created_at, updated_at,
+              name, description, status,
+              created_by, created_by_username,
+              data_version, params_json,
+              cloned_from_scenario_id
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                str(scenario_id), str(tenant_id), created_at, updated_at,
+                str(name), description, str(status),
+                int(created_by), str(created_by_username),
+                data_version, json.dumps(params or {}, ensure_ascii=False),
+                cloned_from_scenario_id,
+            ),
+        )
+        self.conn.commit()
+        return str(scenario_id)
+
+    def get(self, *, tenant_id: str, scenario_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM whatif_scenarios_v1 WHERE tenant_id=? AND scenario_id=?",
+            (tenant_id, scenario_id),
+        ).fetchone()
+        return self._decode_row(row)
+
+    def get_status(self, *, tenant_id: str, scenario_id: str) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT status FROM whatif_scenarios_v1 WHERE tenant_id=? AND scenario_id=?",
+            (tenant_id, scenario_id),
+        ).fetchone()
+        return str(row[0]) if row else None
+
+    def list(self, *, tenant_id: str, status: str | None, q: str | None, limit: int, offset: int) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        if status:
+            where.append("status=?")
+            args.append(status)
+        if q:
+            qq = f"%{q}%"
+            where.append("(name LIKE ? OR description LIKE ?)")
+            args.extend([qq, qq])
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM whatif_scenarios_v1 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM whatif_scenarios_v1
+            WHERE {where_sql}
+            ORDER BY updated_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "scenarios": [self._decode_row(r) for r in rows if r]}
+
+    def update_draft(
+        self,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        updated_at: str,
+        name: str | None,
+        description: str | None,
+        data_version: str | None,
+        params: dict[str, Any] | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE whatif_scenarios_v1
+            SET updated_at=?,
+                name=COALESCE(?, name),
+                description=COALESCE(?, description),
+                data_version=COALESCE(?, data_version),
+                params_json=COALESCE(?, params_json)
+            WHERE tenant_id=? AND scenario_id=?
+            """,
+            (
+                updated_at, name, description, data_version,
+                (json.dumps(params, ensure_ascii=False) if params is not None else None),
+                tenant_id, scenario_id,
+            ),
+        )
+        self.conn.commit()
+
+    def approve(
+        self,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        updated_at: str,
+        approved_by: int,
+        approved_by_username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE whatif_scenarios_v1
+            SET updated_at=?,
+                status='approved',
+                approved_at=?,
+                approved_by=?,
+                approved_by_username=?,
+                approval_comment=?,
+                rejected_at=NULL,
+                rejected_by=NULL,
+                rejected_by_username=NULL,
+                rejection_comment=NULL
+            WHERE tenant_id=? AND scenario_id=?
+            """,
+            (updated_at, updated_at, int(approved_by), str(approved_by_username), comment, tenant_id, scenario_id),
+        )
+        self.conn.commit()
+
+    def reject(
+        self,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        updated_at: str,
+        rejected_by: int,
+        rejected_by_username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE whatif_scenarios_v1
+            SET updated_at=?,
+                rejected_at=?,
+                rejected_by=?,
+                rejected_by_username=?,
+                rejection_comment=?
+            WHERE tenant_id=? AND scenario_id=?
+            """,
+            (updated_at, updated_at, int(rejected_by), str(rejected_by_username), comment, tenant_id, scenario_id),
+        )
+        self.conn.commit()
+
+    def attach_last_run(self, *, tenant_id: str, scenario_id: str, updated_at: str, economics_run: str) -> None:
+        self.conn.execute(
+            """
+            UPDATE whatif_scenarios_v1
+            SET updated_at=?, last_economics_run=?, last_run_at=?
+            WHERE tenant_id=? AND scenario_id=?
+            """,
+            (updated_at, str(economics_run), updated_at, tenant_id, scenario_id),
+        )
+        self.conn.commit()
+
+    def archive(
+        self,
+        *,
+        tenant_id: str,
+        scenario_id: str,
+        updated_at: str,
+        archived_by: int,
+        archived_by_username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE whatif_scenarios_v1
+            SET updated_at=?,
+                status='archived',
+                archived_at=?,
+                archived_by=?,
+                archived_by_username=?,
+                archive_comment=?
+            WHERE tenant_id=? AND scenario_id=?
+            """,
+            (updated_at, updated_at, int(archived_by), str(archived_by_username), comment, tenant_id, scenario_id),
+        )
+        self.conn.commit()
+
+
+class WhatIfReportsRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["params"] = json.loads(d.get("params_json") or "{}")
+        except Exception:
+            d["params"] = {}
+        d.pop("params_json", None)
+        return d
+
+    def create(
+        self,
+        *,
+        tenant_id: str,
+        created_at: str,
+        created_by: int,
+        created_by_username: str,
+        scenario_id: str,
+        report_version: str,
+        data_version: str,
+        base_economics_run: str,
+        scenario_economics_run: str,
+        pdf_rel_path: str,
+        params: dict[str, Any],
+    ) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO whatif_reports_v1(
+              tenant_id, created_at, created_by, created_by_username,
+              scenario_id, report_version,
+              data_version, base_economics_run, scenario_economics_run,
+              pdf_rel_path, params_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                str(tenant_id), created_at, int(created_by), str(created_by_username),
+                str(scenario_id), str(report_version), str(data_version),
+                str(base_economics_run), str(scenario_economics_run), str(pdf_rel_path),
+                json.dumps(params or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+
+    def get(self, *, tenant_id: str, report_version: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM whatif_reports_v1 WHERE tenant_id=? AND report_version=?",
+            (tenant_id, report_version),
+        ).fetchone()
+        return self._decode_row(row)
+
+    def list(self, *, tenant_id: str, scenario_id: str | None, limit: int, offset: int) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        if scenario_id:
+            where.append("scenario_id=?")
+            args.append(str(scenario_id))
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM whatif_reports_v1 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM whatif_reports_v1
+            WHERE {where_sql}
+            ORDER BY created_at DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "reports": [self._decode_row(r) for r in rows if r]}
+
+
+class ReportApprovalsRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        return dict(row) if row else None
+
+    def ensure_row(self, *, tenant_id: str, data_version: str, report_version: str, now: str, status: str = 'draft') -> None:
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO report_approvals_v1(
+              tenant_id, data_version, report_version,
+              status, created_at, updated_at
+            ) VALUES (?,?,?,?,?,?)
+            """,
+            (str(tenant_id), str(data_version), str(report_version), str(status), now, now),
+        )
+        self.conn.commit()
+
+    def get(self, *, tenant_id: str, data_version: str, report_version: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            """
+            SELECT * FROM report_approvals_v1
+            WHERE tenant_id=? AND data_version=? AND report_version=?
+            """,
+            (str(tenant_id), str(data_version), str(report_version)),
+        ).fetchone()
+        return self._decode_row(row)
+
+    def list_by_data_version(self, *, tenant_id: str, data_version: str) -> dict[str, dict[str, Any]]:
+        rows = self.conn.execute(
+            """
+            SELECT * FROM report_approvals_v1
+            WHERE tenant_id=? AND data_version=?
+            """,
+            (str(tenant_id), str(data_version)),
+        ).fetchall()
+        return {str(r['report_version']): self._decode_row(r) for r in rows if r}
+
+    def approve(
+        self,
+        *,
+        tenant_id: str,
+        data_version: str,
+        report_version: str,
+        updated_at: str,
+        user_id: int,
+        username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE report_approvals_v1
+            SET status='approved',
+                updated_at=?,
+                approved_at=?,
+                approved_by=?,
+                approved_by_username=?,
+                approval_comment=?,
+                rejected_at=NULL,
+                rejected_by=NULL,
+                rejected_by_username=NULL,
+                rejection_comment=NULL
+            WHERE tenant_id=? AND data_version=? AND report_version=?
+            """,
+            (updated_at, updated_at, int(user_id), str(username), comment, str(tenant_id), str(data_version), str(report_version)),
+        )
+        self.conn.commit()
+
+    def reject(
+        self,
+        *,
+        tenant_id: str,
+        data_version: str,
+        report_version: str,
+        updated_at: str,
+        user_id: int,
+        username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE report_approvals_v1
+            SET status='draft',
+                updated_at=?,
+                rejected_at=?,
+                rejected_by=?,
+                rejected_by_username=?,
+                rejection_comment=?
+            WHERE tenant_id=? AND data_version=? AND report_version=?
+            """,
+            (updated_at, updated_at, int(user_id), str(username), comment, str(tenant_id), str(data_version), str(report_version)),
+        )
+        self.conn.commit()
+
+    def archive(
+        self,
+        *,
+        tenant_id: str,
+        data_version: str,
+        report_version: str,
+        updated_at: str,
+        user_id: int,
+        username: str,
+        comment: str | None,
+    ) -> None:
+        self.conn.execute(
+            """
+            UPDATE report_approvals_v1
+            SET status='archived',
+                updated_at=?,
+                archived_at=?,
+                archived_by=?,
+                archived_by_username=?,
+                archive_comment=?
+            WHERE tenant_id=? AND data_version=? AND report_version=?
+            """,
+            (updated_at, updated_at, int(user_id), str(username), comment, str(tenant_id), str(data_version), str(report_version)),
+        )
+        self.conn.commit()
+
+
+
+class FavoritesRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["metadata"] = json.loads(d.get("metadata_json") or "{}")
+        except Exception:
+            d["metadata"] = {}
+        return d
+
+    def add(
+        self,
+        *,
+        tenant_id: str,
+        user_id: int,
+        object_type: str,
+        object_id: str,
+        created_at: str,
+        label: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO favorites_v1(
+              tenant_id, created_at, user_id,
+              object_type, object_id,
+              label, metadata_json
+            ) VALUES (?,?,?,?,?,?,?)
+            """,
+            (
+                str(tenant_id),
+                created_at,
+                int(user_id),
+                str(object_type).strip(),
+                str(object_id).strip(),
+                str(label).strip() if label else None,
+                json.dumps(metadata or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+
+    def remove(self, *, tenant_id: str, user_id: int, object_type: str, object_id: str) -> int:
+        cur = self.conn.execute(
+            "DELETE FROM favorites_v1 WHERE tenant_id=? AND user_id=? AND object_type=? AND object_id=?",
+            (str(tenant_id), int(user_id), str(object_type).strip(), str(object_id).strip()),
+        )
+        self.conn.commit()
+        return int(cur.rowcount or 0)
+
+    def exists(self, *, tenant_id: str, user_id: int, object_type: str, object_id: str) -> bool:
+        row = self.conn.execute(
+            "SELECT 1 FROM favorites_v1 WHERE tenant_id=? AND user_id=? AND object_type=? AND object_id=?",
+            (str(tenant_id), int(user_id), str(object_type).strip(), str(object_id).strip()),
+        ).fetchone()
+        return bool(row)
+
+    def list(
+        self,
+        *,
+        tenant_id: str,
+        user_id: int,
+        object_type: str | None = None,
+        limit: int = 300,
+    ) -> list[dict[str, Any]]:
+        q = "SELECT * FROM favorites_v1 WHERE tenant_id=? AND user_id=?"
+        args: list[Any] = [str(tenant_id), int(user_id)]
+        if object_type:
+            q += " AND object_type=?"
+            args.append(str(object_type).strip())
+        q += " ORDER BY id DESC LIMIT ?"
+        args.append(int(limit))
+        rows = self.conn.execute(q, tuple(args)).fetchall()
+        return [self._decode_row(r) for r in rows if r]
+
+
+class SavedViewsRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["state"] = json.loads(d.get("state_json") or "{}")
+        except Exception:
+            d["state"] = {}
+        return d
+
+    def create(
+        self,
+        *,
+        view_id: str,
+        tenant_id: str,
+        created_at: str,
+        updated_at: str,
+        created_by: int,
+        created_by_username: str,
+        scope: str,
+        name: str,
+        description: str | None,
+        page_key: str,
+        state: dict[str, Any],
+        data_version: str | None,
+        run_id: str | None,
+    ) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO saved_views_v1(
+              view_id, tenant_id, created_at, updated_at,
+              created_by, created_by_username,
+              scope, name, description, page_key,
+              state_json, data_version, run_id
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                str(view_id), str(tenant_id), created_at, updated_at,
+                int(created_by), str(created_by_username),
+                str(scope), str(name), description, str(page_key),
+                json.dumps(state, ensure_ascii=False), data_version, run_id,
+            ),
+        )
+        self.conn.commit()
+        return str(view_id)
+
+    def get(self, *, tenant_id: str, view_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM saved_views_v1 WHERE tenant_id=? AND view_id=?",
+            (str(tenant_id), str(view_id)),
+        ).fetchone()
+        return self._decode_row(row)
+
+    def update(
+        self,
+        *,
+        tenant_id: str,
+        view_id: str,
+        updated_at: str,
+        name: str,
+        description: str | None,
+        scope: str,
+        state_json: str,
+        data_version: str | None,
+        run_id: str | None,
+    ) -> int:
+        cur = self.conn.execute(
+            """
+            UPDATE saved_views_v1
+            SET updated_at=?, name=?, description=?, scope=?, state_json=?, data_version=?, run_id=?
+            WHERE tenant_id=? AND view_id=?
+            """,
+            (updated_at, name, description, scope, state_json, data_version, run_id, str(tenant_id), str(view_id)),
+        )
+        self.conn.commit()
+        return int(cur.rowcount or 0)
+
+    def delete(self, *, tenant_id: str, view_id: str) -> int:
+        cur = self.conn.execute(
+            "DELETE FROM saved_views_v1 WHERE tenant_id=? AND view_id=?",
+            (str(tenant_id), str(view_id)),
+        )
+        self.conn.commit()
+        return int(cur.rowcount or 0)
+
+    def list(
+        self,
+        *,
+        tenant_id: str,
+        user_id: int,
+        page_key: str | None = None,
+        include_shared: bool = True,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        q = "SELECT * FROM saved_views_v1 WHERE tenant_id=?"
+        args: list[Any] = [str(tenant_id)]
+        if page_key:
+            q += " AND page_key=?"
+            args.append(str(page_key))
+        if include_shared:
+            q += " AND (scope='shared' OR created_by=?)"
+            args.append(int(user_id))
+        else:
+            q += " AND created_by=?"
+            args.append(int(user_id))
+        q += " ORDER BY updated_at DESC LIMIT ?"
+        args.append(int(limit))
+        rows = self.conn.execute(q, tuple(args)).fetchall()
+        return [self._decode_row(r) for r in rows if r]
+
+
+class ReportTemplatesRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        for key, default in (("sections_json", []), ("metrics_json", []), ("options_json", {})):
+            try:
+                d[key.replace("_json", "")] = json.loads(d.get(key) or ("[]" if isinstance(default, list) else "{}"))
+            except Exception:
+                d[key.replace("_json", "")] = default
+        return d
+
+    def create(
+        self,
+        *,
+        template_id: str,
+        tenant_id: str,
+        created_at: str,
+        updated_at: str,
+        created_by: int,
+        created_by_username: str,
+        scope: str,
+        name: str,
+        description: str | None,
+        sections_json: str,
+        metrics_json: str,
+        options_json: str,
+    ) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO report_templates_v1(
+              template_id, tenant_id, created_at, updated_at,
+              created_by, created_by_username,
+              scope, name, description,
+              sections_json, metrics_json, options_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                str(template_id), str(tenant_id), created_at, updated_at,
+                int(created_by), str(created_by_username),
+                str(scope), str(name), description,
+                sections_json, metrics_json, options_json,
+            ),
+        )
+        self.conn.commit()
+        return str(template_id)
+
+    def get(self, *, tenant_id: str, template_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM report_templates_v1 WHERE tenant_id=? AND template_id=?",
+            (str(tenant_id), str(template_id)),
+        ).fetchone()
+        return self._decode_row(row)
+
+    def update(
+        self,
+        *,
+        tenant_id: str,
+        template_id: str,
+        updated_at: str,
+        scope: str,
+        name: str,
+        description: str | None,
+        sections_json: str,
+        metrics_json: str,
+        options_json: str,
+    ) -> int:
+        cur = self.conn.execute(
+            """
+            UPDATE report_templates_v1
+            SET updated_at=?, scope=?, name=?, description=?,
+                sections_json=?, metrics_json=?, options_json=?
+            WHERE tenant_id=? AND template_id=?
+            """,
+            (updated_at, scope, name, description, sections_json, metrics_json, options_json, str(tenant_id), str(template_id)),
+        )
+        self.conn.commit()
+        return int(cur.rowcount or 0)
+
+    def delete(self, *, tenant_id: str, template_id: str) -> int:
+        cur = self.conn.execute(
+            "DELETE FROM report_templates_v1 WHERE tenant_id=? AND template_id=?",
+            (str(tenant_id), str(template_id)),
+        )
+        self.conn.commit()
+        return int(cur.rowcount or 0)
+
+    def list(
+        self,
+        *,
+        tenant_id: str,
+        user_id: int,
+        include_shared: bool = True,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        q = "SELECT * FROM report_templates_v1 WHERE tenant_id=?"
+        args: list[Any] = [str(tenant_id)]
+        if include_shared:
+            q += " AND (scope='shared' OR created_by=?)"
+            args.append(int(user_id))
+        else:
+            q += " AND created_by=?"
+            args.append(int(user_id))
+        q += " ORDER BY updated_at DESC LIMIT ?"
+        args.append(int(limit))
+        rows = self.conn.execute(q, tuple(args)).fetchall()
+        return [self._decode_row(r) for r in rows if r]
+
+
+class FeedbackRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        item = dict(row)
+        try:
+            item["metadata"] = json.loads(item.get("metadata_json") or "{}")
+        except Exception:
+            item["metadata"] = {}
+        item.pop("metadata_json", None)
+        return item
+
+    def insert_event(self, *, tenant_id: str, feedback_id: str, created_at: str, recommendation_id: str, decision: str, reason_code: str, comment: str | None, recommendation_created_at: str | None, decision_seconds: int | None, related_alert: str | None, task_id: str | None, object_type: str | None, object_id: str | None, farm_id: str | None, group_id: str | None, data_version: str | None, model_version: str | None, report_version: str | None, qc_run: str | None, scoring_run: str | None, feedback_source: str | None, decision_id: str, metadata: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO feedback_events_v1(
+              feedback_id, tenant_id, created_at,
+              recommendation_id, decision, reason_code, comment,
+              recommendation_created_at, decision_seconds,
+              related_alert, task_id,
+              object_type, object_id, farm_id, group_id,
+              data_version, model_version, report_version, qc_run, scoring_run,
+              feedback_source, decision_id, metadata_json
+            ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                feedback_id, tenant_id, created_at, recommendation_id, decision, reason_code, comment,
+                recommendation_created_at, decision_seconds, related_alert, task_id, object_type, object_id, farm_id, group_id,
+                data_version, model_version, report_version, qc_run, scoring_run, feedback_source, decision_id,
+                json.dumps(metadata or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+        return feedback_id
+
+    def list_events(self, *, tenant_id: str, filters: dict[str, Any], limit: int = 200, offset: int = 0) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        for key in ("recommendation_id", "decision", "object_type", "object_id", "data_version", "scoring_run", "report_version", "feedback_source", "model_version"):
+            value = filters.get(key)
+            if value:
+                where.append(f"{key}=?")
+                args.append(value)
+        where_sql = " AND ".join(where)
+        total = int(self.conn.execute(f"SELECT COUNT(*) FROM feedback_events_v1 WHERE {where_sql}", tuple(args)).fetchone()[0])
+        rows = self.conn.execute(
+            f"SELECT * FROM feedback_events_v1 WHERE {where_sql} ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": total, "items": [self._decode_row(r) for r in rows if r]}
+
+    def list_rows(self, *, tenant_id: str, filters: dict[str, Any]) -> list[dict[str, Any]]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        for key in ("data_version", "scoring_run", "report_version", "feedback_source", "model_version"):
+            value = filters.get(key)
+            if value:
+                where.append(f"{key}=?")
+                args.append(value)
+        sql = "SELECT * FROM feedback_events_v1 WHERE " + " AND ".join(where) + " ORDER BY created_at DESC, id DESC"
+        rows = self.conn.execute(sql, tuple(args)).fetchall()
+        return [dict(r) for r in rows]
+
+
+
+class AnimalEventsRepo(BaseSqlRepo):
+    @staticmethod
+    def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["payload"] = json.loads(d.get("payload_json") or "{}")
+        except Exception:
+            d["payload"] = {}
+        d.pop("payload_json", None)
+        return d
+
+    def append(self, *, tenant_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO animal_events_v1(
+              event_id, tenant_id, created_at, updated_at,
+              animal_id, farm_id, site_id, lactation_id,
+              event_type, event_ts, event_date,
+              actor_type, actor_user_id, actor_username,
+              source, source_ref, reason_code,
+              linked_object_type, linked_object_id,
+              linked_decision_id, linked_task_id,
+              request_id, job_id,
+              data_version, qc_run, model_version, scoring_run, report_version,
+              payload_json, schema_version
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                payload.get("event_id"), tenant_id, created_at, created_at,
+                payload.get("animal_id"), payload.get("farm_id"), payload.get("site_id"), payload.get("lactation_id"),
+                payload.get("event_type"), payload.get("event_ts"), payload.get("event_date"),
+                payload.get("actor_type"), payload.get("actor_user_id"), payload.get("actor_username"),
+                payload.get("source"), payload.get("source_ref"), payload.get("reason_code"),
+                payload.get("linked_object_type"), payload.get("linked_object_id"),
+                payload.get("linked_decision_id"), payload.get("linked_task_id"),
+                payload.get("request_id"), payload.get("job_id"),
+                payload.get("data_version"), payload.get("qc_run"), payload.get("model_version"), payload.get("scoring_run"), payload.get("report_version"),
+                json.dumps(payload.get("payload") or {}, ensure_ascii=False), int(payload.get("schema_version") or 1),
+            ),
+        )
+        self.conn.commit()
+        return str(payload.get("event_id") or "")
+
+    def get(self, *, tenant_id: str, event_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM animal_events_v1 WHERE tenant_id=? AND event_id=?",
+            (tenant_id, event_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def list_for_animal(self, *, tenant_id: str, animal_id: str, limit: int, offset: int = 0, event_types: list[str] | None = None) -> dict[str, Any]:
+        where = ["tenant_id=?", "animal_id=?"]
+        args: list[Any] = [tenant_id, animal_id]
+        if event_types:
+            ph = self._ph(len(event_types))
+            where.append(f"event_type IN ({ph})")
+            args.extend(list(event_types))
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(
+            f"SELECT COUNT(*) AS n FROM animal_events_v1 WHERE {where_sql}",
+            tuple(args),
+        ).fetchone()[0]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM animal_events_v1
+            WHERE {where_sql}
+            ORDER BY event_ts DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "events": [self._row_to_dict(r) for r in rows if r]}
+
+    def list_linked(self, *, tenant_id: str, linked_object_type: str, linked_object_id: str, limit: int, offset: int = 0) -> dict[str, Any]:
+        total = self.conn.execute(
+            "SELECT COUNT(*) AS n FROM animal_events_v1 WHERE tenant_id=? AND linked_object_type=? AND linked_object_id=?",
+            (tenant_id, linked_object_type, linked_object_id),
+        ).fetchone()[0]
+        rows = self.conn.execute(
+            """
+            SELECT * FROM animal_events_v1
+            WHERE tenant_id=? AND linked_object_type=? AND linked_object_id=?
+            ORDER BY event_ts DESC, id DESC
+            LIMIT ? OFFSET ?
+            """,
+            (tenant_id, linked_object_type, linked_object_id, int(limit), int(offset)),
+        ).fetchall()
+        return {"total": int(total), "events": [self._row_to_dict(r) for r in rows if r]}
+
+
+class VetProtocolExecutionsRepo(BaseSqlRepo):
+    @staticmethod
+    def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        for key, default in (
+            ('steps_json', []),
+            ('linked_treatments_json', []),
+            ('linked_observations_json', []),
+            ('source_versions_json', {}),
+            ('metrics_json', {}),
+            ('metadata_json', {}),
+        ):
+            try:
+                d[key[:-5]] = json.loads(d.get(key) or json.dumps(default, ensure_ascii=False))
+            except Exception:
+                d[key[:-5]] = default
+            d.pop(key, None)
+        return d
+
+    def insert(self, *, tenant_id: str, execution_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO vet_protocol_executions_v1(
+              execution_id, tenant_id, created_at, updated_at,
+              protocol_key, protocol_version, protocol_title, catalog_version,
+              status,
+              animal_id, farm_id, site_id,
+              linked_alert_id, linked_health_event_id, linked_worklist_id,
+              object_type, object_id,
+              owner_user_id, assignee_team, owner_role,
+              started_by, started_by_username, started_role,
+              next_follow_up_due_at, completed_at, completed_by, completed_by_username,
+              request_id, data_version, qc_run, model_version, scoring_run, report_version,
+              steps_json, linked_treatments_json, linked_observations_json, source_versions_json, metrics_json, metadata_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                execution_id, tenant_id, created_at, created_at,
+                payload.get('protocol_key'), payload.get('protocol_version'), payload.get('protocol_title'), payload.get('catalog_version'),
+                payload.get('status') or 'open',
+                payload.get('animal_id'), payload.get('farm_id'), payload.get('site_id'),
+                payload.get('linked_alert_id'), payload.get('linked_health_event_id'), payload.get('linked_worklist_id'),
+                payload.get('object_type'), payload.get('object_id'),
+                payload.get('owner_user_id'), payload.get('assignee_team'), payload.get('owner_role'),
+                payload.get('started_by'), payload.get('started_by_username'), payload.get('started_role'),
+                payload.get('next_follow_up_due_at'), payload.get('completed_at'), payload.get('completed_by'), payload.get('completed_by_username'),
+                payload.get('request_id'), payload.get('data_version'), payload.get('qc_run'), payload.get('model_version'), payload.get('scoring_run'), payload.get('report_version'),
+                json.dumps(payload.get('steps') or [], ensure_ascii=False),
+                json.dumps(payload.get('linked_treatments') or [], ensure_ascii=False),
+                json.dumps(payload.get('linked_observations') or [], ensure_ascii=False),
+                json.dumps(payload.get('source_versions') or {}, ensure_ascii=False),
+                json.dumps(payload.get('metrics') or {}, ensure_ascii=False),
+                json.dumps(payload.get('metadata') or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+        return execution_id
+
+    def get(self, *, tenant_id: str, execution_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM vet_protocol_executions_v1 WHERE tenant_id=? AND execution_id=?",
+            (tenant_id, execution_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def update(self, *, tenant_id: str, execution_id: str, updated_at: str, payload: dict[str, Any]) -> None:
+        self.conn.execute(
+            """
+            UPDATE vet_protocol_executions_v1 SET
+              updated_at=?,
+              status=?,
+              linked_alert_id=?, linked_health_event_id=?, linked_worklist_id=?,
+              owner_user_id=?, assignee_team=?, owner_role=?,
+              next_follow_up_due_at=?, completed_at=?, completed_by=?, completed_by_username=?,
+              request_id=?, data_version=?, qc_run=?, model_version=?, scoring_run=?, report_version=?,
+              steps_json=?, linked_treatments_json=?, linked_observations_json=?, source_versions_json=?, metrics_json=?, metadata_json=?
+            WHERE tenant_id=? AND execution_id=?
+            """,
+            (
+                updated_at,
+                payload.get('status') or 'open',
+                payload.get('linked_alert_id'), payload.get('linked_health_event_id'), payload.get('linked_worklist_id'),
+                payload.get('owner_user_id'), payload.get('assignee_team'), payload.get('owner_role'),
+                payload.get('next_follow_up_due_at'), payload.get('completed_at'), payload.get('completed_by'), payload.get('completed_by_username'),
+                payload.get('request_id'), payload.get('data_version'), payload.get('qc_run'), payload.get('model_version'), payload.get('scoring_run'), payload.get('report_version'),
+                json.dumps(payload.get('steps') or [], ensure_ascii=False),
+                json.dumps(payload.get('linked_treatments') or [], ensure_ascii=False),
+                json.dumps(payload.get('linked_observations') or [], ensure_ascii=False),
+                json.dumps(payload.get('source_versions') or {}, ensure_ascii=False),
+                json.dumps(payload.get('metrics') or {}, ensure_ascii=False),
+                json.dumps(payload.get('metadata') or {}, ensure_ascii=False),
+                tenant_id, execution_id,
+            ),
+        )
+        self.conn.commit()
+
+    def list_rows(self, *, tenant_id: str, filters: dict[str, Any], limit: int = 200, offset: int = 0) -> dict[str, Any]:
+        where = ['tenant_id=?']
+        args: list[Any] = [tenant_id]
+        for key in ('protocol_key', 'status', 'animal_id', 'farm_id', 'site_id', 'linked_alert_id', 'linked_health_event_id', 'linked_worklist_id', 'assignee_team', 'owner_role', 'object_type', 'object_id', 'data_version'):
+            value = filters.get(key)
+            if value not in (None, ''):
+                where.append(f"{key}=?")
+                args.append(value)
+        q = filters.get('q')
+        if q:
+            qq = f'%{q}%'
+            where.append('(protocol_title LIKE ? OR animal_id LIKE ? OR execution_id LIKE ?)')
+            args.extend([qq, qq, qq])
+        where_sql = ' AND '.join(where)
+        total = int(self.conn.execute(f"SELECT COUNT(*) FROM vet_protocol_executions_v1 WHERE {where_sql}", tuple(args)).fetchone()[0])
+        rows = self.conn.execute(
+            f"SELECT * FROM vet_protocol_executions_v1 WHERE {where_sql} ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?",
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {'total': total, 'items': [self._row_to_dict(r) for r in rows if r]}
+
+    def list_for_object(self, *, tenant_id: str, object_type: str, object_id: str, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+        total = int(self.conn.execute(
+            "SELECT COUNT(*) FROM vet_protocol_executions_v1 WHERE tenant_id=? AND object_type=? AND object_id=?",
+            (tenant_id, object_type, object_id),
+        ).fetchone()[0])
+        rows = self.conn.execute(
+            "SELECT * FROM vet_protocol_executions_v1 WHERE tenant_id=? AND object_type=? AND object_id=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?",
+            (tenant_id, object_type, object_id, int(limit), int(offset)),
+        ).fetchall()
+        return {'total': total, 'items': [self._row_to_dict(r) for r in rows if r]}
+
+
+
+
+class TreatmentJournalRepo(BaseSqlRepo):
+    @staticmethod
+    def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        for key, default in (
+            ('source_versions_json', {}),
+            ('metadata_json', {}),
+        ):
+            try:
+                d[key[:-5]] = json.loads(d.get(key) or json.dumps(default, ensure_ascii=False))
+            except Exception:
+                d[key[:-5]] = default
+            d.pop(key, None)
+        return d
+
+    def insert(self, *, tenant_id: str, course_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO treatment_journal_v1(
+              course_id, tenant_id, created_at, updated_at,
+              course_status, animal_id, farm_id, site_id, pen_id,
+              linked_alert_id, linked_health_event_id, linked_protocol_execution_id, linked_worklist_id,
+              treatment_type, diagnosis_label, drug_name, drug_code, route, dose_value, dose_unit, frequency_per_day, duration_days,
+              start_date, end_date, follow_up_due_at, follow_up_status, follow_up_comment,
+              withdrawal_rule_version, withdrawal_days_rule, withdrawal_end_date_source, withdrawal_end_date_calc, withdrawal_end_date_effective,
+              created_by, created_by_username, created_by_role, completed_at, completed_by, completed_by_username,
+              request_id, data_version, source_versions_json, metadata_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                course_id, tenant_id, created_at, created_at,
+                payload.get('course_status') or 'active', payload.get('animal_id'), payload.get('farm_id'), payload.get('site_id'), payload.get('pen_id'),
+                payload.get('linked_alert_id'), payload.get('linked_health_event_id'), payload.get('linked_protocol_execution_id'), payload.get('linked_worklist_id'),
+                payload.get('treatment_type'), payload.get('diagnosis_label'), payload.get('drug_name'), payload.get('drug_code'), payload.get('route'), payload.get('dose_value'), payload.get('dose_unit'), payload.get('frequency_per_day'), payload.get('duration_days'),
+                payload.get('start_date'), payload.get('end_date'), payload.get('follow_up_due_at'), payload.get('follow_up_status') or 'none', payload.get('follow_up_comment'),
+                payload.get('withdrawal_rule_version'), payload.get('withdrawal_days_rule'), payload.get('withdrawal_end_date_source'), payload.get('withdrawal_end_date_calc'), payload.get('withdrawal_end_date_effective'),
+                payload.get('created_by'), payload.get('created_by_username'), payload.get('created_by_role'), payload.get('completed_at'), payload.get('completed_by'), payload.get('completed_by_username'),
+                payload.get('request_id'), payload.get('data_version'), json.dumps(payload.get('source_versions') or {}, ensure_ascii=False), json.dumps(payload.get('metadata') or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+        return course_id
+
+    def get(self, *, tenant_id: str, course_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM treatment_journal_v1 WHERE tenant_id=? AND course_id=?",
+            (tenant_id, course_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def update(self, *, tenant_id: str, course_id: str, updated_at: str, payload: dict[str, Any]) -> None:
+        self.conn.execute(
+            """
+            UPDATE treatment_journal_v1 SET
+              updated_at=?, course_status=?, animal_id=?, farm_id=?, site_id=?, pen_id=?,
+              linked_alert_id=?, linked_health_event_id=?, linked_protocol_execution_id=?, linked_worklist_id=?,
+              treatment_type=?, diagnosis_label=?, drug_name=?, drug_code=?, route=?, dose_value=?, dose_unit=?, frequency_per_day=?, duration_days=?,
+              start_date=?, end_date=?, follow_up_due_at=?, follow_up_status=?, follow_up_comment=?,
+              withdrawal_rule_version=?, withdrawal_days_rule=?, withdrawal_end_date_source=?, withdrawal_end_date_calc=?, withdrawal_end_date_effective=?,
+              completed_at=?, completed_by=?, completed_by_username=?, request_id=?, data_version=?, source_versions_json=?, metadata_json=?
+            WHERE tenant_id=? AND course_id=?
+            """,
+            (
+                updated_at, payload.get('course_status') or 'active', payload.get('animal_id'), payload.get('farm_id'), payload.get('site_id'), payload.get('pen_id'),
+                payload.get('linked_alert_id'), payload.get('linked_health_event_id'), payload.get('linked_protocol_execution_id'), payload.get('linked_worklist_id'),
+                payload.get('treatment_type'), payload.get('diagnosis_label'), payload.get('drug_name'), payload.get('drug_code'), payload.get('route'), payload.get('dose_value'), payload.get('dose_unit'), payload.get('frequency_per_day'), payload.get('duration_days'),
+                payload.get('start_date'), payload.get('end_date'), payload.get('follow_up_due_at'), payload.get('follow_up_status') or 'none', payload.get('follow_up_comment'),
+                payload.get('withdrawal_rule_version'), payload.get('withdrawal_days_rule'), payload.get('withdrawal_end_date_source'), payload.get('withdrawal_end_date_calc'), payload.get('withdrawal_end_date_effective'),
+                payload.get('completed_at'), payload.get('completed_by'), payload.get('completed_by_username'), payload.get('request_id'), payload.get('data_version'), json.dumps(payload.get('source_versions') or {}, ensure_ascii=False), json.dumps(payload.get('metadata') or {}, ensure_ascii=False),
+                tenant_id, course_id,
+            ),
+        )
+        self.conn.commit()
+
+    def list_rows(self, *, tenant_id: str, filters: dict[str, Any], limit: int = 200, offset: int = 0) -> dict[str, Any]:
+        where = ['tenant_id=?']
+        args: list[Any] = [tenant_id]
+        for key in ('course_status', 'animal_id', 'farm_id', 'site_id', 'pen_id', 'linked_alert_id', 'linked_health_event_id', 'linked_protocol_execution_id', 'linked_worklist_id', 'treatment_type', 'data_version'):
+            value = filters.get(key)
+            if value not in (None, ''):
+                where.append(f"{key}=?")
+                args.append(value)
+        q = filters.get('q')
+        if q:
+            where.append('(course_id LIKE ? OR animal_id LIKE ? OR drug_name LIKE ? OR diagnosis_label LIKE ? OR treatment_type LIKE ?)')
+            qq = f"%{q}%"
+            args.extend([qq, qq, qq, qq, qq])
+        where_sql = ' AND '.join(where)
+        total = self.conn.execute(f"SELECT COUNT(*) AS n FROM treatment_journal_v1 WHERE {where_sql}", tuple(args)).fetchone()[0]
+        rows = self.conn.execute(
+            f"SELECT * FROM treatment_journal_v1 WHERE {where_sql} ORDER BY COALESCE(withdrawal_end_date_effective, start_date) ASC, updated_at DESC LIMIT ? OFFSET ?",
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {'total': int(total), 'items': [self._row_to_dict(r) for r in rows if r]}
+
+
+
+
+class DrugUseComplianceRepo(BaseSqlRepo):
+    @staticmethod
+    def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        for key, default in (
+            ('source_versions_json', {}),
+            ('metadata_json', {}),
+        ):
+            try:
+                d[key[:-5]] = json.loads(d.get(key) or json.dumps(default, ensure_ascii=False))
+            except Exception:
+                d[key[:-5]] = default
+            d.pop(key, None)
+        return d
+
+    def insert(self, *, tenant_id: str, entry_id: str, created_at: str, payload: dict[str, Any]) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO drug_use_compliance_v1(
+              entry_id, tenant_id, created_at, event_at,
+              course_id, animal_id, farm_id, site_id, pen_id,
+              linked_object_type, linked_object_id,
+              linked_alert_id, linked_health_event_id, linked_protocol_execution_id, linked_worklist_id,
+              protocol_reference,
+              drug_name, drug_code, route, dose_value, dose_unit,
+              action_type, action_reason_code, action_comment,
+              administration_date,
+              approval_required, approval_state,
+              prescribed_by, prescribed_by_username, prescribed_by_role, prescribed_at,
+              approved_by, approved_by_username, approved_by_role, approved_at, approval_comment,
+              executed_by, executed_by_username, executed_by_role, executed_at,
+              request_id, data_version, source_versions_json, metadata_json
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                entry_id, tenant_id, created_at, payload.get('event_at') or created_at,
+                payload.get('course_id'), payload.get('animal_id'), payload.get('farm_id'), payload.get('site_id'), payload.get('pen_id'),
+                payload.get('linked_object_type'), payload.get('linked_object_id'),
+                payload.get('linked_alert_id'), payload.get('linked_health_event_id'), payload.get('linked_protocol_execution_id'), payload.get('linked_worklist_id'),
+                payload.get('protocol_reference'),
+                payload.get('drug_name'), payload.get('drug_code'), payload.get('route'), payload.get('dose_value'), payload.get('dose_unit'),
+                payload.get('action_type'), payload.get('action_reason_code'), payload.get('action_comment'),
+                payload.get('administration_date'),
+                1 if bool(payload.get('approval_required')) else 0, payload.get('approval_state') or 'not_required',
+                payload.get('prescribed_by'), payload.get('prescribed_by_username'), payload.get('prescribed_by_role'), payload.get('prescribed_at'),
+                payload.get('approved_by'), payload.get('approved_by_username'), payload.get('approved_by_role'), payload.get('approved_at'), payload.get('approval_comment'),
+                payload.get('executed_by'), payload.get('executed_by_username'), payload.get('executed_by_role'), payload.get('executed_at'),
+                payload.get('request_id'), payload.get('data_version'), json.dumps(payload.get('source_versions') or {}, ensure_ascii=False), json.dumps(payload.get('metadata') or {}, ensure_ascii=False),
+            ),
+        )
+        self.conn.commit()
+        return entry_id
+
+    def get(self, *, tenant_id: str, entry_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM drug_use_compliance_v1 WHERE tenant_id=? AND entry_id=?",
+            (tenant_id, entry_id),
+        ).fetchone()
+        return self._row_to_dict(row)
+
+    def list_rows(self, *, tenant_id: str, filters: dict[str, Any], limit: int = 200, offset: int = 0) -> dict[str, Any]:
+        where = ['tenant_id=?']
+        args: list[Any] = [tenant_id]
+        for key in ('course_id', 'animal_id', 'farm_id', 'site_id', 'pen_id', 'linked_object_type', 'linked_object_id', 'action_type', 'approval_state'):
+            value = filters.get(key)
+            if value not in (None, ''):
+                where.append(f"{key}=?")
+                args.append(value)
+        q = filters.get('q')
+        if q:
+            where.append('(entry_id LIKE ? OR course_id LIKE ? OR animal_id LIKE ? OR drug_name LIKE ? OR protocol_reference LIKE ?)')
+            qq = f"%{q}%"
+            args.extend([qq, qq, qq, qq, qq])
+        where_sql = ' AND '.join(where)
+        total = int(self.conn.execute(f"SELECT COUNT(*) FROM drug_use_compliance_v1 WHERE {where_sql}", tuple(args)).fetchone()[0])
+        rows = self.conn.execute(
+            f"SELECT * FROM drug_use_compliance_v1 WHERE {where_sql} ORDER BY event_at DESC, id DESC LIMIT ? OFFSET ?",
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {'total': total, 'items': [self._row_to_dict(r) for r in rows if r]}
+
+
+class AuditRepo(BaseSqlRepo):
+    def write(self, *, row: dict[str, Any]) -> int:
+        cur = self.conn.execute(
+            """
+            INSERT INTO audit_log(
+              ts, tenant_id, user_id, username, role,
+              action, action_group, object_type, object_id, object_ref,
+              data_version, run_id,
+              before_json, after_json,
+              ip, user_agent,
+              status, error, request_id,
+              schema_version
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                row.get("ts"),
+                row.get("tenant_id"),
+                int(row.get("user_id") or 0),
+                row.get("username"),
+                row.get("role"),
+                row.get("action"),
+                row.get("action_group"),
+                row.get("object_type"),
+                row.get("object_id"),
+                row.get("object_ref"),
+                row.get("data_version"),
+                row.get("run_id"),
+                row.get("before_json"),
+                row.get("after_json"),
+                row.get("ip"),
+                row.get("user_agent"),
+                row.get("status"),
+                row.get("error"),
+                row.get("request_id"),
+                int(row.get("schema_version") or 2),
+            ),
+        )
+        self.conn.commit()
+        return int(cur.lastrowid)
+
+    def list_rows(self, *, select_sql: str, args: list[Any]) -> list[dict[str, Any]]:
+        rows = [dict(r) for r in self.conn.execute(select_sql, tuple(args)).fetchall()]
+        return rows
+
+    def fetch_one(self, *, select_sql: str, args: list[Any]) -> Any:
+        return self.conn.execute(select_sql, tuple(args)).fetchone()
+
+    def archive_batch(self, *, tenant_id: str, older_than_ts: str, limit: int, reason: str, archived_at: str, batch_id: str) -> dict[str, Any]:
+        rows = self.conn.execute(
+            'SELECT id FROM audit_log WHERE tenant_id=? AND archived_at IS NULL AND ts < ? ORDER BY ts ASC, id ASC LIMIT ?',
+            (tenant_id, older_than_ts, limit),
+        ).fetchall()
+        ids = [int(r['id']) for r in rows]
+        if ids:
+            placeholders = self._ph(len(ids))
+            self.conn.execute(
+                f'UPDATE audit_log SET archived_at=?, archive_reason=?, archive_batch_id=? WHERE id IN ({placeholders})',
+                (archived_at, reason, batch_id, *ids),
+            )
+        self.conn.execute(
+            """
+            INSERT INTO audit_archive_runs(batch_id, tenant_id, created_at, cutoff_ts, rows_archived, reason)
+            VALUES (?,?,?,?,?,?)
+            """,
+            (batch_id, tenant_id, archived_at, older_than_ts, len(ids), reason),
+        )
+        self.conn.commit()
+        return {"batch_id": batch_id, "archived_at": archived_at, "rows_archived": len(ids), "cutoff_ts": older_than_ts, "reason": reason}
+
+
+class RunsRepo(BaseSqlRepo):
+    def get_job(self, job_id: int) -> Optional[dict[str, Any]]:
+        row = self.conn.execute("SELECT * FROM jobs WHERE id=?", (int(job_id),)).fetchone()
+        return dict(row) if row else None
+
+    def list_jobs_filtered(self, *, status: str | None = None, pipeline: str | None = None, q: str | None = None, limit: int = 200, active_statuses: Iterable[str] = ()) -> list[dict[str, Any]]:
+        sql = "SELECT * FROM jobs WHERE 1=1"
+        args: list[Any] = []
+        if status:
+            raw_status = str(status).strip()
+            if raw_status == "active":
+                active_statuses = list(active_statuses)
+                placeholders = self._ph(len(active_statuses))
+                sql += f" AND status IN ({placeholders})"
+                args.extend(active_statuses)
+            else:
+                sql += " AND status=?"
+                args.append(raw_status)
+        if pipeline:
+            sql += " AND (pipeline_key=? OR kind=?)"
+            args.extend([str(pipeline).strip(), str(pipeline).strip()])
+        if q:
+            term = f"%{str(q).strip()}%"
+            sql += (
+                " AND (public_job_id LIKE ? OR run_id LIKE ? OR data_version LIKE ? OR command LIKE ? OR user LIKE ? "
+                "OR pipeline_key LIKE ? OR kind LIKE ? OR qc_run LIKE ? OR model_version LIKE ? OR scoring_run LIKE ? "
+                "OR report_version LIKE ? OR retry_source LIKE ? OR error_text LIKE ?)"
+            )
+            args.extend([term] * 13)
+        sql += " ORDER BY id DESC LIMIT ?"
+        args.append(max(1, min(int(limit or 200), 1000)))
+        rows = self.conn.execute(sql, tuple(args)).fetchall()
+        return [dict(r) for r in rows]
+
+    def list_job_family(self, job_id: int) -> list[dict[str, Any]]:
+        current = self.get_job(job_id)
+        if not current:
+            return []
+        root_id = int(current.get("id") or job_id)
+        seen: set[int] = set()
+        while current and current.get("retry_of_job_id") and int(current.get("retry_of_job_id")) not in seen:
+            seen.add(root_id)
+            root_id = int(current.get("retry_of_job_id"))
+            current = self.get_job(root_id)
+        rows = self.conn.execute(
+            "SELECT * FROM jobs WHERE id=? OR retry_of_job_id=? OR id IN (SELECT id FROM jobs WHERE retry_of_job_id=?) ORDER BY id ASC",
+            (root_id, root_id, root_id),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+@dataclass
+class ArtifactsRepo:
+    project_root: Path
+    artifacts_root: Path
+    storage_root: Path
+
+    def __post_init__(self) -> None:
+        self.project_root = Path(self.project_root).resolve()
+        self.artifacts_root = Path(self.artifacts_root).resolve()
+        self.storage_root = Path(self.storage_root).resolve()
+
+    def _root_map(self) -> dict[str, Path]:
+        return {
+            "artifacts": self.artifacts_root,
+            "web_storage": self.storage_root,
+            "project": self.project_root,
+        }
+
+    def resolve_virtual_path(self, path: str) -> tuple[Path, str]:
+        from web_cabinet.utils import safe_join
+
+        rel = str(path or "").lstrip("/")
+        base = self.project_root
+        rel2 = rel
+        for prefix, root in self._root_map().items():
+            if rel == prefix or rel.startswith(prefix + "/"):
+                base = root
+                rel2 = rel[len(prefix):].lstrip("/")
+                break
+        if not rel2:
+            raise ValueError("empty path")
+        resolved = safe_join(base, rel2)
+        if not resolved.exists() or not resolved.is_file():
+            raise FileNotFoundError(str(resolved))
+        return resolved, rel
+
+    def read_json(self, path: Path) -> dict[str, Any]:
+        payload = json.loads(Path(path).read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("artifact_json_must_be_object")
+        return payload
+
+    def read_json_virtual(self, path: str) -> dict[str, Any]:
+        resolved, _ = self.resolve_virtual_path(path)
+        return self.read_json(resolved)
+
+    def read_yaml(self, path: Path) -> dict[str, Any]:
+        payload = yaml.safe_load(Path(path).read_text(encoding="utf-8")) or {}
+        return payload if isinstance(payload, dict) else {}
+
+    def list_files_recursive(self, path: Path | None, *, limit: int = 200) -> list[Path]:
+        fp = Path(path) if path is not None else None
+        if fp is None or not fp.exists():
+            return []
+        if fp.is_file():
+            return [fp]
+        files = [x for x in fp.rglob('*') if x.is_file()]
+        return sorted(files)[: max(1, int(limit or 1))]
+
+    def read_preview(self, path: Path, *, max_bytes: int = 65536) -> tuple[str, bool]:
+        raw = Path(path).read_bytes()
+        truncated = len(raw) > max_bytes
+        body = raw[:max_bytes]
+        text = body.decode("utf-8", errors="ignore")
+        if truncated:
+            text += "\n... <preview truncated> ..."
+        return text, truncated
+
+    def read_jsonl_objects(self, path: Path | None, *, limit: int = 200) -> list[dict[str, Any]]:
+        if path is None or not Path(path).exists() or not Path(path).is_file():
+            return []
+        rows: list[dict[str, Any]] = []
+        try:
+            with Path(path).open('r', encoding='utf-8') as f:
+                for idx, line in enumerate(f):
+                    if idx >= max(1, int(limit or 1)):
+                        break
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        obj = json.loads(line)
+                    except Exception:
+                        continue
+                    if isinstance(obj, dict):
+                        rows.append(obj)
+        except Exception:
+            return []
+        return rows
+
+    def preview_virtual(self, path: str, *, max_bytes: int) -> tuple[str, bool]:
+        resolved, _ = self.resolve_virtual_path(path)
+        return self.read_preview(resolved, max_bytes=max_bytes)
+
+    def read_text(self, path: Path) -> str:
+        return Path(path).read_text(encoding="utf-8")
+
+    def read_bytes_tail(self, path: Path, *, max_bytes: int) -> dict[str, Any]:
+        raw = Path(path).read_bytes()
+        size = len(raw)
+        max_tail = max(1024, min(int(max_bytes), 1024 * 1024))
+        body = raw[-max_tail:]
+        return {"size_bytes": size, "tail_bytes": len(body), "is_truncated": size > len(body), "text": body.decode("utf-8", errors="ignore")}
+
+    def read_stream(self, path: Path, *, cursor: int = 0, max_bytes: int = 65536) -> dict[str, Any]:
+        fp = Path(path)
+        if not fp.exists() or not fp.is_file():
+            return {"cursor": max(0, int(cursor or 0)), "next_cursor": max(0, int(cursor or 0)), "max_bytes": 0, "size_bytes": 0, "text": "", "is_eof": True}
+        raw = fp.read_bytes()
+        size = len(raw)
+        start = max(0, min(int(cursor or 0), size))
+        chunk_limit = max(1, min(int(max_bytes or 65536), 1024 * 1024))
+        body = raw[start:start + chunk_limit]
+        next_cursor = start + len(body)
+        return {"cursor": start, "next_cursor": next_cursor, "max_bytes": chunk_limit, "size_bytes": size, "text": body.decode("utf-8", errors="ignore"), "is_eof": next_cursor >= size}
+
+    def ensure_dir(self, path: Path) -> Path:
+        p = Path(path)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+
+    def write_json(self, path: Path, payload: dict[str, Any]) -> Path:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        return p
+
+    def write_dataframe_csv(self, path: Path, df: pd.DataFrame) -> Path:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        df.to_csv(p, index=False)
+        return p
+
+
+class PlaybooksRepo(BaseSqlRepo):
+    @staticmethod
+    def _decode_version_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        d = dict(row)
+        try:
+            d["steps"] = json.loads(d.get("steps_json") or "[]")
+        except Exception:
+            d["steps"] = []
+        d.pop("steps_json", None)
+        return d
+
+    def create_version(
+        self,
+        *,
+        tenant_id: str,
+        version_id: str,
+        playbook_key: str,
+        target_kind: str,
+        target_type: str,
+        farm_id: str,
+        name: str,
+        description: str | None,
+        steps: list[dict[str, Any]],
+        created_at: str,
+        created_by: int | None,
+        created_by_username: str | None,
+        comment: str | None,
+    ) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO playbook_versions(
+              version_id, tenant_id,
+              playbook_key, target_kind, target_type, farm_id,
+              name, description, steps_json,
+              created_at, created_by, created_by_username, comment
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                version_id, tenant_id, playbook_key, target_kind, target_type, farm_id,
+                name, description, json.dumps(steps, ensure_ascii=False),
+                created_at, created_by, created_by_username, comment,
+            ),
+        )
+        self.conn.commit()
+        return version_id
+
+    def get_version(self, *, tenant_id: str, version_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM playbook_versions WHERE tenant_id=? AND version_id=?",
+            (tenant_id, version_id),
+        ).fetchone()
+        return self._decode_version_row(row)
+
+    def list_versions(
+        self,
+        *,
+        tenant_id: str,
+        target_kind: str | None = None,
+        target_type: str | None = None,
+        farm_id: str | None = None,
+        limit: int = 200,
+        offset: int = 0,
+    ) -> list[dict[str, Any]]:
+        sql = "SELECT * FROM playbook_versions WHERE tenant_id=?"
+        args: list[Any] = [tenant_id]
+        if target_kind:
+            sql += " AND target_kind=?"
+            args.append(target_kind)
+        if target_type:
+            sql += " AND target_type=?"
+            args.append(target_type)
+        if farm_id is not None:
+            sql += " AND farm_id=?"
+            args.append(farm_id)
+        sql += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+        args.extend([max(1, int(limit or 200)), max(0, int(offset or 0))])
+        rows = self.conn.execute(sql, tuple(args)).fetchall()
+        return [self._decode_version_row(r) for r in rows if r]
+
+    def get_active_version_mapping(self, *, tenant_id: str, playbook_key: str, farm_id: str) -> dict[str, Any]:
+        row = self.conn.execute(
+            "SELECT active_version_id FROM playbooks_active WHERE tenant_id=? AND playbook_key=? AND farm_id=?",
+            (tenant_id, playbook_key, farm_id),
+        ).fetchone()
+        return dict(row) if row else {"active_version_id": None}
+
+    def list_active_candidates(self, *, tenant_id: str, playbook_key: str, farm_id: str) -> list[dict[str, Any]]:
+        rows = self.conn.execute(
+            "SELECT active_version_id, farm_id FROM playbooks_active WHERE tenant_id=? AND playbook_key=? AND farm_id IN (?, '') ORDER BY CASE WHEN farm_id=? THEN 0 ELSE 1 END",
+            (tenant_id, playbook_key, farm_id, farm_id),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def set_active_version(self, *, tenant_id: str, playbook_key: str, farm_id: str, version_id: str, updated_at: str) -> None:
+        self.conn.execute(
+            """
+            INSERT INTO playbooks_active(tenant_id, playbook_key, farm_id, active_version_id, updated_at)
+            VALUES(?,?,?,?,?)
+            ON CONFLICT(tenant_id, playbook_key, farm_id) DO UPDATE SET
+              active_version_id=excluded.active_version_id,
+              updated_at=excluded.updated_at
+            """,
+            (tenant_id, playbook_key, farm_id, version_id, updated_at),
+        )
+        self.conn.commit()
+
+
+class ConnectorRunsRepo(BaseSqlRepo):
+    def ensure_tables(self) -> None:
+        self.conn.executescript(
+            """
+            CREATE TABLE IF NOT EXISTS connector_runs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              connector_run_id TEXT NOT NULL UNIQUE,
+              tenant_id TEXT NOT NULL,
+              connector_id TEXT NOT NULL,
+              kind TEXT NOT NULL,
+              trigger_type TEXT NOT NULL,
+              schedule_slot TEXT,
+              status TEXT NOT NULL,
+              created_at TEXT NOT NULL,
+              started_at TEXT NOT NULL,
+              finished_at TEXT,
+              data_version TEXT,
+              message TEXT,
+              config_path TEXT,
+              outputs_json TEXT NOT NULL DEFAULT '{}',
+              selected_files_json TEXT NOT NULL DEFAULT '[]',
+              ingest_summaries_json TEXT NOT NULL DEFAULT '[]',
+              error_text TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_connector_runs_connector ON connector_runs(tenant_id, connector_id, started_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_connector_runs_status ON connector_runs(status, started_at DESC);
+
+            CREATE TABLE IF NOT EXISTS connector_schedule_state (
+              tenant_id TEXT NOT NULL,
+              connector_id TEXT NOT NULL,
+              last_slot TEXT,
+              last_enqueued_at TEXT,
+              last_job_id INTEGER,
+              PRIMARY KEY(tenant_id, connector_id)
+            );
+            """
+        )
+        self.conn.commit()
+
+    @staticmethod
+    def decode_run_row(row: Any) -> Optional[dict[str, Any]]:
+        if not row:
+            return None
+        item = dict(row)
+        for key in ("outputs_json", "selected_files_json", "ingest_summaries_json"):
+            try:
+                item[key[:-5]] = json.loads(item.get(key) or ("{}" if key == "outputs_json" else "[]"))
+            except Exception:
+                item[key[:-5]] = {} if key == "outputs_json" else []
+        return item
+
+    def start_run(
+        self,
+        *,
+        tenant_id: str,
+        connector_run_id: str,
+        connector_id: str,
+        kind: str,
+        trigger_type: str,
+        schedule_slot: str | None,
+        config_path: str,
+        started_at: str,
+    ) -> None:
+        self.ensure_tables()
+        self.conn.execute(
+            """
+            INSERT OR REPLACE INTO connector_runs(
+              connector_run_id, tenant_id, connector_id, kind, trigger_type, schedule_slot,
+              status, created_at, started_at, config_path
+            ) VALUES(?,?,?,?,?,?,?,?,?,?)
+            """,
+            (connector_run_id, tenant_id, connector_id, kind, trigger_type, schedule_slot, "running", started_at, started_at, config_path),
+        )
+        self.conn.commit()
+
+    def finish_run(
+        self,
+        *,
+        tenant_id: str,
+        connector_run_id: str,
+        status: str,
+        finished_at: str,
+        data_version: str | None,
+        message: str,
+        outputs: dict[str, Any],
+        selected_files: list[dict[str, Any]],
+        ingest_summaries: list[dict[str, Any]],
+        error_text: str | None = None,
+    ) -> None:
+        self.ensure_tables()
+        self.conn.execute(
+            """
+            UPDATE connector_runs
+               SET tenant_id=?,
+                   status=?,
+                   finished_at=?,
+                   data_version=?,
+                   message=?,
+                   outputs_json=?,
+                   selected_files_json=?,
+                   ingest_summaries_json=?,
+                   error_text=?
+             WHERE connector_run_id=?
+            """,
+            (tenant_id, status, finished_at, data_version, message, json.dumps(outputs or {}, ensure_ascii=False), json.dumps(selected_files or [], ensure_ascii=False), json.dumps(ingest_summaries or [], ensure_ascii=False), error_text, connector_run_id),
+        )
+        self.conn.commit()
+
+    def get_run(self, *, tenant_id: str, connector_run_id: str) -> Optional[dict[str, Any]]:
+        self.ensure_tables()
+        row = self.conn.execute(
+            "SELECT * FROM connector_runs WHERE tenant_id=? AND connector_run_id=?",
+            (tenant_id, str(connector_run_id).strip()),
+        ).fetchone()
+        return self.decode_run_row(row)
+
+    def list_runs(self, *, tenant_id: str, connector_id: str | None = None, limit: int = 100) -> list[dict[str, Any]]:
+        self.ensure_tables()
+        sql = "SELECT * FROM connector_runs WHERE tenant_id=?"
+        args: list[Any] = [tenant_id]
+        if connector_id:
+            sql += " AND connector_id=?"
+            args.append(str(connector_id).strip())
+        sql += " ORDER BY id DESC LIMIT ?"
+        args.append(max(1, min(int(limit or 100), 500)))
+        rows = self.conn.execute(sql, tuple(args)).fetchall()
+        return [self.decode_run_row(r) for r in rows if r]
+
+    def get_schedule_state(self, *, tenant_id: str, connector_id: str) -> dict[str, Any] | None:
+        self.ensure_tables()
+        row = self.conn.execute(
+            "SELECT tenant_id, connector_id, last_slot, last_enqueued_at, last_job_id FROM connector_schedule_state WHERE tenant_id=? AND connector_id=?",
+            (tenant_id, connector_id),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def set_schedule_state(self, *, tenant_id: str, connector_id: str, last_slot: str, last_job_id: int | None, last_enqueued_at: str) -> None:
+        self.ensure_tables()
+        self.conn.execute(
+            """
+            INSERT INTO connector_schedule_state(tenant_id, connector_id, last_slot, last_enqueued_at, last_job_id)
+            VALUES(?,?,?,?,?)
+            ON CONFLICT(tenant_id, connector_id) DO UPDATE SET
+              last_slot=excluded.last_slot,
+              last_enqueued_at=excluded.last_enqueued_at,
+              last_job_id=excluded.last_job_id
+            """,
+            (tenant_id, connector_id, last_slot, last_enqueued_at, last_job_id),
+        )
+        self.conn.commit()
+
+    def list_pending_jobs(self, *, tenant_id: str, config_path: str, limit: int = 25, parser: Any | None = None) -> list[dict[str, Any]]:
+        normalized_config = str(Path(config_path).resolve())
+        rows = self.conn.execute(
+            "SELECT id, public_job_id, kind, status, created_at, next_attempt_at, retry_source, args_json FROM jobs WHERE tenant_id=? AND kind='connector_run' AND status='queued' ORDER BY id DESC LIMIT ?",
+            (tenant_id, max(1, min(int(limit or 25), 200))),
+        ).fetchall()
+        out: list[dict[str, Any]] = []
+        for row in rows:
+            item = dict(row)
+            try:
+                args = json.loads(item.get('args_json') or '{}')
+            except Exception:
+                args = {}
+            parsed = parser(list((args or {}).get('argv') or [])) if parser is not None else {}
+            cfg = str(Path(str(parsed.get('config_path') or '')).resolve()) if parsed.get('config_path') else ''
+            if cfg != normalized_config:
+                continue
+            out.append({
+                'job_id': int(item.get('id') or 0),
+                'public_job_id': item.get('public_job_id'),
+                'status': item.get('status'),
+                'created_at': item.get('created_at'),
+                'next_attempt_at': item.get('next_attempt_at'),
+                'retry_source': item.get('retry_source'),
+                'trigger_type': parsed.get('trigger_type'),
+                'connector_run_id': parsed.get('connector_run_id'),
+                'dataset_keys': parsed.get('dataset_keys') or [],
+                'retry_parent_run_id': parsed.get('retry_parent_run_id'),
+                'retry_attempt_no': int(parsed.get('retry_attempt_no') or 0),
+                'force': bool(parsed.get('force')),
+                'scheduled_slot': parsed.get('scheduled_slot'),
+            })
+        return out
+
+
+__all__ = [
+    "AnimalEventsRepo",
+    "AlertsRepo",
+    "ArtifactsRepo",
+    "AuditRepo",
+    "BaseSqlRepo",
+    "CompletionOutcomesRepo",
+    "ConnectorRunsRepo",
+    "DecisionsRepo",
+    "PlaybooksRepo",
+    "RunsRepo",
+    "TasksRepo",
+]

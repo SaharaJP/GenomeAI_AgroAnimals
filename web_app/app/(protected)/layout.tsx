@@ -1,0 +1,3 @@
+import { cookies } from 'next/headers'; import { redirect } from 'next/navigation'; import { AppShell } from '@/components/app/app-shell'; import { RouteGuard } from '@/components/app/route-guard'; import { AuthProvider } from '@/components/auth/auth-provider'; import { getBrowserAppConfig } from '@/lib/config';
+const config=getBrowserAppConfig();
+export default async function ProtectedLayout({children}:{children:React.ReactNode}){const cookieStore=await cookies();if(!cookieStore.has(config.authCookieNames.accessToken)&&!cookieStore.has(config.authCookieNames.refreshToken))redirect('/login');return <AuthProvider><RouteGuard><AppShell>{children}</AppShell></RouteGuard></AuthProvider>}

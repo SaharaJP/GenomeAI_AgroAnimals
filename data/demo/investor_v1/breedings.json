@@ -1,0 +1,1592 @@
+[
+  {
+    "breeding_id": "BR_3002_01",
+    "animal_id": "3002",
+    "date": "2026-03-12",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-16"
+  },
+  {
+    "breeding_id": "BR_3003_01",
+    "animal_id": "3003",
+    "date": "2025-11-05",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2025-12-10"
+  },
+  {
+    "breeding_id": "BR_3006_01",
+    "animal_id": "3006",
+    "date": "2026-01-03",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-07"
+  },
+  {
+    "breeding_id": "BR_3007_01",
+    "animal_id": "3007",
+    "date": "2026-04-03",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3014_01",
+    "animal_id": "3014",
+    "date": "2026-03-28",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3015_01",
+    "animal_id": "3015",
+    "date": "2026-02-24",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-31"
+  },
+  {
+    "breeding_id": "BR_3018_01",
+    "animal_id": "3018",
+    "date": "2026-02-04",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-11"
+  },
+  {
+    "breeding_id": "BR_3020_01",
+    "animal_id": "3020",
+    "date": "2025-12-09",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-01-13"
+  },
+  {
+    "breeding_id": "BR_3023_01",
+    "animal_id": "3023",
+    "date": "2025-11-12",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2025-12-17"
+  },
+  {
+    "breeding_id": "BR_3025_01",
+    "animal_id": "3025",
+    "date": "2026-04-21",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3028_01",
+    "animal_id": "3028",
+    "date": "2026-01-31",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-07"
+  },
+  {
+    "breeding_id": "BR_3029_01",
+    "animal_id": "3029",
+    "date": "2025-12-17",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-21"
+  },
+  {
+    "breeding_id": "BR_3033_01",
+    "animal_id": "3033",
+    "date": "2025-12-20",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-24"
+  },
+  {
+    "breeding_id": "BR_3034_01",
+    "animal_id": "3034",
+    "date": "2026-02-03",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-10"
+  },
+  {
+    "breeding_id": "BR_3037_01",
+    "animal_id": "3037",
+    "date": "2026-03-22",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3040_01",
+    "animal_id": "3040",
+    "date": "2026-04-07",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3043_01",
+    "animal_id": "3043",
+    "date": "2026-01-04",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-08"
+  },
+  {
+    "breeding_id": "BR_3045_01",
+    "animal_id": "3045",
+    "date": "2026-04-11",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3048_01",
+    "animal_id": "3048",
+    "date": "2025-11-25",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2025-12-30"
+  },
+  {
+    "breeding_id": "BR_3049_01",
+    "animal_id": "3049",
+    "date": "2026-04-02",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3050_01",
+    "animal_id": "3050",
+    "date": "2025-11-19",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2025-12-24"
+  },
+  {
+    "breeding_id": "BR_3060_01",
+    "animal_id": "3060",
+    "date": "2026-01-21",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-25"
+  },
+  {
+    "breeding_id": "BR_3062_01",
+    "animal_id": "3062",
+    "date": "2026-02-10",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-17"
+  },
+  {
+    "breeding_id": "BR_3063_01",
+    "animal_id": "3063",
+    "date": "2026-02-02",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-09"
+  },
+  {
+    "breeding_id": "BR_3065_01",
+    "animal_id": "3065",
+    "date": "2026-02-20",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-27"
+  },
+  {
+    "breeding_id": "BR_3066_01",
+    "animal_id": "3066",
+    "date": "2026-01-09",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-02-13"
+  },
+  {
+    "breeding_id": "BR_3067_01",
+    "animal_id": "3067",
+    "date": "2026-03-28",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3069_01",
+    "animal_id": "3069",
+    "date": "2025-11-04",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2025-12-09"
+  },
+  {
+    "breeding_id": "BR_3070_01",
+    "animal_id": "3070",
+    "date": "2026-03-06",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-10"
+  },
+  {
+    "breeding_id": "BR_3074_01",
+    "animal_id": "3074",
+    "date": "2025-12-05",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-09"
+  },
+  {
+    "breeding_id": "BR_3075_01",
+    "animal_id": "3075",
+    "date": "2026-04-04",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3076_01",
+    "animal_id": "3076",
+    "date": "2025-12-16",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-01-20"
+  },
+  {
+    "breeding_id": "BR_3077_01",
+    "animal_id": "3077",
+    "date": "2026-03-31",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3080_01",
+    "animal_id": "3080",
+    "date": "2026-04-08",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3082_01",
+    "animal_id": "3082",
+    "date": "2026-01-20",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-24"
+  },
+  {
+    "breeding_id": "BR_3083_01",
+    "animal_id": "3083",
+    "date": "2026-01-31",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-07"
+  },
+  {
+    "breeding_id": "BR_3084_01",
+    "animal_id": "3084",
+    "date": "2026-01-19",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-23"
+  },
+  {
+    "breeding_id": "BR_3086_01",
+    "animal_id": "3086",
+    "date": "2026-01-18",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-02-22"
+  },
+  {
+    "breeding_id": "BR_3088_01",
+    "animal_id": "3088",
+    "date": "2026-04-19",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3089_01",
+    "animal_id": "3089",
+    "date": "2026-03-11",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-04-15"
+  },
+  {
+    "breeding_id": "BR_3090_01",
+    "animal_id": "3090",
+    "date": "2026-01-24",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-28"
+  },
+  {
+    "breeding_id": "BR_3093_01",
+    "animal_id": "3093",
+    "date": "2025-11-12",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2025-12-17"
+  },
+  {
+    "breeding_id": "BR_3094_01",
+    "animal_id": "3094",
+    "date": "2026-02-19",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-26"
+  },
+  {
+    "breeding_id": "BR_3096_01",
+    "animal_id": "3096",
+    "date": "2026-03-11",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-04-15"
+  },
+  {
+    "breeding_id": "BR_3098_01",
+    "animal_id": "3098",
+    "date": "2025-12-26",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-01-30"
+  },
+  {
+    "breeding_id": "BR_3106_01",
+    "animal_id": "3106",
+    "date": "2026-02-02",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-09"
+  },
+  {
+    "breeding_id": "BR_3107_01",
+    "animal_id": "3107",
+    "date": "2026-03-25",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3108_01",
+    "animal_id": "3108",
+    "date": "2025-12-21",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-25"
+  },
+  {
+    "breeding_id": "BR_3109_01",
+    "animal_id": "3109",
+    "date": "2026-02-16",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-23"
+  },
+  {
+    "breeding_id": "BR_3111_01",
+    "animal_id": "3111",
+    "date": "2026-01-04",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-08"
+  },
+  {
+    "breeding_id": "BR_3113_01",
+    "animal_id": "3113",
+    "date": "2026-01-12",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-16"
+  },
+  {
+    "breeding_id": "BR_3116_01",
+    "animal_id": "3116",
+    "date": "2026-01-29",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-05"
+  },
+  {
+    "breeding_id": "BR_3117_01",
+    "animal_id": "3117",
+    "date": "2026-03-16",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-04-20"
+  },
+  {
+    "breeding_id": "BR_3119_01",
+    "animal_id": "3119",
+    "date": "2026-03-21",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3122_01",
+    "animal_id": "3122",
+    "date": "2026-02-21",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-28"
+  },
+  {
+    "breeding_id": "BR_3124_01",
+    "animal_id": "3124",
+    "date": "2026-01-05",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-09"
+  },
+  {
+    "breeding_id": "BR_3128_01",
+    "animal_id": "3128",
+    "date": "2026-01-03",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-02-07"
+  },
+  {
+    "breeding_id": "BR_3131_01",
+    "animal_id": "3131",
+    "date": "2026-02-01",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-08"
+  },
+  {
+    "breeding_id": "BR_3132_01",
+    "animal_id": "3132",
+    "date": "2026-01-13",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-17"
+  },
+  {
+    "breeding_id": "BR_3133_01",
+    "animal_id": "3133",
+    "date": "2025-12-29",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-02-02"
+  },
+  {
+    "breeding_id": "BR_3143_01",
+    "animal_id": "3143",
+    "date": "2026-02-01",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-08"
+  },
+  {
+    "breeding_id": "BR_3145_01",
+    "animal_id": "3145",
+    "date": "2026-03-16",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-20"
+  },
+  {
+    "breeding_id": "BR_3148_01",
+    "animal_id": "3148",
+    "date": "2025-11-05",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2025-12-10"
+  },
+  {
+    "breeding_id": "BR_3149_01",
+    "animal_id": "3149",
+    "date": "2026-03-03",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-04-07"
+  },
+  {
+    "breeding_id": "BR_3152_01",
+    "animal_id": "3152",
+    "date": "2026-01-31",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-07"
+  },
+  {
+    "breeding_id": "BR_3153_01",
+    "animal_id": "3153",
+    "date": "2026-01-11",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-15"
+  },
+  {
+    "breeding_id": "BR_3155_01",
+    "animal_id": "3155",
+    "date": "2025-12-14",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-01-18"
+  },
+  {
+    "breeding_id": "BR_3159_01",
+    "animal_id": "3159",
+    "date": "2026-01-05",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-09"
+  },
+  {
+    "breeding_id": "BR_3160_01",
+    "animal_id": "3160",
+    "date": "2025-10-29",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2025-12-03"
+  },
+  {
+    "breeding_id": "BR_3161_01",
+    "animal_id": "3161",
+    "date": "2026-01-24",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-28"
+  },
+  {
+    "breeding_id": "BR_3166_01",
+    "animal_id": "3166",
+    "date": "2025-11-17",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2025-12-22"
+  },
+  {
+    "breeding_id": "BR_3172_01",
+    "animal_id": "3172",
+    "date": "2026-03-31",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3173_01",
+    "animal_id": "3173",
+    "date": "2026-01-12",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-16"
+  },
+  {
+    "breeding_id": "BR_3174_01",
+    "animal_id": "3174",
+    "date": "2026-01-09",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-13"
+  },
+  {
+    "breeding_id": "BR_3175_01",
+    "animal_id": "3175",
+    "date": "2026-02-03",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-10"
+  },
+  {
+    "breeding_id": "BR_3176_01",
+    "animal_id": "3176",
+    "date": "2025-11-16",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2025-12-21"
+  },
+  {
+    "breeding_id": "BR_3178_01",
+    "animal_id": "3178",
+    "date": "2026-04-18",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3181_01",
+    "animal_id": "3181",
+    "date": "2025-11-08",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2025-12-13"
+  },
+  {
+    "breeding_id": "BR_3183_01",
+    "animal_id": "3183",
+    "date": "2026-03-07",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-11"
+  },
+  {
+    "breeding_id": "BR_3186_01",
+    "animal_id": "3186",
+    "date": "2025-12-31",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-04"
+  },
+  {
+    "breeding_id": "BR_3189_01",
+    "animal_id": "3189",
+    "date": "2025-11-30",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-01-04"
+  },
+  {
+    "breeding_id": "BR_3191_01",
+    "animal_id": "3191",
+    "date": "2026-04-14",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3193_01",
+    "animal_id": "3193",
+    "date": "2026-03-16",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-04-20"
+  },
+  {
+    "breeding_id": "BR_3194_01",
+    "animal_id": "3194",
+    "date": "2026-03-26",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3195_01",
+    "animal_id": "3195",
+    "date": "2026-01-20",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-24"
+  },
+  {
+    "breeding_id": "BR_3196_01",
+    "animal_id": "3196",
+    "date": "2026-01-13",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-17"
+  },
+  {
+    "breeding_id": "BR_3199_01",
+    "animal_id": "3199",
+    "date": "2026-04-09",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3200_01",
+    "animal_id": "3200",
+    "date": "2026-04-12",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3201_01",
+    "animal_id": "3201",
+    "date": "2026-02-20",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-27"
+  },
+  {
+    "breeding_id": "BR_3202_01",
+    "animal_id": "3202",
+    "date": "2026-01-27",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-03"
+  },
+  {
+    "breeding_id": "BR_3203_01",
+    "animal_id": "3203",
+    "date": "2025-11-07",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2025-12-12"
+  },
+  {
+    "breeding_id": "BR_3207_01",
+    "animal_id": "3207",
+    "date": "2025-11-24",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2025-12-29"
+  },
+  {
+    "breeding_id": "BR_3210_01",
+    "animal_id": "3210",
+    "date": "2025-12-21",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-01-25"
+  },
+  {
+    "breeding_id": "BR_3212_01",
+    "animal_id": "3212",
+    "date": "2025-12-25",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-29"
+  },
+  {
+    "breeding_id": "BR_3215_01",
+    "animal_id": "3215",
+    "date": "2026-02-18",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-25"
+  },
+  {
+    "breeding_id": "BR_3216_01",
+    "animal_id": "3216",
+    "date": "2025-12-30",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-03"
+  },
+  {
+    "breeding_id": "BR_3217_01",
+    "animal_id": "3217",
+    "date": "2026-02-19",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-26"
+  },
+  {
+    "breeding_id": "BR_3218_01",
+    "animal_id": "3218",
+    "date": "2026-01-31",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-07"
+  },
+  {
+    "breeding_id": "BR_3221_01",
+    "animal_id": "3221",
+    "date": "2026-03-21",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3222_01",
+    "animal_id": "3222",
+    "date": "2026-03-25",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3223_01",
+    "animal_id": "3223",
+    "date": "2026-04-19",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3224_01",
+    "animal_id": "3224",
+    "date": "2026-03-29",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3226_01",
+    "animal_id": "3226",
+    "date": "2025-11-08",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2025-12-13"
+  },
+  {
+    "breeding_id": "BR_3227_01",
+    "animal_id": "3227",
+    "date": "2026-04-12",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3228_01",
+    "animal_id": "3228",
+    "date": "2026-03-02",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-04-06"
+  },
+  {
+    "breeding_id": "BR_3229_01",
+    "animal_id": "3229",
+    "date": "2026-02-12",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-19"
+  },
+  {
+    "breeding_id": "BR_3230_01",
+    "animal_id": "3230",
+    "date": "2026-01-13",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-02-17"
+  },
+  {
+    "breeding_id": "BR_3231_01",
+    "animal_id": "3231",
+    "date": "2026-04-11",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3233_01",
+    "animal_id": "3233",
+    "date": "2026-04-02",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3234_01",
+    "animal_id": "3234",
+    "date": "2026-02-13",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-20"
+  },
+  {
+    "breeding_id": "BR_3238_01",
+    "animal_id": "3238",
+    "date": "2026-03-30",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3240_01",
+    "animal_id": "3240",
+    "date": "2026-02-13",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-20"
+  },
+  {
+    "breeding_id": "BR_3243_01",
+    "animal_id": "3243",
+    "date": "2026-01-23",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-27"
+  },
+  {
+    "breeding_id": "BR_3244_01",
+    "animal_id": "3244",
+    "date": "2026-03-19",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3247_01",
+    "animal_id": "3247",
+    "date": "2026-04-20",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3248_01",
+    "animal_id": "3248",
+    "date": "2025-12-29",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-02"
+  },
+  {
+    "breeding_id": "BR_3249_01",
+    "animal_id": "3249",
+    "date": "2025-12-28",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-01"
+  },
+  {
+    "breeding_id": "BR_3250_01",
+    "animal_id": "3250",
+    "date": "2026-03-13",
+    "method": "AI",
+    "bull_name": "Буран",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-04-17"
+  },
+  {
+    "breeding_id": "BR_3251_01",
+    "animal_id": "3251",
+    "date": "2026-01-28",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-04"
+  },
+  {
+    "breeding_id": "BR_3252_01",
+    "animal_id": "3252",
+    "date": "2026-01-27",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-03-03"
+  },
+  {
+    "breeding_id": "BR_3254_01",
+    "animal_id": "3254",
+    "date": "2026-03-08",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-12"
+  },
+  {
+    "breeding_id": "BR_3255_01",
+    "animal_id": "3255",
+    "date": "2026-01-27",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-03"
+  },
+  {
+    "breeding_id": "BR_3259_01",
+    "animal_id": "3259",
+    "date": "2026-03-03",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-07"
+  },
+  {
+    "breeding_id": "BR_3264_01",
+    "animal_id": "3264",
+    "date": "2026-01-11",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-15"
+  },
+  {
+    "breeding_id": "BR_3265_01",
+    "animal_id": "3265",
+    "date": "2026-03-17",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-21"
+  },
+  {
+    "breeding_id": "BR_3267_01",
+    "animal_id": "3267",
+    "date": "2026-04-02",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3269_01",
+    "animal_id": "3269",
+    "date": "2026-01-12",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-02-16"
+  },
+  {
+    "breeding_id": "BR_3271_01",
+    "animal_id": "3271",
+    "date": "2026-03-05",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-04-09"
+  },
+  {
+    "breeding_id": "BR_3272_01",
+    "animal_id": "3272",
+    "date": "2026-01-03",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-07"
+  },
+  {
+    "breeding_id": "BR_3275_01",
+    "animal_id": "3275",
+    "date": "2026-02-24",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-03-31"
+  },
+  {
+    "breeding_id": "BR_3276_01",
+    "animal_id": "3276",
+    "date": "2026-04-17",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3279_01",
+    "animal_id": "3279",
+    "date": "2026-04-10",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3283_01",
+    "animal_id": "3283",
+    "date": "2026-03-28",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3284_01",
+    "animal_id": "3284",
+    "date": "2025-10-27",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2025-12-01"
+  },
+  {
+    "breeding_id": "BR_3285_01",
+    "animal_id": "3285",
+    "date": "2026-01-12",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-02-16"
+  },
+  {
+    "breeding_id": "BR_3287_01",
+    "animal_id": "3287",
+    "date": "2026-04-12",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3289_01",
+    "animal_id": "3289",
+    "date": "2025-12-26",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-01-30"
+  },
+  {
+    "breeding_id": "BR_3293_01",
+    "animal_id": "3293",
+    "date": "2026-03-12",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-04-16"
+  },
+  {
+    "breeding_id": "BR_3296_01",
+    "animal_id": "3296",
+    "date": "2026-03-18",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3298_01",
+    "animal_id": "3298",
+    "date": "2025-11-28",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-01-02"
+  },
+  {
+    "breeding_id": "BR_3300_01",
+    "animal_id": "3300",
+    "date": "2026-03-26",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3301_01",
+    "animal_id": "3301",
+    "date": "2025-12-26",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-30"
+  },
+  {
+    "breeding_id": "BR_3303_01",
+    "animal_id": "3303",
+    "date": "2026-04-08",
+    "method": "AI",
+    "bull_name": "Вихрь",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3304_01",
+    "animal_id": "3304",
+    "date": "2026-04-06",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3305_01",
+    "animal_id": "3305",
+    "date": "2026-04-13",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3308_01",
+    "animal_id": "3308",
+    "date": "2026-04-10",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3317_01",
+    "animal_id": "3317",
+    "date": "2025-12-07",
+    "method": "AI",
+    "bull_name": "Кавказ",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-01-11"
+  },
+  {
+    "breeding_id": "BR_3318_01",
+    "animal_id": "3318",
+    "date": "2025-11-21",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2025-12-26"
+  },
+  {
+    "breeding_id": "BR_3319_01",
+    "animal_id": "3319",
+    "date": "2026-02-22",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": "2026-03-29"
+  },
+  {
+    "breeding_id": "BR_3322_01",
+    "animal_id": "3322",
+    "date": "2025-12-24",
+    "method": "AI",
+    "bull_name": "Зевс",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-01-28"
+  },
+  {
+    "breeding_id": "BR_3325_01",
+    "animal_id": "3325",
+    "date": "2025-12-22",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-01-26"
+  },
+  {
+    "breeding_id": "BR_3328_01",
+    "animal_id": "3328",
+    "date": "2025-12-05",
+    "method": "AI",
+    "bull_name": "Дунай",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-01-09"
+  },
+  {
+    "breeding_id": "BR_3329_01",
+    "animal_id": "3329",
+    "date": "2026-03-25",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": null
+  },
+  {
+    "breeding_id": "BR_3333_01",
+    "animal_id": "3333",
+    "date": "2025-11-30",
+    "method": "AI",
+    "bull_name": "Гром",
+    "heat_detected": true,
+    "result": "open",
+    "preg_check_date": "2026-01-04"
+  },
+  {
+    "breeding_id": "BR_3338_01",
+    "animal_id": "3338",
+    "date": "2026-03-04",
+    "method": "AI",
+    "bull_name": "Ильич",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-08"
+  },
+  {
+    "breeding_id": "BR_3339_01",
+    "animal_id": "3339",
+    "date": "2026-03-09",
+    "method": "AI",
+    "bull_name": "Ермак",
+    "heat_detected": false,
+    "result": "open",
+    "preg_check_date": "2026-04-13"
+  },
+  {
+    "breeding_id": "BR_3340_01",
+    "animal_id": "3340",
+    "date": "2026-01-02",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-02-06"
+  },
+  {
+    "breeding_id": "BR_3343_01",
+    "animal_id": "3343",
+    "date": "2026-03-02",
+    "method": "AI",
+    "bull_name": "Жигули",
+    "heat_detected": false,
+    "result": "pregnant",
+    "preg_check_date": "2026-04-06"
+  },
+  {
+    "breeding_id": "BR_3346_01",
+    "animal_id": "3346",
+    "date": "2026-03-28",
+    "method": "AI",
+    "bull_name": "Атаман",
+    "heat_detected": true,
+    "result": "pregnant",
+    "preg_check_date": null
+  }
+]

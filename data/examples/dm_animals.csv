@@ -1,0 +1,4 @@
+animal_id,farm_id,ear_tag,breed,sex,birth_date,is_alive,status
+A0001,F001,10001,Holstein,F,2021-03-10,true,lactating
+A0002,F001,10002,Holstein,F,2020-11-02,true,dry
+A0003,F002,20001,Jersey,F,2022-05-17,true,heifer

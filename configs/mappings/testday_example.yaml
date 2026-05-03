@@ -1,0 +1,10 @@
+# Пример мэппинга для dm_testday (опционально)
+
+dataset: testday
+columns:
+  AnimalID: animal_id
+  Date: test_date
+  MilkKg: milk_kg
+  FatPct: fat_pct
+  ProteinPct: protein_pct
+  SCC: scc

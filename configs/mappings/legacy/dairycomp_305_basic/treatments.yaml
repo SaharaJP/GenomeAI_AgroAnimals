@@ -1,0 +1,11 @@
+dataset: treatments
+constants:
+  tenant_id: default
+columns:
+  TXID: treatment_id
+  COWID: animal_id
+  STARTDATE: start_date
+  ENDDATE: end_date
+  TXTYPE: treatment_type
+  EVENTREF: reason_event_id
+  WITHDRAWALEND: withdrawal_end_date

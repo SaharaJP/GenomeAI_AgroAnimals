@@ -1,0 +1,53 @@
+'use client';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { ExplainabilityBlock } from '@/components/ui/explainability-block';
+
+export function AssistantInteractiveClient({initialTarget}:{initialTarget:string}) {
+  const [dataVersion,setDataVersion]=useState('demo_v1');
+  const [target,setTarget]=useState(initialTarget);
+  const [result,setResult]=useState('');
+  const [error,setError]=useState<string|null>(null);
+
+  return (
+    <>
+      <ExplainabilityBlock reasons={[
+        'Assistant behavior remains server-governed.',
+        'This shell only forwards intent to the backend boundary.',
+        'Shared payload semantics stay aligned with Android.',
+      ]} />
+
+      <Card>
+        <div className="toolbar">
+          <input className="input" value={dataVersion} onChange={(e:any)=>setDataVersion(e.target.value)} placeholder="data_version" />
+          <input className="input" value={target} onChange={(e:any)=>setTarget(e.target.value)} placeholder="target" />
+          <Button onClick={async()=>{
+            setError(null);
+            setResult('');
+            try{
+              const trimmedTarget=String(target||'').trim();
+              const payload = trimmedTarget.startsWith('genomeai://')
+                ? { data_version:dataVersion, target:trimmedTarget }
+                : { data_version:dataVersion, section:trimmedTarget || 'alerts' };
+
+              const response=await fetch('/api/backend/assistant/resolve-target',{
+                method:'POST',
+                headers:{'content-type':'application/json'},
+                body:JSON.stringify(payload),
+              });
+              const body=await response.json();
+              if(!response.ok) throw new Error(body?.detail || 'Assistant request failed');
+              setResult(JSON.stringify(body,null,2));
+            }catch(err){
+              setError(err instanceof Error ? err.message : 'Assistant request failed');
+            }
+          }}>Resolve target</Button>
+        </div>
+      </Card>
+
+      {error?<div className="card error-text">{error}</div>:null}
+      {result?<Card><pre style={{whiteSpace:'pre-wrap',margin:0}}>{result}</pre></Card>:null}
+    </>
+  );
+}

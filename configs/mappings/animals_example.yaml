@@ -1,0 +1,12 @@
+# Пример мэппинга для dm_animals
+
+dataset: animals
+columns:
+  AnimalID: animal_id
+  FarmID: farm_id
+  EarTag: ear_tag
+  Breed: breed
+  Sex: sex
+  Birth: birth_date
+  Alive: is_alive
+  Status: status

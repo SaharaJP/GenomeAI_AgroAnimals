@@ -1,0 +1,15 @@
+connector_id: demo_onec_stub
+kind: onec_stub
+enabled: false
+description: Stub 1C connector. Real 1C integration is intentionally deferred beyond T13-02.
+source_system: 1C Livestock (stub)
+system_family: erp_herd_management
+export_mode: onec_stub
+diagnostics_profile: onec_stub_common
+schedule_hint: Representative 1C placeholder until a farm-specific export is configured.
+schedule: "@daily"
+datasets:
+  - dataset_key: lactations
+    path: data/examples/external/lactations.csv
+    mapping: configs/mappings/lactations_example.yaml
+    required: false

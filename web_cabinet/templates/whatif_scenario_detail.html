@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>What-If сценарий</h2>
+
+{% if error %}
+  <div class="card" style="border-color:#f5c2c7;background:#fff5f5;">
+    <strong>Ошибка:</strong> {{ error }}
+  </div>
+{% endif %}
+{% if notice %}
+  <div class="card" style="border-color:#b6d4fe;background:#f0f7ff;">
+    <strong>OK:</strong> {{ notice }}
+  </div>
+{% endif %}
+
+<div class="card">
+  <div class="row" style="align-items:center; justify-content:space-between;">
+    <div>
+      <div><strong>{{ scenario.name }}</strong></div>
+      <div class="muted">scenario_id: {{ scenario.scenario_id }} · updated: {{ scenario.updated_at }}</div>
+    </div>
+    <div>
+      <span class="pill">{{ scenario.status }}</span>
+    </div>
+  </div>
+  <div class="muted" style="margin-top:8px;">data_version: {{ scenario.data_version or '' }} · last_run: {{ scenario.last_economics_run or '' }}</div>
+  {% if scenario.description %}
+    <div style="margin-top:8px;">{{ scenario.description }}</div>
+  {% endif %}
+
+  {% if scenario.approved_at %}
+    <div class="muted" style="margin-top:10px;">approved: {{ scenario.approved_at }} by {{ scenario.approved_by_username }}{% if scenario.approval_comment %} · {{ scenario.approval_comment }}{% endif %}</div>
+  {% endif %}
+  {% if scenario.rejected_at %}
+    <div class="muted" style="margin-top:6px;">rejected: {{ scenario.rejected_at }} by {{ scenario.rejected_by_username }}{% if scenario.rejection_comment %} · {{ scenario.rejection_comment }}{% endif %}</div>
+  {% endif %}
+  {% if scenario.archived_at %}
+    <div class="muted" style="margin-top:6px;">archived: {{ scenario.archived_at }} by {{ scenario.archived_by_username }}{% if scenario.archive_comment %} · {{ scenario.archive_comment }}{% endif %}</div>
+  {% endif %}
+</div>
+
+{% if can_write %}
+<div class="card">
+  <h3>Редактирование (только draft)</h3>
+  <form method="post" action="/whatif_scenarios/{{ scenario.scenario_id }}/update">
+    <div class="row">
+      <div>
+        <label>Название</label>
+        <input type="text" name="name" value="{{ scenario.name }}" />
+      </div>
+      <div>
+        <label>data_version</label>
+        <input type="text" name="data_version" value="{{ scenario.data_version or '' }}" />
+      </div>
+      <div>
+        <label>Описание</label>
+        <input type="text" name="description" value="{{ scenario.description or '' }}" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label>params_json</label>
+      <textarea name="params_json">{{ params_json }}</textarea>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="primary" type="submit">Сохранить</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h3>Согласование (директор)</h3>
+
+  <div class="row">
+    {% if can_approve %}
+      <form method="post" action="/whatif_scenarios/{{ scenario.scenario_id }}/approve">
+        <label>Комментарий к approval</label>
+        <input type="text" name="comment" placeholder="OK / условия" />
+        <div style="margin-top:8px;">
+          <button class="primary" type="submit">Approve</button>
+        </div>
+      </form>
+
+      <form method="post" action="/whatif_scenarios/{{ scenario.scenario_id }}/reject">
+        <label>Комментарий к отклонению</label>
+        <input type="text" name="comment" placeholder="что исправить" />
+        <div style="margin-top:8px;">
+          <button type="submit">Reject</button>
+        </div>
+      </form>
+    {% else %}
+      <div class="muted">Нет прав approve/reject.</div>
+    {% endif %}
+
+    {% if can_archive %}
+      <form method="post" action="/whatif_scenarios/{{ scenario.scenario_id }}/archive">
+        <label>Комментарий к архивированию</label>
+        <input type="text" name="comment" placeholder="причина" />
+        <div style="margin-top:8px;">
+          <button type="submit">Archive</button>
+        </div>
+      </form>
+    {% endif %}
+
+    {% if can_clone %}
+      <form method="post" action="/whatif_scenarios/{{ scenario.scenario_id }}/clone">
+        <label>Клонировать в draft</label>
+        <input type="text" name="name" placeholder="новое имя (опц.)" />
+        <div style="margin-top:8px;">
+          <button type="submit">Clone</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div style="margin-top:12px;">
+  <a href="/whatif_scenarios">← назад к списку</a>
+</div>
+
+{% endblock %}

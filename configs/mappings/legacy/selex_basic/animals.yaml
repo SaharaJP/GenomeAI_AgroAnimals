@@ -1,0 +1,10 @@
+dataset: animals
+columns:
+  НомерЖивотного: animal_id
+  Ферма: farm_id
+  Бирка: ear_tag
+  Порода: breed
+  Пол: sex
+  ДатаРождения: birth_date
+  Живо: is_alive
+  Статус: status

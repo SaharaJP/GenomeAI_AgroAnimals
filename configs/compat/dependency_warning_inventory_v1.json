@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "scope": "reproducible test environment warning audit",
+  "tested_environment": {
+    "python": "3.11",
+    "packages": {
+      "ddtrace": "4.4.0",
+      "fastapi": "0.111.0",
+      "jinja2": "3.1.6",
+      "numpy": "2.3.5",
+      "pandas": "2.2.3",
+      "pytest": "9.0.2",
+      "python-multipart": "0.0.22",
+      "starlette": "0.37.2"
+    }
+  },
+  "observed_in_targeted_ci": {
+    "project_warning_origins": [
+      {
+        "type": "DeprecationWarning",
+        "origin": "project",
+        "source": "legacy shim imports and CLI aliases",
+        "policy": "allowlisted in deprecation_warnings_v1.json"
+      }
+    ],
+    "dependency_warning_origins": [
+      {
+        "package": "python-multipart",
+        "observed_now": false,
+        "known_issue": "PendingDeprecationWarning on legacy import multipart / multipart.multipart",
+        "status": "closed in project runtime by local src/multipart shim",
+        "action": "do not remove shim or bump FastAPI/Starlette inside business refactor; review only in dedicated dependency upgrade iteration"
+      },
+      {
+        "package": "ddtrace",
+        "observed_now": false,
+        "known_issue": "pytest/plugin/import warnings may appear from site-packages/ddtrace in some environments",
+        "status": "document-only monitor",
+        "action": "upgrade only if warning is reproducible in clean targeted gates and isolated to dependency origin"
+      }
+    ]
+  },
+  "upgrade_policy": {
+    "upgrade_in_separate_change_when": [
+      "warning origin is dependency/site-packages rather than project code",
+      "warning is reproducible in targeted pytest/smoke gates",
+      "upstream fix or safer supported version is known",
+      "upgrade can be validated with pytest, smoke and verify_refactor without changing business behavior"
+    ],
+    "document_only_when": [
+      "warning is not reproducible in current targeted gates",
+      "warning is already neutralized by a compatibility shim without business-impact change",
+      "upgrade would mix dependency churn with business refactor or compatibility work",
+      "upstream has no clear fix or upgrade risk is higher than operational value"
+    ]
+  }
+}

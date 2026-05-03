@@ -1,0 +1,128 @@
+import { apiFetch, authFetch } from '@/lib/api/client';
+import type { AlertItem, AuthMeResponse, DecisionIntelligenceResponse, FeedbackItem, ListResponse, PlannerResponse, ReportsListResponse, WorklistItem } from '@/lib/api/contracts';
+import { normalizeListResponse } from '@/lib/api/contracts';
+
+export type FarmBreakdownItem={farmId:string;label:string;alerts:number;tasks:number;overdue:number};
+export type DailyBriefAction={label:string;href:string;count:number;caption:string};
+export type DailyBriefPreviewModel={headline:string;statusLine:string;bullets:string[];actions:DailyBriefAction[]};
+export type DailyOperationsViewModel={
+  totals:{alertsOpen:number;alertsCritical:number;worklistsOpen:number;worklistsOverdue:number;pendingApprovals:number;reportsReady:number;feedbackAcceptanceRate:number;linkedDecisions:number};
+  scope:{tenantId:string;mode:'single-farm'|'multi-site';activeFarmId?:string|null;activeSiteId?:string|null;farmCountVisible:number;siteCountVisible:number};
+  farms:FarmBreakdownItem[];
+  highlightAlerts:AlertItem[];
+  highlightWorklists:WorklistItem[];
+  planner:PlannerResponse;
+  brief:DailyBriefPreviewModel;
+};
+export type DailyOperationsBundle={me:AuthMeResponse;alerts:ListResponse<AlertItem>;worklists:ListResponse<WorklistItem>;planner:PlannerResponse;reports:ReportsListResponse;decisionIntelligence:DecisionIntelligenceResponse;feedback:ListResponse<FeedbackItem>&{metrics?:{acceptance_rate?:number|null}}};
+
+export async function fetchDailyOperationsBundle():Promise<DailyOperationsBundle>{
+  const emptyDecisionIntelligence: DecisionIntelligenceResponse = {
+    schema: 'genomeai.api.decision_intelligence.summary.v1',
+    summary: {
+      total_decisions: 0,
+      accepted_feedback: 0,
+      rejected_feedback: 0,
+      acceptance_rate: 0,
+      linked_alerts: 0,
+    },
+    top_actions: [],
+    latest_decisions: [],
+  };
+  const emptyFeedback: ListResponse<FeedbackItem> & {metrics?:{acceptance_rate?:number|null}} = {
+    schema: 'genomeai.api.feedback.list.v1',
+    total: 0,
+    limit: 0,
+    offset: 0,
+    items: [],
+    metrics: { acceptance_rate: 0 },
+  };
+
+  const [me,alerts,worklists,planner,reports,decisionIntelligence,feedback]=await Promise.all([
+    authFetch<AuthMeResponse>('/me'),
+    apiFetch<ListResponse<AlertItem>>('/alerts'),
+    apiFetch<ListResponse<WorklistItem>>('/worklists'),
+    apiFetch<PlannerResponse>('/planner'),
+    apiFetch<ReportsListResponse>('/reports'),
+    apiFetch<DecisionIntelligenceResponse>('/decision-intelligence').catch(()=>emptyDecisionIntelligence),
+    apiFetch<ListResponse<FeedbackItem>&{metrics?:{acceptance_rate?:number|null}}>('/feedback').catch(()=>emptyFeedback),
+  ]);
+
+  return {
+    me,
+    alerts: normalizeListResponse(alerts),
+    worklists: normalizeListResponse(worklists),
+    planner,
+    reports,
+    decisionIntelligence,
+    feedback: {...normalizeListResponse(feedback),metrics:feedback.metrics},
+  };
+}
+
+function labelForFarm(farmId:string){return farmId==='unknown'?'Unknown farm':farmId}
+function countOpenAlerts(items:AlertItem[]){return items.filter(item=>item.status!=='resolved').length}
+function countCriticalAlerts(items:AlertItem[]){return items.filter(item=>['critical','high'].includes(String(item.severity||'').toLowerCase())&&item.status!=='resolved').length}
+function countOpenTasks(items:WorklistItem[]){return items.filter(item=>item.status!=='done'&&item.status!=='cancelled').length}
+function countOverdueTasks(items:WorklistItem[]){return items.filter(item=>Boolean(item.is_overdue)&&item.status!=='done'&&item.status!=='cancelled').length}
+function summarizeFarms(alerts:AlertItem[], worklists:WorklistItem[]):FarmBreakdownItem[]{
+  const byFarm=new Map<string,FarmBreakdownItem>();
+  const touch=(farmId:string)=>{const safe=farmId||'unknown'; if(!byFarm.has(safe))byFarm.set(safe,{farmId:safe,label:labelForFarm(safe),alerts:0,tasks:0,overdue:0}); return byFarm.get(safe)!};
+  for(const item of alerts){touch(item.entity?.farm_id||'unknown').alerts+= item.status==='resolved'?0:1}
+  for(const item of worklists){const bucket=touch(item.entity?.farm_id||'unknown'); if(item.status!=='done'&&item.status!=='cancelled')bucket.tasks+=1; if(item.is_overdue&&item.status!=='done'&&item.status!=='cancelled')bucket.overdue+=1}
+  return [...byFarm.values()].sort((a,b)=> (b.alerts+b.overdue)-(a.alerts+a.overdue) || a.label.localeCompare(b.label));
+}
+
+export function buildDailyBriefPreview(bundle:DailyOperationsBundle):DailyBriefPreviewModel{
+  const alertsOpen=countOpenAlerts(bundle.alerts.items);
+  const critical=countCriticalAlerts(bundle.alerts.items);
+  const tasksOverdue=countOverdueTasks(bundle.worklists.items);
+  const openTasks=countOpenTasks(bundle.worklists.items);
+  const farmCount=Math.max(bundle.me.scope.allowed_farm_ids.length, summarizeFarms(bundle.alerts.items,bundle.worklists.items).filter(item=>item.farmId!=='unknown').length || (bundle.me.scope.active_farm_id?1:0));
+  const mode=farmCount>1?'multi-site':'single-farm';
+  const bullets=[
+    critical>0?`${critical} критичных алертов требуют первичного разбора.`:`Критичных алертов сейчас нет; можно идти по обычному дневному ритму.`,
+    tasksOverdue>0?`${tasksOverdue} worklist-пунктов просрочены и должны войти в brief.`:`Просроченных worklist-пунктов нет.`,
+    bundle.planner.pending_approvals>0?`${bundle.planner.pending_approvals} weekly plan ждут подтверждения.`:`На текущем scope нет pending approvals.`,
+    mode==='multi-site'?`Контур работает в multi-site режиме: видимость по ${farmCount} farm scope(s).`:`Контур работает в single-farm режиме: active farm ${bundle.me.scope.active_farm_id||'current'}.`,
+  ];
+  const actions:DailyBriefAction[]=[
+    {label:'Open alerts',href:'/alerts',count:alertsOpen,caption:'Перейти к triage и explainability.'},
+    {label:'Open worklists',href:'/worklists',count:openTasks,caption:'Проверить задачи дня и linked actions.'},
+    {label:'Open planner',href:'/planner',count:bundle.planner.pending_approvals,caption:'Сверить approvals, weekly plans и overdue.'},
+    {label:'Open decisions',href:'/decisions',count:bundle.decisionIntelligence.summary.total_decisions,caption:'Проверить decision/feedback trail.'},
+  ];
+  const headline=critical>0 || tasksOverdue>0 ? 'Нужен управляемый start-of-day triage' : 'Операционный контур стабилен и готов к обычному дневному циклу';
+  const statusLine=`alerts_open=${alertsOpen} · tasks_open=${openTasks} · overdue=${tasksOverdue} · reports_ready=${bundle.reports.total}`;
+  return {headline,statusLine,bullets,actions};
+}
+
+export function buildDailyOperationsViewModel(bundle:DailyOperationsBundle):DailyOperationsViewModel{
+  const farms=summarizeFarms(bundle.alerts.items,bundle.worklists.items);
+  const farmCountVisible=Math.max(bundle.me.scope.allowed_farm_ids.length, farms.filter(item=>item.farmId!=='unknown').length || (bundle.me.scope.active_farm_id?1:0));
+  const mode: 'single-farm' | 'multi-site' = farmCountVisible>1 ? 'multi-site' : 'single-farm';
+  return {
+    totals:{
+      alertsOpen:countOpenAlerts(bundle.alerts.items),
+      alertsCritical:countCriticalAlerts(bundle.alerts.items),
+      worklistsOpen:countOpenTasks(bundle.worklists.items),
+      worklistsOverdue:countOverdueTasks(bundle.worklists.items),
+      pendingApprovals:bundle.planner.pending_approvals,
+      reportsReady:bundle.reports.total,
+      feedbackAcceptanceRate:Number(bundle.feedback.metrics?.acceptance_rate||bundle.decisionIntelligence.summary.acceptance_rate||0),
+      linkedDecisions:bundle.decisionIntelligence.summary.total_decisions,
+    },
+    scope:{
+      tenantId:bundle.me.scope.tenant_id,
+      mode,
+      activeFarmId:bundle.me.scope.active_farm_id,
+      activeSiteId:bundle.me.scope.active_site_id,
+      farmCountVisible,
+      siteCountVisible:Math.max(bundle.me.scope.allowed_site_ids.length, bundle.me.scope.active_site_id?1:0),
+    },
+    farms,
+    highlightAlerts:bundle.alerts.items.filter(item=>item.status!=='resolved').slice(0,6),
+    highlightWorklists:bundle.worklists.items.filter(item=>item.status!=='done'&&item.status!=='cancelled').slice(0,6),
+    planner:bundle.planner,
+    brief:buildDailyBriefPreview(bundle),
+  };
+}

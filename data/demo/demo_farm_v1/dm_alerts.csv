@@ -1,0 +1,7 @@
+tenant_id,alert_id,farm_id,alert_date,severity,alert_type,entity_type,entity_id,message
+default,AL_DEMO_001,DEMO_FARM_001,2025-04-05,high,fresh_cow_risk,animal,DEMO_COW_1002,Fresh cow needs protocol review
+default,AL_DEMO_002,DEMO_FARM_001,2025-04-05,high,vet_triage,animal,DEMO_COW_2002,Lameness triage overdue
+default,AL_DEMO_003,DEMO_FARM_001,2025-04-05,warn,repro_due,animal,DEMO_COW_2001,Insemination follow-up due
+default,AL_DEMO_004,DEMO_FARM_002,2025-04-05,warn,milk_quality,animal,DEMO_COW_3002,SCC needs review
+default,AL_DEMO_005,DEMO_FARM_002,2025-04-05,warn,dry_off,animal,DEMO_COW_3003,Dry-off task due this week
+default,AL_DEMO_006,DEMO_FARM_002,2025-04-05,info,benchmark_gap,site,DEMO_SITE_003,South site below sibling median on overdue rate

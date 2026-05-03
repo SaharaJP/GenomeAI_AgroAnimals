@@ -1,0 +1,19 @@
+# Workflow 2.0 stages (Kanban columns)
+# NOTE: status in DB remains: open|in_progress|done|cancelled (SQLite CHECK).
+# Stages are an additional ad-hoc field for visual workflow.
+
+default_stage_open: triage
+
+stages:
+  - key: triage
+    title: Triage
+  - key: plan
+    title: Plan
+  - key: execute
+    title: Execute
+  - key: review
+    title: Review
+
+# When task is closed we mirror status to stage for clarity.
+done_stage: done
+cancelled_stage: cancelled

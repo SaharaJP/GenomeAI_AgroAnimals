@@ -1,0 +1,314 @@
+version: 1
+
+# T12-03: Default playbooks.
+# These are seeded into web.db on cabinet startup (idempotent).
+# farm_id: '' means global (tenant-wide). Use explicit farm_id to override per farm.
+
+playbooks:
+  # --- Alerts ---
+  - target_kind: alert
+    target_type: ML.MASTITIS_RISK
+    farm_id: ''
+    name: "План действий: риск мастита (ML)"
+    description: "Базовый чек‑лист для отработки алерта по риску мастита. Адаптируйте под протоколы фермы."
+    steps:
+      - key: confirm_data
+        title: "Проверить данные"
+        details: "Проверьте дату, животное/группу, последние удои, SCC/соматические клетки, и корректность идентификатора."
+        required: true
+      - key: clinical_check
+        title: "Клинический осмотр"
+        details: "Осмотреть вымя, оценить температуру, поведение, наличие хлопьев/изменения молока."
+        required: true
+      - key: sample_test
+        title: "Отбор пробы и экспресс‑тест"
+        details: "При необходимости — CMT/тест на мастит и/или отправка пробы в лабораторию."
+        required: false
+      - key: action_and_log
+        title: "Действие + фиксация"
+        details: "Выполнить протокол (изоляция/лечение/контроль) и зафиксировать решение в Decision Log."
+        required: true
+
+  - target_kind: alert
+    target_type: ML.REPRO_RISK
+    farm_id: ''
+    name: "План действий: риск по репродукции (ML)"
+    description: "Базовый чек‑лист для отработки ML‑алерта по риску репродукции (без диагноза)."
+    steps:
+      - key: verify_calendar
+        title: "Проверить календарь событий"
+        details: "Осеменения, диагностики, даты отёла/статусы — убедиться, что данные актуальны."
+        required: true
+      - key: check_animal_status
+        title: "Проверить статус животного"
+        details: "Лактация/parity, days_open, последние события репродукции (факты)."
+        required: true
+      - key: plan_actions
+        title: "Сформировать план"
+        details: "Назначить осмотр/диагностику, уточнить план осеменения и сроки."
+        required: true
+      - key: log_decision
+        title: "Зафиксировать решение"
+        details: "Записать план действий в Decision Log и создать/обновить задачу при необходимости."
+        required: true
+
+  - target_kind: alert
+    target_type: ML.DRIFT_SUSPECT
+    farm_id: ''
+    name: "План действий: подозрение на дрейф данных (ML)"
+    description: "Чек‑лист для проверки дрейфа: сначала факты и метрики, затем решение о переобучении."
+    steps:
+      - key: open_drift_report
+        title: "Открыть отчёт по дрейфу"
+        details: "Проверить, какие фичи/таблицы изменились и на каком периоде."
+        required: true
+      - key: validate_data_pipeline
+        title: "Проверить пайплайн данных"
+        details: "Свежесть выгрузки, схемы, QC‑статус, mapping/единицы измерения."
+        required: true
+      - key: evaluate_model_metrics
+        title: "Оценить метрики модели"
+        details: "Сравнить текущие метрики/распределения со стабильным периодом."
+        required: false
+      - key: decide_retrain
+        title: "Принять решение"
+        details: "Если дрейф подтверждён — запланировать переобучение/валидацию и зафиксировать решение."
+        required: true
+
+  - target_kind: alert
+    target_type: QC.MISSING_REQUIRED
+    farm_id: ''
+    name: "План действий: QC отсутствуют обязательные поля"
+    description: "Чек‑лист для устранения критичных ошибок качества данных при загрузке."
+    steps:
+      - key: identify_file
+        title: "Определить файл/таблицу"
+        details: "Откройте QC‑отчет: какая таблица (dataset) и какие поля отсутствуют."
+        required: true
+      - key: fix_mapping
+        title: "Проверить маппинг"
+        details: "Проверьте mapping.yml: названия колонок, типы, обязательность."
+        required: true
+      - key: reexport
+        title: "Перевыгрузка данных"
+        details: "Сформируйте корректный экспорт из исходной системы и загрузите заново."
+        required: true
+      - key: rerun_qc
+        title: "Повторный QC"
+        details: "Запустите QC и убедитесь, что ошибка исчезла; если нет — уточните контракт/формат."
+        required: true
+
+  - target_kind: alert
+    target_type: QC.PK_DUPLICATE
+    farm_id: ''
+    name: "План действий: QC дубликаты ключей"
+    description: "Чек‑лист для устранения дубликатов первичного ключа."
+    steps:
+      - key: locate_duplicates
+        title: "Найти дубликаты"
+        details: "По QC issue определить ключевые поля и пример row_id."
+        required: true
+      - key: decide_resolution
+        title: "Определить правило устранения"
+        details: "Какой ряд считать истинным (последний по дате/по источнику)."
+        required: true
+      - key: fix_source
+        title: "Исправить источник"
+        details: "Устранить дубликаты в учётной системе/выгрузке и перезагрузить данные."
+        required: true
+      - key: rerun_qc
+        title: "Повторный QC"
+        details: "Запустить QC и убедиться, что дубликаты исчезли."
+        required: true
+
+  - target_kind: alert
+    target_type: QC.CONTRACT_MISMATCH
+    farm_id: ''
+    name: "План действий: QC несоответствие контракту"
+    description: "Чек‑лист для случаев, когда типы/форматы колонок не совпадают с контрактом."
+    steps:
+      - key: open_contract
+        title: "Открыть контракт датасета"
+        details: "Сверить ожидаемые типы/форматы (дата/число/строка/enum)."
+        required: true
+      - key: check_mapping
+        title: "Проверить mapping/преобразования"
+        details: "Преобразования, локали, разделители, единицы измерения."
+        required: true
+      - key: fix_and_upload
+        title: "Исправить и перезагрузить"
+        details: "Исправить преобразования и повторить ingest."
+        required: true
+      - key: rerun_qc
+        title: "Повторный QC"
+        details: "Убедиться, что правило QC больше не срабатывает."
+        required: true
+
+  - target_kind: alert
+    target_type: REPRO.LONG_DAYS_OPEN
+    farm_id: ''
+    name: "План действий: длительный open period"
+    description: "Чек‑лист для контроля длительного open period."
+    steps:
+      - key: confirm_days_open
+        title: "Подтвердить days_open"
+        details: "Проверить даты отёла/осеменений/диагностики и корректность статуса."
+        required: true
+      - key: schedule_exam
+        title: "Назначить осмотр/диагностику"
+        details: "Уточнить план УЗИ/осмотра и сроки."
+        required: true
+      - key: plan_breeding
+        title: "План осеменения"
+        details: "Согласовать окно осеменения и ответственного."
+        required: true
+      - key: log_decision
+        title: "Зафиксировать решение"
+        details: "Записать план действий и создать задачу контроля."
+        required: true
+
+  - target_kind: alert
+    target_type: REPRO.CALVING_OVERDUE
+    farm_id: ''
+    name: "План действий: отёл просрочен"
+    description: "Чек‑лист для подтверждения факта отёла/корректировки статуса беременности."
+    steps:
+      - key: check_animal
+        title: "Проверить животное"
+        details: "Осмотр и уточнение факта отёла/беременности."
+        required: true
+      - key: update_records
+        title: "Обновить учёт"
+        details: "Внести факт отёла или корректировку статуса/дат."
+        required: true
+      - key: rerun_pipeline
+        title: "Перезапустить расчёты"
+        details: "Обновить данные и убедиться, что алерт исчез."
+        required: false
+
+  # --- Tasks ---
+  - target_kind: task
+    target_type: mastitis_control
+    farm_id: ''
+    name: "Чек‑лист: контроль мастита"
+    description: "Рекомендуемый план действий для задачи mastitis_control."
+    steps:
+      - key: take_task
+        title: "Назначение и дедлайн"
+        details: "Уточните ответственного и срок выполнения согласно SLA."
+        required: true
+      - key: vet_actions
+        title: "Ветеринарные действия"
+        details: "Осмотр, тест, лечение/изоляция по протоколу фермы."
+        required: true
+      - key: followup
+        title: "Контроль результата"
+        details: "Проверка SCC/удоев через 24–72 часа; при ухудшении — эскалация."
+        required: true
+
+  - target_kind: task
+    target_type: vet_inspection
+    farm_id: ''
+    name: "Чек‑лист: ветеринарный осмотр"
+    description: "Базовый план действий для задачи vet_inspection."
+    steps:
+      - key: verify_id
+        title: "Проверить идентификатор"
+        details: "Убедиться, что животное/группа определены корректно."
+        required: true
+      - key: clinical_exam
+        title: "Клинический осмотр"
+        details: "Температура, поведение, признаки заболевания (факты)."
+        required: true
+      - key: decide_actions
+        title: "Назначить действия"
+        details: "Лечение/изоляция/наблюдение согласно протоколам фермы."
+        required: true
+      - key: log
+        title: "Зафиксировать решение"
+        details: "Decision Log + отметка выполнения задачи."
+        required: true
+
+  - target_kind: task
+    target_type: repro_check
+    farm_id: ''
+    name: "Чек‑лист: проверка репродукции"
+    description: "План действий для задач контроля репродукции."
+    steps:
+      - key: verify_calendar
+        title: "Сверить календарь"
+        details: "События осеменений/охоты/диагностики, ожидаемые даты."
+        required: true
+      - key: schedule
+        title: "Назначить осмотр/диагностику"
+        details: "Согласовать дату/ответственного."
+        required: true
+      - key: update_records
+        title: "Обновить учёт"
+        details: "Внести факт/статус и зафиксировать решение."
+        required: true
+
+  - target_kind: task
+    target_type: repeat_insemination
+    farm_id: ''
+    name: "Чек‑лист: повторное осеменение"
+    description: "План действий для задачи повторного осеменения."
+    steps:
+      - key: check_history
+        title: "Проверить историю"
+        details: "Количество осеменений, даты, качество семени, результаты диагностики."
+        required: true
+      - key: plan
+        title: "Сформировать план"
+        details: "Окно времени, техника, ответственный, контроль."
+        required: true
+      - key: log
+        title: "Зафиксировать"
+        details: "Записать решение и завершить задачу после выполнения."
+        required: true
+
+  - target_kind: task
+    target_type: alert_followup
+    farm_id: ''
+    name: "Чек‑лист: обработка алерта (fallback)"
+    description: "Плейбук по умолчанию для задач, созданных из алертов без явного правила."
+    steps:
+      - key: open_alert
+        title: "Открыть алерт"
+        details: "Понять тип/серьёзность и к какой сущности относится."
+        required: true
+      - key: assign_owner
+        title: "Назначить ответственного"
+        details: "Определить владельца и дедлайн согласно SLA."
+        required: true
+      - key: execute
+        title: "Выполнить действия"
+        details: "Следовать протоколам фермы и фиксировать факты/решения."
+        required: true
+      - key: close
+        title: "Закрыть задачу"
+        details: "Отметить статус и добавить запись в Decision Log."
+        required: true
+
+  - target_kind: task
+    target_type: data_correction
+    farm_id: ''
+    name: "Чек‑лист: корректировка данных (QC)"
+    description: "Базовый чек‑лист для задач исправления данных, созданных из QC‑алертов."
+    steps:
+      - key: read_qc
+        title: "Ознакомиться с QC"
+        details: "Откройте QC‑отчет и зафиксируйте: правило/поле/пример строки, data_version и qc_run."
+        required: true
+      - key: root_cause
+        title: "Найти первопричину"
+        details: "Проверьте источник: выгрузка, маппинг, справочники, идентификаторы."
+        required: true
+      - key: fix_and_upload
+        title: "Исправить и загрузить"
+        details: "Исправьте данные/маппинг и повторите загрузку."
+        required: true
+      - key: verify
+        title: "Проверить результат"
+        details: "Повторите QC и убедитесь, что ошибка устранена; зафиксируйте решение."
+        required: true

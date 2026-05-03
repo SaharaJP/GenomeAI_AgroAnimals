@@ -1,0 +1,11 @@
+queue_name_default: default
+max_attempts_default: 2
+cancel_poll_interval_sec: 0.5
+cancel_grace_sec: 10
+ui_log_tail_bytes: 262144
+ui_auto_refresh_sec: 3
+log_stream_chunk_bytes: 16384
+auto_retry_enabled_default: true
+auto_retry_backoff_sec: 1.0
+auto_retry_exit_codes: [1, 2, 124]
+auto_retry_kinds: [ingest, qc, train, score, report, repro, pack]

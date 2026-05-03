@@ -1,0 +1,11 @@
+dataset: treatments
+constants:
+  tenant_id: default
+columns:
+  ЛечениеID: treatment_id
+  НомерЖивотного: animal_id
+  ДатаНачала: start_date
+  ДатаОкончания: end_date
+  ТипЛечения: treatment_type
+  СобытиеОснование: reason_event_id
+  WithdrawalДо: withdrawal_end_date

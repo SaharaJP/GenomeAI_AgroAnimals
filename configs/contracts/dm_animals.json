@@ -1,0 +1,77 @@
+{
+  "dataset": "dm_animals",
+  "contract_version": "1.0.0",
+  "description": "Справочник животных (P0). 1 строка = 1 животное.",
+  "primary_key": [
+    "animal_id"
+  ],
+  "foreign_keys": [
+    {
+      "fields": [
+        "farm_id"
+      ],
+      "ref_dataset": "dm_farms",
+      "ref_fields": [
+        "farm_id"
+      ],
+      "enforced": false
+    }
+  ],
+  "fields": [
+    {
+      "name": "animal_id",
+      "type": "string",
+      "required": true,
+      "description": "Уникальный идентификатор животного"
+    },
+    {
+      "name": "farm_id",
+      "type": "string",
+      "required": true,
+      "description": "Ссылка на dm_farms"
+    },
+    {
+      "name": "ear_tag",
+      "type": "string",
+      "required": false,
+      "description": "Бирка/номер"
+    },
+    {
+      "name": "breed",
+      "type": "string",
+      "required": false,
+      "description": "Порода"
+    },
+    {
+      "name": "sex",
+      "type": "string",
+      "required": false,
+      "allowed_values": [
+        "F",
+        "M"
+      ],
+      "description": "Пол (F/M)"
+    },
+    {
+      "name": "birth_date",
+      "type": "date",
+      "required": false,
+      "description": "Дата рождения"
+    },
+    {
+      "name": "is_alive",
+      "type": "bool",
+      "required": false,
+      "description": "Животное живо"
+    },
+    {
+      "name": "status",
+      "type": "string",
+      "required": false,
+      "description": "Статус"
+    }
+  ],
+  "notes": [
+    "FK на dm_farms не проверяется в A0 (будет в QC)."
+  ]
+}

@@ -1,0 +1,2 @@
+tenant_id,cull_event_id,animal_id,event_date,event_type,revenue_rub,cost_rub,notes
+default,CU_001,A1002,2025-01-10,cull,45000.0,5000.0,demo

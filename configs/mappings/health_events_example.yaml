@@ -1,0 +1,13 @@
+# Пример мэппинга для dm_health_events (external -> canonical)
+# Внешний файл: data/examples/external/health_events_ext.csv
+
+dataset: health_events
+constants:
+  tenant_id: default
+columns:
+  EventID: event_id
+  AnimalID: animal_id
+  EventDate: event_date
+  EventType: event_type
+  Severity: severity
+  Notes: notes

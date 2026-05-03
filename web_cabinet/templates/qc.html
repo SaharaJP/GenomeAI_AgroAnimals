@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>QC</h2>
+<div class="card">
+  <form method="get" action="/qc">
+    <div class="row">
+      <div>
+        <label>data_version</label>
+        <select name="dv" onchange="this.form.submit()">
+          <option value="">-- выберите --</option>
+          {% for dv in data_versions %}
+            <option value="{{ dv }}" {% if dv==selected_dv %}selected{% endif %}>{{ dv }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </form>
+
+  <form method="post" action="/qc/run" style="margin-top:12px;">
+    <input type="hidden" name="data_version" value="{{ selected_dv }}" />
+    <button class="primary" type="submit" {% if not selected_dv or user.role=='viewer' %}disabled{% endif %}>Запустить QC</button>
+    {% if user.role=='viewer' %}<span class="muted">Viewer не может запускать QC</span>{% endif %}
+  </form>
+</div>
+
+<div class="card">
+  <h3>QC runs для {{ selected_dv }}</h3>
+  {% if qc_runs %}
+    <ul>
+      {% for r in qc_runs %}
+        <li>{{ r }} · <a href="/download?path=artifacts/{{ selected_dv }}/qc/{{ r }}/qc_report.xlsx">qc_report.xlsx</a> · <a href="/download?path=artifacts/{{ selected_dv }}/qc/{{ r }}/qc_issues.csv">qc_issues.csv</a> · <a href="/download?path=artifacts/{{ selected_dv }}/qc/{{ r }}/bad_rows.csv">bad_rows.csv</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="muted">Нет QC runs.</div>
+  {% endif %}
+</div>
+{% endblock %}

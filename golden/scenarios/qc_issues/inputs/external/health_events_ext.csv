@@ -1,0 +1,3 @@
+EventID,AnimalID,EventDate,EventType,Severity,Notes
+HE1,A1,2025-03-10,mastitis,medium,"clinical signs"
+HE2,A2,2025-03-11,lameness,low,"observation"

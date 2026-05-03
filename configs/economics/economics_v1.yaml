@@ -1,0 +1,37 @@
+schema: genomeai.economics.v1
+
+# T7-01: Экономика / what-if
+# Принцип: прозрачные формулы, без оптимизаторов.
+
+defaults:
+  currency: EUR
+  # Если нет dm_prices и dm_economics_daily, используем fallback.
+  milk_price_per_kg: 0.50
+  # Если нет dm_economics_daily.feed_cost_per_kg_dm
+  feed_cost_per_kg_dm: 0.28
+  # Прочие расходы на ферму в день (если нет dm_economics_daily.other_cost_eur)
+  other_cost_per_farm_day: 120.0
+
+allocation:
+  # Как распределять other_cost_per_farm_day по группам (pen_id).
+  # revenue_share: пропорционально доле выручки по группе в этот день.
+  # headcount_share: пропорционально числу голов в группе.
+  other_cost_allocation: revenue_share
+
+what_if:
+  # Допустимые диапазоны мультипликаторов (UI будет валидировать)
+  milk_price_multiplier_range: [0.5, 2.0]
+  feed_cost_multiplier_range: [0.5, 2.0]
+  other_cost_multiplier_range: [0.5, 2.0]
+
+governance:
+  # T11-04 What-If 2.0: политики управления сценариями/отчётами.
+  # ВАЖНО: по умолчанию не блокируем генерацию PDF для draft, чтобы не ломать MVP+.
+  # Если заказчик хочет human-in-the-loop строго до публикации отчёта — включите флаг ниже.
+  require_approval_for_report_pdf: false
+
+prices:
+  # Как часто обновляются цены в реальном мире (для документации/UI)
+  milk_price_update_period: monthly
+  feed_price_update_period: monthly
+  other_cost_update_period: quarterly

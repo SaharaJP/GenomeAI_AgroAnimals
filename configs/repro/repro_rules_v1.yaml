@@ -1,0 +1,61 @@
+schema: genomeai.repro_rules.v1
+
+# Reproduction KPI + worklists rules (T5-01)
+# Intent: keep rules simple, transparent and editable without code changes.
+
+defaults:
+  voluntary_waiting_period_days: 50       # VWP after calving before cow is eligible for insemination
+  preg_check_due_days: 32                # days after last service when pregnancy diagnosis should be scheduled
+  repeat_due_days_if_negative: 1         # days after negative preg check when cow is due for repeat service
+  repeat_due_days_no_check: 60           # days after service without any preg check => repeat list
+  lookback_conception_days: 60           # window for conception rate
+  lookback_pregnancy_rate_days: 21       # window for pregnancy rate
+
+parsing:
+  # Heuristics (string match, case-insensitive) to interpret `dm_repro_events.event_type`.
+  insemination_event_type_contains:
+    - insemin
+    - service
+    - ai
+    - breeding
+  pregcheck_event_type_contains:
+    - preg
+    - diagnosis
+    - pd
+    - ultrasound
+
+  # Heuristics for `dm_repro_events.result`.
+  pregnant_result_values:
+    - pregnant
+    - positive
+    - yes
+    - 1
+    - true
+  not_pregnant_result_values:
+    - open
+    - not_pregnant
+    - negative
+    - no
+    - 0
+    - false
+
+worklists:
+  # Priority is 1..5 (1 = highest)
+  insemination_priority_by_dim:
+    - {min_dim: 120, priority: 1}
+    - {min_dim: 90, priority: 2}
+    - {min_dim: 70, priority: 3}
+    - {min_dim: 50, priority: 4}
+    - {min_dim: 0, priority: 5}
+
+  diagnostics_priority_by_days_since_service:
+    - {min_days: 60, priority: 1}
+    - {min_days: 45, priority: 2}
+    - {min_days: 32, priority: 3}
+    - {min_days: 0, priority: 5}
+
+  repeat_priority_by_days_since_service:
+    - {min_days: 90, priority: 1}
+    - {min_days: 70, priority: 2}
+    - {min_days: 60, priority: 3}
+    - {min_days: 0, priority: 5}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Upload → Ingest</h2>
+<div class="card">
+  <p class="muted">Загрузите внешние файлы (CSV/XLSX) и запустите ingest в выбранный <b>data_version</b>.</p>
+  <p class="muted">Перед загрузкой можно открыть <a href="/contracts">каталог контрактов</a> и проверить required fields, QC coverage и шаблоны mapping.</p>
+  {% if user.role == 'viewer' %}
+    <p class="pill failed">Viewer не может запускать ingest. Можно только смотреть и скачивать артефакты.</p>
+  {% endif %}
+  {% if notice %}
+    <div class="card warn">{{ notice }}</div>
+  {% endif %}
+  {% if created_jobs %}
+    <div class="card done">
+      <div><strong>Jobs поставлены в очередь:</strong> {{ created_jobs|join(', ') }}</div>
+      <div class="muted"><a href="/tasks">Открыть Tasks &amp; Logs</a></div>
+    </div>
+  {% endif %}
+  {% if contract_errors %}
+    <div class="card failed">
+      <h3>Contract validation не пройдена</h3>
+      <p class="muted">Импорт не был поставлен в очередь для файлов ниже. Исправьте mapping/колонки/значения и повторите загрузку.</p>
+      {% for err in contract_errors %}
+        <div style="margin-bottom:10px;">
+          <strong>{{ err.dataset }}</strong> · version={{ err.contract_version }} · rows={{ err.rows_in }} · errors={{ err.error_count }}
+          <div class="muted" style="margin:4px 0;">
+            <a href="{{ err.contract_href }}">Открыть контракт</a>
+            {% if err.report_href %}<a href="{{ err.report_href }}" style="margin-left:10px;">Открыть validation report</a>{% endif %}
+            {% if err.mapping_file_virtual %}<a href="/download?path={{ err.mapping_file_virtual }}" style="margin-left:10px;">Скачать mapping</a>{% endif %}
+          </div>
+          <div class="muted">mapping={{ err.mapping_file }}</div>
+          <ul>
+            {% for line in err.preview %}
+              <li>{{ line }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <form method="post" action="/upload/ingest-all" enctype="multipart/form-data">
+    <div class="row">
+      <div>
+        <label>data_version</label>
+        <input type="text" name="data_version" value="{{ default_dv }}" required />
+      </div>
+    </div>
+    <hr style="border:none;border-top:1px solid #eee;margin:12px 0" />
+    <h3>dm_farms</h3>
+    <div class="row">
+      <div>
+        <label>Файл (CSV/XLSX)</label>
+        <input type="file" name="farms_file" />
+      </div>
+      <div>
+        <label>Mapping (выбрать)</label>
+        <select name="farms_mapping_path">
+          {% for path in example_mappings.farms %}
+            <option value="{{ path }}">{{ path }}</option>
+          {% endfor %}
+        </select>
+        <div class="muted">или загрузить свой mapping YAML</div>
+        <input type="file" name="farms_mapping_upload" />
+      </div>
+    </div>
+
+    <h3>dm_animals</h3>
+    <div class="row">
+      <div>
+        <label>Файл (CSV/XLSX)</label>
+        <input type="file" name="animals_file" />
+      </div>
+      <div>
+        <label>Mapping (выбрать)</label>
+        <select name="animals_mapping_path">
+          {% for path in example_mappings.animals %}
+            <option value="{{ path }}">{{ path }}</option>
+          {% endfor %}
+        </select>
+        <div class="muted">или загрузить свой mapping YAML</div>
+        <input type="file" name="animals_mapping_upload" />
+      </div>
+    </div>
+
+    <h3>dm_lactations</h3>
+    <div class="row">
+      <div>
+        <label>Файл (CSV/XLSX)</label>
+        <input type="file" name="lactations_file" />
+      </div>
+      <div>
+        <label>Mapping (выбрать)</label>
+        <select name="lactations_mapping_path">
+          {% for path in example_mappings.lactations %}
+            <option value="{{ path }}">{{ path }}</option>
+          {% endfor %}
+        </select>
+        <div class="muted">или загрузить свой mapping YAML</div>
+        <input type="file" name="lactations_mapping_upload" />
+      </div>
+    </div>
+
+    <div style="margin-top: 14px;">
+      <button class="primary" type="submit" {% if user.role=='viewer' %}disabled{% endif %}>Запустить ingest (создаст задачи)</button>
+      <a href="/tasks" style="margin-left:10px;">Перейти к задачам</a>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Найденные data_version</h3>
+  {% if data_versions %}
+    <ul>
+      {% for dv in data_versions %}
+        <li><a href="/qc?dv={{ dv }}">{{ dv }}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="muted">Пока нет (после ingest появятся).</div>
+  {% endif %}
+</div>
+{% endblock %}

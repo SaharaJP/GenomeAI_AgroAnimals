@@ -1,0 +1,4 @@
+tenant_id,source_system,source_animal_id,master_animal_id,confidence,is_active,created_at,updated_at
+default,registry,A1001,MA_demo_1,1.0,1,2025-01-01T00:00:00Z,2025-01-01T00:00:00Z
+default,sensor,S_8899,MA_demo_1,0.8,1,2025-01-01T00:00:00Z,2025-01-01T00:00:00Z
+default,registry,A2001,MA_demo_2,1.0,1,2025-01-01T00:00:00Z,2025-01-01T00:00:00Z

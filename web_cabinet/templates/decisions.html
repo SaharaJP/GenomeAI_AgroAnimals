@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Decisions</h2>
+<div class="card">
+  <form method="get" action="/decisions">
+    <div class="row">
+      <div>
+        <label>data_version</label>
+        <select name="dv" onchange="this.form.submit()">
+          <option value="">-- выберите --</option>
+          {% for dv in data_versions %}
+            <option value="{{ dv }}" {% if dv==selected_dv %}selected{% endif %}>{{ dv }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Init decision_log</h3>
+  <form method="post" action="/decisions/init">
+    <input type="hidden" name="data_version" value="{{ selected_dv }}" />
+    <div class="row">
+      <div>
+        <label>scoring_run (опционально: для шаблона)</label>
+        <select name="scoring_run">
+          <option value="">(без шаблона)</option>
+          {% for sr in scoring_runs %}
+            <option value="{{ sr }}">{{ sr }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button class="primary" type="submit" {% if not selected_dv or user.role=='viewer' %}disabled{% endif %}>Создать decision_log</button>
+    {% if user.role=='viewer' %}<span class="muted">Viewer не может фиксировать решения</span>{% endif %}
+  </form>
+  <div class="muted" style="margin-top:8px;">Файлы будут в: artifacts/&lt;dv&gt;/decisions/decision_log.*</div>
+</div>
+
+<div class="card">
+  <h3>Add decision</h3>
+  <form method="post" action="/decisions/add">
+    <input type="hidden" name="data_version" value="{{ selected_dv }}" />
+    <div class="row">
+      <div>
+        <label>animal_id</label>
+        <input type="text" name="animal_id" required />
+      </div>
+      <div>
+        <label>lactation_id</label>
+        <input type="text" name="lactation_id" required />
+        <div class="muted">MVP surrogate: animal_id__lactation_no</div>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>recommendation_type</label>
+        <select name="recommendation_type">
+          <option>PRIORITY</option>
+          <option>OBSERVE</option>
+          <option>CULL_CANDIDATE</option>
+        </select>
+      </div>
+      <div>
+        <label>decision</label>
+        <select name="decision">
+          <option>ACCEPT</option>
+          <option>REJECT</option>
+          <option>DEFER</option>
+        </select>
+      </div>
+      <div>
+        <label>comment</label>
+        <input type="text" name="comment" />
+      </div>
+      <div>
+        <label>scoring_run (опционально)</label>
+        <select name="scoring_run">
+          <option value="">(нет)</option>
+          {% for sr in scoring_runs %}
+            <option value="{{ sr }}">{{ sr }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <button class="primary" type="submit" {% if not selected_dv or user.role=='viewer' %}disabled{% endif %}>Добавить решение</button>
+  </form>
+</div>
+
+<div class="card">
+  <h3>Скачать decision_log</h3>
+  {% if selected_dv %}
+    <ul>
+      <li><a href="/download?path=artifacts/{{ selected_dv }}/decisions/decision_log.csv">decision_log.csv</a></li>
+      <li><a href="/download?path=artifacts/{{ selected_dv }}/decisions/decision_log.xlsx">decision_log.xlsx</a></li>
+      <li><a href="/download?path=artifacts/{{ selected_dv }}/decisions/decision_log.jsonl">decision_log.jsonl</a></li>
+    </ul>
+  {% else %}
+    <div class="muted">Выберите data_version.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

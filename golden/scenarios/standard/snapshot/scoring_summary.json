@@ -1,0 +1,14 @@
+{
+  "data_version": "dv_refactor_standard",
+  "model_version": "model_refactor_standard",
+  "row_counts": {
+    "n_animals_ranked": 2,
+    "n_cull_candidates": 0,
+    "n_lactations": 2,
+    "n_observe": 2,
+    "n_priority": 0
+  },
+  "schema": "genomeai.scoring_summary.v1",
+  "scoring_run": "score_refactor_standard",
+  "status": "OK"
+}

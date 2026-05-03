@@ -1,0 +1,45 @@
+version: 1
+title: Pilot adoption / usage / ROI metrics
+window_days: 30
+activation_window_hours: 24
+thresholds:
+  onboarding_activation_rate_min: 0.70
+  task_completion_rate_min: 0.60
+  median_event_entry_latency_hours_max: 6.0
+  roi_evidence_rate_min: 0.50
+  overdue_open_tasks_max: 5
+  min_economics_decisions_for_roi_gate: 2
+usage_categories:
+  report_usage:
+    action_prefixes: ["report.", "report_view.", "regular_reports.", "trend_reports."]
+    object_types: ["report"]
+    action_equals: ["export.download"]
+  approval_usage:
+    action_group: "approve"
+  assistant_usage:
+    action_prefixes: ["assistant."]
+role_activation_signals:
+  Director:
+    action_prefixes: ["assistant.", "decision.", "brief.", "drilldown.open", "alert_center.open", "report_to_action."]
+    action_groups: ["approve"]
+    object_types: ["report", "alert", "group", "animal"]
+  Zootech:
+    action_prefixes: ["tasks.", "decision.", "assistant.", "drilldown.open", "report_to_action.", "alert_center.open"]
+    action_groups: ["tasks"]
+    object_types: ["task", "animal", "group", "alert"]
+  Vet:
+    action_prefixes: ["vet_protocol.", "tasks.", "assistant.", "drilldown.open", "alert_center.open"]
+    action_groups: ["vet", "tasks"]
+    object_types: ["task", "animal", "alert", "vet_protocol_execution"]
+  Operator:
+    action_prefixes: ["upload.", "job.", "jobs_", "pipeline.", "connector.", "tasks.", "report_ops.", "score_ops.", "train_ops.", "qc_ops."]
+    action_groups: ["run", "upload"]
+    object_types: ["job", "dataset", "task"]
+  Admin:
+    action_prefixes: ["security.", "auth.", "support_bundle.", "competitive_acceptance.", "operational_rollout.", "audit.", "users."]
+    action_groups: ["security", "config", "approve"]
+    object_types: ["user", "support_bundle", "config", "security"]
+notes:
+  - Metrics are aggregated and reproducible. They avoid user-level vanity views unless needed for diagnostics.
+  - ROI metrics are evidence-oriented: expected effect plus linked outcome coverage, not a promise of realized rollout ROI.
+  - Onboarding friction is derived from governed post-login activation signals, not from speculative session heatmaps.

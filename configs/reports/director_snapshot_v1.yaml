@@ -1,0 +1,12 @@
+schema: genomeai.director_snapshot_config.v1
+
+# PNG snapshot rendering defaults (offline-core)
+png:
+  # Renderer options: pil (default, fast) or matplotlib (fallback/best-effort).
+  renderer: pil
+  width_px: 1600
+  height_px: 900
+  dpi: 150
+  top_deviations_rows: 10
+  plan_fact_rows: 12
+  include_milk_90d_plot: true

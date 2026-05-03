@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2>What-If сценарии</h2>
+
+{% if error %}
+  <div class="card" style="border-color:#f5c2c7;background:#fff5f5;">
+    <strong>Ошибка:</strong> {{ error }}
+  </div>
+{% endif %}
+{% if notice %}
+  <div class="card" style="border-color:#b6d4fe;background:#f0f7ff;">
+    <strong>OK:</strong> {{ notice }}
+  </div>
+{% endif %}
+
+<div class="card">
+  <form method="get" action="/whatif_scenarios" class="row">
+    <div>
+      <label>Статус</label>
+      <select name="status">
+        <option value="" {% if filters.status=='' %}selected{% endif %}>Все</option>
+        <option value="draft" {% if filters.status=='draft' %}selected{% endif %}>draft</option>
+        <option value="approved" {% if filters.status=='approved' %}selected{% endif %}>approved</option>
+        <option value="archived" {% if filters.status=='archived' %}selected{% endif %}>archived</option>
+      </select>
+    </div>
+    <div>
+      <label>Поиск</label>
+      <input type="text" name="q" value="{{ filters.q }}" placeholder="name/description" />
+    </div>
+    <div style="align-self:end;">
+      <button type="submit">Фильтр</button>
+    </div>
+  </form>
+</div>
+
+{% if can_write %}
+<div class="card">
+  <h3>Создать сценарий (draft)</h3>
+  <form method="post" action="/whatif_scenarios/create">
+    <div class="row">
+      <div>
+        <label>Название</label>
+        <input type="text" name="name" required />
+      </div>
+      <div>
+        <label>data_version (опц.)</label>
+        <input type="text" name="data_version" placeholder="dv_..." />
+      </div>
+      <div>
+        <label>Описание (опц.)</label>
+        <input type="text" name="description" placeholder="Коротко" />
+      </div>
+    </div>
+    <div style="margin-top:10px;">
+      <label>params_json (опц.)</label>
+      <textarea name="params_json">{}</textarea>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="primary" type="submit">Создать</button>
+    </div>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="muted">Всего: {{ total }}</div>
+  <table>
+    <thead>
+      <tr>
+        <th>updated</th>
+        <th>name</th>
+        <th>status</th>
+        <th>data_version</th>
+        <th>last_run</th>
+        <th>created_by</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in scenarios %}
+      <tr>
+        <td class="muted">{{ s.updated_at }}</td>
+        <td><a href="/whatif_scenarios/{{ s.scenario_id }}">{{ s.name }}</a></td>
+        <td><span class="pill">{{ s.status }}</span></td>
+        <td class="muted">{{ s.data_version or '' }}</td>
+        <td class="muted">{{ s.last_economics_run or '' }}</td>
+        <td class="muted">{{ s.created_by_username }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}

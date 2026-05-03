@@ -1,0 +1,65 @@
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+
+export function LoginForm() {
+  const router = useRouter();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ username, password, tenant_id: 'default', client_kind: 'web' }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => null);
+        throw new Error((body && body.detail) || 'Ошибка входа');
+      }
+      router.replace('/dashboard');
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка входа');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form className="login-form" onSubmit={onSubmit}>
+      <div className="login-fields-row">
+        <div className="login-field">
+          <label className="login-label">Имя пользователя</label>
+          <input
+            className="input"
+            value={username}
+            autoComplete="username"
+            onChange={(e: any) => setUsername(e.target.value)}
+          />
+        </div>
+        <div className="login-field">
+          <label className="login-label">Пароль</label>
+          <input
+            className="input"
+            type="password"
+            value={password}
+            autoComplete="current-password"
+            onChange={(e: any) => setPassword(e.target.value)}
+          />
+        </div>
+      </div>
+      {error ? <div className="error-text">{error}</div> : null}
+      <Button disabled={loading} type="submit" style={{ width: '100%', justifyContent: 'center' }}>
+        {loading ? 'Вхожу…' : 'Войти'}
+      </Button>
+    </form>
+  );
+}

@@ -1,0 +1,10 @@
+dataset: lactations
+columns:
+  AnimalID: animal_id
+  LactNo: lactation_no
+  CalvingDate: calving_date
+  DryoffDate: dryoff_date
+  DIM: days_in_milk
+  Milk305Kg: milk_305d_kg
+  FatPct: fat_pct
+  ProteinPct: protein_pct

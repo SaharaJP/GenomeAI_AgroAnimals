@@ -1,0 +1,38 @@
+{
+  "schema": "genomeai.metrics_contract.v1",
+  "required_correlation_ids": [
+    "request_id",
+    "job_id",
+    "run_id",
+    "user_id",
+    "tenant_id"
+  ],
+  "required_log_labels": [
+    "storage_backend",
+    "queue_backend",
+    "auth_backend",
+    "auth_mode"
+  ],
+  "request_metrics": [
+    "requests.total",
+    "requests.in_flight",
+    "requests.routes.*.p95_duration_sec"
+  ],
+  "job_metrics": [
+    "jobs.*.total",
+    "jobs.*.failed",
+    "jobs.*.p95_duration_sec"
+  ],
+  "runtime_gauges": [
+    "runtime_storage.backend",
+    "runtime_state.backend",
+    "queue_runtime.backend",
+    "queue_runtime.queues.*.pending_jobs",
+    "production_lockdown.lockdown_active"
+  ],
+  "dashboards_minimum": [
+    "api_runtime_health",
+    "queue_and_worker_health",
+    "storage_auth_lockdown"
+  ]
+}

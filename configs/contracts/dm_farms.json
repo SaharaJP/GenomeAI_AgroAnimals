@@ -1,0 +1,61 @@
+{
+  "dataset": "dm_farms",
+  "contract_version": "1.0.0",
+  "description": "Справочник ферм/площадок (P0). 1 строка = 1 ферма.",
+  "primary_key": [
+    "farm_id"
+  ],
+  "fields": [
+    {
+      "name": "farm_id",
+      "type": "string",
+      "required": true,
+      "description": "Уникальный идентификатор фермы"
+    },
+    {
+      "name": "farm_name",
+      "type": "string",
+      "required": true,
+      "description": "Название фермы"
+    },
+    {
+      "name": "region",
+      "type": "string",
+      "required": false,
+      "description": "Регион/область"
+    },
+    {
+      "name": "country",
+      "type": "string",
+      "required": false,
+      "description": "Страна"
+    },
+    {
+      "name": "lat",
+      "type": "float",
+      "required": false,
+      "description": "Широта"
+    },
+    {
+      "name": "lon",
+      "type": "float",
+      "required": false,
+      "description": "Долгота"
+    },
+    {
+      "name": "created_at",
+      "type": "date",
+      "required": false,
+      "description": "Дата (YYYY-MM-DD)"
+    },
+    {
+      "name": "is_active",
+      "type": "bool",
+      "required": false,
+      "description": "Активна ли ферма"
+    }
+  ],
+  "notes": [
+    "farm_id — ключ для ссылок из других датасетов."
+  ]
+}

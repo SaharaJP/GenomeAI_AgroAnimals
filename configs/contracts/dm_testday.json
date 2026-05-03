@@ -1,0 +1,62 @@
+{
+  "dataset": "dm_testday",
+  "contract_version": "1.0.0",
+  "description": "Контрольные дойки (опционально). 1 строка = измерение в дату.",
+  "primary_key": [
+    "animal_id",
+    "test_date"
+  ],
+  "foreign_keys": [
+    {
+      "fields": [
+        "animal_id"
+      ],
+      "ref_dataset": "dm_animals",
+      "ref_fields": [
+        "animal_id"
+      ],
+      "enforced": false
+    }
+  ],
+  "fields": [
+    {
+      "name": "animal_id",
+      "type": "string",
+      "required": true,
+      "description": "Ссылка на животное"
+    },
+    {
+      "name": "test_date",
+      "type": "date",
+      "required": true,
+      "description": "Дата измерения"
+    },
+    {
+      "name": "milk_kg",
+      "type": "float",
+      "required": false,
+      "description": "Удой за день, кг"
+    },
+    {
+      "name": "fat_pct",
+      "type": "float",
+      "required": false,
+      "description": "Жир, %"
+    },
+    {
+      "name": "protein_pct",
+      "type": "float",
+      "required": false,
+      "description": "Белок, %"
+    },
+    {
+      "name": "somatic_cells",
+      "type": "int",
+      "required": false,
+      "description": "Соматические клетки"
+    }
+  ],
+  "notes": [
+    "Файл может отсутствовать — validate не падает."
+  ]
+}

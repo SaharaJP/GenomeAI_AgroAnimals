@@ -1,0 +1,75 @@
+version: 1
+title: Commercial readiness gate
+summary: Honest final readiness gate for product-ready / pilot-ready / commercially-ready without substituting missing field evidence.
+thresholds:
+  product_ready:
+    min_competitive_scenarios_full: 5
+  packaging:
+    min_editions: 3
+    min_modules: 3
+  pilot_ready:
+    min_pilots: 2
+    min_dau: 3
+    min_roi_evidence_rate: 0.5
+  support:
+    min_diagnostics_reports: 2
+    min_release_notes: 1
+  commercially_ready:
+    min_referenceable_deployments: 1
+artifacts:
+  competitive_acceptance: competitive_acceptance_report.json
+  pilot_framework: pilot_framework_report.json
+  pilot_adoption: pilot_adoption_metrics_report.json
+  support_sla_incident: support_sla_incident_report.json
+  customer_upgrade: customer_upgrade_report.json
+evidence_pack:
+  sections:
+    - key: competitive_acceptance
+      title: Competitive acceptance evidence
+      required_for: [product_ready, pilot_ready, commercially_ready]
+    - key: pilot_framework
+      title: Pilot framework and deployment tracking
+      required_for: [pilot_ready, commercially_ready]
+    - key: pilot_adoption
+      title: Adoption / usage / ROI evidence
+      required_for: [pilot_ready, commercially_ready]
+    - key: support_sla_incident
+      title: Support / SLA / incident evidence
+      required_for: [pilot_ready, commercially_ready]
+    - key: customer_upgrade
+      title: Upgrade / migration / rollback evidence
+      required_for: [product_ready, commercially_ready]
+    - key: commercial_packaging
+      title: Packaging / edition model
+      required_for: [product_ready, commercially_ready]
+    - key: replacement_narratives
+      title: Replacement narratives and proof points
+      required_for: [commercially_ready]
+    - key: demo_kit
+      title: Demo farm and benchmark demos
+      required_for: [pilot_ready, commercially_ready]
+market_launch_checklist:
+  - key: product_parity
+    title: Product parity evidence is explicit
+    maps_to: product_parity
+  - key: pilot_framework
+    title: Pilot operating model is in place
+    maps_to: pilot_framework
+  - key: adoption_metrics
+    title: Adoption / ROI evidence is captured
+    maps_to: pilot_adoption
+  - key: support_readiness
+    title: Support and incident model is governed
+    maps_to: support_operating_model
+  - key: packaging_model
+    title: Commercial packaging is technically enforceable
+    maps_to: packaging_and_editions
+  - key: migration_readiness
+    title: Migration / upgrade evidence is attached
+    maps_to: migration_and_upgrade
+  - key: reference_deployments
+    title: Reference deployment evidence exists
+    maps_to: reference_deployments
+  - key: launch_materials
+    title: Market-launch materials are product-backed
+    maps_to: launch_materials

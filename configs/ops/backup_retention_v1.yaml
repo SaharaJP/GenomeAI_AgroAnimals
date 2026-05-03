@@ -1,0 +1,12 @@
+version: 1
+enabled: true
+apply_after_backup: false
+backup_archives:
+  keep_last: 5
+  glob: "*.zip"
+restore_snapshots:
+  enabled: true
+  keep_last: 2
+data_versions:
+  enabled: false
+  keep_last: 0

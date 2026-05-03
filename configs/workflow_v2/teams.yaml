@@ -1,0 +1,15 @@
+# Workflow 2.0 teams catalog (optional).
+# If the list is non-empty, web-cabinet validates assignee_team against it.
+# Keep it simple: change names to match your org structure.
+
+teams:
+  - key: team-health
+    title: Health team
+  - key: team-repro
+    title: Repro team
+  - key: team-data
+    title: Data team
+  - key: team-qc
+    title: QC team
+  - key: team-econ
+    title: Economics team

@@ -1,0 +1,2 @@
+tenant_id,lactation_id,animal_id,lactation_no,calving_date,dryoff_date,milk_305d_kg,calving_outcome
+default,LAC_A1001_1,A1001,1,2024-08-01,2025-05-15,9800,normal

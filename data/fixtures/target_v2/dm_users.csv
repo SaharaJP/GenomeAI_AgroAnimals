@@ -1,0 +1,2 @@
+tenant_id,user_id,username,display_name,is_active
+default,U_001,admin,Admin User,1

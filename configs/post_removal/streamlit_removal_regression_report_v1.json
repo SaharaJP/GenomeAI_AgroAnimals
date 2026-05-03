@@ -1,0 +1,27 @@
+{
+  "schema": "genomeai.post_removal.streamlit_cleanup_report.v1",
+  "status": "post_removal_regression_ready",
+  "formal_cutover_basis": "T32-11/T32-11A automated parity + runbook evidence, plus T32-12 coordinator-requested approval artifact",
+  "streamlit_present": false,
+  "streamlit_dependency_in_product": false,
+  "streamlit_dependency_in_deployment": false,
+  "final_architecture": [
+    "web_app",
+    "mobile_android",
+    "backend_api",
+    "workers",
+    "scheduler"
+  ],
+  "regression_targets": [
+    "web_react",
+    "android_foundation",
+    "android_offline_sync",
+    "server_deployment",
+    "production_security"
+  ],
+  "notes": [
+    "Historical cutover artefacts are superseded by this post-removal regression report.",
+    "web_cabinet remains an internal admin/support/debug surface, not the product UI.",
+    "No runtime path should import or execute Streamlit after T32-12."
+  ]
+}

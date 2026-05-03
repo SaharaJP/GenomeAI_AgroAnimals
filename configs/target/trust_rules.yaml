@@ -1,0 +1,44 @@
+default_source_rank:
+- registry
+- sensor
+- lab
+- manual
+field_source_rank:
+  sex:
+  - registry
+  - manual
+  - lab
+  - sensor
+  birth_date:
+  - registry
+  - lab
+  - manual
+  - sensor
+  breed:
+  - registry
+  - manual
+  - lab
+  - sensor
+  ear_tag_id:
+  - registry
+  - manual
+  - sensor
+  - lab
+  status:
+  - registry
+  - manual
+  - sensor
+  - lab
+  farm_id:
+  - registry
+  - manual
+  - sensor
+  - lab
+  dam_animal_id:
+  - registry
+  - manual
+  - lab
+  - sensor
+thresholds:
+  birth_date_max_delta_days: 30
+  min_calving_age_days: 450

@@ -1,0 +1,2 @@
+tenant_id,farm_id,farm_name,country_code,timezone,currency
+default,FARM_001,Green Valley Farm,DE,Europe/Berlin,EUR

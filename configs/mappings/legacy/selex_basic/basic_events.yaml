@@ -1,0 +1,10 @@
+dataset: basic_events
+columns:
+  СобытиеID: event_id
+  НомерЖивотного: animal_id
+  Ферма: farm_id
+  ДатаСобытия: event_date
+  ТипСобытия: event_type
+  Комментарий: comment
+  Группа: pen_id
+  КодПричины: reason_code

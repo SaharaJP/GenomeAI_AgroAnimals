@@ -1,0 +1,3 @@
+FarmID,Name,Reg,Country,Latitude,Longitude,Created,Active
+F001,Farm One,RegionA,RU,55.75,37.61,2024-01-01,yes
+F002,Farm Two,RegionB,RU,56.00,38.00,2024-02-15,maybe

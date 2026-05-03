@@ -1,0 +1,50 @@
+{
+  "iteration": "T34-05",
+  "status": "partially_proven",
+  "deliverables": [
+    "docs/artifact_backup_restore_cutover.md",
+    "docs/iterations/T34-05_execution_proof.md",
+    "docs/iterations/T34-05_execution_manifest.json",
+    "src/core/recovery/adult_maintenance.py",
+    "scripts/verify_adult_backup_set.py",
+    "scripts/verify_adult_restore_set.py",
+    "deploy/adult/ops/collect_support_bundle.sh",
+    "deploy/adult/ops/backup_host.sh",
+    "deploy/adult/ops/restore_host.sh",
+    "deploy/adult/ops/diagnostic_sql/backup_restore_checks.sql",
+    "tests/test_t34_05_support_bundle_adult_contour.py",
+    "tests/test_t34_05_adult_backup_restore_verification.py"
+  ],
+  "executed_checks": [
+    {
+      "type": "py_compile",
+      "result": "ok"
+    },
+    {
+      "type": "pytest",
+      "target": "tests/test_t34_05_support_bundle_adult_contour.py tests/test_t34_05_adult_backup_restore_verification.py",
+      "result": "2 passed"
+    },
+    {
+      "type": "pytest",
+      "target": "tests/test_t13_06_backup_restore_step1.py tests/test_t13_06_backup_restore_step2.py tests/test_t17_07_backup_restore_drill.py",
+      "result": "9 passed"
+    },
+    {
+      "type": "pytest",
+      "target": "tests/test_t34_03_support_bundle_runtime_state.py tests/test_t34_04_queue_runtime_foundation.py tests/test_t34_04_embedded_worker_guard.py tests/web/test_t34_04_queue_observability.py",
+      "result": "6 passed"
+    }
+  ],
+  "proven": [
+    "adult support bundle posture no longer treats web.db as production default",
+    "adult backup/restore verification scripts exist and are runnable",
+    "backup metadata and restore metadata are collected into support bundle",
+    "artifact integrity summary is present"
+  ],
+  "not_proven": [
+    "live pg_dump/psql restore on deployed adult contour",
+    "live redis broker restore proof",
+    "restored deployed contour boot proof after production restore"
+  ]
+}

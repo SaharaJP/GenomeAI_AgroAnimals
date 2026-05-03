@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{ title or "GenomeAI Cabinet" }}</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; }
+    header { padding: 12px 16px; border-bottom: 1px solid #eee; display: flex; align-items: center; justify-content: space-between; }
+    nav a { margin-right: 12px; text-decoration: none; color: #0366d6; }
+    nav a.active { font-weight: 700; }
+    main { padding: 16px; }
+    .card { border: 1px solid #eee; border-radius: 10px; padding: 12px; margin: 12px 0; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    label { display: block; font-size: 12px; color: #555; margin-bottom: 4px; }
+    input[type=text], input[type=password], select { padding: 8px; border: 1px solid #ddd; border-radius: 8px; min-width: 240px; }
+    textarea { padding: 8px; border: 1px solid #ddd; border-radius: 8px; min-width: 360px; min-height: 120px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    input[type=file] { padding: 6px; }
+    button { padding: 8px 12px; border-radius: 8px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
+    button.primary { background: #0366d6; border-color: #0366d6; color: white; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align: left; font-size: 14px; }
+    .pill { padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #ddd; }
+    .queued { background: #fff7e6; }
+    .running { background: #e6f7ff; }
+    .done { background: #f6ffed; }
+    .warn { background: #fffbe6; }
+    .failed { background: #fff1f0; }
+    .muted { color: #777; font-size: 12px; }
+    pre { white-space: pre-wrap; background: #0b1020; color: #e6edf3; padding: 12px; border-radius: 10px; overflow: auto; }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <strong>GenomeAI Web Cabinet</strong>
+    <span class="muted">(artifacts: {{ settings.artifacts_root }})</span>
+    {% if release_stamp %}<span class="muted" style="margin-left: 10px;">{{ release_stamp }}</span>{% endif %}
+  </div>
+  <div>
+    {% if user %}
+      <span class="pill">{{ user.username }} · {{ user.role }}</span>
+      <a href="/logout" style="margin-left: 12px;">Выйти</a>
+    {% endif %}
+  </div>
+</header>
+<nav style="padding: 10px 16px; border-bottom: 1px solid #eee;">
+  <div class="muted" style="margin-bottom: 8px;">Internal admin/support/debug navigation.</div>
+  <a href="/upload" class="{% if active=='upload' %}active{% endif %}">Upload</a>
+  <a href="/contracts" class="{% if active=='contracts' %}active{% endif %}">Data Catalog</a>
+  {% if user and ('pipeline.run' in (user.permissions or [])) %}<a href="/connectors" class="{% if active=='connectors' %}active{% endif %}">Connectors</a>{% endif %}
+  <a href="/qc" class="{% if active=='qc' %}active{% endif %}">QC</a>
+  <a href="/train" class="{% if active=='train' %}active{% endif %}">Train</a>
+  <a href="/score" class="{% if active=='score' %}active{% endif %}">Score</a>
+  <a href="/repro" class="{% if active=='repro' %}active{% endif %}">Repro</a>
+  <a href="/reports" class="{% if active=='reports' %}active{% endif %}">Reports</a>
+  <a href="/decisions" class="{% if active=='decisions' %}active{% endif %}">Decisions</a>
+  {% if user and ('tasks.view' in (user.permissions or [])) %}
+    <a href="/workflow" class="{% if active=='workflow' %}active{% endif %}">Workflow</a>
+  {% endif %}
+  {% if user and ('playbooks.view' in (user.permissions or [])) %}
+    <a href="/playbooks" class="{% if active=='playbooks' %}active{% endif %}">Playbooks</a>
+  {% endif %}
+  {% if user and ('weekly_plans.view' in (user.permissions or [])) %}
+    <a href="/weekly_plans" class="{% if active=='weekly_plans' %}active{% endif %}">Weekly Plans</a>
+  {% endif %}
+  {% if user and ('whatif.scenarios.view' in (user.permissions or [])) %}
+    <a href="/whatif_scenarios" class="{% if active=='whatif_scenarios' %}active{% endif %}">What-If</a>
+  {% endif %}
+  <a href="/pack" class="{% if active=='pack' %}active{% endif %}">Pilot Pack</a>
+  <a href="/tasks" class="{% if active in ['tasks', 'jobs'] %}active{% endif %}">Tasks & Logs</a>
+  {% if user and ('users.manage' in (user.permissions or [])) %}
+    <a href="/admin/users" class="{% if active=='admin_users' %}active{% endif %}">Security</a>
+  {% endif %}
+  {% if user and ('configs.manage' in (user.permissions or [])) %}
+    <a href="/configs" class="{% if active=='configs' %}active{% endif %}">Configs</a>
+  {% endif %}
+  {% if user and ('audit.view' in (user.permissions or [])) %}
+    <a href="/audit" class="{% if active=='audit' %}active{% endif %}">Audit</a>
+  {% endif %}
+</nav>
+<main>
+  {% block content %}{% endblock %}
+</main>
+<footer style="padding: 10px 16px; border-top: 1px solid #eee; color: #777; font-size: 12px;">
+  GenomeAI AgroAnimals · {{ release.display if release else "" }}
+</footer>
+</body>
+</html>

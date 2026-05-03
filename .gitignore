@@ -1,0 +1,52 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Runtime/generated artifacts
+_tmp/
+artifacts/_ci/
+web_cabinet/storage/
+runtime/
+
+# Local regression scratch files
+chunk*.list
+chunk*.out
+chunk_results.txt
+sub.list
+full_pytest*.log
+full_pytest*.txt
+collected_tests*.txt
+artifacts/_verify_refactor/
+artifacts/backups/
+artifacts/_archive/
+artifacts/support_bundles/
+installers/releases/
+
+# React/Next.js web app
+web_app/node_modules/
+web_app/.next/
+next_task.md
+artifacts/
+_tmp/
+runtime/
+.claude/
+MVP_progress.md
+design_decisions.md
+.env.ai
+.env.ai.broken
+web_app/.env.local
+configs/configs
+src/core/configs
+tests.backup.*
+
+# Smoke test artifacts — не коммитим
+tmp/smoke_*/
+*.db-journal
+src/core/web_cabinet/storage/web.db

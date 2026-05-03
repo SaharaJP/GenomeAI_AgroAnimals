@@ -1,0 +1,1 @@
+export function ExplainabilityBlock({title,reasons}:{title?:string;reasons:string[]}){return <section className="card explain"><h3 className="card-title">{title||'Почему это важно'}</h3>{reasons.map(r=><div className="explain-item" key={r}>{r}</div>)}</section>}

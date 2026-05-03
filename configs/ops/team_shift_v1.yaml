@@ -1,0 +1,22 @@
+team_shift_management_v1:
+  shifts:
+    - key: day
+      title: Day shift
+    - key: evening
+      title: Evening shift
+    - key: night
+      title: Night shift
+    - key: unassigned
+      title: Unassigned shift
+  handover_reason_codes:
+    - shift_end
+    - backlog_rebalance
+    - team_reassignment
+    - site_support
+    - expert_review
+  role_team_scope:
+    Operator: [team-data, team-qc]
+    Zootech: [team-repro, team-econ]
+    Vet: [team-health]
+    Director: [team-econ, team-health, team-repro, team-data, team-qc]
+    Admin: [team-econ, team-health, team-repro, team-data, team-qc]

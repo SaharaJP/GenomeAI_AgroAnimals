@@ -1,0 +1,4 @@
+tenant_id,site_id,farm_id,site_name,address
+default,DEMO_SITE_001,DEMO_FARM_001,North Site A,Demo Avenue 1
+default,DEMO_SITE_002,DEMO_FARM_001,North Site B,Demo Avenue 2
+default,DEMO_SITE_003,DEMO_FARM_002,South Site,Demo Road 3

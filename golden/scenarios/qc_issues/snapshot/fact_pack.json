@@ -1,0 +1,191 @@
+{
+  "distributions": {
+    "group_size": {
+      "count": 2,
+      "max": 2.0,
+      "mean": 2.0,
+      "min": 2.0,
+      "p25": 2.0,
+      "p50": 2.0,
+      "p75": 2.0,
+      "std": 0.0
+    },
+    "residual": {
+      "count": 2,
+      "max": 0.0,
+      "mean": -4400.0,
+      "min": -8800.0,
+      "p25": -6600.0,
+      "p50": -4400.0,
+      "p75": -2200.0,
+      "std": 4400.0
+    },
+    "y_pred": {
+      "count": 2,
+      "max": 19000.0,
+      "mean": 19000.0,
+      "min": 19000.0,
+      "p25": 19000.0,
+      "p50": 19000.0,
+      "p75": 19000.0,
+      "std": 0.0
+    }
+  },
+  "mastitis_risk": {
+    "available": false
+  },
+  "ml": {
+    "features": {
+      "categorical": [
+        "calving_season"
+      ],
+      "numeric": [
+        "parity",
+        "calving_year",
+        "calving_quarter",
+        "age_at_calving"
+      ]
+    },
+    "limitations": {
+      "age_at_calving_available": true,
+      "age_at_calving_reason": null
+    },
+    "metrics": {
+      "mae": 8800.0,
+      "n_test": 1,
+      "n_train": 1,
+      "rmse": 8800.0
+    },
+    "split": {
+      "n_total": 2,
+      "strategy": "time_percentile",
+      "train_fraction": 0.8
+    },
+    "target": "milk_305d_kg",
+    "task": "baseline_regression"
+  },
+  "playbooks": {
+    "recommended": [
+      {
+        "target_kind": "task",
+        "target_type": "data_correction",
+        "title": null
+      }
+    ]
+  },
+  "productivity_explainability": {
+    "animal_explainability": [
+      {
+        "action": "OBSERVE",
+        "animal_id": "A001",
+        "confidence": "MEDIUM",
+        "explain_counterfactuals_text": "no_simple_counterfactual",
+        "explain_top_factors_text": "parity=1.000 (↑ прогноз, baseline=1.000); calving_year=2023.000 (↑ прогноз, baseline=2023.000); calving_quarter=1.000 (↑ прогноз, baseline=1.000)",
+        "farm_id": "F001",
+        "prediction": 19000.0
+      },
+      {
+        "action": "OBSERVE",
+        "animal_id": "A002",
+        "confidence": "MEDIUM",
+        "explain_counterfactuals_text": "no_simple_counterfactual",
+        "explain_top_factors_text": "parity=1.000 (↑ прогноз, baseline=1.000); calving_year=2023.000 (↑ прогноз, baseline=2023.000); calving_quarter=1.000 (↑ прогноз, baseline=1.000)",
+        "farm_id": "F001",
+        "prediction": 19000.0
+      }
+    ],
+    "available": true,
+    "counterfactuals_preview": [],
+    "top_factors_preview": [],
+    "top_feature_counts": {}
+  },
+  "qc": {
+    "datasets_loaded": {
+      "dm_animals": 3,
+      "dm_farms": 2,
+      "dm_lactations": 2
+    },
+    "metrics": {
+      "cross.animals_without_lactations_rows": 1,
+      "cross.birth_ge_calving_rows": 0,
+      "cross.calving_in_future_rows": 0,
+      "cross.lactations_missing_animal_rows": 0,
+      "cross.milk_range_error_rows": 0,
+      "cross.milk_range_warn_rows": 1,
+      "cross.missing_calving_date_rows": 0,
+      "dm_animals.pk_duplicate_rows": 0,
+      "dm_animals.pk_missing_rows": 0,
+      "dm_animals.required_empty:animal_id": 0,
+      "dm_animals.required_empty:farm_id": 0,
+      "dm_farms.pk_duplicate_rows": 0,
+      "dm_farms.pk_missing_rows": 0,
+      "dm_farms.required_empty:farm_id": 0,
+      "dm_farms.required_empty:farm_name": 0,
+      "dm_lactations.pk_duplicate_rows": 0,
+      "dm_lactations.pk_missing_rows": 0,
+      "dm_lactations.required_empty:animal_id": 0,
+      "dm_lactations.required_empty:lactation_no": 0
+    },
+    "qc_status": "WARN"
+  },
+  "schema": "genomeai.fact_pack.v1",
+  "scoring": {
+    "confidence_counts": {
+      "MEDIUM": 2
+    },
+    "row_counts": {
+      "n_animals_ranked": 2,
+      "n_cull_candidates": 0,
+      "n_lactations": 2,
+      "n_observe": 2,
+      "n_priority": 0
+    },
+    "status": "OK"
+  },
+  "temporal": {
+    "calving_season_counts": {
+      "winter": 2
+    },
+    "calving_year_counts": {
+      "2023": 2
+    }
+  },
+  "top_lists": {
+    "cull_candidates": [],
+    "observe": [
+      {
+        "action_reasons": "small_group",
+        "animal_id": "A001",
+        "calving_date": "2023-01-10",
+        "confidence": "MEDIUM",
+        "ear_tag": 12345,
+        "explain_counterfactuals_text": "no_simple_counterfactual",
+        "explain_top_factors_text": "parity=1.000 (↑ прогноз, baseline=1.000); calving_year=2023.000 (↑ прогноз, baseline=2023.000); calving_quarter=1.000 (↑ прогноз, baseline=1.000)",
+        "farm_id": "F001",
+        "lactation_no": 1,
+        "residual": 0,
+        "y_pred": 19000
+      },
+      {
+        "action_reasons": "small_group",
+        "animal_id": "A002",
+        "calving_date": "2023-02-05",
+        "confidence": "MEDIUM",
+        "ear_tag": 12346,
+        "explain_counterfactuals_text": "no_simple_counterfactual",
+        "explain_top_factors_text": "parity=1.000 (↑ прогноз, baseline=1.000); calving_year=2023.000 (↑ прогноз, baseline=2023.000); calving_quarter=1.000 (↑ прогноз, baseline=1.000)",
+        "farm_id": "F001",
+        "lactation_no": 1,
+        "residual": -8800,
+        "y_pred": 19000
+      }
+    ],
+    "priority": []
+  },
+  "versions": {
+    "data_version": "dv_refactor_qc_issues",
+    "model_version": "model_refactor_qc_issues",
+    "qc_run": "qc_refactor_qc_issues",
+    "scoring_run": "score_refactor_qc_issues"
+  }
+}

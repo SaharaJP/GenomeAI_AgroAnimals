@@ -1,0 +1,34 @@
+{
+  "dataset": "dm_treatments",
+  "contract_version": "1.0.0",
+  "description": "Учёт назначений/лечений. 1 строка = 1 курс/назначение.",
+  "primary_key": ["tenant_id", "treatment_id"],
+  "foreign_keys": [
+    {
+      "fields": ["animal_id"],
+      "ref_dataset": "dm_animals",
+      "ref_fields": ["animal_id"],
+      "enforced": false
+    },
+    {
+      "fields": ["reason_event_id"],
+      "ref_dataset": "dm_health_events",
+      "ref_fields": ["event_id"],
+      "enforced": false
+    }
+  ],
+  "fields": [
+    {"name": "tenant_id", "type": "string", "required": true, "description": "Идентификатор тенанта/фермы (логический)"},
+    {"name": "treatment_id", "type": "string", "required": true, "description": "Уникальный идентификатор лечения"},
+    {"name": "animal_id", "type": "string", "required": true, "description": "Идентификатор животного"},
+    {"name": "start_date", "type": "date", "required": true, "description": "Дата начала лечения"},
+    {"name": "end_date", "type": "date", "required": false, "description": "Дата окончания лечения (если пусто, считаем start_date)"},
+    {"name": "treatment_type", "type": "string", "required": true, "description": "Категория лечения (из справочника)"},
+    {"name": "reason_event_id", "type": "string", "required": false, "description": "Ссылка на событие здоровья (dm_health_events.event_id)"},
+    {"name": "withdrawal_end_date", "type": "date", "required": false, "description": "Опциональная явная дата окончания withdrawal из источника"}
+  ],
+  "notes": [
+    "withdrawal рассчитывается детерминированно по configs/health/withdrawal_rules.yaml (см. docs/health/withdrawal_rules.md).",
+    "Никаких диагнозов от ИИ: tests/веб используют только факты + правила."
+  ]
+}

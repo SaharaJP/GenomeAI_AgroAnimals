@@ -1,0 +1,143 @@
+version: 1
+# Worklists/Tasks v1: simple action lists derived from alerts_v2 and minimal rules.
+# Not a full task tracker.
+
+# Minimal statuses for tasks_v1:
+# - open
+# - in_progress
+# - done
+# - cancelled
+
+from_alerts:
+  # Health & vet
+  health_risk:
+    task_type: vet_inspection
+    domain: health
+    title: "Осмотр животного (риск по здоровью)"
+    priority: 1
+    due_days: 1
+
+  health.mastitis_risk:
+    task_type: mastitis_control
+    domain: health
+    title: "Контроль мастита (риск)"
+    priority: 1
+    due_days: 1
+
+  health.withdrawal_active:
+    task_type: withdrawal_control
+    domain: health
+    title: "Контроль withdrawal (активный период ожидания)"
+    priority: 2
+    due_days: 0
+
+  # Reproduction
+  repro.repeat_insemination:
+    task_type: repeat_insemination
+    domain: repro
+    title: "Повторное осеменение"
+    priority: 2
+    due_days: 3
+
+  repro.heat_missed:
+    task_type: repro_check
+    domain: repro
+    title: "Проверка охоты (пропуск)"
+    priority: 3
+    due_days: 2
+
+  # QC / data
+
+  # Alerts v2 QC catalog ids (T12-02)
+  QC.GENERIC:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: разобрать QC проблемы"
+    priority: 3
+    due_days: 3
+
+  QC.MISSING_REQUIRED:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: отсутствуют обязательные колонки"
+    priority: 1
+    due_days: 1
+
+  QC.NON_NULL_VIOLATION:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: пустые значения в обязательных полях"
+    priority: 2
+    due_days: 2
+
+  QC.FK_MISSING:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: нарушены внешние ключи"
+    priority: 1
+    due_days: 1
+
+  QC.CONTRACT_MISMATCH:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: несоответствие контракту (типы/форматы)"
+    priority: 2
+    due_days: 2
+
+  QC.NUMERIC_RANGE:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: значения вне диапазона"
+    priority: 3
+    due_days: 3
+
+  # Alerts v2 ML catalog ids (T12-02)
+  ML.HEALTH_RISK:
+    task_type: vet_inspection
+    domain: health
+    title: "Осмотр животного (ML риск по здоровью)"
+    priority: 1
+    due_days: 1
+
+  ML.MASTITIS_RISK:
+    task_type: mastitis_control
+    domain: health
+    title: "Контроль мастита (ML риск)"
+    priority: 1
+    due_days: 1
+
+  ML.REPRO_RISK:
+    task_type: repro_check
+    domain: repro
+    title: "Проверка репродукции (ML риск)"
+    priority: 2
+    due_days: 3
+
+  QC.PK_DUPLICATE:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: дубликаты ключей"
+    priority: 2
+    due_days: 2
+
+  QC.SCHEMA_MISSING:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: отсутствуют обязательные поля"
+    priority: 2
+    due_days: 2
+
+  QC.RANGE_VIOLATION:
+    task_type: data_correction
+    domain: qc
+    title: "Корректировка данных: нарушение диапазонов"
+    priority: 3
+    due_days: 3
+
+  # Sensors
+  sensors.anomaly:
+    task_type: sensor_check
+    domain: data
+    title: "Проверка датчиков (аномалия)"
+    priority: 3
+    due_days: 1

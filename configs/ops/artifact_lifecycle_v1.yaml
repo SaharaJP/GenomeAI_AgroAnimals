@@ -1,0 +1,60 @@
+version: 1
+enabled: true
+
+archive_dir: artifacts/_archive
+support_bundle_dir: artifacts/support_bundles
+
+# Paths that must never be removed by generic lifecycle cleanup.
+protected_prefixes:
+  - golden
+  - installers
+  - artifacts/releases
+  - artifacts/_release
+  - artifacts/manifests
+  - artifacts/manifest.json
+  - web_cabinet/storage/web.db
+  - web_cabinet/storage/uploads
+
+runtime_families:
+  verify_reports:
+    enabled: true
+    root: artifacts/_verify_refactor
+    glob: verify_*
+    keep_last: 3
+  ci_scratch:
+    enabled: true
+    root: artifacts/_ci
+    glob: '*'
+    keep_last: 3
+  tmp_workdirs:
+    enabled: true
+    root: _tmp
+    glob: '*'
+    keep_last: 5
+  runtime_archives:
+    enabled: true
+    root: artifacts/_archive
+    glob: '*.zip'
+    keep_last: 5
+  support_bundles:
+    enabled: true
+    root: artifacts/support_bundles
+    glob: '*.zip'
+    keep_last: 5
+  web_logs:
+    enabled: true
+    root: web_cabinet/storage/logs
+    glob: '*.log'
+    keep_last: 20
+
+backup_retention:
+  enabled: true
+  include_data_versions_default: false
+
+support_bundle:
+  include_environment_snapshot: true
+  include_inventory: true
+  include_policy_files: true
+  include_web_db_summary: true
+  include_latest_verify_report: true
+  max_log_files: 5

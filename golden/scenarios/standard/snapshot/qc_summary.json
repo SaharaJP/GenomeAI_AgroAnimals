@@ -1,0 +1,34 @@
+{
+  "data_version": "dv_refactor_standard",
+  "datasets_loaded": {
+    "dm_animals": 2,
+    "dm_farms": 2,
+    "dm_lactations": 2
+  },
+  "issue_counts": {},
+  "metrics": {
+    "cross.animals_without_lactations_rows": 0,
+    "cross.birth_ge_calving_rows": 0,
+    "cross.calving_in_future_rows": 0,
+    "cross.lactations_missing_animal_rows": 0,
+    "cross.milk_range_error_rows": 0,
+    "cross.milk_range_warn_rows": 0,
+    "cross.missing_calving_date_rows": 0,
+    "dm_animals.pk_duplicate_rows": 0,
+    "dm_animals.pk_missing_rows": 0,
+    "dm_animals.required_empty:animal_id": 0,
+    "dm_animals.required_empty:farm_id": 0,
+    "dm_farms.pk_duplicate_rows": 0,
+    "dm_farms.pk_missing_rows": 0,
+    "dm_farms.required_empty:farm_id": 0,
+    "dm_farms.required_empty:farm_name": 0,
+    "dm_lactations.pk_duplicate_rows": 0,
+    "dm_lactations.pk_missing_rows": 0,
+    "dm_lactations.required_empty:animal_id": 0,
+    "dm_lactations.required_empty:lactation_no": 0
+  },
+  "qc_run": "qc_refactor_standard",
+  "qc_status": "PASS",
+  "row_counts": {},
+  "schema": "genomeai.qc_summary.v1"
+}

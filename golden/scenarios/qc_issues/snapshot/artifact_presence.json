@@ -1,0 +1,12 @@
+{
+  "decision_log_csv": true,
+  "decision_log_jsonl": true,
+  "decision_log_xlsx": true,
+  "fact_pack_json": true,
+  "qc_report_xlsx": true,
+  "recommendations_xlsx": true,
+  "report_docx": true,
+  "report_summary_json": true,
+  "scored_latest_csv": true,
+  "web_db": true
+}

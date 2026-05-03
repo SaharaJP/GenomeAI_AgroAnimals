@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "scope": "Controlled dependency updates for warning governance and reproducible CI/runtime behavior",
+  "upgrade_policy": {
+    "separate_controlled_change_required": true,
+    "project_refactor_must_not_change_dependencies": true,
+    "validate_with": [
+      "pytest gate",
+      "web smoke",
+      "verify_refactor",
+      "warning governance report"
+    ],
+    "when_to_upgrade": [
+      "documented external warning becomes reproducible and noisy in current CI/smoke",
+      "upstream fix or safer supported version is known",
+      "change can be isolated from business refactor and release hardening work"
+    ],
+    "when_not_to_upgrade": [
+      "warning is project-origin and should be fixed in our code",
+      "warning is already neutralized by a compatibility shim without behavior drift",
+      "upgrade risk is higher than operational value or affects public contracts"
+    ],
+    "notes": [
+      "Dependency changes should update dependency_warning_inventory_v1.json and python_environment.json evidence together.",
+      "Any accepted dependency warning budget must stay explicit in warning_governance_v1.json."
+    ]
+  },
+  "tracked_packages": [
+    {"name": "pytest", "role": "test-runner", "impact": "warning summary format and CI behavior"},
+    {"name": "python-multipart", "role": "runtime-web-upload", "impact": "historical pending deprecation warnings"},
+    {"name": "ddtrace", "role": "dependency-observability", "impact": "external plugin/import warnings in some environments"},
+    {"name": "fastapi", "role": "runtime-web", "impact": "routing/form handling and multipart integration"},
+    {"name": "starlette", "role": "runtime-web", "impact": "templating/lifespan/test client behavior"},
+    {"name": "numpy", "role": "runtime-ml", "impact": "runtime/statistical warnings"},
+    {"name": "pandas", "role": "runtime-dataframe", "impact": "future/runtime warnings and output stability"}
+  ]
+}

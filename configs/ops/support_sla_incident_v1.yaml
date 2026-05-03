@@ -1,0 +1,79 @@
+version: 1
+support_model:
+  title: Support / SLA / incident operating model
+  notes:
+    - Support model is operational and traceable; it does not claim unsupported contractual SLA guarantees.
+    - Critical incidents must keep linkage to diagnostics, support bundle usage and version context.
+    - Release note linkage and known-issue mapping are required for customer-facing incident handling where applicable.
+  severity_levels:
+    SEV1:
+      label: SEV1 Critical
+      response_target_minutes: 30
+      escalate_after_minutes: 60
+      incident_required: true
+      customer_meaning: Service blocked or governed daily operations unavailable.
+    SEV2:
+      label: SEV2 High
+      response_target_minutes: 120
+      escalate_after_minutes: 240
+      incident_required: true
+      customer_meaning: Major degradation or high-risk workflow failure with workaround.
+    SEV3:
+      label: SEV3 Medium
+      response_target_minutes: 480
+      escalate_after_minutes: 1440
+      incident_required: false
+      customer_meaning: Bounded issue with workaround or partial scope impact.
+    SEV4:
+      label: SEV4 Low
+      response_target_minutes: 1440
+      escalate_after_minutes: 4320
+      incident_required: false
+      customer_meaning: Cosmetic or low-risk issue, no material business block.
+  escalation_paths:
+    SEV1:
+      - Support / incident coordinator
+      - Implementation lead
+      - Product owner
+    SEV2:
+      - Support / incident coordinator
+      - Implementation lead
+    SEV3:
+      - Support lead
+      - Customer success / training owner
+    SEV4:
+      - Product backlog / known issues review
+  known_issue_statuses:
+    - open
+    - mitigated
+    - fixed_pending_release
+    - closed
+  support_case_statuses:
+    - open
+    - investigating
+    - waiting_customer
+    - mitigated
+    - closed
+  incident_statuses:
+    - open
+    - mitigated
+    - monitoring
+    - closed
+  required_incident_linkage:
+    - diagnostics_ref
+    - support_bundle_ref
+  constraints:
+    - Response targets are support operating goals only and depend on observability, diagnostics and backup/support bundle availability.
+    - Product must not promise response objectives that are not backed by tooling and traceable records.
+    - Known issues and release-note linkage are required for customer-safe workaround communication.
+records:
+  path: data/support/support_operating_records_v1.json
+  runtime_relpath: support/support_operating_records_v1.json
+  runtime_schema: genomeai.support_operating_records.v1
+diagnostics:
+  expected_reports:
+    - performance_gates_report.json
+    - operational_rollout_gates_report.json
+    - competitive_acceptance_report.json
+    - restore_drill_report.json
+    - pilot_framework_report.json

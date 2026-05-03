@@ -1,0 +1,11 @@
+dataset: animals
+dayfirst: true
+columns:
+  CowID: animal_id
+  FarmCode: farm_id
+  TagNo: ear_tag
+  BreedCode: breed
+  Gender: sex
+  BirthDate: birth_date
+  AliveFlag: is_alive
+  LifecycleStatus: status

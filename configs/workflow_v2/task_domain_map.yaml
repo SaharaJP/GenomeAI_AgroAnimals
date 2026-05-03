@@ -1,0 +1,31 @@
+version: 1
+
+# Coarse domain classifier for tasks.
+#
+# This is used only when a task doesn't explicitly specify `domain` and there is
+# no `domain` in the alert→task rule.
+
+default_domain: data
+
+rules:
+  # QC / data quality
+  - match: "^QC\\."
+    domain: qc
+  - match: "qc|quality|schema|duplicate|range"
+    domain: qc
+
+  # Health / vet
+  - match: "mastitis|health|vet|withdrawal|treat|therapy|medicine"
+    domain: health
+
+  # Reproduction
+  - match: "repro|insemin|heat|calv|preg|abortion|service_period"
+    domain: repro
+
+  # Economics
+  - match: "econ|roi|whatif|budget|cost|price|margin"
+    domain: econ
+
+  # Data / sensors / integrations
+  - match: "sensor|integration|etl|pipeline|mapping|import|export|data"
+    domain: data

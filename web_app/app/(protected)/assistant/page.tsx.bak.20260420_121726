@@ -1,0 +1,4 @@
+import { Card } from '@/components/ui/card';
+import { AssistantInteractiveClient } from '@/components/operations/assistant-interactive-client';
+
+export default async function AssistantPage({searchParams}:{searchParams:Promise<Record<string,string|undefined>>}){const params=await searchParams; return <div className="grid"><div className="topbar"><div><h1 className="page-title">Assistant</h1><p className="page-subtitle">Thin frontend surface for assistant target resolution via canonical backend API.</p></div></div>{Object.keys(params).length>0?<Card><h3 className="card-title">Hook context</h3><p className="card-subtitle">This page was opened from a linked action hook. The context below is passed to backend resolution only.</p><pre style={{whiteSpace:'pre-wrap',margin:0}}>{JSON.stringify(params,null,2)}</pre></Card>:null}<AssistantInteractiveClient initialTarget={params.target||'alerts'} /></div>}

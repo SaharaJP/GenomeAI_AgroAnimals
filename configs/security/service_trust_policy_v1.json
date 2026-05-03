@@ -1,0 +1,14 @@
+{
+  "schema": "genomeai.security.service_trust_policy.v1",
+  "mode": "shared_internal_token_baseline",
+  "header_name": "X-GenomeAI-Service-Token",
+  "secret_env": "GENOMEAI_INTERNAL_SERVICE_TOKEN",
+  "secret_env_file": "GENOMEAI_INTERNAL_SERVICE_TOKEN_FILE",
+  "applies_to": [
+    "internal admin/support flows",
+    "worker to api future callbacks",
+    "scheduler to api future callbacks",
+    "ops/integration future internal routes"
+  ],
+  "silent_bypass_allowed": false
+}

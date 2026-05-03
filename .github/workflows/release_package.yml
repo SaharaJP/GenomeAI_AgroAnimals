@@ -1,0 +1,52 @@
+name: release_package
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_stamp:
+        description: Stable build stamp for release metadata
+        required: false
+        default: ci
+      release_channel:
+        description: Release channel label
+        required: false
+        default: ci
+      source_date_epoch:
+        description: Reproducible build epoch
+        required: false
+        default: "315532800"
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+      - name: Build release archive
+        run: |
+          PYTHONPATH=src python -m genomeai.cli release-build \
+            --project-root . \
+            --build-stamp "${{ github.event.inputs.build_stamp || 'ci' }}" \
+            --release-channel "${{ github.event.inputs.release_channel || 'ci' }}" \
+            --source-date-epoch "${{ github.event.inputs.source_date_epoch || '315532800' }}"
+      - name: Run packaged smoke
+        run: |
+          archive=$(ls -1 installers/releases/*.zip | head -n 1)
+          PYTHONPATH=src python -m genomeai.cli release-smoke --archive "$archive" --report-json installers/releases/release_smoke_report.json
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: genomeai-release-package
+          path: |
+            installers/releases/*.zip
+            installers/releases/*.manifest.json
+            installers/releases/*.sha256
+            installers/releases/release_smoke_report.json

@@ -1,0 +1,40 @@
+version: 1
+archive_dir: installers/releases
+package_basename: genomeai_agroanimals_release
+root_dir_template: genomeai_agroanimals_{version}_{build_stamp}
+include_paths:
+  - .dockerignore
+  - .gitignore
+  - README.md
+  - pyproject.toml
+  - ci
+  - configs
+  - data/examples
+  - deploy
+  - docs
+  - genomeai
+  - installers
+  - scripts
+  - src
+  - web_app
+  - mobile_android
+  - web_cabinet
+exclude_globs:
+  - .git/**
+  - .venv/**
+  - '**/__pycache__/**'
+  - '**/*.pyc'
+  - '**/*.pyo'
+  - .pytest_cache/**
+  - .mypy_cache/**
+  - .ruff_cache/**
+  - artifacts/**
+  - _tmp/**
+  - build/**
+  - dist/**
+  - installers/releases/**
+  - web_cabinet/storage/**
+  - runtime/**
+embedded_metadata_path: release/release_stamp.json
+embedded_manifest_path: release/manifest.json
+embedded_checksums_path: release/SHA256SUMS
