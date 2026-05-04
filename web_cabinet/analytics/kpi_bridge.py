@@ -1,0 +1,147 @@
+"""KPI Bridge — facade between kpi_v2 computation engine and web_cabinet UI.
+
+Isolates the UI from internal kpi_v2 details. Does NOT duplicate KPI computation.
+"""
+from __future__ import annotations
+
+import math
+import tempfile
+from dataclasses import dataclass, field
+from datetime import date
+from pathlib import Path
+from typing import Literal, Optional
+
+import pandas as pd
+
+# Default fixture path (relative to repo root, resolved at call time)
+_FIXTURES_DIR = Path(__file__).parents[3] / "data" / "fixtures" / "target_v2"
+
+
+@dataclass
+class DashboardKPI:
+    farm_id: str
+    as_of: date
+    # Production
+    avg_milk_yield_kg: Optional[float]
+    ecm_kg: Optional[float]
+    fat_pct: Optional[float]
+    protein_pct: Optional[float]
+    scc_bulk_k: Optional[float]
+    # Reproduction
+    pregnancy_rate_21d_pct: Optional[float]
+    days_open_avg: Optional[float]
+    # Health
+    cows_in_treatment: Optional[int]
+    mastitis_incidence_pct_per_year: Optional[float]
+    # Meta
+    confidence: Literal["high", "medium", "low"]
+    sample_size_cows: int
+    raw_kpi_long: Optional[pd.DataFrame] = field(default=None, repr=False)
+
+
+def _get_kpi(df: pd.DataFrame, kpi_id: str, farm_id: str) -> Optional[float]:
+    """Extract a single KPI value for the given farm from a kpi_long DataFrame."""
+    if df.empty:
+        return None
+    sub = df[(df["kpi_id"] == kpi_id) & (df["farm_id"] == farm_id)]
+    if sub.empty:
+        return None
+    val = pd.to_numeric(sub["value"].iloc[0], errors="coerce")
+    return None if (val is None or (isinstance(val, float) and math.isnan(val))) else float(val)
+
+
+def _compute_confidence(
+    avg_milk: Optional[float],
+    fat_pct: Optional[float],
+    protein_pct: Optional[float],
+    sample_size: int,
+) -> Literal["high", "medium", "low"]:
+    if sample_size < 5:
+        return "low"
+    present = sum(v is not None for v in [avg_milk, fat_pct, protein_pct])
+    if sample_size >= 30 and present >= 2:
+        return "high"
+    if present >= 1:
+        return "medium"
+    return "low"
+
+
+def compute_dashboard_kpi(
+    farm_id: str,
+    as_of: date,
+    *,
+    period_days: int = 7,
+    input_dir: Optional[Path] = None,
+) -> DashboardKPI:
+    """
+    Computes KPI snapshot for UI Dashboard.
+    Uses genomeai.kpi_v2.run_kpi() as computation engine.
+    """
+    from genomeai.kpi_v2 import run_kpi  # lazy import — kpi_v2 is heavy
+
+    resolved_input = input_dir or _FIXTURES_DIR
+
+    with tempfile.TemporaryDirectory(prefix="kpi_bridge_") as tmp:
+        artifacts_root = Path(tmp) / "artifacts"
+        result = run_kpi(
+            data_version="bridge",
+            asof_date=as_of.isoformat(),
+            artifacts_root=artifacts_root,
+            input_dir=resolved_input,
+        )
+        kpi_long_path = Path(result["kpi_dir"]) / "kpi_long.csv"
+        if kpi_long_path.exists():
+            kpi_long = pd.read_csv(kpi_long_path)
+        else:
+            kpi_long = pd.DataFrame()
+
+    # Sample size: count unique active animals for this farm (approximate via milk records)
+    sample_size = 0
+    if not kpi_long.empty:
+        farm_rows = kpi_long[kpi_long["farm_id"] == farm_id]
+        # milk_avg_kg_per_cow_1d has a cows denominator; use alert_count or health_events as proxy
+        # Best proxy: kpi_count per farm ≈ number of data rows present
+        sample_size = int(farm_rows.shape[0])
+
+    avg_milk = _get_kpi(kpi_long, "milk_avg_kg_per_cow_1d", farm_id)
+    fat_pct = _get_kpi(kpi_long, "fat_pct_avg_7d", farm_id)
+    protein_pct = _get_kpi(kpi_long, "protein_pct_avg_7d", farm_id)
+
+    scc_raw = _get_kpi(kpi_long, "scc_avg_7d", farm_id)
+    scc_bulk_k = (scc_raw / 1000.0) if scc_raw is not None else None
+
+    # Mastitis incidence annualized: events_30d / sample_cows * 12 * 100
+    mast_30d = _get_kpi(kpi_long, "mastitis_events_30d", farm_id)
+    mastitis_pct_year: Optional[float] = None
+    if mast_30d is not None and sample_size > 0:
+        mastitis_pct_year = round(mast_30d / sample_size * 12 * 100, 1)
+
+    # Cows in treatment: approximated from severe health events (no dedicated KPI in v2)
+    severe = _get_kpi(kpi_long, "severe_health_events_30d", farm_id)
+    cows_in_treatment = int(round(severe)) if severe is not None else None
+
+    confidence = _compute_confidence(avg_milk, fat_pct, protein_pct, sample_size)
+
+    # Attach only the rows for this farm (not rows for fallback farms from kpi_v2)
+    farm_rows_df: Optional[pd.DataFrame] = None
+    if not kpi_long.empty:
+        farm_subset = kpi_long[kpi_long["farm_id"] == farm_id]
+        if not farm_subset.empty:
+            farm_rows_df = farm_subset.reset_index(drop=True)
+
+    return DashboardKPI(
+        farm_id=farm_id,
+        as_of=as_of,
+        avg_milk_yield_kg=avg_milk,
+        ecm_kg=None,  # ECM not computed in kpi_v2; placeholder for Week 4
+        fat_pct=fat_pct,
+        protein_pct=protein_pct,
+        scc_bulk_k=scc_bulk_k,
+        pregnancy_rate_21d_pct=None,  # requires insem/preg ratio; not in kpi_v2 yet
+        days_open_avg=None,           # requires calving/conception dates; not in kpi_v2 yet
+        cows_in_treatment=cows_in_treatment,
+        mastitis_incidence_pct_per_year=mastitis_pct_year,
+        confidence=confidence,
+        sample_size_cows=sample_size,
+        raw_kpi_long=farm_rows_df,
+    )
