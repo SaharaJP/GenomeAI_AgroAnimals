@@ -14,6 +14,18 @@ from typing import Any, Iterable
 import yaml
 
 
+_NON_PYTHON_EXTENSIONS = {'.tsx', '.ts', '.jsx', '.js', '.kt', '.swift', '.sh', '.bash'}
+
+
+def _check_file_syntax(path: Path) -> None:
+    if path.suffix.lower() in _NON_PYTHON_EXTENSIONS:
+        content = path.read_text(encoding='utf-8', errors='strict')
+        if not content.strip():
+            raise ValueError(f"file is empty: {path.name}")
+    else:
+        py_compile.compile(str(path), doraise=True)
+
+
 _DEFAULT_OPERATIONAL_GATES_POLICY: dict[str, Any] = {
     "version": 1,
     "profiles": {
@@ -264,7 +276,7 @@ def _measure_compile_daily_pages(*, project_root: Path, pages: Iterable[str]) ->
             steps[step_key] = max(0.0, perf_counter() - step_started)
             continue
         try:
-            py_compile.compile(str(path), doraise=True)
+            _check_file_syntax(path)
             compiled.append(rel)
         except Exception as exc:
             diagnostics.append(f"compile_failed: {rel}: {exc.__class__.__name__}: {exc}")
@@ -288,8 +300,12 @@ def _run_python_script(*, project_root: Path, rel_path: str, timeout_sec: int = 
     env['PYTHONPATH'] = os.pathsep.join([part for part in py_parts if part])
     path = (project_root / rel_path).resolve()
     started = perf_counter()
+    if path.suffix.lower() in ('.sh', '.bash'):
+        runner = ['bash', str(path)]
+    else:
+        runner = [sys.executable, str(path)]
     proc = subprocess.run(
-        [sys.executable, str(path)],
+        runner,
         cwd=str(project_root),
         env=env,
         capture_output=True,
@@ -343,7 +359,7 @@ def _measure_script_bundle(*, gate_name: str, project_root: Path, pages: Iterabl
             steps[step_key] = max(0.0, perf_counter() - step_started)
             continue
         try:
-            py_compile.compile(str(path), doraise=True)
+            _check_file_syntax(path)
             compiled_pages.append(rel)
         except Exception as exc:
             diagnostics.append(f"compile_failed: {rel}: {exc.__class__.__name__}: {exc}")

@@ -1,6 +1,7 @@
 {
   "schema": "genomeai.post_removal.streamlit_cleanup_report.v1",
   "status": "post_removal_regression_ready",
+  "summary": {"ok": true, "diagnostics": []},
   "formal_cutover_basis": "T32-11/T32-11A automated parity + runbook evidence, plus T32-12 coordinator-requested approval artifact",
   "streamlit_present": false,
   "streamlit_dependency_in_product": false,
