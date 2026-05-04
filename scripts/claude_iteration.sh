@@ -60,32 +60,42 @@ claude -p "$(cat "$TASK_FILE")" \
 
 echo "==> Claude session written to $SESSION_LOG"
 
-# --- MVP-soft 7 гейтов (после Claude) ---
-echo "==> Gate 1/7: pytest gate (MVP-soft)"
+# --- Обязательные 7 гейтов ---
+echo "==> Gate 1/7: pytest gate"
 GATE_FAIL=0
 
-{ bash scripts/run_ci_gate.sh 2>&1 | tee "${ARTIFACTS_DIR}/pytest.log"; } \
-  || echo "[iteration] Gate 1 non-zero exit (MVP mode, ignored)"
+bash scripts/run_ci_gate.sh \
+  || { echo "GATE 1 FAILED"; GATE_FAIL=1; }
 
-echo "==> Gate 2/7: web smoke (MVP-soft)"
-{ python -m web_cabinet.smoke --workdir _tmp/ci_smoke --clean \
-  --timing-json "${ARTIFACTS_DIR}/web_smoke.json" 2>&1 | tee "${ARTIFACTS_DIR}/web_smoke.log"; } \
-  || echo "[iteration] Gate 2 non-zero exit (MVP mode, ignored)"
+echo "==> Gate 2/7: web smoke"
+python -m web_cabinet.smoke \
+  --workdir _tmp/ci_smoke --clean \
+  --timing-json "${ARTIFACTS_DIR}/web_smoke.json" \
+  2>&1 | tee "${ARTIFACTS_DIR}/web_smoke.log" \
+  || { echo "GATE 2 FAILED"; GATE_FAIL=1; }
 
-echo "==> Gate 3/7: verify_refactor (MVP-skipped)"
-echo "Skipped for MVP" | tee "${ARTIFACTS_DIR}/verify_refactor.log"
+echo "==> Gate 3/7: verify_refactor (golden)"
+python -m genomeai.cli verify_refactor \
+  --project-root . --golden golden \
+  --report-root "${ARTIFACTS_DIR}/verify_refactor" \
+  2>&1 | tee "${ARTIFACTS_DIR}/verify_refactor.log" \
+  || { echo "GATE 3 FAILED"; GATE_FAIL=1; }
 
-echo "==> Gate 4/7: warning governance (MVP-skipped)"
-echo "Skipped for MVP" | tee "${ARTIFACTS_DIR}/warning_governance_report.md"
+echo "==> Gate 4/7: warning governance"
+bash scripts/run_warning_governance_gate.sh \
+  || { echo "GATE 4 FAILED"; GATE_FAIL=1; }
 
-echo "==> Gate 5/7: operational rollout (MVP-skipped)"
-echo "Skipped for MVP" | tee "${ARTIFACTS_DIR}/operational_rollout_gate.log"
+echo "==> Gate 5/7: operational rollout"
+bash scripts/run_operational_rollout_gate.sh \
+  || { echo "GATE 5 FAILED"; GATE_FAIL=1; }
 
-echo "==> Gate 6/7: competitive acceptance (MVP-skipped)"
-echo "Skipped for MVP" | tee "${ARTIFACTS_DIR}/competitive_acceptance_gate.log"
+echo "==> Gate 6/7: competitive acceptance"
+bash scripts/run_competitive_acceptance_gate.sh \
+  || { echo "GATE 6 FAILED"; GATE_FAIL=1; }
 
-echo "==> Gate 7/7: perf gates (MVP-skipped)"
-echo "Skipped for MVP" | tee "${ARTIFACTS_DIR}/perf_gates.log"
+echo "==> Gate 7/7: perf gates"
+bash scripts/run_perf_gates.sh \
+  || { echo "GATE 7 FAILED"; GATE_FAIL=1; }
 
 # --- Supportability (опционально, для T34-05..09 задач) ---
 if [[ -x scripts/run_supportability_checks.sh ]]; then
