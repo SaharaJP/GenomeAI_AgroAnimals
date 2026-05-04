@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from datetime import date, datetime, timedelta
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -15,8 +17,14 @@ from packages.contracts.analytics_v1 import (
     ReproductionResponse,
 )
 
+from .ai.config import get_ai_settings as _get_ai_settings
+from .analytics.kpi_bridge import DashboardKPI, compute_dashboard_kpi
 from .auth import get_current_user, get_db
 from .rbac import require_permissions
+
+_DASHBOARD_SEEDED_PATH = (
+    Path(__file__).parent.parent / "data" / "demo" / "investor_v1" / "dashboard_today_seeded.json"
+)
 
 router = APIRouter(prefix='/api/analytics', tags=['analytics-v1'])
 
@@ -283,3 +291,68 @@ def analytics_health(
         health_issues_breakdown=breakdown,
         events_total=events_total,
     )
+
+
+# ---------------------------------------------------------------------------
+# /api/dashboard/today — KPI snapshot with demo/real branching
+# ---------------------------------------------------------------------------
+
+def _load_seeded_dashboard(farm_id: str) -> dict:
+    """Return seeded dashboard KPI dict for demo mode."""
+    if _DASHBOARD_SEEDED_PATH.exists():
+        raw = json.loads(_DASHBOARD_SEEDED_PATH.read_text(encoding="utf-8"))
+        if isinstance(raw, list):
+            for rec in raw:
+                if rec.get("farm_id") == farm_id:
+                    return rec
+            if raw:
+                d = dict(raw[0])
+                d["farm_id"] = farm_id
+                return d
+        return raw
+    return {
+        "farm_id": farm_id,
+        "as_of": date.today().isoformat(),
+        "confidence": "low",
+        "sample_size_cows": 0,
+        "demo": True,
+    }
+
+
+def _kpi_to_dict(kpi: DashboardKPI) -> dict:
+    """Serialize DashboardKPI to a JSON-safe dict (excludes raw DataFrame)."""
+    return {
+        "farm_id": kpi.farm_id,
+        "as_of": kpi.as_of.isoformat(),
+        "avg_milk_yield_kg": kpi.avg_milk_yield_kg,
+        "ecm_kg": kpi.ecm_kg,
+        "fat_pct": kpi.fat_pct,
+        "protein_pct": kpi.protein_pct,
+        "scc_bulk_k": kpi.scc_bulk_k,
+        "pregnancy_rate_21d_pct": kpi.pregnancy_rate_21d_pct,
+        "days_open_avg": kpi.days_open_avg,
+        "cows_in_treatment": kpi.cows_in_treatment,
+        "mastitis_incidence_pct_per_year": kpi.mastitis_incidence_pct_per_year,
+        "confidence": kpi.confidence,
+        "sample_size_cows": kpi.sample_size_cows,
+        "demo": False,
+    }
+
+
+def _compute_dashboard_today(farm_id: str, today: date) -> dict:
+    """Core branching logic — testable without FastAPI request context."""
+    settings = _get_ai_settings()
+    if settings.GENOMEAI_AI_DEMO_MODE:
+        return _load_seeded_dashboard(farm_id)
+    kpi = compute_dashboard_kpi(farm_id, today)
+    return _kpi_to_dict(kpi)
+
+
+@router.get('/dashboard/today')
+def get_dashboard_today(
+    farm_id: Optional[str] = Query(default=None),
+    user=Depends(require_permissions('kpi.view')),
+):
+    settings = _get_ai_settings()
+    effective_farm = farm_id or settings.GENOMEAI_DEMO_FARM_ID
+    return _compute_dashboard_today(effective_farm, date.today())
