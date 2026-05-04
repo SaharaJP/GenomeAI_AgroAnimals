@@ -6,10 +6,30 @@ from __future__ import annotations
 
 import math
 import tempfile
+import threading
+import time
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any, Literal, Optional
+
+# ---------------------------------------------------------------------------
+# In-process TTL cache — collapses repeated tab/brief calls into one run_kpi()
+# ---------------------------------------------------------------------------
+_CACHE_TTL = 300  # seconds (5 min)
+_kpi_cache: dict[tuple, tuple] = {}  # key -> (DashboardKPI, expiry_monotonic)
+_kpi_lock = threading.Lock()
+
+
+def _cache_key(farm_id: str, as_of: date, input_dir_str: str) -> tuple:
+    return (farm_id, as_of.isoformat(), input_dir_str)
+
+
+def invalidate_kpi_cache(farm_id: str, as_of: date, input_dir_str: str) -> None:
+    """Remove a single entry from the KPI cache (call after write events)."""
+    with _kpi_lock:
+        _kpi_cache.pop(_cache_key(farm_id, as_of, input_dir_str), None)
+
 
 VALID_TABS: frozenset[str] = frozenset(
     {"production", "reproduction", "health", "feed", "finance", "herd", "behavior"}
@@ -70,17 +90,13 @@ def _compute_confidence(
     return "low"
 
 
-def compute_dashboard_kpi(
+def _compute_dashboard_kpi_uncached(
     farm_id: str,
     as_of: date,
     *,
     period_days: int = 7,
     input_dir: Optional[Path] = None,
 ) -> DashboardKPI:
-    """
-    Computes KPI snapshot for UI Dashboard.
-    Uses genomeai.kpi_v2.run_kpi() as computation engine.
-    """
     from genomeai.kpi_v2 import run_kpi  # lazy import — kpi_v2 is heavy
 
     resolved_input = input_dir or _FIXTURES_DIR
@@ -99,12 +115,9 @@ def compute_dashboard_kpi(
         else:
             kpi_long = pd.DataFrame()
 
-    # Sample size: count unique active animals for this farm (approximate via milk records)
     sample_size = 0
     if not kpi_long.empty:
         farm_rows = kpi_long[kpi_long["farm_id"] == farm_id]
-        # milk_avg_kg_per_cow_1d has a cows denominator; use alert_count or health_events as proxy
-        # Best proxy: kpi_count per farm ≈ number of data rows present
         sample_size = int(farm_rows.shape[0])
 
     avg_milk = _get_kpi(kpi_long, "milk_avg_kg_per_cow_1d", farm_id)
@@ -114,19 +127,16 @@ def compute_dashboard_kpi(
     scc_raw = _get_kpi(kpi_long, "scc_avg_7d", farm_id)
     scc_bulk_k = (scc_raw / 1000.0) if scc_raw is not None else None
 
-    # Mastitis incidence annualized: events_30d / sample_cows * 12 * 100
     mast_30d = _get_kpi(kpi_long, "mastitis_events_30d", farm_id)
     mastitis_pct_year: Optional[float] = None
     if mast_30d is not None and sample_size > 0:
         mastitis_pct_year = round(mast_30d / sample_size * 12 * 100, 1)
 
-    # Cows in treatment: approximated from severe health events (no dedicated KPI in v2)
     severe = _get_kpi(kpi_long, "severe_health_events_30d", farm_id)
     cows_in_treatment = int(round(severe)) if severe is not None else None
 
     confidence = _compute_confidence(avg_milk, fat_pct, protein_pct, sample_size)
 
-    # Attach only the rows for this farm (not rows for fallback farms from kpi_v2)
     farm_rows_df: Optional[pd.DataFrame] = None
     if not kpi_long.empty:
         farm_subset = kpi_long[kpi_long["farm_id"] == farm_id]
@@ -149,6 +159,30 @@ def compute_dashboard_kpi(
         sample_size_cows=sample_size,
         raw_kpi_long=farm_rows_df,
     )
+
+
+def compute_dashboard_kpi(
+    farm_id: str,
+    as_of: date,
+    *,
+    period_days: int = 7,
+    input_dir: Optional[Path] = None,
+) -> DashboardKPI:
+    """KPI snapshot for UI Dashboard. Second call with same args returns cached result."""
+    key = _cache_key(farm_id, as_of, str(input_dir or _FIXTURES_DIR))
+    now = time.monotonic()
+    with _kpi_lock:
+        entry = _kpi_cache.get(key)
+        if entry is not None:
+            cached_result, expiry = entry
+            if now < expiry:
+                return cached_result
+    result = _compute_dashboard_kpi_uncached(
+        farm_id, as_of, period_days=period_days, input_dir=input_dir
+    )
+    with _kpi_lock:
+        _kpi_cache[key] = (result, now + _CACHE_TTL)
+    return result
 
 
 # ---------------------------------------------------------------------------

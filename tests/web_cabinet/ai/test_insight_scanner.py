@@ -21,6 +21,16 @@ import pytest
 _wt_root = Path(__file__).resolve().parents[3]
 if str(_wt_root) not in sys.path:
     sys.path.insert(0, str(_wt_root))
+else:
+    sys.path.remove(str(_wt_root))
+    sys.path.insert(0, str(_wt_root))
+
+# Evict any web_cabinet loaded from main-repo (which lacks ai/ subpackage)
+for _key in list(sys.modules.keys()):
+    if _key == "web_cabinet" or _key.startswith("web_cabinet."):
+        del sys.modules[_key]
+
+from datetime import datetime, timedelta
 
 from web_cabinet.ai.models import ScannerInsight, ScannerRecommendation
 from web_cabinet.ai.background.insight_scanner import (
@@ -356,3 +366,230 @@ class TestScanForNewInsightsLive:
             results = scan_for_new_insights("demo-farm-v1")
 
         assert results == []
+
+
+# ---------------------------------------------------------------------------
+# New tests: bridge integration, sensor serialization, 7-day dedup
+# ---------------------------------------------------------------------------
+
+def _live_settings() -> MagicMock:
+    s = MagicMock()
+    s.GENOMEAI_AI_DEMO_MODE = False
+    s.GENOMEAI_DEMO_FARM_ID = "demo-farm-v1"
+    return s
+
+
+class TestScannerDemoModeUsesSeeded:
+    """Demo mode must return seeded JSON without calling bridges or Claude."""
+
+    def test_scanner_demo_mode_uses_seeded(self):
+        demo_s = MagicMock()
+        demo_s.GENOMEAI_AI_DEMO_MODE = True
+        demo_s.GENOMEAI_DEMO_FARM_ID = "demo-farm-v1"
+
+        with (
+            patch(f"{_SCANNER_MOD}.get_ai_settings", return_value=demo_s),
+            patch(f"{_SCANNER_MOD}.build_farm_context") as mock_ctx_builder,
+            patch(f"{_SCANNER_MOD}.get_client") as mock_client_getter,
+        ):
+            results = scan_for_new_insights("demo-farm-v1")
+
+        # No bridge or Claude calls in demo mode
+        mock_ctx_builder.assert_not_called()
+        mock_client_getter.assert_not_called()
+
+        assert isinstance(results, list)
+        assert len(results) > 0
+        for ins in results:
+            assert isinstance(ins, ScannerInsight)
+
+
+class TestScannerRealModeFindsSeededAnomalies:
+    """Real mode must include sensor_anomalies in context sent to Claude."""
+
+    def _make_claude_client(self, content: str) -> MagicMock:
+        captured: list[str] = []
+
+        async def fake_agenerate(message, **kwargs):
+            captured.append(message)
+            resp = MagicMock()
+            resp.content = content
+            return resp
+
+        mock_client = MagicMock()
+        mock_client.agenerate = fake_agenerate
+        mock_client._captured = captured
+        return mock_client
+
+    def test_scanner_real_mode_finds_seeded_anomalies(self):
+        from datetime import date
+        from web_cabinet.ai.context import FarmContext
+        from web_cabinet.analytics.sensor_bridge import SensorAnomaly
+
+        sensor_anomalies = [
+            SensorAnomaly("4821", "demo-farm-v1", "scc_spike", date.today(), 450.0, 200.0, "Звёздочка SCC 450k"),
+            SensorAnomaly("7001", "demo-farm-v1", "yield_drop", date.today(), 15.0, 20.0, "Малина yield drop 17%"),
+            SensorAnomaly("9002", "demo-farm-v1", "scc_spike", date.today(), 280.0, 200.0, "Ночка SCC 280k"),
+        ]
+        mock_ctx = FarmContext(farm_id="demo-farm-v1", sensor_anomalies=sensor_anomalies)
+
+        claude_payload = json.dumps([
+            {
+                "insight_id": "ins_z01xxxx",
+                "title": "SCC spike Звёздочка",
+                "description": "SCC 450k uptrend 9 days",
+                "category": "health",
+                "priority": "high",
+                "affected_cow_ids": ["4821"],
+                "affected_group_ids": [],
+                "evidence_ids": ["SENS_SCC_4821"],
+                "recommendations": [{"action": "Vet check", "priority": "high", "role": "vet"}],
+            },
+            {
+                "insight_id": "ins_m01xxxx",
+                "title": "Yield drop Малина",
+                "description": "Yield dropped 17%",
+                "category": "production",
+                "priority": "medium",
+                "affected_cow_ids": ["7001"],
+                "affected_group_ids": [],
+                "evidence_ids": ["SENS_YIELD_7001"],
+                "recommendations": [{"action": "Check feeding", "priority": "medium", "role": "zootech"}],
+            },
+            {
+                "insight_id": "ins_n01xxxx",
+                "title": "SCC spike Ночка",
+                "description": "SCC 280k uptrend",
+                "category": "health",
+                "priority": "medium",
+                "affected_cow_ids": ["9002"],
+                "affected_group_ids": [],
+                "evidence_ids": ["SENS_SCC_9002"],
+                "recommendations": [{"action": "Monitor SCC", "priority": "medium", "role": "vet"}],
+            },
+        ])
+        mock_client = self._make_claude_client(claude_payload)
+
+        with (
+            patch(f"{_SCANNER_MOD}.get_ai_settings", return_value=_live_settings()),
+            patch(f"{_SCANNER_MOD}.build_farm_context", return_value=mock_ctx),
+            patch(f"{_SCANNER_MOD}.get_active_insights", return_value=[]),
+            patch(f"{_SCANNER_MOD}.get_client", return_value=mock_client),
+            patch(f"{_SCANNER_MOD}.save_insight"),
+        ):
+            results = scan_for_new_insights("demo-farm-v1")
+
+        # At least 3 insights returned
+        assert len(results) >= 3
+
+        cow_ids = {cid for ins in results for cid in ins.affected_cow_ids}
+        assert "4821" in cow_ids, "Звёздочка (4821) missing"
+        assert "7001" in cow_ids, "Малина (7001) missing"
+        assert "9002" in cow_ids, "Ночка (9002) missing"
+
+        # Sensor anomalies must appear in the prompt sent to Claude
+        assert len(mock_client._captured) == 1
+        prompt_sent = mock_client._captured[0]
+        assert "АНОМАЛИИ СЕНСОРОВ" in prompt_sent, (
+            "sensor_anomalies section missing from prompt; "
+            "_serialize_for_claude likely not called"
+        )
+        assert "4821" in prompt_sent
+        assert "scc_spike" in prompt_sent
+
+
+class TestScannerDedup7Days:
+    """7-day same-animal+category dedup must prevent duplicate insights."""
+
+    def _make_claude_client(self, content: str) -> MagicMock:
+        async def fake_agenerate(message, **kwargs):
+            resp = MagicMock()
+            resp.content = content
+            return resp
+
+        mock_client = MagicMock()
+        mock_client.agenerate = fake_agenerate
+        return mock_client
+
+    def test_scanner_dedup_skips_existing(self):
+        """New insight for cow+category already seen in last 7 days is dropped."""
+        existing = [
+            {
+                "insight_id": "ins_existing",
+                "category": "health",
+                "priority": "high",
+                "affected_cow_ids": ["4821"],
+                "evidence_ids": ["SENS_SCC_4821_OLD"],
+                "generated_at_utc": (datetime.utcnow() - timedelta(days=3)).isoformat(),
+                "title": "Existing SCC insight",
+            }
+        ]
+
+        # Claude returns a new insight for the SAME cow+category (different evidence)
+        new_insight_content = json.dumps([
+            {
+                "insight_id": "ins_new001x",
+                "title": "New SCC spike same cow",
+                "description": "SCC 480k rising",
+                "category": "health",
+                "priority": "high",
+                "affected_cow_ids": ["4821"],
+                "affected_group_ids": [],
+                "evidence_ids": ["SENS_SCC_4821_NEW"],
+                "recommendations": [{"action": "Vet check", "priority": "high", "role": "vet"}],
+            }
+        ])
+
+        from web_cabinet.ai.context import FarmContext
+
+        with (
+            patch(f"{_SCANNER_MOD}.get_ai_settings", return_value=_live_settings()),
+            patch(f"{_SCANNER_MOD}.build_farm_context", return_value=FarmContext("demo-farm-v1")),
+            patch(f"{_SCANNER_MOD}.get_active_insights", return_value=existing),
+            patch(f"{_SCANNER_MOD}.get_client", return_value=self._make_claude_client(new_insight_content)),
+            patch(f"{_SCANNER_MOD}.save_insight"),
+        ):
+            results = scan_for_new_insights("demo-farm-v1")
+
+        assert results == [], f"Expected 0 insights (7-day dedup), got {len(results)}"
+
+    def test_scanner_dedup_allows_old_insights(self):
+        """Same cow+category older than 7 days is NOT deduped — new insight allowed."""
+        existing = [
+            {
+                "insight_id": "ins_old",
+                "category": "health",
+                "priority": "high",
+                "affected_cow_ids": ["4821"],
+                "evidence_ids": ["SENS_SCC_4821_STALE"],
+                "generated_at_utc": (datetime.utcnow() - timedelta(days=10)).isoformat(),
+                "title": "Stale SCC insight",
+            }
+        ]
+
+        new_insight_content = json.dumps([
+            {
+                "insight_id": "ins_new002x",
+                "title": "Fresh SCC spike",
+                "description": "SCC 510k",
+                "category": "health",
+                "priority": "high",
+                "affected_cow_ids": ["4821"],
+                "affected_group_ids": [],
+                "evidence_ids": ["SENS_SCC_4821_FRESH"],
+                "recommendations": [{"action": "Vet check", "priority": "high", "role": "vet"}],
+            }
+        ])
+
+        from web_cabinet.ai.context import FarmContext
+
+        with (
+            patch(f"{_SCANNER_MOD}.get_ai_settings", return_value=_live_settings()),
+            patch(f"{_SCANNER_MOD}.build_farm_context", return_value=FarmContext("demo-farm-v1")),
+            patch(f"{_SCANNER_MOD}.get_active_insights", return_value=existing),
+            patch(f"{_SCANNER_MOD}.get_client", return_value=self._make_claude_client(new_insight_content)),
+            patch(f"{_SCANNER_MOD}.save_insight"),
+        ):
+            results = scan_for_new_insights("demo-farm-v1")
+
+        assert len(results) == 1, f"Expected 1 insight (old enough), got {len(results)}"
