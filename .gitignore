@@ -50,3 +50,4 @@ tests.backup.*
 tmp/smoke_*/
 *.db-journal
 src/core/web_cabinet/storage/web.db
+.playwright-mcp/
