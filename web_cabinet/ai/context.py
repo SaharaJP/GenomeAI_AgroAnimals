@@ -28,16 +28,20 @@ class FarmContext:
     def __init__(
         self,
         farm_id: str,
-        kpi: Optional[dict] = None,
+        kpi: Optional[Any] = None,
         active_insights: Optional[list] = None,
         recent_events: Optional[list] = None,
         herd_summary: Optional[dict] = None,
+        sensor_anomalies: Optional[list] = None,
+        attention_cows: Optional[list] = None,
     ) -> None:
         self.farm_id = farm_id
-        self.kpi = kpi or {}
+        self.kpi = kpi
         self.active_insights = active_insights or []
         self.recent_events = recent_events or []
         self.herd_summary = herd_summary or {}
+        self.sensor_anomalies = sensor_anomalies
+        self.attention_cows = attention_cows or []
 
     def to_text(self, max_chars: int = 3000) -> str:
         parts = [f"Ферма: {self.farm_id}"]
@@ -64,11 +68,12 @@ def build_farm_context(
     farm_id: str,
     db: Any = None,
     *,
+    settings: Any = None,
     store: Any = None,
     include_cow_details: bool = False,
     specific_cow_ids: Optional[list[str]] = None,
     period_days: int = 7,
-) -> dict:
+) -> Any:
     """
     Build farm snapshot for Claude injection.
 
@@ -92,6 +97,12 @@ def build_farm_context(
     dict with keys: farm_summary, today_kpi, period_trends, active_insights,
     recent_events, attention_cows, groups_summary, [full_profiles], token_count.
     """
+    # Settings-based dispatch: real bridge mode vs legacy demo/dict mode
+    if settings is not None:
+        if settings.GENOMEAI_AI_DEMO_MODE:
+            return _build_seeded_context(farm_id)
+        return _build_bridge_context(farm_id)
+
     from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
     from web_cabinet.ai.context_helpers.kpi import compute_today_kpi, compute_period_trends
     from web_cabinet.ai.context_helpers.attention import flag_attention_cows
@@ -163,6 +174,49 @@ def build_farm_context(
     ctx["token_count"] = _count_tokens(ctx_text)
 
     return ctx
+
+
+# ---------------------------------------------------------------------------
+# Settings-dispatch helpers
+# ---------------------------------------------------------------------------
+
+def _build_seeded_context(farm_id: str) -> FarmContext:
+    """Demo mode: return the hardcoded seeded FarmContext (no bridges called)."""
+    ctx = build_demo_farm_context()
+    ctx.farm_id = farm_id
+    return ctx
+
+
+def _build_bridge_context(farm_id: str) -> FarmContext:
+    """Real mode: assemble FarmContext from kpi_bridge, alerts_bridge, sensor_bridge."""
+    from datetime import date as _date
+
+    from web_cabinet.analytics.kpi_bridge import compute_dashboard_kpi
+    from web_cabinet.analytics.alerts_bridge import list_active_alerts
+    from web_cabinet.analytics.sensor_bridge import detect_recent_sensor_anomalies
+
+    kpi = compute_dashboard_kpi(farm_id, _date.today())
+    alerts = list_active_alerts(farm_id)
+    sensor_anomalies = detect_recent_sensor_anomalies(farm_id, lookback_days=14)
+
+    return FarmContext(
+        farm_id=farm_id,
+        kpi=kpi,
+        active_insights=alerts,
+        sensor_anomalies=sensor_anomalies,
+        recent_events=_query_recent_events(farm_id, days=14),
+        attention_cows=_query_attention_cows(farm_id),
+    )
+
+
+def _query_recent_events(farm_id: str, days: int = 14) -> list:
+    """Stub: returns DB events when DB is wired; empty list until then."""
+    return []
+
+
+def _query_attention_cows(farm_id: str) -> list:
+    """Stub: returns DB-queried attention cows; empty list until DB is wired."""
+    return []
 
 
 # ---------------------------------------------------------------------------
