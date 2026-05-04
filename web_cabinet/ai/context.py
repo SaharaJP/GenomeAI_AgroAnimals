@@ -210,13 +210,72 @@ def _build_bridge_context(farm_id: str) -> FarmContext:
 
 
 def _query_recent_events(farm_id: str, days: int = 14) -> list:
-    """Stub: returns DB events when DB is wired; empty list until then."""
-    return []
+    """Query recent health events from DB. Falls back to fixture CSV if no DB DSN."""
+    import os
+    dsn = os.getenv("GENOMEAI_DB_DSN") or os.getenv("GENOMEAI_RUNTIME_POSTGRES_DSN")
+    if not dsn:
+        return _query_recent_events_fixtures(farm_id, days)
+
+    since = (datetime.date.today() - datetime.timedelta(days=days)).isoformat()
+    sql = """
+        SELECT h.event_date, h.event_type, h.severity, h.animal_id
+        FROM dm_health_events h
+        JOIN dm_animals a ON h.tenant_id = a.tenant_id AND h.animal_id = a.animal_id
+        WHERE a.farm_id = %s AND h.event_date >= %s
+        ORDER BY h.event_date DESC
+        LIMIT 50
+    """
+    try:
+        import psycopg2
+        conn = psycopg2.connect(dsn)
+        cur = conn.cursor()
+        cur.execute(sql, [farm_id, since])
+        rows = cur.fetchall()
+        conn.close()
+        return [
+            {"event_date": str(r[0]), "event_type": r[1], "severity": r[2], "animal_id": r[3]}
+            for r in rows
+        ]
+    except Exception:
+        return []
+
+
+def _query_recent_events_fixtures(farm_id: str, days: int) -> list:
+    """Fixture fallback for _query_recent_events when no DB DSN is set."""
+    from pathlib import Path
+    fixtures_dir = Path(__file__).parents[3] / "data" / "fixtures" / "target_v2"
+    he_path = fixtures_dir / "dm_health_events.csv"
+    animals_path = fixtures_dir / "dm_animals.csv"
+    if not he_path.exists() or not animals_path.exists():
+        return []
+    try:
+        animals = pd.read_csv(animals_path)
+        farm_animals = set(animals[animals["farm_id"] == farm_id]["animal_id"].astype(str).tolist())
+        he = pd.read_csv(he_path)
+        he["event_date"] = pd.to_datetime(he["event_date"], errors="coerce")
+        since = pd.Timestamp.today() - pd.Timedelta(days=days)
+        filtered = he[(he["animal_id"].astype(str).isin(farm_animals)) & (he["event_date"] >= since)]
+        return [
+            {"event_date": str(r["event_date"].date()), "event_type": str(r["event_type"]),
+             "severity": r.get("severity"), "animal_id": str(r["animal_id"])}
+            for _, r in filtered.iterrows()
+        ]
+    except Exception:
+        return []
 
 
 def _query_attention_cows(farm_id: str) -> list:
-    """Stub: returns DB-queried attention cows; empty list until DB is wired."""
-    return []
+    """Return attention cows using fixture CSV data (consistent with kpi_bridge source)."""
+    from pathlib import Path
+    from web_cabinet.ai.context_helpers.attention import flag_attention_cows
+    from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
+
+    fixtures_dir = Path(__file__).parents[3] / "data" / "fixtures" / "target_v2"
+    try:
+        store = DemoDataStore(base_dir=fixtures_dir)
+        return flag_attention_cows(store, farm_id=farm_id, as_of=datetime.date.today())
+    except Exception:
+        return []
 
 
 # ---------------------------------------------------------------------------
