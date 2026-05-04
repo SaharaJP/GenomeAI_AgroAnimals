@@ -1,6 +1,6 @@
 {
-  "generated_at_utc": "2026-03-11T20:03:38+00:00",
-  "golden_root": "/mnt/data/t15repo/golden",
+  "generated_at_utc": "2026-05-04T11:15:58+00:00",
+  "golden_root": "/opt/genomeai/worktrees/wt-bridge/golden",
   "scenario_count": 2,
   "scenarios": [
     {
@@ -44,14 +44,14 @@
         "total_bytes": 895
       },
       "scenario": "standard",
-      "scenario_total_bytes": 11504,
+      "scenario_total_bytes": 11499,
       "snapshot": {
         "file_count": 11,
         "files": [
           {
             "path": "artifact_presence.json",
-            "sha256": "a4da5c3a2e67efe8abd5205b92211c99331865d50f89ec595967d2b0ebcc8ab4",
-            "size_bytes": 275
+            "sha256": "88cdc8633838fb7f1ce3bd829e36a698e0b01a6ec22be132f31a512d19826aa1",
+            "size_bytes": 276
           },
           {
             "path": "audit.json",
@@ -60,8 +60,8 @@
           },
           {
             "path": "decision_log.csv",
-            "sha256": "e41f23816379a13eeffba8f73ac5237ea5184cda81cd9908fdbdda37f2896bf2",
-            "size_bytes": 245
+            "sha256": "07b0091deba7a403494f6f3af62a56afc46985c060415c56ce9a4a09dfc55a26",
+            "size_bytes": 242
           },
           {
             "path": "fact_pack.json",
@@ -90,8 +90,8 @@
           },
           {
             "path": "scored_latest.csv",
-            "sha256": "ff83ecc11f9f9728641005d3ca6e066adc79307ce43633a87ec6e68e34cbf41a",
-            "size_bytes": 372
+            "sha256": "665b033c9fc46b1419139bcdbee52f1f5ee5fd7f1c703239bb5eefd5b61ecc2c",
+            "size_bytes": 369
           },
           {
             "path": "scoring_summary.json",
@@ -105,7 +105,7 @@
           }
         ],
         "root": "scenarios/standard/snapshot",
-        "total_bytes": 10609
+        "total_bytes": 10604
       },
       "versions": {
         "data_version": "dv_refactor_standard",
@@ -156,14 +156,14 @@
         "total_bytes": 949
       },
       "scenario": "qc_issues",
-      "scenario_total_bytes": 12656,
+      "scenario_total_bytes": 12651,
       "snapshot": {
         "file_count": 11,
         "files": [
           {
             "path": "artifact_presence.json",
-            "sha256": "a4da5c3a2e67efe8abd5205b92211c99331865d50f89ec595967d2b0ebcc8ab4",
-            "size_bytes": 275
+            "sha256": "88cdc8633838fb7f1ce3bd829e36a698e0b01a6ec22be132f31a512d19826aa1",
+            "size_bytes": 276
           },
           {
             "path": "audit.json",
@@ -172,8 +172,8 @@
           },
           {
             "path": "decision_log.csv",
-            "sha256": "6bf3863c271312a2599dfe15f8c73a991e1cb61251d3eb045b2d09ccdfd86570",
-            "size_bytes": 247
+            "sha256": "ac1e7af422173ddef8174d0b30d59c333a401304a096e64d07cd1d49588a0e56",
+            "size_bytes": 244
           },
           {
             "path": "fact_pack.json",
@@ -202,8 +202,8 @@
           },
           {
             "path": "scored_latest.csv",
-            "sha256": "ab1b94b9405ed18a34ca09ce62d27f9183f235bb2b6279d0a27d17d93e478fc6",
-            "size_bytes": 377
+            "sha256": "cc8a02bfb910bc6854f3aa3a3c7a1fc613a93b52c10c6e40f108bf11b5c2934f",
+            "size_bytes": 374
           },
           {
             "path": "scoring_summary.json",
@@ -217,7 +217,7 @@
           }
         ],
         "root": "scenarios/qc_issues/snapshot",
-        "total_bytes": 11707
+        "total_bytes": 11702
       },
       "versions": {
         "data_version": "dv_refactor_qc_issues",
@@ -229,5 +229,5 @@
     }
   ],
   "schema": "genomeai.golden_manifest.v1",
-  "total_bytes": 24160
+  "total_bytes": 24150
 }

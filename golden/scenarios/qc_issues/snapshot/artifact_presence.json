@@ -8,5 +8,5 @@
   "report_docx": true,
   "report_summary_json": true,
   "scored_latest_csv": true,
-  "web_db": true
+  "web_db": false
 }
