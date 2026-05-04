@@ -150,3 +150,139 @@ def build_production_timeseries(
             ]},
         },
     }
+
+
+_HEALTH_COLORS = {
+    "mastitis": "#EF4444",
+    "lameness": "#F59E0B",
+    "ketosis": "#8B5CF6",
+    "metritis": "#3B82F6",
+    "other": "#94A3B8",
+}
+_KNOWN_HEALTH = ["mastitis", "lameness", "ketosis", "metritis"]
+
+
+def build_health_timeseries(
+    conn: Any,
+    farm_id: str,
+    tenant_id: str = "default",
+    weeks: int = 26,
+) -> dict:
+    since = (datetime.date.today() - datetime.timedelta(weeks=weeks)).isoformat()
+    sql = """
+        SELECT h.event_date, LOWER(h.event_type) AS event_type
+        FROM dm_health_events h
+        JOIN dm_animals a
+          ON h.tenant_id = a.tenant_id AND h.animal_id = a.animal_id
+        WHERE h.tenant_id = ?
+          AND a.farm_id = ?
+          AND h.event_date >= ?
+        ORDER BY h.event_date
+    """
+    try:
+        rows = list(conn.execute(sql, [tenant_id, farm_id, since]).fetchall())
+    except Exception:
+        _log.exception("timeseries_bridge: DB query failed for farm=%s tab=health", farm_id)
+        rows = []
+
+    if not rows:
+        return {"tab": "health", "labels": [], "charts": {
+            "mastitis": {"labels": [], "series": [{"name": "Мастит", "color": "#EF4444", "data": []}]},
+            "issues": {"labels": [], "series": []},
+        }}
+
+    by_week: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    for row in rows:
+        d = row["event_date"]
+        if isinstance(d, str):
+            d = datetime.date.fromisoformat(d)
+        wk = _iso_week_key(d)
+        by_week[wk]["dates"].append(d)
+        etype = str(row["event_type"])
+        by_week[wk].setdefault(etype, []).append(1)
+
+    sorted_weeks = sorted(by_week.keys())
+    labels = [_week_label(min(by_week[wk]["dates"])) for wk in sorted_weeks]
+
+    mastitis_data = [len(by_week[wk].get("mastitis", [])) for wk in sorted_weeks]
+
+    all_types = sorted({str(row["event_type"]) for row in rows})
+    issues_series = []
+    for etype in all_types:
+        color = _HEALTH_COLORS.get(etype, "#94A3B8")
+        data = [len(by_week[wk].get(etype, [])) for wk in sorted_weeks]
+        issues_series.append({"name": etype.capitalize(), "color": color, "data": data})
+
+    return {
+        "tab": "health",
+        "labels": labels,
+        "charts": {
+            "mastitis": {"labels": labels, "series": [
+                {"name": "Мастит", "color": "#EF4444", "data": mastitis_data},
+            ]},
+            "issues": {"labels": labels, "series": issues_series},
+        },
+    }
+
+
+def build_reproduction_timeseries(
+    conn: Any,
+    farm_id: str,
+    tenant_id: str = "default",
+    weeks: int = 26,
+) -> dict:
+    since = (datetime.date.today() - datetime.timedelta(weeks=weeks)).isoformat()
+    sql = """
+        SELECT r.event_date, LOWER(r.event_type) AS event_type,
+               LOWER(COALESCE(r.result, '')) AS result
+        FROM dm_repro_events r
+        JOIN dm_animals a
+          ON r.tenant_id = a.tenant_id AND r.animal_id = a.animal_id
+        WHERE r.tenant_id = ?
+          AND a.farm_id = ?
+          AND r.event_date >= ?
+        ORDER BY r.event_date
+    """
+    try:
+        rows = list(conn.execute(sql, [tenant_id, farm_id, since]).fetchall())
+    except Exception:
+        _log.exception("timeseries_bridge: DB query failed for farm=%s tab=reproduction", farm_id)
+        rows = []
+
+    empty = {"tab": "reproduction", "labels": [], "charts": {
+        "inseminations": {"labels": [], "series": [
+            {"name": "Осеменения", "color": "#3B82F6", "data": []},
+            {"name": "Стельные", "color": "#10B981", "data": []},
+        ]},
+    }}
+    if not rows:
+        return empty
+
+    by_week: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    for row in rows:
+        d = row["event_date"]
+        if isinstance(d, str):
+            d = datetime.date.fromisoformat(d)
+        wk = _iso_week_key(d)
+        by_week[wk]["dates"].append(d)
+        etype = str(row["event_type"])
+        result = str(row["result"])
+        by_week[wk].setdefault(etype, []).append(1)
+        if etype == "insemination" and result == "pregnant":
+            by_week[wk].setdefault("pregnant", []).append(1)
+
+    sorted_weeks = sorted(by_week.keys())
+    labels = [_week_label(min(by_week[wk]["dates"])) for wk in sorted_weeks]
+    insem_data = [len(by_week[wk].get("insemination", [])) for wk in sorted_weeks]
+    preg_data = [len(by_week[wk].get("pregnant", [])) for wk in sorted_weeks]
+
+    return {
+        "tab": "reproduction",
+        "labels": labels,
+        "charts": {
+            "inseminations": {"labels": labels, "series": [
+                {"name": "Осеменения", "color": "#3B82F6", "data": insem_data},
+                {"name": "Стельные", "color": "#10B981", "data": preg_data},
+            ]},
+        },
+    }

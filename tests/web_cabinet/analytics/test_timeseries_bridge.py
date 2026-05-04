@@ -2,7 +2,11 @@ import pytest
 from datetime import date
 from unittest.mock import MagicMock
 
-from web_cabinet.analytics.timeseries_bridge import build_production_timeseries
+from web_cabinet.analytics.timeseries_bridge import (
+    build_production_timeseries,
+    build_health_timeseries,
+    build_reproduction_timeseries,
+)
 
 
 def _make_conn(rows):
@@ -55,3 +59,19 @@ def test_production_timeseries_null_fat_protein():
     assert milk_val == pytest.approx(25.0, abs=0.1)
     fat_val = result["charts"]["fat_protein"]["series"][0]["data"][0]
     assert fat_val == 0.0  # fallback when fat is None
+
+
+def test_health_timeseries_empty_db():
+    conn = _make_conn([])
+    result = build_health_timeseries(conn, farm_id="FARM_001", tenant_id="default", weeks=4)
+    assert result["tab"] == "health"
+    assert result["labels"] == []
+    assert "mastitis" in result["charts"]
+
+
+def test_reproduction_timeseries_empty_db():
+    conn = _make_conn([])
+    result = build_reproduction_timeseries(conn, farm_id="FARM_001", tenant_id="default", weeks=26)
+    assert result["tab"] == "reproduction"
+    assert result["labels"] == []
+    assert "inseminations" in result["charts"]
