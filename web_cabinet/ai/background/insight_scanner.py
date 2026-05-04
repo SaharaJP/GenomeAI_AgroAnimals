@@ -10,7 +10,7 @@ import logging
 import os
 import re
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -148,10 +148,12 @@ def _run_live_scan(farm_id: str) -> list[ScannerInsight]:
     import asyncio
 
     try:
-        ctx = build_farm_context(farm_id, period_days=1, include_cow_details=True)
+        settings = get_ai_settings()
+        ctx = build_farm_context(farm_id, settings=settings)
+        context_text = _serialize_for_claude(ctx)
         existing = get_active_insights(farm_id)
 
-        user_message = build_insight_scanner_message(ctx, existing)
+        user_message = build_insight_scanner_message(context_text, existing)
         client = get_client()
 
         loop = asyncio.new_event_loop()
@@ -171,6 +173,7 @@ def _run_live_scan(farm_id: str) -> list[ScannerInsight]:
         new_insights = _parse_insights(resp.content, farm_id)
         valid = [i for i in new_insights if _validate_evidence(i)]
         valid = _deduplicate(valid, existing)
+        valid = _dedup_animal_category_7d(valid, existing)
 
         for insight in valid:
             save_insight(insight)
@@ -275,6 +278,64 @@ def _deduplicate(
         if key and key not in existing_evidence_sets:
             result.append(ins)
             existing_evidence_sets.add(key)
+    return result
+
+
+def _serialize_for_claude(ctx: Any) -> str:
+    """Serialize FarmContext for Claude with sensor_anomalies as a dedicated section."""
+    import dataclasses as _dc
+
+    if not hasattr(ctx, "farm_id"):
+        return str(ctx)
+
+    def _safe_dump(obj: Any) -> str:
+        if _dc.is_dataclass(obj) and not isinstance(obj, type):
+            obj = _dc.asdict(obj)
+        return json.dumps(obj, ensure_ascii=False, default=str)
+
+    parts = [f"Ферма: {ctx.farm_id}"]
+    if getattr(ctx, "herd_summary", None):
+        parts.append(f"Стадо: {_safe_dump(ctx.herd_summary)}")
+    kpi = getattr(ctx, "kpi", None)
+    if kpi is not None:
+        parts.append(f"KPI: {_safe_dump(kpi)}")
+    if getattr(ctx, "active_insights", None):
+        parts.append(f"Активные тревоги: {_safe_dump(ctx.active_insights)}")
+    if getattr(ctx, "recent_events", None):
+        parts.append(f"Последние события: {_safe_dump(ctx.recent_events)}")
+    if getattr(ctx, "attention_cows", None):
+        parts.append(f"Коровы под наблюдением: {_safe_dump(ctx.attention_cows)}")
+    anomalies = getattr(ctx, "sensor_anomalies", None)
+    if anomalies:
+        anom_list = [
+            (_dc.asdict(a) if _dc.is_dataclass(a) and not isinstance(a, type) else vars(a))
+            for a in anomalies
+        ]
+        parts.append(f"АНОМАЛИИ СЕНСОРОВ:\n{json.dumps(anom_list, ensure_ascii=False, default=str)}")
+    return "\n".join(parts)
+
+
+def _dedup_animal_category_7d(
+    new_insights: list[ScannerInsight],
+    existing: list[dict],
+) -> list[ScannerInsight]:
+    """Skip new insights if same (animal_id, category) was seen in existing within 7 days."""
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    recent_keys: set[tuple[str, str]] = set()
+    for ex in existing:
+        try:
+            gen_at = datetime.fromisoformat(str(ex.get("generated_at_utc", "")))
+            if gen_at < cutoff:
+                continue
+        except (ValueError, TypeError):
+            continue
+        category = ex.get("category", "")
+        for cow_id in ex.get("affected_cow_ids", []):
+            recent_keys.add((cow_id, category))
+    result = []
+    for ins in new_insights:
+        if not any((cid, ins.category) in recent_keys for cid in ins.affected_cow_ids):
+            result.append(ins)
     return result
 
 
