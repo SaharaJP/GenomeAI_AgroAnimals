@@ -1,0 +1,16 @@
+{
+  "farm_id": "demo-farm-v1",
+  "as_of": "2026-05-04",
+  "avg_milk_yield_kg": 28.3,
+  "ecm_kg": null,
+  "fat_pct": 3.7,
+  "protein_pct": 3.1,
+  "scc_bulk_k": 185.0,
+  "pregnancy_rate_21d_pct": null,
+  "days_open_avg": null,
+  "cows_in_treatment": 3,
+  "mastitis_incidence_pct_per_year": 18.5,
+  "confidence": "high",
+  "sample_size_cows": 120,
+  "demo": true
+}

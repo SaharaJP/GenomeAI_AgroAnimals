@@ -9,7 +9,11 @@ import tempfile
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
+
+VALID_TABS: frozenset[str] = frozenset(
+    {"production", "reproduction", "health", "feed", "finance", "herd", "behavior"}
+)
 
 import pandas as pd
 
@@ -144,4 +148,66 @@ def compute_dashboard_kpi(
         confidence=confidence,
         sample_size_cows=sample_size,
         raw_kpi_long=farm_rows_df,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Tab KPI — per-tab facade for the analytics dashboard
+# ---------------------------------------------------------------------------
+
+@dataclass
+class TabKPIData:
+    tab_name: str
+    farm_id: str
+    as_of: date
+    metrics: dict[str, Any]
+    confidence: Literal["high", "medium", "low"]
+    sample_size_cows: int
+
+
+def _kpi_to_tab_metrics(kpi: DashboardKPI, tab_name: str) -> dict[str, Any]:
+    if tab_name == "production":
+        return {
+            "avg_milk_yield_kg": kpi.avg_milk_yield_kg,
+            "ecm_kg": kpi.ecm_kg,
+            "fat_pct": kpi.fat_pct,
+            "protein_pct": kpi.protein_pct,
+            "scc_bulk_k": kpi.scc_bulk_k,
+        }
+    if tab_name == "reproduction":
+        return {
+            "pregnancy_rate_21d_pct": kpi.pregnancy_rate_21d_pct,
+            "days_open_avg": kpi.days_open_avg,
+        }
+    if tab_name == "health":
+        return {
+            "cows_in_treatment": kpi.cows_in_treatment,
+            "mastitis_incidence_pct_per_year": kpi.mastitis_incidence_pct_per_year,
+        }
+    # feed, finance, herd, behavior — not yet in kpi_v2; return empty metrics
+    return {}
+
+
+def compute_tab_kpi(
+    farm_id: str,
+    as_of: date,
+    tab_name: str,
+    *,
+    input_dir: Optional[Path] = None,
+) -> TabKPIData:
+    """Computes KPI snapshot for a specific analytics dashboard tab.
+
+    Delegates to compute_dashboard_kpi() and projects to tab-specific fields.
+    Tabs feed/finance/herd/behavior return empty metrics until kpi_v2 supports them.
+    """
+    if tab_name not in VALID_TABS:
+        raise ValueError(f"Unknown tab: {tab_name!r}. Valid: {sorted(VALID_TABS)}")
+    kpi = compute_dashboard_kpi(farm_id, as_of, input_dir=input_dir)
+    return TabKPIData(
+        tab_name=tab_name,
+        farm_id=farm_id,
+        as_of=as_of,
+        metrics=_kpi_to_tab_metrics(kpi, tab_name),
+        confidence=kpi.confidence,
+        sample_size_cows=kpi.sample_size_cows,
     )
