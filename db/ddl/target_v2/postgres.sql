@@ -421,3 +421,11 @@ CREATE TABLE IF NOT EXISTS dm_identity_events (
   payload_json JSONB NOT NULL,
   PRIMARY KEY (tenant_id, event_id)
 );
+
+-- Analytics performance indexes (migration 20260504_11)
+CREATE INDEX IF NOT EXISTS idx_milkings_tenant_date ON dm_milkings_daily (tenant_id, date);
+CREATE INDEX IF NOT EXISTS idx_milkings_animal_date ON dm_milkings_daily (animal_id, date);
+CREATE INDEX IF NOT EXISTS idx_health_tenant_date   ON dm_health_events  (tenant_id, event_date);
+CREATE INDEX IF NOT EXISTS idx_health_animal_date   ON dm_health_events  (animal_id, event_date);
+CREATE INDEX IF NOT EXISTS idx_repro_tenant_date    ON dm_repro_events   (tenant_id, event_date);
+CREATE INDEX IF NOT EXISTS idx_sensors_animal_date  ON dm_sensors_daily  (animal_id, date);
