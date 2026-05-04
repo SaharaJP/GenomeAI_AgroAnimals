@@ -27,6 +27,11 @@ from .analytics.kpi_bridge import (
     compute_dashboard_kpi,
     compute_tab_kpi,
 )
+from .analytics.timeseries_bridge import (
+    build_production_timeseries,
+    build_health_timeseries,
+    build_reproduction_timeseries,
+)
 from .auth import get_current_user, get_db
 from .rbac import require_permissions
 
@@ -416,6 +421,37 @@ def _compute_tab_today(farm_id: str, as_of: date, tab_name: str) -> dict:
         "sample_size_cows": tab_kpi.sample_size_cows,
         "demo": False,
     }
+
+
+@router.get('/timeseries/{tab_name}')
+def analytics_timeseries(
+    tab_name: str,
+    farm_id: Optional[str] = Query(default=None),
+    weeks: int = Query(default=26, ge=1, le=104),
+    user=Depends(require_permissions('kpi.view')),
+    conn=Depends(get_db),
+):
+    """Weekly time-series for analytics dashboard tabs.
+
+    Returns {tab, labels, charts} where charts is a dict of chart_id -> {labels, series}.
+    Tabs without DB time-series (feed, herd, behavior, finance) return empty charts.
+    """
+    if tab_name not in VALID_TABS:
+        raise HTTPException(status_code=404, detail=f"Unknown tab: {tab_name!r}")
+
+    settings = _get_ai_settings()
+    tenant_id = (user or {}).get('tenant_id', 'default')
+    effective_farm = farm_id or settings.GENOMEAI_DEMO_FARM_ID
+
+    if tab_name == "production":
+        return build_production_timeseries(conn, farm_id=effective_farm, tenant_id=tenant_id, weeks=weeks)
+    if tab_name == "health":
+        return build_health_timeseries(conn, farm_id=effective_farm, tenant_id=tenant_id, weeks=weeks)
+    if tab_name == "reproduction":
+        return build_reproduction_timeseries(conn, farm_id=effective_farm, tenant_id=tenant_id, weeks=weeks)
+
+    # feed / herd / behavior / finance: not yet implemented
+    return {"tab": tab_name, "labels": [], "charts": {}}
 
 
 @router.get('/{tab_name}')
