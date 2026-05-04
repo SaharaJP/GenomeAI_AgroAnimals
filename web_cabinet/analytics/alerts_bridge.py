@@ -1,6 +1,8 @@
 """Alerts Bridge — facade between alerts_v2 computation engine and web_cabinet UI."""
 from __future__ import annotations
 
+from web_cabinet.analytics.cache import cached
+
 import hashlib
 from dataclasses import dataclass
 from datetime import date
@@ -108,6 +110,7 @@ def _load_generators():
     return generate_from_dm_alerts, generate_withdrawal_alerts, generate_repro_alerts
 
 
+@cached(ttl=600)
 def list_active_alerts(
     farm_id: str,
     *,
