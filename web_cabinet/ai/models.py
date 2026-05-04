@@ -222,3 +222,35 @@ class ImpactNarrative(BaseModel):
     confidence: float = Field(..., ge=0.0, le=1.0)
     generation_model: str
     generated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+
+
+# ---------------------------------------------------------------------------
+# Statistical Impact Endpoint (PMV-B03)
+# ---------------------------------------------------------------------------
+
+class ImpactRequest(BaseModel):
+    event_id: str
+    farm_id: str = "demo-farm-v1"
+    kpi_list: list[str] = Field(default_factory=lambda: ["milk_yield"])
+    window: Literal["3d", "1w", "2w", "4w"] = "1w"
+
+
+class KpiImpactResult(BaseModel):
+    kpi: str
+    welch_t_pvalue: float
+    cohen_d_effect_size: float
+    bootstrap_ci_95: tuple[float, float]
+    significance: Literal["significant", "not_significant", "inconclusive"]
+    effect_magnitude: Literal["negligible", "small", "medium", "large"]
+    diff_in_diff_effect: float
+    treated_before: float
+    treated_after: float
+    sample_sizes: dict
+
+
+class ImpactResponse(BaseModel):
+    event_id: str
+    farm_id: str
+    window: str
+    results: list[KpiImpactResult]
+    demo_mode: bool

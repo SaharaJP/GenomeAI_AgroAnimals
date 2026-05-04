@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import {
   Salad,
   UserPlus,
@@ -18,9 +21,10 @@ import {
   MousePointerClick,
   Plus,
   Cpu,
+  Loader2,
 } from 'lucide-react';
-import type { TimelineEvent, MetricWindow } from '@/lib/api/timeline';
-import { getImpactForEvent, formatDayMonth, formatRelativeDate } from '@/lib/api/timeline';
+import type { TimelineEvent, MetricWindow, ImpactWindowData } from '@/lib/api/timeline';
+import { fetchImpactForEvent, formatDayMonth, formatRelativeDate } from '@/lib/api/timeline';
 import { WindowTabs } from './window-tabs';
 import { MetricCompareCard } from './metric-compare-card';
 import { OtherChangesTable } from './other-changes-table';
@@ -53,6 +57,29 @@ type Props = {
 };
 
 export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Props) {
+  const [impact, setImpact] = useState<ImpactWindowData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
+
+  useEffect(() => {
+    if (!event) {
+      setImpact(null);
+      setFetchError(false);
+      return;
+    }
+    let cancelled = false;
+    setLoading(true);
+    setFetchError(false);
+    fetchImpactForEvent(event, activeWindow).then((data) => {
+      if (!cancelled) {
+        setImpact(data);
+        setFetchError(data === null);
+        setLoading(false);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [event?.timeline_event_id, activeWindow]);
+
   if (!event) {
     return (
       <div className="tl-right">
@@ -70,7 +97,6 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
   }
 
   const icon = ICONS[event.event_type] ?? <Clock size={18} />;
-  const impact = getImpactForEvent(event.timeline_event_id, activeWindow);
 
   return (
     <div className="tl-right">
@@ -108,7 +134,37 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
           диапазона, чтобы увидеть значения ключевых метрик в разных временных окнах.
         </p>
 
-        {impact ? (
+        {loading ? (
+          <div className="empty-state" role="status" aria-live="polite" style={{ padding: '32px 0', textAlign: 'center' }}>
+            <Loader2 size={20} style={{ color: 'var(--text-muted)', marginBottom: 8, animation: 'spin 1s linear infinite' }} />
+            <span className="sr-only">Загрузка...</span>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Вычисляем статистику…
+            </div>
+          </div>
+        ) : fetchError ? (
+          <div className="empty-state" style={{ padding: '32px 0', textAlign: 'center' }}>
+            <div style={{ marginBottom: 8, color: 'var(--text-muted)', fontSize: 13 }}>
+              Не удалось загрузить данные анализа
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ fontSize: 12, marginTop: 4 }}
+              onClick={() => {
+                setFetchError(false);
+                setLoading(true);
+                fetchImpactForEvent(event, activeWindow).then((data) => {
+                  setImpact(data);
+                  setFetchError(data === null);
+                  setLoading(false);
+                });
+              }}
+            >
+              Повторить
+            </button>
+          </div>
+        ) : impact ? (
           <>
             {/* Period labels */}
             <div className="impact-period-row">
@@ -165,7 +221,7 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
               Данные анализа ещё не готовы
             </div>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              Impact analysis появится автоматически после накопления достаточного количества данных
+              Анализ влияния появится автоматически после накопления достаточного количества данных
             </div>
           </div>
         )}
