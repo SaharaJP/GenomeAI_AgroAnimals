@@ -7,6 +7,9 @@ PERF_REPORT_ROOT="${CI_PERF_REPORT_ROOT:-${ARTIFACTS_DIR}/performance_gates}"
 PERF_PROFILE="${CI_PERF_PROFILE:-ci}"
 mkdir -p "${ARTIFACTS_DIR}" "${PERF_REPORT_ROOT}"
 
+# shellcheck source=scripts/_env_bootstrap.sh
+source "${ROOT_DIR}/scripts/_env_bootstrap.sh"
+
 PYTHONPATH="${ROOT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}" \
 python -m genomeai.cli perf-gates \
   --project-root "${ROOT_DIR}" \
