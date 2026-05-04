@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -105,15 +105,20 @@ def _fallback_narrative(event_id: str, window: str) -> ImpactNarrative:
 # ---------------------------------------------------------------------------
 
 async def _generate_via_llm(req: ImpactNarrativeRequest, settings: Any) -> ImpactNarrative:
+    from web_cabinet.analytics.statistical_extension import compute_full_impact
+
     event = _load_event(req.event_id, req.farm_id)
     before_metrics, after_metrics = _compute_window_metrics(req.event_id, req.window, req.farm_id)
     related_events = _load_related_events(req.event_id, req.window, req.farm_id)
+
+    stat_result = _compute_statistical_result(event, req.farm_id, req.window, compute_full_impact)
 
     user_msg = build_impact_narrative_message(
         event=event,
         before_metrics=before_metrics,
         after_metrics=after_metrics,
         related_events=related_events,
+        statistical_result=stat_result,
     )
     client = get_client()
     resp = client.generate(
@@ -124,6 +129,32 @@ async def _generate_via_llm(req: ImpactNarrativeRequest, settings: Any) -> Impac
         temperature=0.3,
     )
     return _parse_response(resp.content, req.event_id, req.window, resp.model)
+
+
+def _compute_statistical_result(
+    event: dict, farm_id: str, window: str, compute_fn: Any
+) -> Any | None:
+    """Вычисляет StatisticalImpactResult для первичного KPI события."""
+    try:
+        raw_date = event.get("event_date") or event.get("date")
+        if not raw_date:
+            return None
+        event_date = date.fromisoformat(str(raw_date)[:10])
+        event_type = event.get("event_type", "unknown")
+        affected_groups = event.get("affected_groups") or event.get("groups") or []
+        if isinstance(affected_groups, str):
+            affected_groups = [affected_groups]
+        return compute_fn(
+            farm_id=farm_id,
+            event_date=event_date,
+            event_type=event_type,
+            affected_groups=list(affected_groups),
+            kpi_metric="milk_yield",
+            window=window,  # type: ignore[arg-type]
+        )
+    except Exception as exc:
+        logger.warning(f"statistical_result compute failed event={event.get('timeline_event_id')}: {exc}")
+        return None
 
 
 def _load_event(event_id: str, farm_id: str) -> dict:

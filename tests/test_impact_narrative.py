@@ -412,3 +412,88 @@ class TestClassification:
             assert seeded[eid]["confidence"] >= 0.85, (
                 f"{eid} is major but confidence={seeded[eid]['confidence']}"
             )
+
+
+# ---------------------------------------------------------------------------
+# Statistical narrative integration (T34 / connect impact narrative with stats)
+# ---------------------------------------------------------------------------
+
+class TestStatisticalNarrativeIntegration:
+    """Tests for StatisticalImpactResult integration into impact narrative prompt."""
+
+    def _make_stat(self, p_value: float, n: int, significance: str):
+        from web_cabinet.analytics.statistical_extension import StatisticalImpactResult
+        return StatisticalImpactResult(
+            treated_before=36.0,
+            treated_after=28.0,
+            control_before=35.0,
+            control_after=34.5,
+            diff_in_diff_effect=-7.5,
+            welch_t_pvalue=p_value,
+            cohen_d_effect_size=1.2,
+            effect_magnitude="large",
+            bootstrap_ci_95=(-9.0, -6.0),
+            significance=significance,  # type: ignore[arg-type]
+            sample_sizes={"treated": n, "control": n},
+        )
+
+    def test_narrative_demo_returns_seeded(self):
+        """Demo mode не вызывает compute_full_impact."""
+        from unittest.mock import patch
+        from web_cabinet.ai.endpoints.impact_narrative import _load_seeded_narrative
+
+        with patch(
+            "web_cabinet.analytics.statistical_extension.compute_full_impact"
+        ) as mock_stat:
+            n = _load_seeded_narrative("TL_001", "4w")
+            mock_stat.assert_not_called()
+
+        assert n.event_id == "TL_001"
+        assert n.generation_model == "demo-seeded"
+
+    def test_narrative_real_mode_uses_p_value_in_text(self):
+        """build_impact_narrative_message с statistical_result включает p-value и CI в payload."""
+        stat = self._make_stat(p_value=0.02, n=14, significance="significant")
+
+        msg = build_impact_narrative_message(
+            event={"timeline_event_id": "TL_001"},
+            before_metrics={"milk_yield": {"value": 36.0}},
+            after_metrics={"milk_yield": {"value": 28.0}},
+            related_events=[],
+            statistical_result=stat,
+        )
+
+        assert "welch_t_pvalue" in msg or "p_value" in msg
+        assert "0.02" in msg
+        assert "bootstrap_ci_95" in msg or "confidence_interval" in msg
+        assert "significant" in msg
+
+    def test_narrative_inconclusive_when_low_n(self):
+        """build_impact_narrative_message с inconclusive stat включает epistemic hint."""
+        import math
+        from web_cabinet.analytics.statistical_extension import StatisticalImpactResult
+
+        stat = StatisticalImpactResult(
+            treated_before=36.0,
+            treated_after=33.0,
+            control_before=35.0,
+            control_after=34.5,
+            diff_in_diff_effect=-2.5,
+            welch_t_pvalue=float("nan"),
+            cohen_d_effect_size=0.0,
+            effect_magnitude="negligible",
+            bootstrap_ci_95=(float("nan"), float("nan")),
+            significance="inconclusive",
+            sample_sizes={"treated": 4, "control": 4},
+        )
+
+        msg = build_impact_narrative_message(
+            event={"timeline_event_id": "TL_SMALL"},
+            before_metrics={},
+            after_metrics={},
+            related_events=[],
+            statistical_result=stat,
+        )
+
+        assert "inconclusive" in msg
+        assert "4" in msg  # sample size must appear
