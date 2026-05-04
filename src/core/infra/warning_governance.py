@@ -173,6 +173,21 @@ def analyze_warning_governance(
             key = entry.package or "unknown"
             by_dependency[key] = by_dependency.get(key, 0) + 1
 
+        # Explicit allowlist overrides denylist — "allowlist it in a separate compatibility change"
+        explicit_match = next((rule for rule in policy.allowlist if rule.matches(entry)), None)
+        if explicit_match is not None:
+            matched_counts[explicit_match.name] = matched_counts.get(explicit_match.name, 0) + 1
+            processed_entries.append(
+                {
+                    "source": item.source,
+                    **asdict(entry),
+                    "status": "allowed",
+                    "rule": explicit_match.name,
+                    "escalation": explicit_match.escalation,
+                }
+            )
+            continue
+
         deny_rule = next((rule for rule in policy.denylist if rule.matches(entry)), None)
         if deny_rule is not None:
             denylisted.append(

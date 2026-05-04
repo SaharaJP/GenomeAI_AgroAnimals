@@ -6,6 +6,15 @@
   },
   "allowlist": [
     {
+      "name": "contracts-schema-field-pydantic-v2",
+      "origin": "project",
+      "category": "UserWarning",
+      "message_regex": "^Field name \"schema\" in \"[^\"]+\" shadows an attribute in parent \"BaseModel\"$",
+      "max_count": 30,
+      "escalation": "tracked in T34 compat backlog: rename 'schema' field to 'schema_version' across all contracts in packages/contracts/ in a dedicated API-contract-change PR; until then, field is documented here as a known Pydantic v2 naming conflict",
+      "notes": "packages/contracts/ response models define a 'schema' field for response-type identification (e.g. 'genomeai.api.alerts.list.v1'). Pydantic v2 considers 'schema' a reserved BaseModel attribute name. Surfaced once web smoke completed successfully in T34 Postgres cutover. No behavior change — warning only. Fix requires renaming field and updating all consumers."
+    },
+    {
       "name": "python-multipart-known-issue",
       "origin": "dependency",
       "package": "python_multipart",
