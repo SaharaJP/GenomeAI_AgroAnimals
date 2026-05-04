@@ -1,21 +1,30 @@
 #!/usr/bin/env bash
 # scripts/setup_worktrees.sh
-# Создаёт 3 git worktrees для параллельной работы Claude.
+# Создаёт 3 git worktrees для параллельной работы Claude Code в Bridge Strategy v3.
 # Запускается ОДИН раз из корня репозитория.
+#
+# Зачем 3 worktrees:
+#   wt-bridge       — bridges (kpi/alerts/sensor) в web_cabinet/analytics/
+#   wt-stat         — statistical extension + impact panel
+#   wt-iot          — sensor ingestion + CSV import
+#
+# Зоны изоляции (чтобы НЕ было merge conflicts):
+#   wt-bridge       трогает ТОЛЬКО web_cabinet/analytics/, web_cabinet/ai/context.py
+#   wt-stat         трогает ТОЛЬКО web_cabinet/analytics/statistical_extension.py, 
+#                                   web_app/components/timeline/impact-panel.tsx
+#   wt-iot          трогает ТОЛЬКО web_cabinet/iot/, web_cabinet/import_endpoints.py
 
 set -euo pipefail
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 WORKTREES_ROOT="$(dirname "$REPO_ROOT")/worktrees"
 
-# Убеждаемся что мы на нужной ветке
 CURRENT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if [[ "$CURRENT_BRANCH" != "mvp-investor-demo" ]]; then
-  echo "ERROR: текущая ветка = $CURRENT_BRANCH, нужна mvp-investor-demo"
+if [[ "$CURRENT_BRANCH" != "main" && "$CURRENT_BRANCH" != "mvp-investor-demo" ]]; then
+  echo "ERROR: текущая ветка = $CURRENT_BRANCH, нужна main или mvp-investor-demo"
   exit 1
 fi
 
-# Проверяем что нет незакоммиченных изменений
 if ! git diff --quiet; then
   echo "ERROR: working tree dirty. Закоммить или stash перед созданием worktrees."
   exit 1
@@ -24,11 +33,10 @@ fi
 echo "==> Создаём worktrees в $WORKTREES_ROOT"
 mkdir -p "$WORKTREES_ROOT"
 
-# Список worktrees: имя | ветка
 declare -A WORKTREES=(
-  ["wt-ui"]="mvp/ui"
-  ["wt-ai-gateway"]="mvp/ai-gateway"
-  ["wt-data"]="mvp/data"
+  ["wt-bridge"]="b/bridge"
+  ["wt-stat"]="b/stat"
+  ["wt-iot"]="b/iot"
 )
 
 for WT_NAME in "${!WORKTREES[@]}"; do
@@ -41,7 +49,7 @@ for WT_NAME in "${!WORKTREES[@]}"; do
   fi
   
   echo "==> $WT_NAME -> ветка $BRANCH"
-  git worktree add "$WT_PATH" -b "$BRANCH" mvp-investor-demo
+  git worktree add "$WT_PATH" -b "$BRANCH" "$CURRENT_BRANCH"
   
   # Копируем конфигурационные файлы в worktree
   for FILE in CLAUDE.md .mcp.json .env.ai; do
@@ -51,12 +59,18 @@ for WT_NAME in "${!WORKTREES[@]}"; do
     fi
   done
   
-  # Копируем scripts/claude_iteration.sh
+  # Копируем claude_iteration.sh
   mkdir -p "$WT_PATH/scripts"
   if [[ -f "$REPO_ROOT/scripts/claude_iteration.sh" ]]; then
     cp "$REPO_ROOT/scripts/claude_iteration.sh" "$WT_PATH/scripts/"
     chmod +x "$WT_PATH/scripts/claude_iteration.sh"
     echo "    скопирован scripts/claude_iteration.sh"
+  fi
+  
+  # Symlink на venv (один venv на всех)
+  if [[ -d "$REPO_ROOT/.venv" ]]; then
+    ln -sf "$REPO_ROOT/.venv" "$WT_PATH/.venv"
+    echo "    создан symlink .venv -> main repo .venv"
   fi
 done
 
@@ -67,13 +81,13 @@ git worktree list
 echo ""
 echo "==> Что дальше"
 echo "1. Создай 3 tmux сессии:"
-echo "   tmux new -s ai-ui -d 'cd $WORKTREES_ROOT/wt-ui'"
-echo "   tmux new -s ai-backend -d 'cd $WORKTREES_ROOT/wt-ai-gateway'"
-echo "   tmux new -s ai-data -d 'cd $WORKTREES_ROOT/wt-data'"
+echo "   tmux new -s ai-bridge -d 'cd $WORKTREES_ROOT/wt-bridge'"
+echo "   tmux new -s ai-stat -d 'cd $WORKTREES_ROOT/wt-stat'"
+echo "   tmux new -s ai-iot -d 'cd $WORKTREES_ROOT/wt-iot'"
 echo ""
 echo "2. Копируй промпт в next_task.md и запускай:"
-echo "   tmux a -t ai-ui"
-echo "   cp $REPO_ROOT/docs/iterations/MVP-N01_prompt.md next_task.md"
+echo "   tmux a -t ai-bridge"
+echo "   cp $REPO_ROOT/docs/iterations/PMV-B01_prompt.md next_task.md"
 echo "   AUTO_PR=false bash scripts/claude_iteration.sh"
 echo ""
 echo "Успехов!"

@@ -65,7 +65,7 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    project_root = Path(os.environ.get("GENOMEAI_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
+    project_root = Path(os.environ.get("GENOMEAI_PROJECT_ROOT", Path(__file__).resolve().parents[3])).resolve()
     storage_dir = Path(os.environ.get("GENOMEAI_WEB_STORAGE", project_root / "web_cabinet" / "storage")).resolve()
     artifacts_root = Path(os.environ.get("GENOMEAI_ARTIFACTS_ROOT", project_root / "artifacts")).resolve()
 
