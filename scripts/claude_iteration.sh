@@ -17,6 +17,13 @@
 
 set -euo pipefail
 
+# --- Env overrides (DSN, API keys) ---
+ENV_FILE="${ENV_FILE:-.env.ai}"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a && source "$ENV_FILE" && set +a
+  echo "==> Loaded env from $ENV_FILE"
+fi
+
 # --- Конфиг ---
 TASK_FILE="${TASK_FILE:-next_task.md}"
 BRANCH_PREFIX="${BRANCH_PREFIX:-ai/t34}"
@@ -61,41 +68,42 @@ claude -p "$(cat "$TASK_FILE")" \
 echo "==> Claude session written to $SESSION_LOG"
 
 # --- Обязательные 7 гейтов ---
-echo "==> Gate 1/7: pytest gate"
 GATE_FAIL=0
+G1=✅ G2=✅ G3=✅ G4=✅ G5=✅ G6=✅ G7=✅
 
+echo "==> Gate 1/7: pytest gate"
 bash scripts/run_ci_gate.sh \
-  || { echo "GATE 1 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 1 FAILED"; G1="❌"; GATE_FAIL=1; }
 
 echo "==> Gate 2/7: web smoke"
 python -m web_cabinet.smoke \
   --workdir _tmp/ci_smoke --clean \
   --timing-json "${ARTIFACTS_DIR}/web_smoke.json" \
   2>&1 | tee "${ARTIFACTS_DIR}/web_smoke.log" \
-  || { echo "GATE 2 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 2 FAILED"; G2="❌"; GATE_FAIL=1; }
 
 echo "==> Gate 3/7: verify_refactor (golden)"
 python -m genomeai.cli verify_refactor \
   --project-root . --golden golden \
   --report-root "${ARTIFACTS_DIR}/verify_refactor" \
   2>&1 | tee "${ARTIFACTS_DIR}/verify_refactor.log" \
-  || { echo "GATE 3 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 3 FAILED"; G3="❌"; GATE_FAIL=1; }
 
 echo "==> Gate 4/7: warning governance"
 bash scripts/run_warning_governance_gate.sh \
-  || { echo "GATE 4 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 4 FAILED"; G4="❌"; GATE_FAIL=1; }
 
 echo "==> Gate 5/7: operational rollout"
 bash scripts/run_operational_rollout_gate.sh \
-  || { echo "GATE 5 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 5 FAILED"; G5="❌"; GATE_FAIL=1; }
 
 echo "==> Gate 6/7: competitive acceptance"
 bash scripts/run_competitive_acceptance_gate.sh \
-  || { echo "GATE 6 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 6 FAILED"; G6="❌"; GATE_FAIL=1; }
 
 echo "==> Gate 7/7: perf gates"
 bash scripts/run_perf_gates.sh \
-  || { echo "GATE 7 FAILED"; GATE_FAIL=1; }
+  || { echo "GATE 7 FAILED"; G7="❌"; GATE_FAIL=1; }
 
 # --- Supportability (опционально, для T34-05..09 задач) ---
 if [[ -x scripts/run_supportability_checks.sh ]]; then
@@ -123,13 +131,13 @@ cat > "$SUMMARY_FILE" <<EOF
 
 | # | Gate | Result |
 |---|------|--------|
-| 1 | pytest | $( [[ $GATE_FAIL -eq 0 ]] && echo "✅" || echo "❌ see artifacts/_ci/pytest.log" ) |
-| 2 | web smoke | see artifacts/_ci/web_smoke.log |
-| 3 | verify_refactor (golden) | see artifacts/_ci/verify_refactor.log |
-| 4 | warning governance | see artifacts/_ci/warning_governance_report.md |
-| 5 | operational rollout | see artifacts/_ci/operational_rollout_gate.log |
-| 6 | competitive acceptance | see artifacts/_ci/competitive_acceptance_gate.log |
-| 7 | perf | see artifacts/_ci/perf_gates.log |
+| 1 | pytest | $G1 |
+| 2 | web smoke | $G2 |
+| 3 | verify_refactor (golden) | $G3 |
+| 4 | warning governance | $G4 |
+| 5 | operational rollout | $G5 |
+| 6 | competitive acceptance | $G6 |
+| 7 | perf | $G7 |
 
 ## Next actions
 
@@ -148,13 +156,13 @@ git commit -m "${BRANCH_PREFIX}: ai increment ($STATUS)
 Task: $(head -1 "$TASK_FILE" | sed 's/^# *//')
 
 Gates:
-  1 pytest: $( [[ $GATE_FAIL -eq 0 ]] && echo pass || echo fail )
-  2 web smoke: see artifacts/_ci/web_smoke.log
-  3 golden verify_refactor: see artifacts/_ci/verify_refactor.log
-  4 warning governance: see artifacts/_ci/warning_governance_report.md
-  5 operational rollout: see artifacts/_ci/operational_rollout_gate.log
-  6 competitive acceptance: see artifacts/_ci/competitive_acceptance_gate.log
-  7 perf gates: see artifacts/_ci/perf_gates.log
+  1 pytest: $G1
+  2 web smoke: $G2
+  3 golden verify_refactor: $G3
+  4 warning governance: $G4
+  5 operational rollout: $G5
+  6 competitive acceptance: $G6
+  7 perf gates: $G7
 
 Honest status: $STATUS
 " || echo "==> Nothing to commit (no changes made by Claude)"
