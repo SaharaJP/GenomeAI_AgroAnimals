@@ -659,6 +659,9 @@ app.include_router(analytics_v1_router)
 from web_cabinet.ai.endpoints import register_ai_routes
 register_ai_routes(app)
 
+from web_cabinet.iot import register_iot_routes
+register_iot_routes(app)
+
 
 @app.middleware("http")
 async def auth_context_http_middleware(request: Request, call_next):
