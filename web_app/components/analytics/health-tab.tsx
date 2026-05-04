@@ -1,11 +1,9 @@
-import { getHealthMastitis, getHealthIssues } from '@/lib/api/analytics';
+'use client';
+import { useAnalyticsTimeseries, emptyChart } from '@/lib/api/analytics-live';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { METRICS } from './add-chart-dialog';
-
-const mastitis     = getHealthMastitis();
-const healthIssues = getHealthIssues();
 
 interface Props {
   onAddChart: () => void;
@@ -14,22 +12,33 @@ interface Props {
 }
 
 export function HealthTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
+  const state = useAnalyticsTimeseries('health');
+
+  const mastitis = state.status === 'ok'
+    ? (state.data.charts['mastitis'] ?? emptyChart('Мастит'))
+    : emptyChart('Мастит');
+  const issues = state.status === 'ok' && state.data.charts['issues']?.series?.length
+    ? state.data.charts['issues']
+    : emptyChart('Заболевания');
+
+  const loading = state.status === 'loading';
+
   return (
     <div className="grid grid-2">
       <ChartCard
-        title="Коров с маститом (#)"
-        badges={[{ icon: '📊', label: 'По ферме' }]}
+        title={loading ? 'Мастит — загрузка…' : 'Мастит'}
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
         legend={mastitis.series}
       >
-        <BiChart type="line" series={mastitis.series} labels={mastitis.labels} unit="" />
+        <BiChart type="line" series={mastitis.series} labels={mastitis.labels} unit=" гол" />
       </ChartCard>
 
       <ChartCard
-        title="Коров с проблемами здоровья (#)"
-        badges={[{ icon: '📊', label: 'Проблемы здоровья' }]}
-        legend={healthIssues.series}
+        title={loading ? 'Заболевания — загрузка…' : 'Заболевания по типам'}
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
+        legend={issues.series}
       >
-        <BiChart type="stacked-bar" series={healthIssues.series} labels={healthIssues.labels} unit="" />
+        <BiChart type="line" series={issues.series} labels={issues.labels} unit=" гол" />
       </ChartCard>
 
       {addedMetricIds.map(id => {
@@ -49,7 +58,6 @@ export function HealthTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Pr
       })}
 
       <EmptyChartSlot onAdd={onAddChart} />
-      {addedMetricIds.length === 0 && <EmptyChartSlot onAdd={onAddChart} />}
     </div>
   );
 }

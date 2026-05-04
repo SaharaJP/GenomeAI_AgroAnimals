@@ -1,12 +1,9 @@
-import { getProductionMilkEcm, getProductionFatProtein, getProductionScc } from '@/lib/api/analytics';
+'use client';
+import { useAnalyticsTimeseries, emptyChart } from '@/lib/api/analytics-live';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { METRICS } from './add-chart-dialog';
-
-const milkEcm = getProductionMilkEcm();
-const fatProt = getProductionFatProtein();
-const scc     = getProductionScc();
 
 interface Props {
   onAddChart: () => void;
@@ -15,27 +12,41 @@ interface Props {
 }
 
 export function ProductionTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
+  const state = useAnalyticsTimeseries('production');
+
+  const milkEcm = state.status === 'ok'
+    ? (state.data.charts['milk_ecm'] ?? emptyChart('Надой'))
+    : emptyChart('Надой');
+  const fatProt = state.status === 'ok'
+    ? (state.data.charts['fat_protein'] ?? emptyChart('Жир %'))
+    : emptyChart('Жир %');
+  const scc = state.status === 'ok'
+    ? (state.data.charts['scc'] ?? emptyChart('СКК'))
+    : emptyChart('СКК');
+
+  const loading = state.status === 'loading';
+
   return (
     <div className="grid grid-2">
       <ChartCard
-        title="Надой и ECM"
-        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Система доения, отгруженное молоко' }]}
+        title={loading ? 'Надой и ECM — загрузка…' : 'Надой и ECM'}
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
         legend={milkEcm.series}
       >
         <BiChart type="line" series={milkEcm.series} labels={milkEcm.labels} unit=" кг" />
       </ChartCard>
 
       <ChartCard
-        title="Жир и белок %"
-        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Контроль стада' }]}
+        title={loading ? 'Жир и белок % — загрузка…' : 'Жир и белок %'}
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
         legend={fatProt.series}
       >
         <BiChart type="line" series={fatProt.series} labels={fatProt.labels} unit="%" />
       </ChartCard>
 
       <ChartCard
-        title="Соматические клетки (СКК)"
-        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Отгруженное молоко (скорр.)' }]}
+        title={loading ? 'СКК — загрузка…' : 'Соматические клетки (СКК)'}
+        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
         legend={scc.series}
       >
         <BiChart type="line" series={scc.series} labels={scc.labels} unit="k" refLine={200} />
