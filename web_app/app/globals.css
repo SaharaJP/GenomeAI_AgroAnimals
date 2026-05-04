@@ -322,6 +322,10 @@ button, input, select, textarea { font: inherit; }
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 /* ── Mobile tab bar ────────────────────────────── */
 .mobile-tab-bar {
@@ -1892,6 +1896,20 @@ button, input, select, textarea { font: inherit; }
   padding: 1px 6px;
   letter-spacing: 0.02em;
 }
+
+/* Statistical significance badges on MetricCompareCard */
+.stat-sig-badge {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+  border: 1px solid;
+  letter-spacing: 0.02em;
+  cursor: default;
+}
+.stat-sig-badge--significant    { background: #f0fdf4; border-color: #bbf7d0; color: #166534; }
+.stat-sig-badge--not-significant { background: var(--bg-muted); border-color: var(--border); color: var(--text-muted); }
+.stat-sig-badge--inconclusive   { background: #fffbeb; border-color: #fde68a; color: #92400e; }
 
 .impact-explain-text {
   font-size: 12px;

@@ -18,6 +18,11 @@ export type MetricComparison = {
   after_value: number;
   higher_is_better: boolean;
   max_display?: number;
+  // Statistical fields — present when data comes from /api/impact
+  welch_t_pvalue?: number;
+  bootstrap_ci_95?: [number, number];
+  significance?: 'significant' | 'not_significant' | 'inconclusive';
+  effect_magnitude?: 'negligible' | 'small' | 'medium' | 'large';
 };
 
 export type OtherChange = {
@@ -338,6 +343,100 @@ export function getImpactForEvent(eventId: string, window: MetricWindow): Impact
   const analysis = DEMO_IMPACT_ANALYSES[eventId];
   if (!analysis) return null;
   return analysis.windows[window] ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Real API fetch — replaces mock in impact panel
+// ---------------------------------------------------------------------------
+
+type KpiImpactResult = {
+  kpi: string;
+  welch_t_pvalue: number;
+  cohen_d_effect_size: number;
+  bootstrap_ci_95: [number, number];
+  significance: 'significant' | 'not_significant' | 'inconclusive';
+  effect_magnitude: 'negligible' | 'small' | 'medium' | 'large';
+  diff_in_diff_effect: number;
+  treated_before: number;
+  treated_after: number;
+  sample_sizes: { treated: number; control: number };
+};
+
+type ImpactApiResponse = {
+  event_id: string;
+  farm_id: string;
+  window: string;
+  results: KpiImpactResult[];
+  demo_mode: boolean;
+};
+
+const KPI_META: Record<string, { label: string; unit: string; higher_is_better: boolean; max_display: number }> = {
+  milk_yield:       { label: 'Avg Milk Yield per cow, per pen', unit: 'кг',  higher_is_better: true,  max_display: 45 },
+  dmi_per_group:    { label: 'DMI per group',                   unit: 'кг',  higher_is_better: true,  max_display: 25 },
+  eating_time:      { label: 'Время поедания в день, per pen',  unit: 'мин', higher_is_better: true,  max_display: 500 },
+  rumination:       { label: 'Время руминации per pen, per day',unit: 'мин', higher_is_better: true,  max_display: 550 },
+  ecm_yield:        { label: 'ECM yield per cow per pen',       unit: 'кг',  higher_is_better: true,  max_display: 35 },
+  milking_duration: { label: 'Длительность доения per cow',     unit: 'мин', higher_is_better: false, max_display: 10 },
+};
+
+function _windowPeriods(eventDate: string, w: MetricWindow): { before: { start: string; end: string }; after: { start: string; end: string } } {
+  const days = { '3d': 3, '1w': 7, '2w': 14, '4w': 28 }[w];
+  const ev = new Date(eventDate);
+  const beforeStart = new Date(ev); beforeStart.setDate(ev.getDate() - days);
+  const afterEnd   = new Date(ev); afterEnd.setDate(ev.getDate() + days);
+  const fmt = (d: Date) => d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.');
+  return {
+    before: { start: fmt(beforeStart), end: fmt(ev) },
+    after:  { start: fmt(ev),          end: fmt(afterEnd) },
+  };
+}
+
+export async function fetchImpactForEvent(
+  event: TimelineEvent,
+  window: MetricWindow,
+  kpiList: string[] = ['milk_yield', 'dmi_per_group', 'eating_time', 'rumination'],
+): Promise<ImpactWindowData | null> {
+  try {
+    const resp = await fetch('/api/impact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event_id: event.timeline_event_id,
+        farm_id: 'demo-farm-v1',
+        kpi_list: kpiList,
+        window,
+      }),
+    });
+    if (!resp.ok) return null;
+    const data: ImpactApiResponse = await resp.json();
+
+    const periods = _windowPeriods(event.date, window);
+    const metrics: MetricComparison[] = data.results.map((r) => {
+      const meta = KPI_META[r.kpi] ?? { label: r.kpi, unit: '', higher_is_better: true, max_display: 100 };
+      return {
+        metric_id: r.kpi,
+        label: meta.label,
+        unit: meta.unit,
+        before_value: r.treated_before,
+        after_value: r.treated_after,
+        higher_is_better: meta.higher_is_better,
+        max_display: meta.max_display,
+        welch_t_pvalue: r.welch_t_pvalue,
+        bootstrap_ci_95: r.bootstrap_ci_95,
+        significance: r.significance,
+        effect_magnitude: r.effect_magnitude,
+      };
+    });
+
+    return {
+      before_period: periods.before,
+      after_period: periods.after,
+      metrics,
+      other_changes: [],
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function formatRelativeDate(dateStr: string): string {

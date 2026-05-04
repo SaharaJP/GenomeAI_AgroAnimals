@@ -15,6 +15,18 @@ function calcBarPct(value: number, maxDisplay: number): string {
   return `${pct.toFixed(1)}%`;
 }
 
+const SIG_CLASS: Record<string, string> = {
+  significant:     'stat-sig-badge stat-sig-badge--significant',
+  not_significant: 'stat-sig-badge stat-sig-badge--not-significant',
+  inconclusive:    'stat-sig-badge stat-sig-badge--inconclusive',
+};
+
+const SIG_LABELS: Record<string, string> = {
+  significant:     'p<0.05',
+  not_significant: 'n.s.',
+  inconclusive:    '~',
+};
+
 export function MetricCompareCard({ metric }: Props) {
   const { label, unit, before_value, after_value, higher_is_better, max_display = 100 } = metric;
 
@@ -34,6 +46,11 @@ export function MetricCompareCard({ metric }: Props) {
 
   const beforePct = calcBarPct(before_value, max_display);
   const afterPct = calcBarPct(after_value, max_display);
+
+  const hasStat = metric.welch_t_pvalue !== undefined;
+  const pVal = metric.welch_t_pvalue;
+  const sig = metric.significance;
+  const ci = metric.bootstrap_ci_95;
 
   return (
     <div className="metric-card">
@@ -57,12 +74,21 @@ export function MetricCompareCard({ metric }: Props) {
         </div>
       </div>
 
-      {/* Delta */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+      {/* Delta + p-value row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
         <span className={deltaClass}>
           <DeltaIcon size={11} />
           {deltaFormatted} {unit}
         </span>
+
+        {hasStat && sig && pVal !== undefined && (
+          <span
+            className={SIG_CLASS[sig] ?? 'stat-sig-badge stat-sig-badge--not-significant'}
+            title={ci ? `95% CI: [${ci[0].toFixed(2)}, ${ci[1].toFixed(2)}]` : undefined}
+          >
+            {SIG_LABELS[sig]} · p={pVal < 0.001 ? '<0.001' : pVal.toFixed(3)}
+          </span>
+        )}
       </div>
     </div>
   );
