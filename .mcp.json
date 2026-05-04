@@ -1,13 +1,18 @@
 {
+  "_comment": "MCP серверы для GenomeAI AgroAnimals. Версионируется вместе с репо, чтобы вся команда и CI работали с одним и тем же набором. Секреты (${VAR}) подставляются из окружения — в файле их быть не должно.",
+
   "mcpServers": {
     "github": {
+      "_comment": "Read issues, open PRs, comment on reviews, trigger workflows. Требует GITHUB_PERSONAL_ACCESS_TOKEN c правами repo+workflow.",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
+
     "postgres-test": {
+      "_comment": "ТОЛЬКО тестовая БД! Для prod/stage — отдельный сервер с отдельным DSN и ручным одобрением. Строка DSN берётся из env.",
       "command": "npx",
       "args": [
         "-y",
@@ -15,7 +20,9 @@
         "${GENOMEAI_TEST_DSN}"
       ]
     },
+
     "filesystem": {
+      "_comment": "Доступ к docs, artifacts, golden и configs — всё read-intensive. Не давать доступ к deploy/adult/secrets/ и env/runtime.env.",
       "command": "npx",
       "args": [
         "-y",
@@ -29,13 +36,48 @@
         "./data/fixtures"
       ]
     },
+
     "playwright": {
+      "_comment": "Для автоматизированного UAT по docs/ui_functional_verification_web.md и full_uat_checklist.md. Обязательно для T34-рoles acceptance.",
       "command": "npx",
       "args": ["-y", "@playwright/mcp@latest"]
     },
+
     "context7": {
+      "_comment": "Актуальная документация FastAPI / Next.js 15 / React 19 / Alembic / pandas — у проекта свежие версии, training cutoff LLM может не успевать.",
       "command": "npx",
       "args": ["-y", "@upstash/context7-mcp@latest"]
+    },
+
+    "_disabled_examples": {
+      "_comment": "Раскомментируй в личном ~/.claude.json, если нужно. В командный .mcp.json не включать без общего решения.",
+
+      "sentry": {
+        "command": "npx",
+        "args": ["-y", "@sentry/mcp-server"],
+        "env": {
+          "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}",
+          "SENTRY_ORG": "${SENTRY_ORG}",
+          "SENTRY_PROJECT": "genomeai-agroanimals"
+        }
+      },
+
+      "slack": {
+        "command": "npx",
+        "args": ["-y", "@modelcontextprotocol/server-slack"],
+        "env": {
+          "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
+          "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
+        }
+      },
+
+      "supabase": {
+        "command": "npx",
+        "args": ["-y", "@supabase/mcp-server-supabase"],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}"
+        }
+      }
     }
   }
 }
