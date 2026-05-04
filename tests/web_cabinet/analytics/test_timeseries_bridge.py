@@ -34,3 +34,24 @@ def test_production_timeseries_aggregates_weekly():
     assert len(result["charts"]["milk_ecm"]["series"]) == 2
     milk_val = result["charts"]["milk_ecm"]["series"][0]["data"][0]
     assert milk_val == pytest.approx(29.0, abs=0.5)
+
+
+def test_production_timeseries_db_exception_returns_empty():
+    conn = MagicMock()
+    conn.execute.side_effect = Exception("connection refused")
+    result = build_production_timeseries(conn, farm_id="FARM_001", tenant_id="default", weeks=4)
+    assert result["tab"] == "production"
+    assert result["labels"] == []
+
+
+def test_production_timeseries_null_fat_protein():
+    r1 = MagicMock()
+    r1.__getitem__ = lambda self, k: {"date": date(2025, 1, 6), "avg_milk": 25.0,
+                                       "avg_fat": None, "avg_protein": None, "avg_scc": None}[k]
+    conn = _make_conn([r1])
+    result = build_production_timeseries(conn, farm_id="FARM_001", tenant_id="default", weeks=4)
+    assert len(result["labels"]) == 1
+    milk_val = result["charts"]["milk_ecm"]["series"][0]["data"][0]
+    assert milk_val == pytest.approx(25.0, abs=0.1)
+    fat_val = result["charts"]["fat_protein"]["series"][0]["data"][0]
+    assert fat_val == 0.0  # fallback when fat is None

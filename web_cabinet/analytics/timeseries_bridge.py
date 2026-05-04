@@ -6,8 +6,11 @@ Returns dict shaped for the frontend AnalyticsData contract.
 from __future__ import annotations
 
 import datetime
+import logging
 from collections import defaultdict
 from typing import Any
+
+_log = logging.getLogger(__name__)
 
 
 _MONTHS_RU = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн",
@@ -86,6 +89,7 @@ def build_production_timeseries(
     try:
         rows = list(conn.execute(sql, [tenant_id, farm_id, since]).fetchall())
     except Exception:
+        _log.exception("timeseries_bridge: DB query failed for farm=%s tab=production", farm_id)
         rows = []
 
     if not rows:
@@ -98,7 +102,7 @@ def build_production_timeseries(
             d = datetime.date.fromisoformat(d)
         wk = _iso_week_key(d)
         by_week[wk]["dates"].append(d)
-        by_week[wk]["milk"].append(_safe(row["avg_milk"]) or 0.0)
+        by_week[wk]["milk"].append(_safe(row["avg_milk"]))
         by_week[wk]["fat"].append(_safe(row["avg_fat"]))
         by_week[wk]["protein"].append(_safe(row["avg_protein"]))
         by_week[wk]["scc"].append(_safe(row["avg_scc"]))
@@ -108,10 +112,10 @@ def build_production_timeseries(
     milk_data, ecm_data, fat_data, protein_data, scc_data = [], [], [], [], []
 
     for wk in sorted_weeks:
-        d = by_week[wk]["dates"][0]
+        d = min(by_week[wk]["dates"])
         labels.append(_week_label(d))
 
-        milks = by_week[wk]["milk"]
+        milks = [v for v in by_week[wk]["milk"] if v is not None]
         fats = [v for v in by_week[wk]["fat"] if v is not None]
         proteins = [v for v in by_week[wk]["protein"] if v is not None]
         sccs = [v for v in by_week[wk]["scc"] if v is not None]
@@ -123,6 +127,7 @@ def build_production_timeseries(
         ecm = _ecm(avg_milk, avg_fat, avg_protein)
 
         milk_data.append(avg_milk)
+        # ECM falls back to milk yield when fat/protein unavailable — avoids chart gap
         ecm_data.append(round(ecm, 1) if ecm is not None else avg_milk)
         fat_data.append(avg_fat if avg_fat is not None else 0.0)
         protein_data.append(avg_protein if avg_protein is not None else 0.0)
