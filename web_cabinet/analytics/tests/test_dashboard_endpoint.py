@@ -136,3 +136,100 @@ def test_endpoint_real_mode_compute_called_with_correct_args(monkeypatch):
         analytics_v1._compute_dashboard_today("special-farm", date(2026, 5, 4))
 
     mock_fn.assert_called_once_with("special-farm", date(2026, 5, 4))
+
+
+# ---------------------------------------------------------------------------
+# compute_tab_kpi — unit tests (kpi_bridge level)
+# ---------------------------------------------------------------------------
+
+def _make_tab_kpi(tab_name: str = "production", **overrides):
+    from web_cabinet.analytics.kpi_bridge import TabKPIData
+    defaults = dict(
+        tab_name=tab_name,
+        farm_id="demo-farm-v1",
+        as_of=date(2026, 5, 4),
+        metrics={"avg_milk_yield_kg": 28.3},
+        confidence="high",
+        sample_size_cows=120,
+    )
+    defaults.update(overrides)
+    return TabKPIData(**defaults)
+
+
+@pytest.mark.parametrize("tab_name", [
+    "production", "reproduction", "health", "feed", "finance", "herd", "behavior",
+])
+def test_compute_tab_kpi_each_of_7_tabs(tab_name):
+    """compute_tab_kpi returns TabKPIData with correct tab_name for all 7 tabs."""
+    from web_cabinet.analytics.kpi_bridge import TabKPIData, compute_tab_kpi
+
+    mock_kpi = _make_kpi()
+    with patch("web_cabinet.analytics.kpi_bridge.compute_dashboard_kpi", return_value=mock_kpi):
+        result = compute_tab_kpi("demo-farm-v1", date(2026, 5, 4), tab_name)
+
+    assert isinstance(result, TabKPIData)
+    assert result.tab_name == tab_name
+    assert result.farm_id == "demo-farm-v1"
+    assert result.as_of == date(2026, 5, 4)
+    assert isinstance(result.metrics, dict)
+    assert result.confidence in ("high", "medium", "low")
+    assert isinstance(result.sample_size_cows, int)
+
+
+def test_compute_tab_kpi_production_returns_expected_keys():
+    from web_cabinet.analytics.kpi_bridge import compute_tab_kpi
+
+    mock_kpi = _make_kpi()
+    with patch("web_cabinet.analytics.kpi_bridge.compute_dashboard_kpi", return_value=mock_kpi):
+        result = compute_tab_kpi("demo-farm-v1", date(2026, 5, 4), "production")
+
+    assert "avg_milk_yield_kg" in result.metrics
+    assert "fat_pct" in result.metrics
+    assert "protein_pct" in result.metrics
+    assert "scc_bulk_k" in result.metrics
+
+
+def test_compute_tab_kpi_unknown_tab_raises():
+    from web_cabinet.analytics.kpi_bridge import compute_tab_kpi
+
+    with pytest.raises(ValueError, match="Unknown tab"):
+        compute_tab_kpi("demo-farm-v1", date(2026, 5, 4), "nonexistent")
+
+
+# ---------------------------------------------------------------------------
+# _compute_tab_today — endpoint helper tests
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize("tab_name", [
+    "production", "reproduction", "health", "feed", "finance", "herd", "behavior",
+])
+def test_endpoint_returns_correct_structure_per_tab(monkeypatch, tab_name):
+    """_compute_tab_today returns a dict with required keys for every tab in demo mode."""
+    from web_cabinet import analytics_v1
+
+    monkeypatch.setattr(analytics_v1, "_get_ai_settings", lambda: _mock_settings(demo_mode=True))
+
+    result = analytics_v1._compute_tab_today("demo-farm-v1", date(2026, 5, 4), tab_name)
+
+    assert result["tab_name"] == tab_name
+    assert result["farm_id"] == "demo-farm-v1"
+    assert result["as_of"] == "2026-05-04"
+    assert isinstance(result["metrics"], dict)
+    assert result["confidence"] in ("high", "medium", "low")
+    assert isinstance(result["sample_size_cows"], int)
+    assert result["demo"] is True
+
+
+def test_endpoint_tab_real_mode_calls_compute_tab_kpi(monkeypatch):
+    """In real mode _compute_tab_today delegates to compute_tab_kpi."""
+    from web_cabinet import analytics_v1
+
+    expected = _make_tab_kpi("health", metrics={"cows_in_treatment": 5})
+    monkeypatch.setattr(analytics_v1, "_get_ai_settings", lambda: _mock_settings(demo_mode=False))
+
+    with patch("web_cabinet.analytics_v1.compute_tab_kpi", return_value=expected) as mock_fn:
+        result = analytics_v1._compute_tab_today("demo-farm-v1", date(2026, 5, 4), "health")
+
+    mock_fn.assert_called_once_with("demo-farm-v1", date(2026, 5, 4), "health")
+    assert result["demo"] is False
+    assert result["metrics"] == {"cows_in_treatment": 5}
