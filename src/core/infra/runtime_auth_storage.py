@@ -147,7 +147,7 @@ class SqliteCompatAuthStorage:
         return list_auth_sessions_for_user(self.conn, tenant_id=tenant_id, user_id=user_id, include_revoked=include_revoked)
 
     def list_active_sessions(self, *, tenant_id: str, user_id: int | None = None, username: str | None = None) -> list[dict[str, Any]]:
-        sql = "SELECT * FROM auth_sessions_v1 WHERE tenant_id=? AND status='active'"
+        sql = "SELECT * FROM auth_sessions WHERE tenant_id=? AND status='active'"
         args: list[Any] = [tenant_id]
         if user_id is not None:
             sql += ' AND user_id=?'
@@ -161,7 +161,7 @@ class SqliteCompatAuthStorage:
 
     def list_refresh_lineage(self, *, session_id: str) -> list[dict[str, Any]]:
         rows = self.conn.execute(
-            "SELECT * FROM auth_session_refresh_lineage_v1 WHERE session_id=? ORDER BY rotated_at DESC, id DESC",
+            "SELECT * FROM auth_session_refresh_lineage WHERE session_id=? ORDER BY rotated_at DESC, id DESC",
             (str(session_id),),
         ).fetchall()
         return [dict(r) for r in rows]

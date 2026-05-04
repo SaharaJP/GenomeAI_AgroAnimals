@@ -824,13 +824,15 @@ def _render(request: Request, name: str, **ctx):
 
 def _job_artifact_paths(job: dict) -> list[str]:
     try:
-        stored = json.loads(job.get("artifacts_json") or "[]")
+        _af = job.get("artifacts_json")
+        stored = _af if isinstance(_af, list) else json.loads(_af or "[]")
     except Exception:
         stored = []
     paths = [str(x or "").strip() for x in stored if str(x or "").strip()] if isinstance(stored, list) else []
     kv: dict[str, str] = {}
     try:
-        result = json.loads(job.get("result_json") or "{}")
+        _rj = job.get("result_json")
+        result = _rj if isinstance(_rj, dict) else json.loads(_rj or "{}")
         if isinstance(result, dict):
             kv = dict(result.get("kv") or {})
     except Exception:

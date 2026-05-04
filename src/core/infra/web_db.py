@@ -388,7 +388,7 @@ def create_job(
     cur = conn.execute(
         """
         INSERT INTO jobs(
-          public_job_id, queue_name, pipeline_key, kind, status, created_at, user, command, args_json, log_path,
+          public_job_id, queue_name, pipeline_key, kind, status, created_at, "user", command, args_json, log_path,
           tenant_id, user_id, attempt_no, max_attempts, retry_of_job_id, next_attempt_at, retry_source, data_version, run_id, qc_run,
           model_version, scoring_run, report_version
         )
@@ -560,7 +560,7 @@ def list_jobs_filtered(
     if q:
         term = f"%{str(q).strip()}%"
         sql += (
-            " AND (public_job_id LIKE ? OR run_id LIKE ? OR data_version LIKE ? OR command LIKE ? OR user LIKE ? "
+            ' AND (public_job_id LIKE ? OR run_id LIKE ? OR data_version LIKE ? OR command LIKE ? OR "user" LIKE ? '
             "OR pipeline_key LIKE ? OR kind LIKE ? OR qc_run LIKE ? OR model_version LIKE ? OR scoring_run LIKE ? "
             "OR report_version LIKE ? OR retry_source LIKE ? OR error_text LIKE ?)"
         )
@@ -582,11 +582,14 @@ def create_retry_job(
     if not row:
         return None
     job = dict(row)
-    args_json = str(job.get('args_json') or '{}')
-    try:
-        args = json.loads(args_json)
-    except Exception:
-        args = {}
+    args_raw = job.get('args_json') or {}
+    if isinstance(args_raw, dict):
+        args = args_raw
+    else:
+        try:
+            args = json.loads(str(args_raw))
+        except Exception:
+            args = {}
     attempt_no = int(job.get('attempt_no') or 0) + 1
     max_attempts = max(attempt_no + 1, int(job.get('max_attempts') or 1))
     log_path = Path(str(job.get('log_path') or '')).resolve()
@@ -598,7 +601,7 @@ def create_retry_job(
     cur = conn.execute(
         """
         INSERT INTO jobs(
-          public_job_id, queue_name, pipeline_key, kind, status, created_at, user, command, args_json, log_path,
+          public_job_id, queue_name, pipeline_key, kind, status, created_at, "user", command, args_json, log_path,
           tenant_id, user_id, attempt_no, max_attempts, retry_of_job_id, next_attempt_at, retry_source, data_version, run_id, qc_run,
           model_version, scoring_run, report_version
         )
@@ -735,7 +738,7 @@ def create_auth_session(
     refresh_hash = _token_hash(refresh_token)
     conn.execute(
         """
-        INSERT INTO auth_sessions_v1(
+        INSERT INTO auth_sessions(
           session_id, tenant_id, user_id, username, role, user_source, client_kind, auth_transport,
           status, created_at, updated_at, last_seen_at, expires_at, refresh_expires_at,
           access_token_hash, refresh_token_hash, device_id, device_label, device_platform, device_app_version,
@@ -774,7 +777,7 @@ def create_auth_session(
         ),
     )
     conn.execute(
-        "INSERT INTO auth_session_refresh_lineage_v1(session_id, previous_refresh_token_hash, new_refresh_token_hash, rotated_at, device_app_version) VALUES(?,?,?,?,?)",
+        "INSERT INTO auth_session_refresh_lineage(session_id, previous_refresh_token_hash, new_refresh_token_hash, rotated_at, device_app_version) VALUES(?,?,?,?,?)",
         (session_id, None, refresh_hash, created_at, device_app_version),
     )
     conn.commit()
@@ -789,12 +792,12 @@ def create_auth_session(
 
 
 def get_auth_session_by_id(conn: Any, *, session_id: str) -> Optional[dict[str, Any]]:
-    row = conn.execute("SELECT * FROM auth_sessions_v1 WHERE session_id=?", (str(session_id),)).fetchone()
+    row = conn.execute("SELECT * FROM auth_sessions WHERE session_id=?", (str(session_id),)).fetchone()
     return dict(row) if row else None
 
 
 def _get_auth_session_by_token_hash(conn: Any, *, field: str, token: str) -> Optional[dict[str, Any]]:
-    row = conn.execute(f"SELECT * FROM auth_sessions_v1 WHERE {field}=?", (_token_hash(str(token)),)).fetchone()
+    row = conn.execute(f"SELECT * FROM auth_sessions WHERE {field}=?", (_token_hash(str(token)),)).fetchone()
     return dict(row) if row else None
 
 
@@ -818,7 +821,7 @@ def touch_auth_session(
     now = utcnow_iso()
     conn.execute(
         """
-        UPDATE auth_sessions_v1
+        UPDATE auth_sessions
         SET updated_at=?, last_seen_at=?, last_ip=COALESCE(?, last_ip), last_user_agent=COALESCE(?, last_user_agent),
             active_farm_id=COALESCE(?, active_farm_id), active_site_id=COALESCE(?, active_site_id)
         WHERE session_id=? AND status='active'
@@ -849,7 +852,7 @@ def rotate_auth_session_tokens(
     new_refresh_hash = _token_hash(refresh_token)
     conn.execute(
         """
-        UPDATE auth_sessions_v1
+        UPDATE auth_sessions
         SET updated_at=?, last_seen_at=?, expires_at=?, refresh_expires_at=?,
             access_token_hash=?, refresh_token_hash=?,
             last_ip=COALESCE(?, last_ip), last_user_agent=COALESCE(?, last_user_agent),
@@ -860,7 +863,7 @@ def rotate_auth_session_tokens(
     )
     if current_row is not None:
         conn.execute(
-            "INSERT INTO auth_session_refresh_lineage_v1(session_id, previous_refresh_token_hash, new_refresh_token_hash, rotated_at, device_app_version) VALUES(?,?,?,?,?)",
+            "INSERT INTO auth_session_refresh_lineage(session_id, previous_refresh_token_hash, new_refresh_token_hash, rotated_at, device_app_version) VALUES(?,?,?,?,?)",
             (str(session_id), previous_refresh_hash, new_refresh_hash, now, device_app_version),
         )
     conn.commit()
@@ -877,7 +880,7 @@ def rotate_auth_session_tokens(
 def revoke_auth_session(conn: Any, *, session_id: str, reason: str = 'logout') -> None:
     conn.execute(
         """
-        UPDATE auth_sessions_v1
+        UPDATE auth_sessions
         SET status='revoked', updated_at=?, revoked_at=?, revoke_reason=?, access_token_hash=NULL, refresh_token_hash=NULL
         WHERE session_id=? AND status='active'
         """,
@@ -888,13 +891,13 @@ def revoke_auth_session(conn: Any, *, session_id: str, reason: str = 'logout') -
 
 def revoke_auth_sessions_for_user(conn: Any, *, tenant_id: str, user_id: int, reason: str = 'logout_all') -> list[str]:
     rows = conn.execute(
-        "SELECT session_id FROM auth_sessions_v1 WHERE tenant_id=? AND user_id=? AND status='active'",
+        "SELECT session_id FROM auth_sessions WHERE tenant_id=? AND user_id=? AND status='active'",
         (str(tenant_id), int(user_id)),
     ).fetchall()
     ids = [str(row['session_id']) for row in rows]
     if ids:
         conn.execute(
-            "UPDATE auth_sessions_v1 SET status='revoked', updated_at=?, revoked_at=?, revoke_reason=?, access_token_hash=NULL, refresh_token_hash=NULL WHERE tenant_id=? AND user_id=? AND status='active'",
+            "UPDATE auth_sessions SET status='revoked', updated_at=?, revoked_at=?, revoke_reason=?, access_token_hash=NULL, refresh_token_hash=NULL WHERE tenant_id=? AND user_id=? AND status='active'",
             (utcnow_iso(), utcnow_iso(), str(reason or 'logout_all'), str(tenant_id), int(user_id)),
         )
         conn.commit()
@@ -902,7 +905,7 @@ def revoke_auth_sessions_for_user(conn: Any, *, tenant_id: str, user_id: int, re
 
 
 def list_auth_sessions_for_user(conn: Any, *, tenant_id: str, user_id: int, include_revoked: bool = False) -> list[dict[str, Any]]:
-    sql = "SELECT * FROM auth_sessions_v1 WHERE tenant_id=? AND user_id=?"
+    sql = "SELECT * FROM auth_sessions WHERE tenant_id=? AND user_id=?"
     params: list[Any] = [str(tenant_id), int(user_id)]
     if not include_revoked:
         sql += " AND status='active'"
@@ -919,7 +922,7 @@ def list_active_auth_sessions(
     username: str | None = None,
     limit: int = 200,
 ) -> list[dict[str, Any]]:
-    sql = "SELECT * FROM auth_sessions_v1 WHERE tenant_id=? AND status='active'"
+    sql = "SELECT * FROM auth_sessions WHERE tenant_id=? AND status='active'"
     params: list[Any] = [str(tenant_id)]
     if user_id is not None:
         sql += " AND user_id=?"
@@ -935,7 +938,7 @@ def list_active_auth_sessions(
 
 def list_auth_refresh_lineage(conn: Any, *, session_id: str, limit: int = 200) -> list[dict[str, Any]]:
     rows = conn.execute(
-        "SELECT * FROM auth_session_refresh_lineage_v1 WHERE session_id=? ORDER BY rotated_at DESC, id DESC LIMIT ?",
+        "SELECT * FROM auth_session_refresh_lineage WHERE session_id=? ORDER BY rotated_at DESC, id DESC LIMIT ?",
         (str(session_id), max(1, int(limit))),
     ).fetchall()
     return [dict(row) for row in rows]
@@ -978,7 +981,7 @@ def list_auth_failed_attempts(
 def mark_expired_auth_sessions(conn: Any) -> int:
     now = utcnow_iso()
     cur = conn.execute(
-        "UPDATE auth_sessions_v1 SET status='expired', updated_at=?, revoked_at=COALESCE(revoked_at, ?), revoke_reason=COALESCE(revoke_reason, 'expired'), access_token_hash=NULL WHERE status='active' AND expires_at IS NOT NULL AND expires_at < ?",
+        "UPDATE auth_sessions SET status='expired', updated_at=?, revoked_at=COALESCE(revoked_at, ?), revoke_reason=COALESCE(revoke_reason, 'expired'), access_token_hash=NULL WHERE status='active' AND expires_at IS NOT NULL AND expires_at < ?",
         (now, now, now),
     )
     conn.commit()

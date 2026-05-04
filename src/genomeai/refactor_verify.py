@@ -107,7 +107,7 @@ def _write_json(path: Path, value: Any) -> None:
 def _write_csv(path: Path, rows: list[dict[str, Any]], fieldnames: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=fieldnames)
+        writer = csv.DictWriter(fh, fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({k: row.get(k, "") for k in fieldnames})
@@ -203,7 +203,7 @@ def _seed_web_state(
     web_storage_dir: Path,
     scenario: ScenarioSpec,
     first_object_id: str,
-) -> tuple[Path, list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[Path | None, list[dict[str, Any]], list[dict[str, Any]]]:
     os.environ["GENOMEAI_PROJECT_ROOT"] = str(project_root)
     os.environ["GENOMEAI_WEB_STORAGE"] = str(web_storage_dir)
     from core.audit.events import write_audit
@@ -257,13 +257,19 @@ def _seed_web_state(
         object_id=scenario.report_version,
         data_version=scenario.data_version,
         run_id=scenario.report_version,
+        request_id=task_id,
         after={"scenario": scenario.name, "report_version": scenario.report_version},
     )
 
     tasks_rows = list_tasks(conn, tenant_id="default", limit=50, offset=0).get("rows", [])
-    audit_rows = [dict(r) for r in conn.execute("SELECT * FROM audit_log WHERE tenant_id=? ORDER BY action, object_id", ("default",)).fetchall()]
+    # Scope to this run only (task_id is unique per run; request_id tags the report record).
+    audit_rows = [dict(r) for r in conn.execute(
+        "SELECT * FROM audit_log WHERE tenant_id=? AND action LIKE 'verify_refactor.%%'"
+        " AND (object_id=? OR request_id=?) ORDER BY action, object_id",
+        ("default", task_id, task_id),
+    ).fetchall()]
     conn.close()
-    return db_path, tasks_rows, audit_rows
+    return None, tasks_rows, audit_rows
 
 
 def _normalize_tasks(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:

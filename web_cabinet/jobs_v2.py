@@ -178,7 +178,8 @@ def discover_artifacts_from_kv(kv: dict[str, str], *, project_root: Path) -> lis
 
 def clone_retry_args(job: dict[str, Any]) -> dict[str, Any]:
     try:
-        args = json.loads(job.get("args_json") or "{}")
+        _a = job.get("args_json")
+        args = _a if isinstance(_a, dict) else json.loads(_a or "{}")
     except Exception:
         args = {}
     if not isinstance(args, dict):

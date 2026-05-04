@@ -197,7 +197,8 @@ class JobWorker:
         log_path = Path(job["log_path"]).resolve()
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
-        args = json.loads(job["args_json"]) if job.get("args_json") else {}
+        _args_raw = job.get("args_json")
+        args = _args_raw if isinstance(_args_raw, dict) else (json.loads(_args_raw) if _args_raw else {})
         cmd = [self._python(), "-m", "genomeai"] + args.get("argv", [])
 
         env = os.environ.copy()
