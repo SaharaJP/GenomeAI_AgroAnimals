@@ -58,14 +58,15 @@ def pytest_configure():
     root = Path(__file__).resolve().parents[1]
     src = root / "src"
 
-    # Ensure worktree root is at position 0 so web_cabinet.ai is found here
-    # before any stale sys.modules entry from the main-repo editable install.
+    # Add src/ for genomeai / core packages, then place root at position 0
+    # so that web_cabinet (with analytics/ and ai/ subpackages) is found
+    # before src/web_cabinet (which lacks those subpackages).
+    if src.exists() and str(src) not in sys.path:
+        sys.path.append(str(src))
+
     if str(root) in sys.path:
         sys.path.remove(str(root))
     sys.path.insert(0, str(root))
-
-    if src.exists() and str(src) not in sys.path:
-        sys.path.insert(0, str(src))
 
     # Evict any cached web_cabinet that was loaded from a location without ai/
     for key in list(sys.modules.keys()):
