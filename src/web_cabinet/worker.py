@@ -10,13 +10,11 @@ from pathlib import Path
 from typing import Any, Optional
 
 from core.infra.web_db import (
-    connect,
     create_retry_job,
     fetch_next_queued_job,
     get_job,
     get_job_by_public_id,
     get_settings,
-    init_db,
     mark_job_finished,
     mark_job_running,
 )
@@ -72,6 +70,15 @@ class JobWorker:
         self._stop = threading.Event()
         self._thread: Optional[threading.Thread] = None
 
+    def _get_conn(self):
+        """Return a DB connection for the configured storage backend."""
+        backend = str(self.settings.runtime_storage_backend or "sqlite")
+        if backend == "postgres":
+            from core.infra.postgres_compat import connect_postgres_compat
+            return connect_postgres_compat()
+        import sqlite3  # dev/test compat — adult/prod uses postgres
+        return sqlite3.connect(self.settings.db_path)
+
     def _queue_backend(self) -> str:
         try:
             return str(resolve_queue_runtime_settings().backend or "sqlite")
@@ -104,9 +111,8 @@ class JobWorker:
         Returns True if a job was processed, False if queue is empty.
         Useful for on-prem smoke tests and admin scripts.
         """
-        conn = connect(self.settings.db_path)
+        conn = self._get_conn()
         try:
-            init_db(conn)
             if self._queue_backend() == "redis":
                 broker = resolve_queue_runtime_broker()
                 claimed = broker.claim(queue_name=self.cfg.queue_name_default, worker_id=self.worker_id)
@@ -191,7 +197,8 @@ class JobWorker:
         log_path = Path(job["log_path"]).resolve()
         log_path.parent.mkdir(parents=True, exist_ok=True)
 
-        args = json.loads(job["args_json"]) if job.get("args_json") else {}
+        _args_raw = job.get("args_json")
+        args = _args_raw if isinstance(_args_raw, dict) else (json.loads(_args_raw) if _args_raw else {})
         cmd = [self._python(), "-m", "genomeai"] + args.get("argv", [])
 
         env = os.environ.copy()

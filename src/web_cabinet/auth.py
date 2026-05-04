@@ -9,7 +9,7 @@ from typing import Any, Optional, Callable
 
 from fastapi import Depends, HTTPException, Request, status
 
-from core.infra.web_db import connect, get_settings, mark_expired_auth_sessions
+from core.infra.web_db import get_settings, mark_expired_auth_sessions
 from core.infra.runtime_auth_storage import (
     legacy_cookie_fallback_allowed,
     resolve_runtime_auth_storage,
@@ -108,7 +108,8 @@ def get_db():
     settings = get_settings()
     backend = str(settings.runtime_storage_backend or 'sqlite')
     if backend == 'sqlite':
-        conn = connect(settings.db_path)
+        import sqlite3  # legacy dev/test compat — removed in adult/prod by fail-fast guard
+        conn = sqlite3.connect(settings.db_path)
         try:
             yield conn
         finally:

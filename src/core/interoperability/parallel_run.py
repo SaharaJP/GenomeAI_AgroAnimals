@@ -9,7 +9,7 @@ from typing import Any, Mapping
 import pandas as pd
 
 from core.audit.events import write_audit
-from core.infra.web_db import connect, init_db
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from core.interoperability.migration_verification import (
     list_migration_verification_runs,
     load_migration_verification_manifest,
@@ -318,9 +318,8 @@ def run_parallel_run_mode(
 
     if db_path is not None:
         db_path = Path(db_path).resolve()
-        conn = connect(db_path)
+        conn = _pg_connect()
         try:
-            init_db(conn)
             write_audit(
                 conn,
                 tenant_id=str(tenant_id or 'default'),

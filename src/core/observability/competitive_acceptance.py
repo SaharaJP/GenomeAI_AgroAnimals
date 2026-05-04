@@ -298,7 +298,8 @@ def _run_script_bundle(*, project_root: Path, scripts: list[str]) -> dict[str, A
             checks.append({'kind': 'script', 'target': rel, 'ok': False})
             overall_ok = False
             continue
-        proc = subprocess.run([sys.executable, str(script_path)], cwd=str(project_root), capture_output=True, text=True)
+        runner = ['bash', str(script_path)] if script_path.suffix.lower() in ('.sh', '.bash') else [sys.executable, str(script_path)]
+        proc = subprocess.run(runner, cwd=str(project_root), capture_output=True, text=True)
         ok = proc.returncode == 0
         checks.append({'kind': 'script', 'target': rel, 'ok': ok})
         if not ok:

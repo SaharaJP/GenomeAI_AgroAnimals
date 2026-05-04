@@ -39,7 +39,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from .auth import authenticate, create_authenticated_session, get_current_user, get_db, hash_password, resolve_request_auth_context
 from .rbac import require_permissions
 from core.audit.events import write_audit, list_audit, aggregate_audit_facets, archive_old_audit, count_archivable_audit, load_audit_retention_config, retention_cutoff_ts, validate_audit_scope
-from core.infra.web_db import create_job, create_retry_job, ensure_default_users, ensure_default_users_v2, get_settings, init_db, get_job as db_get_job, get_user_by_username, list_jobs_filtered, list_users_v2, request_job_cancel, list_roles, get_user_v2_any_by_username, get_user_v2_any_by_id, update_user_v2_role, update_user_v2_password_hash, set_user_v2_active, count_active_users_by_role, create_user_v2, get_permissions_for_role
+from core.infra.web_db import create_job, create_retry_job, get_settings, get_job as db_get_job, get_user_by_username, list_jobs_filtered, list_users_v2, request_job_cancel, list_roles, get_user_v2_any_by_username, get_user_v2_any_by_id, update_user_v2_role, update_user_v2_password_hash, set_user_v2_active, count_active_users_by_role, create_user_v2, get_permissions_for_role
 from core.workflow import (
     AlertCreate,
     DecisionCreate,
@@ -571,15 +571,13 @@ def _startup() -> None:
     storage_cfg = (cfg or {}).get("runtime_storage") or {}
 
     if str(storage_cfg.get("backend") or getattr(settings, "runtime_storage_backend", "sqlite")) == "sqlite":
-        # Init sqlite schema + default demo users only for compat/dev/test path.
-        from .db import connect as _connect
+        # SQLite compat/dev/test path — schema init and user seeding removed in T34-09.
+        # Only playbook seeding survives; connect via sqlite3 directly.
+        import sqlite3
         from .playbooks_v1 import ensure_default_playbooks
 
-        conn = _connect(settings.db_path)
+        conn = sqlite3.connect(settings.db_path)
         try:
-            init_db(conn)
-            ensure_default_users(conn, hash_password_fn=hash_password)
-            ensure_default_users_v2(conn, tenant_id="default", hash_password_fn=hash_password)
             # T12-03: seed default playbooks (idempotent)
             ensure_default_playbooks(conn, tenant_id="default")
         finally:
@@ -826,13 +824,15 @@ def _render(request: Request, name: str, **ctx):
 
 def _job_artifact_paths(job: dict) -> list[str]:
     try:
-        stored = json.loads(job.get("artifacts_json") or "[]")
+        _af = job.get("artifacts_json")
+        stored = _af if isinstance(_af, list) else json.loads(_af or "[]")
     except Exception:
         stored = []
     paths = [str(x or "").strip() for x in stored if str(x or "").strip()] if isinstance(stored, list) else []
     kv: dict[str, str] = {}
     try:
-        result = json.loads(job.get("result_json") or "{}")
+        _rj = job.get("result_json")
+        result = _rj if isinstance(_rj, dict) else json.loads(_rj or "{}")
         if isinstance(result, dict):
             kv = dict(result.get("kv") or {})
     except Exception:

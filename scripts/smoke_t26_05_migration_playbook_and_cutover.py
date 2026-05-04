@@ -3,7 +3,6 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from core.infra.web_db import init_db
 from core.interoperability import (
     run_legacy_import_bundle,
     run_migration_playbook_and_cutover,
@@ -30,11 +29,8 @@ def main() -> None:
     for sub in ['uploads', 'logs', 'config_overrides']:
         (web_storage / sub).mkdir(parents=True, exist_ok=True)
     db_path = web_storage / 'web.db'
-    conn = sqlite3.connect(db_path)
-    try:
-        init_db(conn)
-    finally:
-        conn.close()
+    # Create empty SQLite stub — db_path is an audit-context marker only post-T34 cutover
+    sqlite3.connect(str(db_path)).close()
 
     _write(exports / 'animals.csv', '''AnimalID,FarmID,EarTag,Breed,Sex,BirthDate,Alive,Status
 A1,F1,1001,Holstein,F,2024-01-01,true,active

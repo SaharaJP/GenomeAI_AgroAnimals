@@ -2,6 +2,7 @@
   "schema": "genomeai.post_removal.streamlit_legacy_cleanup_report.v1",
   "gate_id": "T32-12A",
   "status": "pass",
+  "summary": {"ok": true, "diagnostics": []},
   "streamlit_contour_fully_removed": true,
   "required_absent_failures": [],
   "dependency_hits": [],

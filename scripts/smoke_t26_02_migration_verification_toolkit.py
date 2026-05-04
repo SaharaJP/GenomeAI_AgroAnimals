@@ -4,7 +4,6 @@ import sqlite3
 import tempfile
 from pathlib import Path
 
-from core.infra.web_db import init_db
 from core.interoperability import run_legacy_import_bundle, run_migration_verification_toolkit
 
 
@@ -20,11 +19,9 @@ def main() -> int:
         exports = base / 'exports'
         artifacts = base / 'artifacts'
         db_path = base / 'web.db'
-        conn = sqlite3.connect(db_path)
-        try:
-            init_db(conn)
-        finally:
-            conn.close()
+        # Create empty SQLite stub — db_path is passed to the migration toolkit
+        # only as an audit-context marker (no legacy schema needed post-T34 cutover)
+        sqlite3.connect(str(db_path)).close()
 
         _write(exports / 'animals.csv', 'AnimalID,FarmID,EarTag,Breed,Sex,BirthDate,Alive,Status\nA1,F1,1001,Holstein,F,2024-01-01,true,active\nA2,F1,1002,Holstein,F,2024-02-01,true,active\n')
         _write(exports / 'lactations.csv', 'AnimalID,LactNo,CalvingDate,DryoffDate,DIM,Milk305Kg,FatPct,ProteinPct\nA1,1,2025-01-01,2025-10-01,250,10250,3.9,3.2\nA2,1,2025-02-01,2025-11-01,220,9800,3.8,3.1\n')

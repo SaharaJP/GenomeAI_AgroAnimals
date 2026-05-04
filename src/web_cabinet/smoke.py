@@ -35,6 +35,34 @@ def _logout(client) -> None:
     client.get("/logout", follow_redirects=False)
 
 
+def _ensure_smoke_users(settings) -> None:
+    backend = str(getattr(settings, 'runtime_storage_backend', '') or 'sqlite')
+    if backend != 'postgres':
+        return
+    from datetime import datetime, timezone as _tz
+    from core.infra.postgres_compat import connect_postgres_compat
+    from web_cabinet.auth import hash_password
+
+    now_iso = datetime.now(_tz.utc).isoformat()
+    smoke_users = [
+        (9_000_001, 'default', 'viewer', 'viewer', 'viewer'),
+        (9_000_002, 'default', 'operator', 'operator', 'operator'),
+    ]
+    conn = connect_postgres_compat()
+    try:
+        for uid, tenant, uname, pw, role in smoke_users:
+            conn.execute(
+                "INSERT INTO auth_users(user_id, tenant_id, username, password_hash, role, is_active, "
+                "collaboration_mode, allowed_farm_ids_json, allowed_site_ids_json, created_at) "
+                "VALUES(?,?,?,?,?,TRUE,'internal','[]','[]',?) "
+                "ON CONFLICT (tenant_id, username) DO UPDATE SET password_hash=EXCLUDED.password_hash, is_active=TRUE",
+                (uid, tenant, uname, hash_password(pw), role, now_iso),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 class _StepTimer:
     def __init__(self) -> None:
         self.timings: dict[str, float] = {}
@@ -77,12 +105,13 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
     app_module = importlib.reload(app_module)
 
     app = app_module.app
-    connect = db_module.connect
     get_settings = db_module.get_settings
     list_jobs = db_module.list_jobs
+    from core.infra.postgres_compat import connect_postgres_compat as connect
     JobWorker = worker_module.JobWorker
 
     settings = get_settings()
+    _ensure_smoke_users(settings)
     dv = data_version or f"dv_websmoke_{_ts()}"
     timer = _StepTimer()
     total_started = perf_counter()
@@ -92,7 +121,7 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
         worker.run_until_empty(max_jobs=200)
 
     def last_kv(kind: str) -> dict[str, str]:
-        conn = connect(settings.db_path)
+        conn = connect()
         try:
             jobs = [j for j in list_jobs(conn, limit=500) if j["kind"] == kind]
             if not jobs:
@@ -100,7 +129,8 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
             j = jobs[0]
             if j["status"] != "done":
                 raise RuntimeError(f"job kind={kind} not done: status={j['status']}")
-            rj = json.loads(j["result_json"]) if j.get("result_json") else {}
+            _rj = j.get("result_json")
+            rj = _rj if isinstance(_rj, dict) else (json.loads(_rj) if _rj else {})
             return dict(rj.get("kv") or {})
         finally:
             conn.close()

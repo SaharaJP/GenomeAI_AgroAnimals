@@ -12,7 +12,6 @@ from typing import Any, Iterable, Mapping
 import pandas as pd
 
 from core.audit.events import write_audit
-from core.infra.web_db import init_db
 from core.interoperability.legacy_import import (
     _CONTRACT_DATASETS,
     _STAGE_SCHEMAS,
@@ -576,7 +575,6 @@ def run_migration_verification_toolkit(
     if db_path is not None:
         conn = _pg_connect()
         try:
-            init_db(conn)
             write_audit(
                 conn,
                 tenant_id=str(tenant_id),
