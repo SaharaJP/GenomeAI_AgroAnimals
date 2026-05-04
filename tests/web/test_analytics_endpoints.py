@@ -24,13 +24,41 @@ def client(tmp_path: Path):
 
     with TestClient(appmod.app) as c:
         # Seed demo farm data into the test SQLite DB
-        from web_cabinet.db import connect, get_settings
-        conn = connect(get_settings().db_path)
+        import sqlite3
+        from web_cabinet.db import get_settings
+        conn = sqlite3.connect(get_settings().db_path)
         try:
+            _ensure_schema(conn)
             _seed_demo_farm(conn)
         finally:
             conn.close()
         yield c
+
+
+def _ensure_schema(conn) -> None:
+    """Create minimal schema needed by analytics endpoints in SQLite test mode."""
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS dm_farms (
+            tenant_id TEXT NOT NULL DEFAULT 'default',
+            farm_id TEXT NOT NULL,
+            farm_name TEXT NOT NULL,
+            country_code TEXT, timezone TEXT, currency TEXT DEFAULT 'EUR',
+            created_at TEXT, updated_at TEXT,
+            PRIMARY KEY (tenant_id, farm_id)
+        );
+        CREATE TABLE IF NOT EXISTS dm_animals (
+            tenant_id TEXT NOT NULL DEFAULT 'default',
+            animal_id TEXT NOT NULL,
+            farm_id TEXT NOT NULL,
+            site_id TEXT, current_pen_id TEXT, master_animal_id TEXT,
+            external_id TEXT, ear_tag TEXT, name TEXT, sex TEXT,
+            breed TEXT, breed_pct_hf REAL, breed_pct_je REAL,
+            date_of_birth TEXT, date_of_entry TEXT, date_of_exit TEXT,
+            exit_reason TEXT, is_active INTEGER DEFAULT 1,
+            created_at TEXT, updated_at TEXT,
+            PRIMARY KEY (tenant_id, animal_id)
+        );
+    """)
 
 
 def _seed_demo_farm(conn) -> None:

@@ -10,7 +10,7 @@ import pandas as pd
 
 from core.artifacts import build_support_bundle
 from core.audit.events import write_audit
-from core.infra.web_db import connect, init_db
+from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
 from core.interoperability.legacy_import import build_legacy_import_plan
 from core.interoperability.migration_verification import (
     list_migration_candidate_versions,
@@ -463,9 +463,8 @@ def run_migration_playbook_and_cutover(
     report_md.write_text(_report_md(manifest), encoding='utf-8')
     write_json(manifest_path, manifest)
 
-    conn = connect(db_path)
+    conn = _pg_connect()
     try:
-        init_db(conn)
         write_audit(
             conn,
             tenant_id=str(tenant_id or 'default'),

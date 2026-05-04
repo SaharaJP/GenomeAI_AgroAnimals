@@ -207,13 +207,11 @@ def _seed_web_state(
     os.environ["GENOMEAI_PROJECT_ROOT"] = str(project_root)
     os.environ["GENOMEAI_WEB_STORAGE"] = str(web_storage_dir)
     from core.audit.events import write_audit
-    from core.infra.web_db import connect, init_db
+    from core.infra.postgres_compat import connect_postgres_compat as _pg_connect
     from web_cabinet.tasks_v1 import TaskCreate, create_task, list_tasks
 
-    db_path = web_storage_dir / "web.db"
     web_storage_dir.mkdir(parents=True, exist_ok=True)
-    conn = connect(db_path)
-    init_db(conn)
+    conn = _pg_connect()
 
     task_id = create_task(
         conn,
