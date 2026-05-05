@@ -22,7 +22,6 @@ class SensorAnomaly:
     description: str
 
 
-@cached(ttl=120)
 def detect_recent_sensor_anomalies(
     farm_id: str,
     *,
@@ -31,7 +30,19 @@ def detect_recent_sensor_anomalies(
     """Detect SCC spike and yield-drop anomalies over the lookback window.
 
     Falls back to demo CSV data. Returns empty list on any data error.
+    Validation runs before the cache so an empty farm_id always raises.
     """
+    if not farm_id:
+        raise ValueError("farm_id must not be empty")
+    return _detect_sensor_anomalies_cached(farm_id, lookback_days=lookback_days)
+
+
+@cached(ttl=120)
+def _detect_sensor_anomalies_cached(
+    farm_id: str,
+    *,
+    lookback_days: int = 14,
+) -> list[SensorAnomaly]:
     try:
         return _from_demo_csv(farm_id, lookback_days)
     except Exception:
@@ -49,6 +60,13 @@ def _from_demo_csv(farm_id: str, lookback_days: int) -> list[SensorAnomaly]:
     if not mk_path.exists():
         return []
     mk = pd.read_csv(mk_path)
+    if mk.empty:
+        return []
+
+    # Tenant isolation: filter by tenant_id or farm_id column when present.
+    _tenant_col = next((c for c in ("tenant_id", "farm_id") if c in mk.columns), None)
+    if _tenant_col:
+        mk = mk[mk[_tenant_col] == farm_id]
     if mk.empty:
         return []
 

@@ -163,7 +163,6 @@ def _compute_dashboard_kpi_uncached(
     )
 
 
-@cached(ttl=300)
 def compute_dashboard_kpi(
     farm_id: str,
     as_of: date,
@@ -171,7 +170,24 @@ def compute_dashboard_kpi(
     period_days: int = 7,
     input_dir: Optional[Path] = None,
 ) -> DashboardKPI:
-    """KPI snapshot for UI Dashboard. Second call with same args returns cached result."""
+    """KPI snapshot for UI Dashboard. Second call with same args returns cached result.
+
+    Validation runs before the cache so an empty farm_id always raises.
+    """
+    if not farm_id:
+        raise ValueError("farm_id must not be empty")
+    return _compute_dashboard_kpi_cached(
+        farm_id, as_of, period_days=period_days, input_dir=input_dir
+    )
+
+
+def _compute_dashboard_kpi_cached(
+    farm_id: str,
+    as_of: date,
+    *,
+    period_days: int = 7,
+    input_dir: Optional[Path] = None,
+) -> DashboardKPI:
     key = _cache_key(farm_id, as_of, str(input_dir or _FIXTURES_DIR))
     now = time.monotonic()
     with _kpi_lock:
