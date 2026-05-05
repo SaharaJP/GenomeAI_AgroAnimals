@@ -4,6 +4,8 @@ Isolates the UI from internal kpi_v2 details. Does NOT duplicate KPI computation
 """
 from __future__ import annotations
 
+from web_cabinet.analytics.cache import cached
+
 import math
 import tempfile
 import threading
@@ -161,6 +163,7 @@ def _compute_dashboard_kpi_uncached(
     )
 
 
+@cached(ttl=300)
 def compute_dashboard_kpi(
     farm_id: str,
     as_of: date,

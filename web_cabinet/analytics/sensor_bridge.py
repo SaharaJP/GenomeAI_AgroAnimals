@@ -1,6 +1,8 @@
 """Sensor Bridge — facade for sensor anomaly detection from milking/health data."""
 from __future__ import annotations
 
+from web_cabinet.analytics.cache import cached
+
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
@@ -20,6 +22,7 @@ class SensorAnomaly:
     description: str
 
 
+@cached(ttl=120)
 def detect_recent_sensor_anomalies(
     farm_id: str,
     *,
