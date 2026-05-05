@@ -10,6 +10,8 @@ type Props = {
   typeFilter: string;
   onTypeFilterChange: (t: string) => void;
   onAddEvent: () => void;
+  onDeleteEvent?: (event: TimelineEvent) => void;
+  onEditEvent?: (event: TimelineEvent) => void;
 };
 
 export function EventList({
@@ -19,6 +21,8 @@ export function EventList({
   typeFilter,
   onTypeFilterChange,
   onAddEvent,
+  onDeleteEvent,
+  onEditEvent,
 }: Props) {
   const uniqueTypes = Array.from(new Set(events.map((e) => e.event_type)));
 
@@ -64,6 +68,8 @@ export function EventList({
                   event={ev}
                   selected={selectedId === ev.timeline_event_id}
                   onClick={() => onSelect(ev.timeline_event_id)}
+                  onDelete={onDeleteEvent}
+                  onEdit={onEditEvent}
                 />
               ))}
             </div>

@@ -861,7 +861,7 @@ def api_timeline_events(
     try:
         rows = conn.execute(
             "SELECT timeline_event_id, event_type, title, body, event_date, source, affected_groups "
-            "FROM timeline_events WHERE tenant_id = ? ORDER BY event_date DESC, id DESC",
+            "FROM timeline_events WHERE tenant_id = %s ORDER BY event_date DESC, id DESC",
             (tenant_id,),
         ).fetchall()
         for r in rows:
@@ -927,7 +927,7 @@ async def api_timeline_event_create(
         "INSERT INTO timeline_events "
         "(timeline_event_id, tenant_id, event_type, title, body, event_date, "
         " animal_ids, affected_groups, source, created_at, created_by, created_by_username) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?, ?)",
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'user', %s, %s, %s)",
         (
             event_id,
             tenant_id,
@@ -967,6 +967,97 @@ async def api_timeline_event_create(
         request_id=getattr(request.state, "request_id", None),
     )
     return {"event": new_event}
+
+
+@app.patch("/api/timeline/events/{event_id}")
+async def api_timeline_event_update(
+    event_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    body = await request.json()
+    tenant_id = user.get("tenant_id", "default")
+    user_id = int(user.get("id", 0))
+    username = user.get("username", "unknown")
+
+    row = conn.execute(
+        "SELECT id FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
+        (event_id, tenant_id),
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    fields, values = [], []
+    for key in ("event_type", "title", "body", "event_date"):
+        if key in body:
+            fields.append(f"{key} = %s")
+            values.append(body[key])
+    if "date" in body and "event_date" not in body:
+        fields.append("event_date = %s")
+        values.append(body["date"])
+
+    if fields:
+        values.append(event_id)
+        values.append(tenant_id)
+        conn.execute(
+            f"UPDATE timeline_events SET {', '.join(fields)} WHERE timeline_event_id = %s AND tenant_id = %s",
+            tuple(values),
+        )
+
+    write_audit(
+        conn,
+        tenant_id=tenant_id,
+        user_id=user_id,
+        username=username,
+        role=user.get("role", ""),
+        action="timeline.event.update",
+        object_type="timeline_event",
+        object_id=event_id,
+        after=body,
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        request_id=getattr(request.state, "request_id", None),
+    )
+    return {"ok": True, "event_id": event_id}
+
+
+@app.delete("/api/timeline/events/{event_id}")
+def api_timeline_event_delete(
+    event_id: str,
+    request: Request,
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get("tenant_id", "default")
+    user_id = int(user.get("id", 0))
+    username = user.get("username", "unknown")
+
+    row = conn.execute(
+        "SELECT id FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
+        (event_id, tenant_id),
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    conn.execute(
+        "DELETE FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
+        (event_id, tenant_id),
+    )
+    write_audit(
+        conn,
+        tenant_id=tenant_id,
+        user_id=user_id,
+        username=username,
+        role=user.get("role", ""),
+        action="timeline.event.delete",
+        object_type="timeline_event",
+        object_id=event_id,
+        ip=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
+        request_id=getattr(request.state, "request_id", None),
+    )
+    return {"ok": True, "deleted": event_id}
 
 
 def _web_primary_url(request: Request) -> str:

@@ -15,6 +15,8 @@ import {
   Award,
   BarChart3,
   Clock,
+  Trash2,
+  Pencil,
 } from 'lucide-react';
 import type { TimelineEvent } from '@/lib/api/timeline';
 import { formatDayMonth } from '@/lib/api/timeline';
@@ -44,10 +46,16 @@ type Props = {
   event: TimelineEvent;
   selected: boolean;
   onClick: () => void;
+  onDelete?: (event: TimelineEvent) => void;
+  onEdit?: (event: TimelineEvent) => void;
 };
 
-export function EventCard({ event, selected, onClick }: Props) {
+const isUserEvent = (e: TimelineEvent) =>
+  e.timeline_event_id.startsWith('TL_') && e.source === 'Добавлено вручную';
+
+export function EventCard({ event, selected, onClick, onDelete, onEdit }: Props) {
   const icon = ICONS[event.event_type] ?? <Clock size={15} />;
+  const canMutate = isUserEvent(event);
 
   return (
     <div
@@ -57,6 +65,7 @@ export function EventCard({ event, selected, onClick }: Props) {
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick(); }}
       aria-pressed={selected}
+      style={{ position: 'relative' }}
     >
       <div className="timeline-event-icon">{icon}</div>
       <div className="timeline-event-body">
@@ -71,6 +80,34 @@ export function EventCard({ event, selected, onClick }: Props) {
           )}
         </div>
       </div>
+      {canMutate && (
+        <div
+          className="timeline-event-actions"
+          style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {onEdit && (
+            <button
+              type="button"
+              title="Редактировать"
+              onClick={() => onEdit(event)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)' }}
+            >
+              <Pencil size={12} />
+            </button>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              title="Удалить"
+              onClick={() => onDelete(event)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)' }}
+            >
+              <Trash2 size={12} />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

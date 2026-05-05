@@ -60,6 +60,12 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
   const [impact, setImpact] = useState<ImpactWindowData | null>(null);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
+  const [addToast, setAddToast] = useState('');
+
+  function handleAddMetric() {
+    setAddToast('Добавление метрик — скоро');
+    setTimeout(() => setAddToast(''), 2800);
+  }
 
   useEffect(() => {
     if (!event) {
@@ -99,6 +105,7 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
   const icon = ICONS[event.event_type] ?? <Clock size={18} />;
 
   return (
+    <>
     <div className="tl-right">
       {/* Header */}
       <div className="impact-panel-header">
@@ -198,7 +205,7 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
                 <option>Body condition score</option>
                 <option>Feed push frequency</option>
               </select>
-              <button className="impact-add-chart-btn" type="button">
+              <button className="impact-add-chart-btn" type="button" onClick={handleAddMetric}>
                 <Plus size={12} />
                 Добавить
               </button>
@@ -227,5 +234,7 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
         )}
       </div>
     </div>
+    {addToast && <div className="toast" role="status">{addToast}</div>}
+    </>
   );
 }

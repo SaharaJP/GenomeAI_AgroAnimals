@@ -123,6 +123,55 @@ _DEMO_HEALTH_METRICS: dict[str, dict] = {
 }
 
 
+def _build_db_animal_fields(conn, tenant_id: str, object_id: str) -> tuple:
+    """Fetch animal attributes and health metrics from Postgres."""
+    import datetime
+    row = conn.execute(
+        "SELECT breed, birth_date, status, current_pen_id FROM dm_animals "
+        "WHERE tenant_id = %s AND animal_id = %s",
+        (tenant_id, object_id),
+    ).fetchone()
+    if not row:
+        return None, None
+
+    breed = row['breed']
+    birth_date = row['birth_date']
+    status = row['status']
+
+    lac = conn.execute(
+        "SELECT lactation_no, calving_date FROM dm_lactations "
+        "WHERE tenant_id = %s AND animal_id = %s ORDER BY calving_date DESC LIMIT 1",
+        (tenant_id, object_id),
+    ).fetchone()
+    lactation_no = lac['lactation_no'] if lac else None
+    calving_date = lac['calving_date'] if lac else None
+    dim = (datetime.date.today() - calving_date).days if calving_date else None
+
+    milk_row = conn.execute(
+        "SELECT milk_kg, scc_cells_ml FROM dm_milkings_daily "
+        "WHERE tenant_id = %s AND animal_id = %s ORDER BY date DESC LIMIT 1",
+        (tenant_id, object_id),
+    ).fetchone()
+    daily_milk = float(milk_row['milk_kg']) if milk_row and milk_row['milk_kg'] is not None else None
+    scc = int(milk_row['scc_cells_ml'] / 1000) if milk_row and milk_row['scc_cells_ml'] is not None else None
+
+    attrs = AnimalAttributes(
+        breed=breed,
+        birth_date=str(birth_date) if birth_date else None,
+        lactation_number=lactation_no,
+        days_in_milk=dim,
+        last_calving_date=str(calving_date) if calving_date else None,
+        total_calvings=lactation_no,
+        reproduction_status=status,
+    )
+    metrics = HealthMetrics(
+        daily_milk_yield_kg=daily_milk,
+        scc=scc,
+        scc_trend="→",
+    )
+    return attrs, metrics
+
+
 def _build_demo_animal_fields(object_id: str) -> tuple:
     attrs_data = _DEMO_ANIMAL_ATTRS.get(object_id)
     metrics_data = _DEMO_HEALTH_METRICS.get(object_id)
@@ -470,6 +519,47 @@ def _readiness_summary(checks: list[ReadinessCheck]) -> ReadinessSummary:
     return ReadinessSummary(overall_status=overall, checks_total=len(checks), passed=passed, warnings=warnings, failed=failed)
 
 
+@router.get('/animals')
+def boundary_animals_list(
+    limit: int = 100,
+    offset: int = 0,
+    search: Optional[str] = None,
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    try:
+        where = "WHERE tenant_id = %s"
+        params: list = [tenant_id]
+        if search:
+            where += " AND animal_id ILIKE %s"
+            params.append(f"%{search}%")
+        rows = conn.execute(
+            f"SELECT animal_id, breed, status, current_pen_id FROM dm_animals {where} ORDER BY animal_id LIMIT %s OFFSET %s",
+            tuple(params) + (limit, offset),
+        ).fetchall()
+        count_row = conn.execute(
+            f"SELECT COUNT(*) FROM dm_animals {where}",
+            tuple(params),
+        ).fetchone()
+        total = count_row[0] if count_row else 0
+        animals = [
+            {
+                "animal_id": r[0],
+                "breed": r[1] or "—",
+                "status": r[2] or "active",
+                "pen_id": r[3] or "—",
+            }
+            for r in rows
+        ]
+    except Exception as exc:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("animals list failed: %s", exc)
+        animals = []
+        total = 0
+    return {"animals": animals, "total": total, "limit": limit, "offset": offset}
+
+
 @router.get('/alerts', response_model=AlertsListResponse)
 def boundary_alerts(
     request: Request,
@@ -597,16 +687,18 @@ def boundary_profile(
     alerts_open = sum(1 for item in alerts if item.status in {'new', 'acknowledged'})
     worklists_open = sum(1 for item in worklists if item.status in {'open', 'in_progress'})
 
-    # Demo animal attributes
     animal_attributes = None
     health_metrics = None
-    try:
-        from web_cabinet.ai.config import get_ai_settings as _get_ai
-        if _get_ai().GENOMEAI_AI_DEMO_MODE and object_type == 'animal':
-            animal_attributes, health_metrics = _build_demo_animal_fields(object_id)
-    except Exception as exc:
-        import logging as _logging
-        _logging.getLogger(__name__).warning("demo animal fields failed: %s", exc)
+    if object_type == 'animal':
+        try:
+            from web_cabinet.ai.config import get_ai_settings as _get_ai
+            if _get_ai().GENOMEAI_AI_DEMO_MODE:
+                animal_attributes, health_metrics = _build_demo_animal_fields(object_id)
+            else:
+                animal_attributes, health_metrics = _build_db_animal_fields(conn, tenant_id, object_id)
+        except Exception as exc:
+            import logging as _logging
+            _logging.getLogger(__name__).warning("animal fields failed: %s", exc)
 
     return ProfileResponse(
         entity=EntityRef(object_type=object_type, object_id=object_id),

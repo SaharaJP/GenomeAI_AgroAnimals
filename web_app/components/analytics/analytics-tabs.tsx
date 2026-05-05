@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { X, Plus, GitCompare, PenLine, Copy, BarChart2 } from 'lucide-react';
 import { ProductionTab } from './production-tab';
 import { ReproductionTab } from './reproduction-tab';
@@ -82,6 +82,12 @@ export function AnalyticsTabs() {
   }, []);
 
   const stubAction = (label: string) => showToast(`${label} — скоро`);
+
+  useEffect(() => {
+    const handler = (e: Event) => showToast((e as CustomEvent<string>).detail + ' — скоро');
+    window.addEventListener('chart-action', handler);
+    return () => window.removeEventListener('chart-action', handler);
+  }, [showToast]);
 
   const activeTab = tabs.find(t => t.id === activeId);
 

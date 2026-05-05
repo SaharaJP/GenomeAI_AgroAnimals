@@ -16,22 +16,36 @@ interface Props extends PropsWithChildren {
   onRename?: () => void;
 }
 
+function fireChartAction(label: string) {
+  window.dispatchEvent(new CustomEvent('chart-action', { detail: label }));
+}
+
 export function ChartCard({ title, badges, legend, onAlert, onDelete, onRename, children }: Props) {
   return (
     <div className="an-chart-card">
       <div className="an-chart-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
           <span className="an-chart-title">{title}</span>
-          <Info size={12} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+          <button
+            className="an-chart-action-btn"
+            title="Информация о графике"
+            onClick={() => fireChartAction(`Информация: ${title}`)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <Info size={12} color="var(--text-muted)" />
+          </button>
         </div>
         <div className="an-chart-actions">
-          <button className="an-chart-action-btn" title="Алерт" onClick={onAlert}>
+          <button className="an-chart-action-btn" title="Алерт по графику"
+            onClick={onAlert ?? (() => fireChartAction(`Алерт: ${title}`))}>
             <AlertTriangle size={11} />
           </button>
-          <button className="an-chart-action-btn" title="Удалить" onClick={onDelete}>
+          <button className="an-chart-action-btn" title="Удалить график"
+            onClick={onDelete ?? (() => fireChartAction(`Удалить: ${title}`))}>
             <Trash2 size={11} />
           </button>
-          <button className="an-chart-action-btn" title="Переименовать" onClick={onRename}>
+          <button className="an-chart-action-btn" title="Переименовать график"
+            onClick={onRename ?? (() => fireChartAction(`Переименовать: ${title}`))}>
             <Pencil size={11} />
           </button>
         </div>
