@@ -42,6 +42,9 @@ class StatisticalImpactResult:
     significance: Literal["significant", "not_significant", "inconclusive"]
     sample_sizes: dict  # {"treated": n, "control": n}
 
+    # Analysis path — "diff_in_diff" when control present, "only_treated" otherwise
+    analysis_type: Literal["diff_in_diff", "only_treated"] = "diff_in_diff"
+
 
 # ---------------------------------------------------------------------------
 # Private helpers
@@ -182,4 +185,141 @@ def compute_full_impact(
         bootstrap_ci_95=ci,
         significance=significance,  # type: ignore[arg-type]
         sample_sizes={"treated": n_treated, "control": n_control},
+        analysis_type="diff_in_diff",
+    )
+
+
+# ---------------------------------------------------------------------------
+# Robust array-based API (handles NaN, small n, zero variance, no control)
+# ---------------------------------------------------------------------------
+
+def compute_impact_from_arrays(
+    treated_before: "list[float] | np.ndarray",
+    treated_after: "list[float] | np.ndarray",
+    control_before: "list[float] | np.ndarray",
+    control_after: "list[float] | np.ndarray",
+    *,
+    available_days: "int | None" = None,
+    window_days: "int | None" = None,
+) -> StatisticalImpactResult:
+    """Compute statistical impact result from pre-aggregated per-animal arrays.
+
+    Handles real-world data problems:
+    - NaN values in any array are removed before any computation.
+    - available_days < window_days truncates each array to available_days items.
+    - n < 7 in the smaller group → significance='inconclusive', p-value=NaN.
+    - Zero variance → cohen_d=0 (no divide-by-zero crash).
+    - Empty (or all-NaN) control → analysis_type='only_treated', diff_in_diff=NaN.
+    """
+    _NAN = float("nan")
+
+    def _clean(arr: "list[float] | np.ndarray") -> np.ndarray:
+        a = np.asarray(arr, dtype=float)
+        if available_days is not None and available_days < len(a):
+            a = a[:available_days]
+        return a[~np.isnan(a)]
+
+    tb = _clean(treated_before)
+    ta = _clean(treated_after)
+    cb = _clean(control_before)
+    ca = _clean(control_after)
+
+    n_ta = len(ta)
+    n_ca = len(ca)
+
+    # No usable treated data → fully inconclusive
+    if n_ta == 0:
+        return StatisticalImpactResult(
+            treated_before=float(np.mean(tb)) if len(tb) else _NAN,
+            treated_after=_NAN,
+            control_before=_NAN,
+            control_after=_NAN,
+            diff_in_diff_effect=_NAN,
+            welch_t_pvalue=_NAN,
+            cohen_d_effect_size=0.0,
+            effect_magnitude="negligible",  # type: ignore[arg-type]
+            bootstrap_ci_95=(_NAN, _NAN),
+            significance="inconclusive",  # type: ignore[arg-type]
+            sample_sizes={"treated": 0, "control": n_ca},
+            analysis_type="diff_in_diff",
+        )
+
+    tb_mean = float(np.mean(tb)) if len(tb) else _NAN
+    ta_mean = float(np.mean(ta))
+
+    # No usable control data → only-treated analysis (no diff-in-diff)
+    if n_ca == 0:
+        n_min = n_ta
+        if n_min < 7:
+            significance: str = "inconclusive"
+            p_value = _NAN
+        else:
+            t_result = stats.ttest_1samp(ta, popmean=tb_mean if not np.isnan(tb_mean) else ta_mean)
+            p_value = float(t_result.pvalue)
+            significance = _classify_significance(p_value, n_min)
+        d = _cohens_d(ta, tb) if len(tb) else 0.0
+        ci = _bootstrap_ci_diff(ta, tb) if len(tb) >= 2 else (_NAN, _NAN)
+        return StatisticalImpactResult(
+            treated_before=tb_mean,
+            treated_after=ta_mean,
+            control_before=_NAN,
+            control_after=_NAN,
+            diff_in_diff_effect=_NAN,
+            welch_t_pvalue=p_value,
+            cohen_d_effect_size=d,
+            effect_magnitude=_magnitude_from_d(abs(d)),  # type: ignore[arg-type]
+            bootstrap_ci_95=ci,
+            significance=significance,  # type: ignore[arg-type]
+            sample_sizes={"treated": n_ta, "control": 0},
+            analysis_type="only_treated",
+        )
+
+    cb_mean = float(np.mean(cb)) if len(cb) else _NAN
+    ca_mean = float(np.mean(ca))
+    did = (ta_mean - tb_mean) - (ca_mean - cb_mean) if not (np.isnan(tb_mean) or np.isnan(cb_mean)) else _NAN
+
+    # Small-n check (use min group size after NaN removal)
+    n_min = min(n_ta, n_ca)
+    if n_min < 7:
+        return StatisticalImpactResult(
+            treated_before=tb_mean,
+            treated_after=ta_mean,
+            control_before=cb_mean,
+            control_after=ca_mean,
+            diff_in_diff_effect=did,
+            welch_t_pvalue=_NAN,
+            cohen_d_effect_size=_cohens_d(ta, ca),
+            effect_magnitude=_magnitude_from_d(abs(_cohens_d(ta, ca))),  # type: ignore[arg-type]
+            bootstrap_ci_95=(_NAN, _NAN),
+            significance="inconclusive",  # type: ignore[arg-type]
+            sample_sizes={"treated": n_ta, "control": n_ca},
+            analysis_type="diff_in_diff",
+        )
+
+    # Full diff-in-diff path
+    ta_std = float(np.std(ta, ddof=1)) if len(ta) > 1 else 0.0
+    ca_std = float(np.std(ca, ddof=1)) if len(ca) > 1 else 0.0
+    if ta_std == 0.0 or ca_std == 0.0:
+        p_value = _NAN
+        significance = "inconclusive"
+    else:
+        t_result = stats.ttest_ind(ta, ca, equal_var=False)
+        p_value = float(t_result.pvalue)
+        significance = _classify_significance(p_value, n_min)
+    d = _cohens_d(ta, ca)
+    ci = _bootstrap_ci_diff(ta, ca)
+
+    return StatisticalImpactResult(
+        treated_before=tb_mean,
+        treated_after=ta_mean,
+        control_before=cb_mean,
+        control_after=ca_mean,
+        diff_in_diff_effect=did,
+        welch_t_pvalue=p_value,
+        cohen_d_effect_size=d,
+        effect_magnitude=_magnitude_from_d(abs(d)),  # type: ignore[arg-type]
+        bootstrap_ci_95=ci,
+        significance=significance,  # type: ignore[arg-type]
+        sample_sizes={"treated": n_ta, "control": n_ca},
+        analysis_type="diff_in_diff",
     )
