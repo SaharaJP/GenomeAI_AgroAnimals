@@ -146,7 +146,7 @@ function CollapsibleSection({ title, defaultOpen = true, children }: {
 
 // ── Empty / error state ──────────────────────────────────────────────────────
 
-function BriefEmpty({ onGenerate, generating }: { onGenerate: () => void; generating: boolean }) {
+function BriefEmpty({ onGenerate, generating, error }: { onGenerate: () => void; generating: boolean; error: string | null }) {
   return (
     <section className="card">
       <div className="brief-ai-label"><span className="brief-ai-dot" /> ИИ-брифинг</div>
@@ -154,6 +154,7 @@ function BriefEmpty({ onGenerate, generating }: { onGenerate: () => void; genera
       <p className="brief-empty-desc">
         Ежедневный брифинг генерируется автоматически каждое утро в 06:00 МСК.
       </p>
+      {error && <div className="brief-error" style={{ marginBottom: 12 }}>{error}</div>}
       <button type="button" className="button button-primary" onClick={onGenerate} disabled={generating}>
         {generating ? 'Генерирую…' : 'Сгенерировать сейчас'}
       </button>
@@ -249,7 +250,7 @@ export function MorningBriefCard({ farmId }: { farmId?: string }) {
     );
   }
 
-  if (!brief) return <BriefEmpty onGenerate={handleRegenerate} generating={generating} />;
+  if (!brief) return <BriefEmpty onGenerate={handleRegenerate} generating={generating} error={error} />;
 
   return (
     <section className="card">

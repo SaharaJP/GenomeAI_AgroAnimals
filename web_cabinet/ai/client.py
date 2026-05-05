@@ -154,7 +154,6 @@ class AnthropicClient:
                     model=target_model,
                     max_tokens=max_tokens,
                     messages=messages,
-                    temperature=temperature,
                 )
                 if system_blocks:
                     kwargs["system"] = system_blocks
@@ -223,7 +222,6 @@ class AnthropicClient:
                     model=target_model,
                     max_tokens=max_tokens,
                     messages=messages,
-                    temperature=temperature,
                 )
                 if system_blocks:
                     kwargs["system"] = system_blocks

@@ -23,32 +23,32 @@ export function TreatmentsWithdrawalSurface() {
   }, []);
 
   return <div className="grid">
-    <div className="topbar"><div><h1 className="page-title">Treatments / withdrawal</h1><p className="page-subtitle">Governed treatment and withdrawal watch surface driven by backend health evidence.</p></div></div>
+    <div className="topbar"><div><h1 className="page-title">Лечение / каренция</h1><p className="page-subtitle">Контроль лечения и периодов каренции на основе данных здоровья с бэкенда.</p></div></div>
     <FactPackGuardrailNote />
     {error ? <div className="card error-text">{error}</div> : null}
-    {!view ? <div className="card">Loading treatments / withdrawal…</div> : <>
+    {!view ? <div className="card">Загрузка данных лечения…</div> : <>
       <div className="grid grid-3">
-        <MetricCard title="Treatment tasks" value={view.summary.treatmentTasks} />
-        <MetricCard title="Withdrawal watch" value={view.summary.withdrawalWatch} />
-        <MetricCard title="Diagnostics available" value={view.summary.diagnosticsAvailable} />
+        <MetricCard title="Задачи лечения" value={view.summary.treatmentTasks} />
+        <MetricCard title="На каренции" value={view.summary.withdrawalWatch} />
+        <MetricCard title="Доступно диагностик" value={view.summary.diagnosticsAvailable} />
       </div>
       <div className="grid grid-2">
         <ScopeSummary scope={view.scope} />
         <Card>
-          <h3 className="card-title">Governance and evidence</h3>
+          <h3 className="card-title">Доказательная база</h3>
           <ul className="bullet-list compact">{view.rulesEvidence.map((item) => <li key={item}>{item}</li>)}</ul>
           <div className="linked-inline-actions">
-            <Link href="/vet">Open vet queues</Link>
-            <Link href="/assistant?target=treatments">Explain in assistant</Link>
-            <Link href="/reports">Report / export</Link>
-            <Link href="/support?context=treatments">Support / diagnostics</Link>
+            <Link href="/vet">Очереди ветеринарии</Link>
+            <Link href="/copilot?target=treatments">Объяснить в ИИ-помощнике</Link>
+            <Link href="/reports">Отчёт / экспорт</Link>
+            <Link href="/support?context=treatments">Поддержка / диагностика</Link>
           </div>
           <p className="small-muted" style={{ marginTop: 12 }}>{view.parityNote}</p>
         </Card>
       </div>
       <div className="grid grid-2">
-        <div><h2 className="section-title">Withdrawal / treatment alerts</h2><AlertList items={view.alerts} /></div>
-        <div><h2 className="section-title">Treatment-linked worklists</h2><WorklistList items={view.worklists} /></div>
+        <div><h2 className="section-title">Алерты лечения / каренции</h2><AlertList items={view.alerts} /></div>
+        <div><h2 className="section-title">Рабочие списки лечения</h2><WorklistList items={view.worklists} /></div>
       </div>
     </>}</div>;
 }

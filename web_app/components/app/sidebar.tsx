@@ -17,20 +17,34 @@ import {
   LogOut,
   Leaf,
   Home,
+  ListTodo,
+  HeartPulse,
+  Stethoscope,
+  Scale,
+  FlaskConical,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getNavigationSections } from '@/lib/navigation';
 
 type Props = { collapsed: boolean; onToggle: () => void };
 
-// Maps href → Lucide icon for primary nav items
-const primaryIconMap: Record<string, React.ReactNode> = {
-  '/dashboard':     <Home size={18} strokeWidth={1.5} />,
-  '/daily-summary': <LayoutDashboard size={18} strokeWidth={1.5} />,
-  '/insights':      <Lightbulb size={18} strokeWidth={1.5} />,
-  '/analytics':     <BarChart2 size={18} strokeWidth={1.5} />,
-  '/timeline':      <Clock size={18} strokeWidth={1.5} />,
-  '/assistant':     <Bot size={18} strokeWidth={1.5} />,
+const navIconMap: Record<string, React.ReactNode> = {
+  '/dashboard':          <Home size={18} strokeWidth={1.5} />,
+  '/daily-summary':      <LayoutDashboard size={18} strokeWidth={1.5} />,
+  '/insights':           <Lightbulb size={18} strokeWidth={1.5} />,
+  '/analytics':          <BarChart2 size={18} strokeWidth={1.5} />,
+  '/timeline':           <Clock size={18} strokeWidth={1.5} />,
+  '/copilot':            <Bot size={18} strokeWidth={1.5} />,
+  '/assistant':          <Bot size={18} strokeWidth={1.5} />,
+  '/worklists':          <ListTodo size={18} strokeWidth={1.5} />,
+  '/reproduction':       <HeartPulse size={18} strokeWidth={1.5} />,
+  '/vet':                <Stethoscope size={18} strokeWidth={1.5} />,
+  '/treatments':         <FlaskConical size={18} strokeWidth={1.5} />,
+  '/decisions':          <Scale size={18} strokeWidth={1.5} />,
+  '/economics':          <TrendingUp size={18} strokeWidth={1.5} />,
+  '/profiles/animal':    <Users size={18} strokeWidth={1.5} />,
 };
 
 export function Sidebar({ collapsed, onToggle }: Props) {
@@ -39,8 +53,6 @@ export function Sidebar({ collapsed, onToggle }: Props) {
   const { me } = useAuth() as { me: any; loading: boolean; refresh: () => Promise<void> };
 
   const sections = getNavigationSections(me);
-  // Show only "Основное" section items in the sidebar top nav
-  const primaryItems = sections.find((s) => s.title === 'Основное')?.items ?? [];
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
@@ -63,33 +75,29 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         )}
       </Link>
 
-      {/* Primary nav */}
-      <nav className="sidebar-nav" aria-label="Основная навигация">
-        {primaryItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
-            title={collapsed ? item.label : undefined}
-          >
-            <span className="nav-link-icon">
-              {primaryIconMap[item.href] ?? <LayoutDashboard size={18} strokeWidth={1.5} />}
-            </span>
-            <span className="nav-link-label">{item.label}</span>
-          </Link>
+      {/* All navigation sections — scrollable */}
+      <div className="sidebar-sections">
+        {sections.map((section, idx) => (
+          <nav key={section.title} className={`sidebar-nav sidebar-nav--section${idx > 0 ? ' sidebar-nav--secondary' : ''}`} aria-label={section.title}>
+            {!collapsed && sections.length > 1 && (
+              <span className="sidebar-section-label">{section.title}</span>
+            )}
+            {section.items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
+                title={collapsed ? item.label : undefined}
+              >
+                <span className="nav-link-icon">
+                  {navIconMap[item.href] ?? <LayoutDashboard size={18} strokeWidth={1.5} />}
+                </span>
+                <span className="nav-link-label">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
         ))}
-        <Link
-          href="/timeline"
-          className={`nav-link ${isActive('/timeline') ? 'nav-link-active' : ''}`}
-          title={collapsed ? 'Лента событий' : undefined}
-        >
-          <span className="nav-link-icon"><Clock size={18} strokeWidth={1.5} /></span>
-          <span className="nav-link-label">Лента событий</span>
-        </Link>
-      </nav>
-
-      {/* Spacer */}
-      <div style={{ flex: 1 }} />
+      </div>
 
       <hr className="sidebar-divider" />
 

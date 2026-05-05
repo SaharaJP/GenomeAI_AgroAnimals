@@ -29,55 +29,55 @@ export function ReproductionSurface() {
 
   return (
     <div className="grid">
-      <div className="topbar"><div><h1 className="page-title">Reproduction</h1><p className="page-subtitle">Operational reproduction parity in React for office and herd-management workflows.</p></div></div>
+      <div className="topbar"><div><h1 className="page-title">Воспроизводство</h1><p className="page-subtitle">Оперативное управление воспроизводством стада: рабочие списки, алерты и планы.</p></div></div>
       <FactPackGuardrailNote />
-      <ExplainabilityBlock title="Parity posture" reasons={[
-        'React reads backend worklist_type=reproduction, repro domain fields and planner approvals only.',
-        'No reproduction logic is reimplemented in the browser.',
-        'Linked actions keep decision, assistant and report lineage intact.',
+      <ExplainabilityBlock title="Источник данных" reasons={[
+        'Данные читаются с бэкенда: тип задачи reproduction, поля репродуктивного домена и согласования планировщика.',
+        'Логика воспроизводства не переносится в браузер — только отображение.',
+        'Связанные действия сохраняют привязку к решениям, помощнику и отчётам.',
       ]} />
       {error ? <div className="card error-text">{error}</div> : null}
-      {!view ? <div className="card">Loading reproduction surface…</div> : (
+      {!view ? <div className="card">Загрузка данных воспроизводства…</div> : (
         <>
           <div className="grid grid-3">
-            <MetricCard title="Open repro worklists" value={view.summary.openWorklists} />
-            <MetricCard title="Overdue repro worklists" value={view.summary.overdueWorklists} />
-            <MetricCard title="Pending approvals" value={view.summary.pendingApprovals} />
+            <MetricCard title="Открытые задачи" value={view.summary.openWorklists} />
+            <MetricCard title="Просроченные" value={view.summary.overdueWorklists} />
+            <MetricCard title="Ожидают согласования" value={view.summary.pendingApprovals} />
           </div>
           <div className="grid grid-2">
             <ScopeSummary scope={view.scope} />
             <Card>
-              <h3 className="card-title">Linked actions</h3>
-              <p className="card-subtitle">Keep planner, reports and explainability hooks connected to the same backend evidence.</p>
+              <h3 className="card-title">Связанные действия</h3>
+              <p className="card-subtitle">Планировщик, отчёты и объяснения привязаны к одной доказательной базе.</p>
               <div className="linked-inline-actions">
-                <Link href="/planner">Open planner</Link>
-                <Link href="/assistant?target=repro">Explain in assistant</Link>
-                <Link href="/reports">Open reports</Link>
-                <Link href="/support?context=reproduction">Support / feedback</Link>
+                <Link href="/planner">Открыть планировщик</Link>
+                <Link href="/copilot?target=repro">Объяснить в ИИ-помощнике</Link>
+                <Link href="/reports">Открыть отчёты</Link>
+                <Link href="/support?context=reproduction">Поддержка</Link>
               </div>
               <p className="small-muted" style={{ marginTop: 12 }}>{view.parityNote}</p>
             </Card>
           </div>
           <div className="grid grid-2">
             <div>
-              <h2 className="section-title">Reproduction alerts</h2>
+              <h2 className="section-title">Алерты воспроизводства</h2>
               <AlertList items={view.alerts} />
             </div>
             <div>
-              <h2 className="section-title">Reproduction worklists</h2>
+              <h2 className="section-title">Задачи воспроизводства</h2>
               <WorklistList items={view.worklists} />
             </div>
           </div>
           <Card>
-            <h3 className="card-title">Planner preview</h3>
-            {view.planPreview.length === 0 ? <p className="small-muted">No weekly plans available for the current scope.</p> : (
+            <h3 className="card-title">Планировщик — предпросмотр</h3>
+            {view.planPreview.length === 0 ? <p className="small-muted">Недельных планов для текущего контекста нет.</p> : (
               <div className="grid">
                 {view.planPreview.map((plan) => (
                   <div className="linked-action-card" key={plan.plan_id}>
                     <div className="linked-action-count">{plan.item_count}</div>
                     <div>
                       <div className="linked-action-title">{plan.name}</div>
-                      <div className="linked-action-caption">week_start={plan.week_start} · farm={plan.farm_id || 'all'} · approvals={plan.approved_at ? 'approved' : 'pending'}</div>
+                      <div className="linked-action-caption">неделя: {plan.week_start} · ферма: {plan.farm_id || 'все'} · статус: {plan.approved_at ? 'согласован' : 'ожидает'}</div>
                     </div>
                   </div>
                 ))}

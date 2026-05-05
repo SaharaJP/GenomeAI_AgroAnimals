@@ -24,36 +24,36 @@ export function VetQueuesSurface() {
   }, []);
 
   return <div className="grid">
-    <div className="topbar"><div><h1 className="page-title">Vet queues</h1><p className="page-subtitle">Office-grade triage surface for vet teams, health follow-ups and linked decision evidence.</p></div></div>
+    <div className="topbar"><div><h1 className="page-title">Ветеринария</h1><p className="page-subtitle">Очереди задач ветеринарной службы: здоровье животных, осмотры и история решений.</p></div></div>
     <FactPackGuardrailNote />
-    <ExplainabilityBlock title="Queue evidence" reasons={[
-      'Queue grouping uses backend worklist_type, health domain and alert severity fields.',
-      'React does not create health factors; it only shows backend why/reason linkage.',
-      'Diagnostics, decision trail and support hooks stay server-governed.',
+    <ExplainabilityBlock title="Источник данных" reasons={[
+      'Группировка очередей — по типу задачи, домену здоровья и серьёзности алерта (данные с сервера).',
+      'Браузер не создаёт факторы здоровья — только отображает привязку к причинам с бэкенда.',
+      'Диагностика, история решений и хуки поддержки управляются сервером.',
     ]} />
     {error ? <div className="card error-text">{error}</div> : null}
-    {!view ? <div className="card">Loading vet queues…</div> : <>
+    {!view ? <div className="card">Загрузка ветеринарных очередей…</div> : <>
       <div className="grid grid-3">
-        <MetricCard title="Queue items" value={view.summary.queueItems} />
-        <MetricCard title="Overdue items" value={view.summary.overdueItems} />
-        <MetricCard title="High severity alerts" value={view.summary.highSeverityAlerts} />
+        <MetricCard title="Задач в очереди" value={view.summary.queueItems} />
+        <MetricCard title="Просрочено" value={view.summary.overdueItems} />
+        <MetricCard title="Критические алерты" value={view.summary.highSeverityAlerts} />
       </div>
       <div className="grid grid-2">
         <ScopeSummary scope={view.scope} />
         <Card>
-          <h3 className="card-title">Linked actions</h3>
+          <h3 className="card-title">Связанные действия</h3>
           <div className="linked-inline-actions">
-            <Link href="/assistant?target=vet">Explain in assistant</Link>
-            <Link href="/decisions?queue=vet">Decision trail</Link>
-            <Link href="/treatments">Treatments / withdrawal</Link>
-            <Link href="/support?context=vet">Support / diagnostics</Link>
+            <Link href="/copilot?target=vet">Объяснить в ИИ-помощнике</Link>
+            <Link href="/decisions?queue=vet">История решений</Link>
+            <Link href="/treatments">Лечение / каренция</Link>
+            <Link href="/support?context=vet">Поддержка / диагностика</Link>
           </div>
           <p className="small-muted" style={{ marginTop: 12 }}>{view.parityNote}</p>
         </Card>
       </div>
       <div className="grid grid-2">
-        <div><h2 className="section-title">Vet alerts</h2><AlertList items={view.alerts} /></div>
-        <div><h2 className="section-title">Vet worklists</h2><WorklistList items={view.worklists} /></div>
+        <div><h2 className="section-title">Ветеринарные алерты</h2><AlertList items={view.alerts} /></div>
+        <div><h2 className="section-title">Ветеринарные задачи</h2><WorklistList items={view.worklists} /></div>
       </div>
     </>}</div>;
 }

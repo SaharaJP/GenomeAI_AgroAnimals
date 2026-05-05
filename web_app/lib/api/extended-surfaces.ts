@@ -209,7 +209,7 @@ export function buildReproductionViewModel(bundle: ExtendedBundle): Reproduction
     worklists: worklists.slice(0, 8),
     alerts: alerts.slice(0, 8),
     planPreview: bundle.planner.weekly_plans.slice(0, 5),
-    parityNote: 'React uses backend evidence from worklist_type/domain/linkage and planner approvals. No reproduction logic is reimplemented in the browser.',
+    parityNote: 'Браузер использует данные бэкенда: worklist_type, домен, привязки и согласования планировщика. Логика воспроизводства не переносится в браузер.',
   };
 }
 
@@ -226,7 +226,7 @@ export function buildVetViewModel(bundle: ExtendedBundle): VetViewModel {
     scope: buildScope(bundle.me),
     worklists: worklists.slice(0, 8),
     alerts: alerts.slice(0, 8),
-    parityNote: 'Vet queues stay anchored to backend-issued worklists, alerts and decision linkage. React only groups the server evidence into a queue surface.',
+    parityNote: 'Ветеринарные очереди привязаны к рабочим спискам, алертам и решениям с бэкенда. Браузер только группирует серверные данные для отображения.',
   };
 }
 
@@ -244,11 +244,11 @@ export function buildTreatmentViewModel(bundle: ExtendedBundle): TreatmentViewMo
     worklists: worklists.slice(0, 8),
     alerts: alerts.slice(0, 8),
     rulesEvidence: [
-      'Withdrawal / treatment surface uses backend health worklists and alerts only.',
-      'Diagnostics, support bundles and report lineage remain server-governed.',
-      'React does not invent treatment protocol logic; it only shows backend-linked evidence.',
+      'Поверхность лечения / каренции использует только рабочие списки и алерты здоровья с бэкенда.',
+      'Диагностика, пакеты поддержки и линия отчётов управляются сервером.',
+      'Браузер не создаёт логику протоколов лечения — только отображает привязанные с бэкенда данные.',
     ],
-    parityNote: 'Treatment and withdrawal parity in React is backed by backend health worklists, alerts and support diagnostics.',
+    parityNote: 'Лечение и каренция отображаются на основе рабочих списков здоровья, алертов и диагностики с бэкенда.',
   };
 }
 

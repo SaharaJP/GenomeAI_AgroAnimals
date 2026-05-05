@@ -49,12 +49,12 @@ export default function DecisionsPage() {
       ) : null}
 
       <ResourceListPage<Record<string, unknown>>
-        title="Decisions"
-        subtitle="Decision intelligence foundation against canonical backend API contracts."
+        title="Решения"
+        subtitle="Журнал решений с аудит-трейлом и привязкой к данным фермы."
         endpoint="/decisions"
         why={[
-          'Decision log semantics stay unchanged and auditable.',
-          'The web shell reads a canonical contract layer shared with Android.',
+          'Семантика журнала решений не изменяется и полностью аудируема.',
+          'Веб-оболочка читает канонический контрактный слой, общий с Android.',
         ]}
         columns={columns}
       />
