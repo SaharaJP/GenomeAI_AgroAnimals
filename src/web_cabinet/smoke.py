@@ -7,6 +7,7 @@ import os
 import shutil
 import sys
 import tempfile
+import time as _time
 from datetime import datetime, timezone
 from pathlib import Path
 from time import perf_counter
@@ -120,23 +121,31 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
         worker = JobWorker()
         worker.run_until_empty(max_jobs=200)
 
-    def last_kv(kind: str) -> dict[str, str]:
-        conn = connect()
-        try:
-            jobs = [
-                j for j in list_jobs(conn, limit=500)
-                if j["kind"] == kind and j.get("data_version") == dv
-            ]
-            if not jobs:
-                raise RuntimeError(f"no jobs of kind={kind}")
-            j = jobs[0]
-            if j["status"] != "done":
-                raise RuntimeError(f"job kind={kind} not done: status={j['status']}")
-            _rj = j.get("result_json")
-            rj = _rj if isinstance(_rj, dict) else (json.loads(_rj) if _rj else {})
-            return dict(rj.get("kv") or {})
-        finally:
-            conn.close()
+    def last_kv(kind: str, *, max_wait_sec: float = 60.0) -> dict[str, str]:
+        deadline = perf_counter() + max_wait_sec
+        while True:
+            conn = connect()
+            try:
+                jobs = [
+                    j for j in list_jobs(conn, limit=500)
+                    if j["kind"] == kind and j.get("data_version") == dv
+                ]
+                if not jobs:
+                    raise RuntimeError(f"no jobs of kind={kind}")
+                j = jobs[0]
+                status = str(j["status"])
+                if status == "done":
+                    _rj = j.get("result_json")
+                    rj = _rj if isinstance(_rj, dict) else (json.loads(_rj) if _rj else {})
+                    return dict(rj.get("kv") or {})
+                if status in ("failed", "cancelled"):
+                    raise RuntimeError(f"job kind={kind} {status}")
+            finally:
+                conn.close()
+            if perf_counter() >= deadline:
+                raise RuntimeError(f"job kind={kind} not done after {max_wait_sec}s: status={status}")
+            _time.sleep(0.1)
+            run_jobs()
 
     base = repo_root / "data" / "examples"
     farms_path = base / "dm_farms.csv"
