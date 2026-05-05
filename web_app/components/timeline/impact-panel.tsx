@@ -22,6 +22,8 @@ import {
   Plus,
   Cpu,
   Loader2,
+  HelpCircle,
+  X,
 } from 'lucide-react';
 import type { TimelineEvent, MetricWindow, ImpactWindowData } from '@/lib/api/timeline';
 import { fetchImpactForEvent, formatDayMonth, formatRelativeDate } from '@/lib/api/timeline';
@@ -61,10 +63,73 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState(false);
   const [addToast, setAddToast] = useState('');
+  const [selectedMetric, setSelectedMetric] = useState('');
+  const [customMetrics, setCustomMetrics] = useState<string[]>([]);
 
   function handleAddMetric() {
-    setAddToast('Добавление метрик — скоро');
-    setTimeout(() => setAddToast(''), 2800);
+    if (!selectedMetric) {
+      setAddToast('Выберите метрику из списка');
+      setTimeout(() => setAddToast(''), 2500);
+      return;
+    }
+    if (customMetrics.includes(selectedMetric)) {
+      setAddToast('Эта метрика уже добавлена');
+      setTimeout(() => setAddToast(''), 2500);
+      return;
+    }
+    setCustomMetrics((prev) => [...prev, selectedMetric]);
+    setSelectedMetric('');
+    setAddToast('Метрика добавлена — данные появятся после накопления статистики');
+    setTimeout(() => setAddToast(''), 3500);
+  }
+
+  function handleDownloadHelp() {
+    const text = `GenomeAI AgroAnimals — Методология анализа влияния событий
+================================================================
+
+ПРИНЦИП РАБОТЫ
+Лента событий сопоставляет управленческие решения с динамикой ключевых метрик стада.
+Для каждого события система формирует "до" и "после" на основе выбранного временного окна.
+
+ВРЕМЕННЫЕ ОКНА
+• 1 день (1d)  — сравнивает 1 день до и 1 день после события
+• 3 дня (3d)  — сравнивает 3 дня до и 3 дня после
+• 7 дней (7d)  — сравнивает 7 дней до и 7 дней после
+• 14 дней (14d) — сравнивает 14 дней до и 14 дней после
+
+АНАЛИЗИРУЕМЫЕ МЕТРИКИ
+• Надой (кг/голову/день) — основная производственная метрика
+• Жир (%) — качественный показатель молока
+• Белок (%) — качественный показатель молока
+• SCC (тыс/мл) — соматические клетки, индикатор здоровья вымени
+• Активность (шагов/сутки) — поведенческая метрика
+
+РАСЧЁТ ИЗМЕНЕНИЯ
+Δ = (среднее "после") − (среднее "до")
+Δ% = Δ / среднее "до" × 100%
+
+Зелёный цвет = улучшение показателя относительно исходного значения.
+Красный цвет = ухудшение показателя.
+
+ПОЛЬЗОВАТЕЛЬСКИЕ СОБЫТИЯ
+Добавленные вручную события помечаются источником "Добавлено вручную".
+Только пользовательские события можно редактировать и удалять.
+Демонстрационные события (DEMO_) используются для калибровки отображения.
+
+ВАЖНО
+• Анализ влияния носит информационный характер и не заменяет ветеринарное заключение.
+• Для достоверных результатов рекомендуется окно ≥ 7 дней.
+• Корреляция не означает причинно-следственную связь.
+
+GenomeAI AgroAnimals © ${new Date().getFullYear()}
+`;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'genomeai-timeline-math.txt';
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   useEffect(() => {
@@ -125,6 +190,18 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
               </div>
             )}
           </div>
+          <button
+            type="button"
+            onClick={handleDownloadHelp}
+            title="Скачать описание математики"
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: 'var(--text-muted)', padding: 4, flexShrink: 0,
+              display: 'inline-flex', alignItems: 'center',
+            }}
+          >
+            <HelpCircle size={15} strokeWidth={1.5} />
+          </button>
         </div>
       </div>
 
@@ -195,15 +272,38 @@ export function ImpactPanel({ event, window: activeWindow, onWindowChange }: Pro
               ))}
             </div>
 
+            {/* Custom metrics */}
+            {customMetrics.length > 0 && (
+              <div className="impact-metrics-grid" style={{ marginTop: 8 }}>
+                {customMetrics.map((m) => (
+                  <div key={m} className="metric-compare-card" style={{ opacity: 0.7, position: 'relative' }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>{m}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>Данные накапливаются…</div>
+                    <button
+                      type="button"
+                      onClick={() => setCustomMetrics((prev) => prev.filter((x) => x !== m))}
+                      style={{ position: 'absolute', top: 6, right: 6, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
+                    >
+                      <X size={11} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Add chart */}
             <div className="impact-add-chart-row">
-              <select className="impact-add-chart-select" defaultValue="">
-                <option value="" disabled>Выберите метрику...</option>
-                <option>Lying time per cow, per day</option>
-                <option>Steps per cow, per day</option>
-                <option>SCC individual</option>
-                <option>Body condition score</option>
-                <option>Feed push frequency</option>
+              <select
+                className="impact-add-chart-select"
+                value={selectedMetric}
+                onChange={(e) => setSelectedMetric(e.target.value)}
+              >
+                <option value="">Выберите метрику...</option>
+                <option value="Lying time per cow, per day">Lying time per cow, per day</option>
+                <option value="Steps per cow, per day">Steps per cow, per day</option>
+                <option value="SCC individual">SCC individual</option>
+                <option value="Body condition score">Body condition score</option>
+                <option value="Feed push frequency">Feed push frequency</option>
               </select>
               <button className="impact-add-chart-btn" type="button" onClick={handleAddMetric}>
                 <Plus size={12} />

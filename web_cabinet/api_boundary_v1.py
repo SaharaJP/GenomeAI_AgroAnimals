@@ -524,6 +524,9 @@ def boundary_animals_list(
     limit: int = 100,
     offset: int = 0,
     search: Optional[str] = None,
+    breed: Optional[str] = None,
+    status: Optional[str] = None,
+    pen_id: Optional[str] = None,
     user=Depends(get_current_user),
     conn=Depends(get_db),
 ):
@@ -534,6 +537,15 @@ def boundary_animals_list(
         if search:
             where += " AND animal_id ILIKE %s"
             params.append(f"%{search}%")
+        if breed:
+            where += " AND breed ILIKE %s"
+            params.append(f"%{breed}%")
+        if status:
+            where += " AND status = %s"
+            params.append(status)
+        if pen_id:
+            where += " AND current_pen_id ILIKE %s"
+            params.append(f"%{pen_id}%")
         rows = conn.execute(
             f"SELECT animal_id, breed, status, current_pen_id FROM dm_animals {where} ORDER BY animal_id LIMIT %s OFFSET %s",
             tuple(params) + (limit, offset),
@@ -558,6 +570,33 @@ def boundary_animals_list(
         animals = []
         total = 0
     return {"animals": animals, "total": total, "limit": limit, "offset": offset}
+
+
+@router.get('/animals/filter-options')
+def boundary_animals_filter_options(
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    """Returns unique values for breed, status, pen_id columns for filter dropdowns."""
+    tenant_id = user.get('tenant_id', 'default')
+    try:
+        breeds = [r[0] for r in conn.execute(
+            "SELECT DISTINCT breed FROM dm_animals WHERE tenant_id = %s AND breed IS NOT NULL ORDER BY breed",
+            (tenant_id,),
+        ).fetchall()]
+        statuses = [r[0] for r in conn.execute(
+            "SELECT DISTINCT status FROM dm_animals WHERE tenant_id = %s AND status IS NOT NULL ORDER BY status",
+            (tenant_id,),
+        ).fetchall()]
+        pen_ids = [r[0] for r in conn.execute(
+            "SELECT DISTINCT current_pen_id FROM dm_animals WHERE tenant_id = %s AND current_pen_id IS NOT NULL ORDER BY current_pen_id",
+            (tenant_id,),
+        ).fetchall()]
+    except Exception as exc:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("animals filter-options failed: %s", exc)
+        breeds, statuses, pen_ids = [], [], []
+    return {"breeds": breeds, "statuses": statuses, "pen_ids": pen_ids}
 
 
 @router.get('/alerts', response_model=AlertsListResponse)

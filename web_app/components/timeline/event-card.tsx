@@ -51,7 +51,8 @@ type Props = {
 };
 
 const isUserEvent = (e: TimelineEvent) =>
-  e.timeline_event_id.startsWith('TL_') && e.source === 'Добавлено вручную';
+  e.timeline_event_id.startsWith('TL_') &&
+  (e.source === 'Добавлено вручную' || e.source === 'user');
 
 export function EventCard({ event, selected, onClick, onDelete, onEdit }: Props) {
   const icon = ICONS[event.event_type] ?? <Clock size={15} />;

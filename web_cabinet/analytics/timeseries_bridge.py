@@ -286,3 +286,81 @@ def build_reproduction_timeseries(
             ]},
         },
     }
+
+
+def build_herd_timeseries(
+    conn: Any,
+    farm_id: str,
+    tenant_id: str = "default",
+) -> dict:
+    """Returns herd composition snapshot: breed distribution and status breakdown."""
+    try:
+        breed_rows = conn.execute(
+            "SELECT breed, COUNT(*) FROM dm_animals WHERE tenant_id = %s AND farm_id = %s GROUP BY breed ORDER BY COUNT(*) DESC",
+            (tenant_id, farm_id),
+        ).fetchall()
+    except Exception:
+        try:
+            breed_rows = conn.execute(
+                "SELECT breed, COUNT(*) FROM dm_animals WHERE tenant_id = %s GROUP BY breed ORDER BY COUNT(*) DESC",
+                (tenant_id,),
+            ).fetchall()
+        except Exception:
+            breed_rows = []
+
+    try:
+        status_rows = conn.execute(
+            "SELECT status, COUNT(*) FROM dm_animals WHERE tenant_id = %s GROUP BY status ORDER BY COUNT(*) DESC",
+            (tenant_id,),
+        ).fetchall()
+    except Exception:
+        status_rows = []
+
+    try:
+        pen_rows = conn.execute(
+            "SELECT current_pen_id, COUNT(*) FROM dm_animals WHERE tenant_id = %s AND current_pen_id IS NOT NULL GROUP BY current_pen_id ORDER BY COUNT(*) DESC LIMIT 12",
+            (tenant_id,),
+        ).fetchall()
+    except Exception:
+        pen_rows = []
+
+    COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899",
+              "#06B6D4", "#84CC16", "#F97316", "#6366F1", "#14B8A6", "#F43F5E"]
+
+    breed_labels = [r[0] or "Неизвестно" for r in breed_rows]
+    breed_data = [int(r[1]) for r in breed_rows]
+
+    status_map = {"active": "Активна", "dry": "Сухостой", "heifer": "Тёлка", "culled": "Выбыла"}
+    status_labels = [status_map.get(str(r[0]), str(r[0])) for r in status_rows]
+    status_data = [int(r[1]) for r in status_rows]
+
+    pen_labels = [str(r[0]) for r in pen_rows]
+    pen_data = [int(r[1]) for r in pen_rows]
+
+    return {
+        "tab": "herd",
+        "labels": breed_labels,
+        "charts": {
+            "breed_distribution": {
+                "labels": breed_labels,
+                "series": [
+                    {"name": b, "color": COLORS[i % len(COLORS)], "data": [breed_data[i]]}
+                    for i, b in enumerate(breed_labels)
+                ],
+            },
+            "status_distribution": {
+                "labels": status_labels,
+                "series": [
+                    {"name": s, "color": COLORS[i % len(COLORS)], "data": [status_data[i]]}
+                    for i, s in enumerate(status_labels)
+                ],
+            },
+            "pen_distribution": {
+                "labels": pen_labels,
+                "series": [
+                    {"name": p, "color": COLORS[i % len(COLORS)], "data": [pen_data[i]]}
+                    for i, p in enumerate(pen_labels)
+                ],
+            },
+        },
+    }

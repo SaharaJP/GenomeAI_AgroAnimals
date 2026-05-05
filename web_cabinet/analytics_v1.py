@@ -31,6 +31,7 @@ from .analytics.timeseries_bridge import (
     build_production_timeseries,
     build_health_timeseries,
     build_reproduction_timeseries,
+    build_herd_timeseries,
 )
 from .auth import get_current_user, get_db
 from .rbac import require_permissions
@@ -449,8 +450,10 @@ def analytics_timeseries(
         return build_health_timeseries(conn, farm_id=effective_farm, tenant_id=tenant_id, weeks=weeks)
     if tab_name == "reproduction":
         return build_reproduction_timeseries(conn, farm_id=effective_farm, tenant_id=tenant_id, weeks=weeks)
+    if tab_name == "herd":
+        return build_herd_timeseries(conn, farm_id=effective_farm, tenant_id=tenant_id)
 
-    # feed / herd / behavior / finance: not yet implemented
+    # feed / behavior / finance: not yet implemented
     return {"tab": tab_name, "labels": [], "charts": {}}
 
 

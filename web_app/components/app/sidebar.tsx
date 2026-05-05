@@ -17,6 +17,7 @@ import {
   LogOut,
   Leaf,
   Home,
+  Beef,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getNavigationSections } from '@/lib/navigation';
@@ -29,8 +30,9 @@ const primaryIconMap: Record<string, React.ReactNode> = {
   '/daily-summary': <LayoutDashboard size={18} strokeWidth={1.5} />,
   '/insights':      <Lightbulb size={18} strokeWidth={1.5} />,
   '/analytics':     <BarChart2 size={18} strokeWidth={1.5} />,
-  '/timeline':      <Clock size={18} strokeWidth={1.5} />,
-  '/assistant':     <Bot size={18} strokeWidth={1.5} />,
+  '/timeline':         <Clock size={18} strokeWidth={1.5} />,
+  '/profiles/animal':  <Beef size={18} strokeWidth={1.5} />,
+  '/assistant':        <Bot size={18} strokeWidth={1.5} />,
 };
 
 export function Sidebar({ collapsed, onToggle }: Props) {
@@ -78,14 +80,6 @@ export function Sidebar({ collapsed, onToggle }: Props) {
             <span className="nav-link-label">{item.label}</span>
           </Link>
         ))}
-        <Link
-          href="/timeline"
-          className={`nav-link ${isActive('/timeline') ? 'nav-link-active' : ''}`}
-          title={collapsed ? 'Лента событий' : undefined}
-        >
-          <span className="nav-link-icon"><Clock size={18} strokeWidth={1.5} /></span>
-          <span className="nav-link-label">Лента событий</span>
-        </Link>
       </nav>
 
       {/* Spacer */}
