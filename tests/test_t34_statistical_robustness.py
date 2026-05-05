@@ -144,6 +144,29 @@ class TestZeroVariance:
         result = compute_impact_from_arrays(tb, ta, cb, ca)
         assert result is not None
 
+    def test_zero_variance_in_treated_pvalue_is_nan(self):
+        """Treated group with zero variance → welch_t_pvalue=NaN (scipy result unreliable)."""
+        rng = np.random.default_rng(99)
+        ta = [25.0] * 10
+        ca = list(rng.normal(25, 2, 10))
+        result = compute_impact_from_arrays([25.0] * 10, ta, [24.0] * 10, ca)
+        assert math.isnan(result.welch_t_pvalue)
+
+    def test_zero_variance_in_control_pvalue_is_nan(self):
+        """Control group with zero variance → welch_t_pvalue=NaN (scipy result unreliable)."""
+        rng = np.random.default_rng(99)
+        ta = list(rng.normal(25, 2, 10))
+        ca = [25.0] * 10
+        result = compute_impact_from_arrays([24.0] * 10, ta, [24.0] * 10, ca)
+        assert math.isnan(result.welch_t_pvalue)
+
+    def test_zero_variance_significance_is_inconclusive(self):
+        """Zero variance in any group → significance='inconclusive' (t-test undefined)."""
+        ta = [25.0] * 10
+        ca = [24.0] * 10
+        result = compute_impact_from_arrays([25.0] * 10, ta, [24.0] * 10, ca)
+        assert result.significance == "inconclusive"
+
 
 # ---------------------------------------------------------------------------
 # Edge case 4: empty control group

@@ -297,9 +297,15 @@ def compute_impact_from_arrays(
         )
 
     # Full diff-in-diff path
-    t_result = stats.ttest_ind(ta, ca, equal_var=False)
-    p_value = float(t_result.pvalue)
-    significance = _classify_significance(p_value, n_min)
+    ta_std = float(np.std(ta, ddof=1)) if len(ta) > 1 else 0.0
+    ca_std = float(np.std(ca, ddof=1)) if len(ca) > 1 else 0.0
+    if ta_std == 0.0 or ca_std == 0.0:
+        p_value = _NAN
+        significance = "inconclusive"
+    else:
+        t_result = stats.ttest_ind(ta, ca, equal_var=False)
+        p_value = float(t_result.pvalue)
+        significance = _classify_significance(p_value, n_min)
     d = _cohens_d(ta, ca)
     ci = _bootstrap_ci_diff(ta, ca)
 
