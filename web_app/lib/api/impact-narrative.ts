@@ -30,7 +30,7 @@ export async function fetchImpactNarrative(req: ImpactNarrativeRequest): Promise
       event_id: req.event_id,
       window: req.window ?? '1w',
       language: req.language ?? 'ru',
-      farm_id: req.farm_id ?? 'demo-farm-v1',
+      farm_id: req.farm_id ?? 'INV_FARM_001',
     }),
   });
 }

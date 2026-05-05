@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
+import { useAuth } from '@/components/auth/auth-provider';
 
 interface InsightEvent {
   event: 'new_insights';
@@ -13,7 +14,9 @@ interface Props {
   farmId?: string;
 }
 
-export function InsightNotificationBell({ farmId = 'demo-farm-v1' }: Props) {
+export function InsightNotificationBell({ farmId }: Props) {
+  const { me } = useAuth();
+  const resolvedFarmId = farmId ?? me?.scope?.active_farm_id ?? 'INV_FARM_001';
   const [unreadCount, setUnreadCount] = useState(0);
   const [scanning, setScanning] = useState(false);
   const [lastMessage, setLastMessage] = useState<string | null>(null);
@@ -21,7 +24,7 @@ export function InsightNotificationBell({ farmId = 'demo-farm-v1' }: Props) {
 
   // Connect to SSE stream on mount
   useEffect(() => {
-    const url = `/api/ai/insights/events/stream?farm_id=${farmId}`;
+    const url = `/api/ai/insights/events/stream?farm_id=${resolvedFarmId}`;
     const es = new EventSource(url);
     esRef.current = es;
 
@@ -44,13 +47,13 @@ export function InsightNotificationBell({ farmId = 'demo-farm-v1' }: Props) {
       es.close();
       esRef.current = null;
     };
-  }, [farmId]);
+  }, [resolvedFarmId]);
 
   async function handleScanNow() {
     setScanning(true);
     setLastMessage(null);
     try {
-      const res = await fetch(`/api/ai/insights/scan-now?farm_id=${farmId}`, {
+      const res = await fetch(`/api/ai/insights/scan-now?farm_id=${resolvedFarmId}`, {
         method: 'POST',
       });
       if (res.ok) {

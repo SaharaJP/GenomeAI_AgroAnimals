@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/components/auth/auth-provider';
 import { DEMO_INSIGHTS } from '@/lib/api/overview';
 
 const SEVERITY_BADGE: Record<string, string> = {
@@ -25,6 +26,8 @@ function formatRuDate(dateStr: string): string {
 }
 
 export function InsightsColumn() {
+  const { me } = useAuth();
+  const farmLabel = me?.scope?.active_farm_id ?? null;
   const [page, setPage] = useState(0);
   const total = DEMO_INSIGHTS.length;
   const insight = DEMO_INSIGHTS[page];
@@ -63,7 +66,7 @@ export function InsightsColumn() {
             <span className={`badge ${SEVERITY_BADGE[insight.severity] ?? ''}`}>
               {SEVERITY_LABEL[insight.severity] ?? insight.severity}
             </span>
-            <span className="badge badge-teal">Демо-ферма</span>
+            {farmLabel && <span className="badge badge-teal">{farmLabel}</span>}
           </div>
 
           <div className="insight-title">{insight.title}</div>

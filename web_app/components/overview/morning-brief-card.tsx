@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { useAuth } from '@/components/auth/auth-provider';
 
 import {
   approveMorningBrief,
@@ -162,7 +163,9 @@ function BriefEmpty({ onGenerate, generating }: { onGenerate: () => void; genera
 
 // ── Main card ────────────────────────────────────────────────────────────────
 
-export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string }) {
+export function MorningBriefCard({ farmId }: { farmId?: string }) {
+  const { me } = useAuth();
+  const resolvedFarmId = farmId ?? me?.scope?.active_farm_id ?? 'INV_FARM_001';
   const [brief, setBrief] = useState<MorningBrief | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -177,11 +180,11 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
     setLoading(true);
     setError(null);
     setApproved(false);
-    void fetchMorningBrief(farmId)
+    void fetchMorningBrief(resolvedFarmId)
       .then((b) => { setBrief(b); setEditedActions(b.today_actions); })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
-  }, [farmId]);
+  }, [resolvedFarmId]);
 
   useEffect(() => { loadBrief(); }, [loadBrief]);
 
@@ -189,7 +192,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
     setGenerating(true);
     setError(null);
     setApproved(false);
-    void regenerateMorningBrief(farmId)
+    void regenerateMorningBrief(resolvedFarmId)
       .then((b) => { setBrief(b); setEditedActions(b.today_actions); })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setGenerating(false));
@@ -215,7 +218,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
     if (!brief) return;
     setApproving(true);
     try {
-      const result = await approveMorningBrief(brief.brief_id, editedActions, farmId);
+      const result = await approveMorningBrief(brief.brief_id, editedActions, resolvedFarmId);
       setTasksCreated(result.tasks_created);
       setApproved(true);
     } catch (e) {
@@ -333,7 +336,7 @@ export function MorningBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string 
             ✓ Согласовано · задачи поставлены {tasksCreated} специалист{tasksCreated === 1 ? 'у' : 'ам'}
           </span>
           <a
-            href={morningBriefPdfUrl(brief.brief_id, farmId)}
+            href={morningBriefPdfUrl(brief.brief_id, resolvedFarmId)}
             target="_blank"
             rel="noreferrer"
             className="button brief-pdf-link"

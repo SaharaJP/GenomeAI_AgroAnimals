@@ -31,6 +31,7 @@ from .auth import (
     get_db,
 )
 from core.infra.runtime_auth_storage import resolve_runtime_auth_storage
+from web_cabinet.ai.config import get_ai_settings
 
 router = APIRouter(prefix='/api/app/v1/auth', tags=['auth-boundary-v1'])
 
@@ -226,7 +227,8 @@ def auth_me(request: Request, user=Depends(get_current_user), conn=Depends(get_d
             'allowed_site_ids_json': user.get('allowed_site_ids') or [],
         }
     session_view = _session_model(user, session_row, current_session_id=session_id or None)
-    return AuthMeResponse(user=_user_model(user), session=session_view, scope=session_view.scope)
+    demo_mode = get_ai_settings().GENOMEAI_AI_DEMO_MODE
+    return AuthMeResponse(user=_user_model(user), session=session_view, scope=session_view.scope, demo_mode=demo_mode)
 
 
 @router.get('/mobile/runtime-proof')

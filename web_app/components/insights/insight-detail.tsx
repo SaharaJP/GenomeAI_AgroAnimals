@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
+import { useAuth } from '@/components/auth/auth-provider';
 import {
   InsightItem,
   InsightStatus,
@@ -31,6 +32,8 @@ type Props = {
 };
 
 export function InsightDetail({ insight, status, onStatusChange }: Props) {
+  const { me } = useAuth();
+  const farmLabel = me?.scope?.active_farm_id ?? null;
   const handleTransition = (newStatus: InsightStatus) => {
     onStatusChange(newStatus);
     showToast(`Статус изменён: ${INSIGHT_STATUS_LABELS[newStatus]}`);
@@ -93,7 +96,7 @@ export function InsightDetail({ insight, status, onStatusChange }: Props) {
           <span className={`badge ${SEVERITY_BADGE[insight.severity]}`}>
             {SEVERITY_LABEL[insight.severity]}
           </span>
-          <span className="badge badge-teal">Демо-ферма</span>
+          {farmLabel && <span className="badge badge-teal">{farmLabel}</span>}
           {status !== insight.status ? (
             <span className="badge badge-success">{INSIGHT_STATUS_LABELS[status]}</span>
           ) : (

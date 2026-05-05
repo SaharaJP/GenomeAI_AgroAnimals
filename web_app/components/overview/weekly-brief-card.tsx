@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/components/auth/auth-provider';
 
 import {
   fetchWeeklyBrief,
@@ -221,7 +222,9 @@ function BriefEmpty({ onGenerate, generating }: { onGenerate: () => void; genera
   );
 }
 
-export function WeeklyBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string }) {
+export function WeeklyBriefCard({ farmId }: { farmId?: string }) {
+  const { me } = useAuth();
+  const resolvedFarmId = farmId ?? me?.scope?.active_farm_id ?? 'INV_FARM_001';
   const [brief, setBrief] = useState<WeeklyBrief | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -230,18 +233,18 @@ export function WeeklyBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string }
   const loadBrief = () => {
     setLoading(true);
     setError(null);
-    void fetchWeeklyBrief(farmId)
+    void fetchWeeklyBrief(resolvedFarmId)
       .then(setBrief)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadBrief(); }, [farmId]);
+  useEffect(() => { loadBrief(); }, [resolvedFarmId]);
 
   const handleRegenerate = () => {
     setGenerating(true);
     setError(null);
-    void generateWeeklyBrief(farmId)
+    void generateWeeklyBrief(resolvedFarmId)
       .then(setBrief)
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
       .finally(() => setGenerating(false));
@@ -287,7 +290,7 @@ export function WeeklyBriefCard({ farmId = 'demo-farm-v1' }: { farmId?: string }
             {generating ? '…' : '↺ Перегенерировать'}
           </button>
           <a
-            href={weeklyBriefPdfUrl(brief.brief_id, farmId)}
+            href={weeklyBriefPdfUrl(brief.brief_id, resolvedFarmId)}
             target="_blank"
             rel="noreferrer"
             style={{ border: '1px solid rgba(128,128,128,0.3)', borderRadius: 4, padding: '3px 8px', fontSize: 12, textDecoration: 'none', color: 'inherit' }}

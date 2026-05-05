@@ -88,6 +88,7 @@ class AuthMeResponse(BaseModel):
     user: AuthUserView
     session: AuthSessionView
     scope: AuthScope
+    demo_mode: bool = False
 
 
 class AuthLogoutRequest(BaseModel):

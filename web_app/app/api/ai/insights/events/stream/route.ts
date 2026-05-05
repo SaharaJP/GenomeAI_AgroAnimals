@@ -5,7 +5,7 @@ import { getServerAppConfig } from '@/lib/config';
 const config = getServerAppConfig();
 
 export async function GET(request: NextRequest) {
-  const farmId = request.nextUrl.searchParams.get('farm_id') ?? 'demo-farm-v1';
+  const farmId = request.nextUrl.searchParams.get('farm_id') ?? 'INV_FARM_001';
   const { accessToken } = await getAuthTokens();
 
   const headers: Record<string, string> = {

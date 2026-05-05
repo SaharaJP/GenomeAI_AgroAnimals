@@ -63,7 +63,7 @@ export function SettingsTabs() {
             email="icreem714@gmail.com"
           />
           <NotificationsTable
-            kpiInsightsEmail={settings.notifications.kpiInsightsEmail}
+            kpiInsightsEmail={settings.notifications?.kpiInsightsEmail ?? true}
             weeklyBriefing={settings.weeklyBriefing}
             onKpiChange={(v) =>
               patch({ ...settings, notifications: { kpiInsightsEmail: v } })

@@ -26,18 +26,18 @@ export interface MorningBrief {
   generation_tokens: { input: number; output: number };
 }
 
-export async function fetchMorningBrief(farmId = 'demo-farm-v1'): Promise<MorningBrief> {
+export async function fetchMorningBrief(farmId = 'INV_FARM_001'): Promise<MorningBrief> {
   return apiFetch<MorningBrief>(`/api/ai/morning-brief/today?farm_id=${encodeURIComponent(farmId)}`);
 }
 
-export async function regenerateMorningBrief(farmId = 'demo-farm-v1'): Promise<MorningBrief> {
+export async function regenerateMorningBrief(farmId = 'INV_FARM_001'): Promise<MorningBrief> {
   return apiFetch<MorningBrief>('/api/ai/morning-brief', {
     method: 'POST',
     body: JSON.stringify({ farm_id: farmId, force_regenerate: true }),
   });
 }
 
-export function morningBriefPdfUrl(briefId: string, farmId = 'demo-farm-v1'): string {
+export function morningBriefPdfUrl(briefId: string, farmId = 'INV_FARM_001'): string {
   return `/api/backend/api/ai/morning-brief/${briefId}/pdf?farm_id=${encodeURIComponent(farmId)}`;
 }
 
@@ -49,7 +49,7 @@ export interface ApproveBriefResult {
 export async function approveMorningBrief(
   briefId: string,
   actions: TodayAction[],
-  farmId = 'demo-farm-v1',
+  farmId = 'INV_FARM_001',
 ): Promise<ApproveBriefResult> {
   return apiFetch<ApproveBriefResult>(`/api/ai/morning-brief/${encodeURIComponent(briefId)}/approve`, {
     method: 'POST',

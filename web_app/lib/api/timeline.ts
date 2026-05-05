@@ -402,7 +402,7 @@ export async function fetchImpactForEvent(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         event_id: event.timeline_event_id,
-        farm_id: 'demo-farm-v1',
+        farm_id: 'INV_FARM_001',
         kpi_list: kpiList,
         window,
       }),

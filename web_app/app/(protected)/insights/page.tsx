@@ -11,6 +11,7 @@ import {
   formatRuDate,
 } from '@/lib/api/insights';
 import { TriageTabs } from '@/components/insights/triage-tabs';
+import { useAuth } from '@/components/auth/auth-provider';
 
 const PAGE_SIZE = 10;
 
@@ -26,6 +27,8 @@ function toast(msg: string) {
 }
 
 export default function InsightsPage() {
+  const { me } = useAuth();
+  const farmLabel = me?.scope?.active_farm_id ?? null;
   const [activeTab, setActiveTab] = useState<InsightStatus>('to_check');
   const [page, setPage] = useState(0);
 
@@ -123,7 +126,7 @@ export default function InsightsPage() {
 
                   {/* Farm */}
                   <td>
-                    <span className="badge badge-teal">Демо-ферма</span>
+                    {farmLabel && <span className="badge badge-teal">{farmLabel}</span>}
                   </td>
 
                   {/* Date */}

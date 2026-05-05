@@ -245,6 +245,8 @@ def build_auth_session_scope(user: dict[str, Any], session_row: Optional[dict[st
     allowed_farm_ids = _parse_scope_list((session_row or {}).get('allowed_farm_ids_json') if session_row else user.get('allowed_farm_ids_json'))
     allowed_site_ids = _parse_scope_list((session_row or {}).get('allowed_site_ids_json') if session_row else user.get('allowed_site_ids_json'))
     active_farm_id = (session_row or {}).get('active_farm_id') or user.get('active_farm_id')
+    if not active_farm_id and allowed_farm_ids:
+        active_farm_id = allowed_farm_ids[0]
     active_site_id = (session_row or {}).get('active_site_id') or user.get('active_site_id')
     return {
         'tenant_id': str(user.get('tenant_id') or 'default'),

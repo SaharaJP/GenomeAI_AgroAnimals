@@ -41,6 +41,7 @@ export type AuthMeResponse = {
   user: AuthUserView;
   session: AuthSessionView;
   scope: AuthScope;
+  demo_mode?: boolean;
 };
 
 export type EntityRef = {

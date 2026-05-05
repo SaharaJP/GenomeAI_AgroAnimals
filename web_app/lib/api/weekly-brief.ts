@@ -48,14 +48,14 @@ export interface WeeklyBrief {
   generation_tokens: { input: number; output: number };
 }
 
-export async function fetchWeeklyBrief(farmId = 'demo-farm-v1'): Promise<WeeklyBrief> {
+export async function fetchWeeklyBrief(farmId = 'INV_FARM_001'): Promise<WeeklyBrief> {
   return apiFetch<WeeklyBrief>(
     `/api/ai/weekly-brief/latest?farm_id=${encodeURIComponent(farmId)}`,
   );
 }
 
 export async function generateWeeklyBrief(
-  farmId = 'demo-farm-v1',
+  farmId = 'INV_FARM_001',
   startDate?: string,
   endDate?: string,
 ): Promise<WeeklyBrief> {
@@ -70,6 +70,6 @@ export async function generateWeeklyBrief(
   });
 }
 
-export function weeklyBriefPdfUrl(briefId: string, farmId = 'demo-farm-v1'): string {
+export function weeklyBriefPdfUrl(briefId: string, farmId = 'INV_FARM_001'): string {
   return `/api/backend/api/ai/weekly-brief/${briefId}/pdf?farm_id=${encodeURIComponent(farmId)}`;
 }

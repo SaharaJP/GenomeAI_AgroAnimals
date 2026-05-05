@@ -66,8 +66,8 @@ export function Topbar() {
 
       {/* Desktop: Breadcrumb (hidden on mobile via CSS) */}
       <nav className="topbar-breadcrumb" aria-label="Хлебные крошки">
-        <span>Демо-ферма</span>
-        <span className="topbar-breadcrumb-sep">▸</span>
+        {me?.demo_mode && <span>Демо-ферма</span>}
+        {me?.demo_mode && <span className="topbar-breadcrumb-sep">▸</span>}
         <span className="topbar-breadcrumb-current">{pageLabel}</span>
       </nav>
 
@@ -75,10 +75,12 @@ export function Topbar() {
       <div className="topbar-right">
         <InsightNotificationBell />
 
-        <button className="topbar-btn-demo" onClick={handleExitDemo}>
-          <LogOut size={13} strokeWidth={2} />
-          <span>Выйти из демо-режима</span>
-        </button>
+        {me?.demo_mode && (
+          <button className="topbar-btn-demo" onClick={handleExitDemo}>
+            <LogOut size={13} strokeWidth={2} />
+            <span>Выйти из демо-режима</span>
+          </button>
+        )}
 
         <div
           className="topbar-avatar"

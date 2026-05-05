@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link2, Plus, Server } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/components/auth/auth-provider';
 
 type Farm = { id: string; name: string; status: string };
 
@@ -46,22 +47,14 @@ function EmptyFarmsState({ onConnect }: { onConnect: () => void }) {
 }
 
 export function FarmsList() {
-  const [farms, setFarms] = useState<Farm[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { me, loading } = useAuth();
   const [toast, setToast] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/connections')
-      .then((r) => r.json())
-      .then((d) => {
-        setFarms(d.farms ?? []);
-        setLoading(false);
-      })
-      .catch(() => {
-        setFarms([{ id: 'demo-farm', name: 'Демо-ферма', status: 'Sandbox' }]);
-        setLoading(false);
-      });
-  }, []);
+  const farms: Farm[] = (me?.scope?.allowed_farm_ids ?? []).map((id) => ({
+    id,
+    name: id,
+    status: me?.demo_mode ? 'Sandbox' : 'Active',
+  }));
 
   function handleConnect() {
     setToast(true);
