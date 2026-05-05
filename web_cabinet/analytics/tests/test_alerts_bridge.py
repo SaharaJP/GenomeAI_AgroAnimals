@@ -28,11 +28,12 @@ def _make_alert(severity: str = "warning", detected_at: date = date(2026, 1, 1))
 
 
 def test_list_active_alerts_returns_list():
+    # Demo CSV uses tenant_id="default"; use matching farm_id so the tenant filter passes.
     with patch(
         "web_cabinet.analytics.alerts_bridge._load_generators",
         return_value=(_no_op_generator, _no_op_generator, _no_op_generator),
     ):
-        result = list_active_alerts("demo-farm-v1")
+        result = list_active_alerts("default")
     assert isinstance(result, list)
     assert len(result) > 0, "Expected non-empty list of alerts from health events fallback"
     for item in result:

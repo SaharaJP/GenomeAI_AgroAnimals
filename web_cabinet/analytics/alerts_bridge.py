@@ -71,6 +71,13 @@ def _alerts_from_health_events(farm_id: str, today: date, data_dir: Path) -> lis
     if df.empty:
         return []
 
+    # Tenant isolation: filter by tenant_id or farm_id column when present.
+    _tenant_col = next((c for c in ("tenant_id", "farm_id") if c in df.columns), None)
+    if _tenant_col:
+        df = df[df[_tenant_col] == farm_id]
+    if df.empty:
+        return []
+
     out: list[ActiveAlert] = []
     for _, r in df.iterrows():
         event_id = str(r.get("event_id") or "")
@@ -101,6 +108,19 @@ def _alerts_from_health_events(farm_id: str, today: date, data_dir: Path) -> lis
     return out
 
 
+def _filter_raw_by_farm_id(raw: list[dict], farm_id: str) -> list[dict]:
+    """Drop generator dicts that belong to a different tenant.
+
+    Keeps dicts that have no tenant field (single-farm generator, backward-compatible)
+    and dicts whose tenant_id / farm_id matches the requested farm_id.
+    """
+    return [
+        d for d in raw
+        if d.get("tenant_id", farm_id) == farm_id
+        and d.get("farm_id", farm_id) == farm_id
+    ]
+
+
 def _load_generators():
     from genomeai.alerts_v2 import (
         generate_from_dm_alerts,
@@ -110,14 +130,28 @@ def _load_generators():
     return generate_from_dm_alerts, generate_withdrawal_alerts, generate_repro_alerts
 
 
-@cached(ttl=600)
 def list_active_alerts(
     farm_id: str,
     *,
     severity_filter: Optional[list[str]] = None,
     limit: int = 50,
 ) -> list[ActiveAlert]:
-    """Wrapper over alerts_v2. Returns active alerts from DB (demo: from CSV)."""
+    """Wrapper over alerts_v2. Returns active alerts from DB (demo: from CSV).
+
+    Validation runs before the cache so an empty farm_id always raises.
+    """
+    if not farm_id:
+        raise ValueError("farm_id must not be empty")
+    return _list_active_alerts_cached(farm_id, severity_filter=severity_filter, limit=limit)
+
+
+@cached(ttl=600)
+def _list_active_alerts_cached(
+    farm_id: str,
+    *,
+    severity_filter: Optional[list[str]] = None,
+    limit: int = 50,
+) -> list[ActiveAlert]:
     today = date.today()
     raw: list[dict] = []
     for fn in _load_generators():
@@ -127,8 +161,9 @@ def list_active_alerts(
             pass
 
     if raw:
+        raw = _filter_raw_by_farm_id(raw, farm_id)
         alerts = [_dict_to_active_alert(d, farm_id, today) for d in raw]
-    else:
+    if not raw:
         alerts = _alerts_from_health_events(farm_id, today, _DEMO_DATA)
 
     alerts.sort(key=lambda a: (_SEVERITY_ORDER.get(a.severity, 99), -a.detected_at.toordinal()))
