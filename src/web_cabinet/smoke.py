@@ -123,7 +123,10 @@ def run_web_smoke_scenario(*, workdir: Path, data_version: str | None = None, cl
     def last_kv(kind: str) -> dict[str, str]:
         conn = connect()
         try:
-            jobs = [j for j in list_jobs(conn, limit=500) if j["kind"] == kind]
+            jobs = [
+                j for j in list_jobs(conn, limit=500)
+                if j["kind"] == kind and j.get("data_version") == dv
+            ]
             if not jobs:
                 raise RuntimeError(f"no jobs of kind={kind}")
             j = jobs[0]
