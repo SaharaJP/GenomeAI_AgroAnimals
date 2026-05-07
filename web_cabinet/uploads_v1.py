@@ -397,12 +397,22 @@ def _fetch_existing_keys(spec: UploadType, tenant_id: str, rows: list[dict]) -> 
     cols_to_select = [c for c in spec.unique_key if c != 'tenant_id']
     if not cols_to_select:
         return set()
+    # Build a per-column ANY(%s) filter to limit the scan to uploaded keys
+    filters = []
+    params: list[Any] = [tenant_id]
+    for col in cols_to_select:
+        values = sorted({r[col] for r in rows if col in r and r[col] is not None})
+        if not values:
+            return set()
+        filters.append(f"{col} = ANY(%s)")
+        params.append(values)
+    where = "tenant_id = %s AND " + " AND ".join(filters)
+    sql = f"SELECT {', '.join(cols_to_select)} FROM {spec.target_table} WHERE {where}"
     try:
         from web_cabinet.insights_v1 import _conn
-        sql = f"SELECT {', '.join(cols_to_select)} FROM {spec.target_table} WHERE tenant_id=%s"
         with _conn() as conn:
             with conn.cursor() as cur:
-                cur.execute(sql, (tenant_id,))
+                cur.execute(sql, params)
                 existing = cur.fetchall()
         result: set[tuple] = set()
         for tup in existing:
@@ -470,21 +480,24 @@ def commit_rows(token: str, *, tenant_id: str, farm_id: Optional[str] = None,
         _TOKEN_CACHE[token] = entry  # restore — don't consume on auth failure
         raise TenantMismatch()
     spec = TYPE_REGISTRY[entry.type_id]
-    inserted = _do_insert(spec, entry.valid_rows, tenant_id=tenant_id,
-                          farm_id=farm_id, site_id=site_id)
-    return UploadCommitResponse(inserted=inserted, skipped_duplicates=0)
+    inserted, skipped = _do_insert(spec, entry.valid_rows, tenant_id=tenant_id,
+                                   farm_id=farm_id, site_id=site_id)
+    return UploadCommitResponse(inserted=inserted, skipped_duplicates=skipped)
 
 
 def _do_insert(spec: UploadType, rows: list[dict], *, tenant_id: str,
-               farm_id: Optional[str], site_id: Optional[str]) -> int:
+               farm_id: Optional[str], site_id: Optional[str]) -> tuple[int, int]:
+    """Returns (inserted, skipped_duplicates)."""
     if not rows:
-        return 0
+        return 0, 0
     auto_value = {
         'tenant_id': tenant_id,
         'farm_id': farm_id or _resolve_default_farm(tenant_id),
         'site_id': site_id or _resolve_default_site(tenant_id),
     }
     inserted = 0
+    skipped = 0
+    use_on_conflict = bool(spec.unique_key) and not spec.server_id_column
     from web_cabinet.insights_v1 import _conn
     with _conn() as conn:
         with conn.cursor() as cur:
@@ -500,17 +513,25 @@ def _do_insert(spec: UploadType, rows: list[dict], *, tenant_id: str,
                 full.setdefault('created_at', datetime.utcnow().isoformat())
                 cols = list(full.keys())
                 placeholders = ', '.join(['%s'] * len(cols))
-                sql = (
-                    f"INSERT INTO {spec.target_table} ({', '.join(cols)}) "
-                    f"VALUES ({placeholders})"
-                )
-                try:
-                    cur.execute(sql, [full[c] for c in cols])
-                    inserted += cur.rowcount
-                except Exception as exc:
-                    logger.warning(f'insert row failed: {exc}; row={r}')
+                if use_on_conflict:
+                    conflict_cols = ', '.join(spec.unique_key)
+                    sql = (
+                        f"INSERT INTO {spec.target_table} ({', '.join(cols)}) "
+                        f"VALUES ({placeholders}) "
+                        f"ON CONFLICT ({conflict_cols}) DO NOTHING"
+                    )
+                else:
+                    sql = (
+                        f"INSERT INTO {spec.target_table} ({', '.join(cols)}) "
+                        f"VALUES ({placeholders})"
+                    )
+                cur.execute(sql, [full[c] for c in cols])
+                if cur.rowcount > 0:
+                    inserted += 1
+                else:
+                    skipped += 1
         conn.commit()
-    return inserted
+    return inserted, skipped
 
 
 def _resolve_default_farm(tenant_id: str) -> Optional[str]:
