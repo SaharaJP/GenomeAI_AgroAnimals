@@ -88,6 +88,18 @@ CREATE INDEX IF NOT EXISTS scanner_insights_farm_status_idx
 
 `payload_json` retained for backward compat and any non-canonical fields. Critical fields denormalized into typed columns.
 
+### 5.2a New `insight_scan_state`
+
+```sql
+CREATE TABLE IF NOT EXISTS insight_scan_state (
+  farm_id TEXT PRIMARY KEY,
+  last_scan_at TIMESTAMPTZ,
+  last_skipped_reason TEXT
+);
+```
+
+Tracks the most recent cron-scan timestamp per farm so the cron token-saver gate (see §6.4) can decide whether new input has arrived since.
+
 ### 5.2 New `insight_settings`
 
 ```sql
@@ -148,6 +160,11 @@ Extend / add:
 - Reads `insight_settings` for the target farm before generating: skips disabled categories during prompt construction or post-filters results.
 - Soft-deleted insights are still queried in `get_active_insights` so dedup `_dedup_animal_category_7d` doesn’t recreate identical ones (extend SQL: `WHERE status IN ('to_check','to_follow_up','deleted') AND ...` — pull deleted too for dedup window).
 - Redis lock added in boundary wrapper, not in scanner itself, so cron path remains untouched.
+- **Cron-only token-saver gate** (`run_insight_scanner_for_all_farms`): before calling Claude, check whether there is any new input since the last scan for that farm. Sources of "new input":
+  - rows in `timeline_events` with `created_at > last_scan_at`,
+  - sensor anomalies returned by `detect_recent_sensor_anomalies` (window since `last_scan_at`),
+  - rows in `alerts_v2` with `created_at > last_scan_at`.
+  If all three sources are empty, log `insight_scanner skipped: no new inputs farm=...` and return without calling Claude. Persist the gate state in a small new table `insight_scan_state(farm_id, last_scan_at, last_skipped_reason)` (or as a dedicated row in an existing scan-state table if one exists). The gate applies **only to the cron path** (`run_insight_scanner_for_all_farms`); the manual `scan-now` boundary endpoint always runs to honor explicit user intent.
 
 ## 7. UI / UX
 
@@ -204,6 +221,7 @@ Extend / add:
 | Edit on deleted insight | 404. UI shows toast and refetches. |
 | Settings narrowed → existing insights stay | Settings only filter list view and future scans. Existing rows are not deleted. |
 | Cron error | Logged to `genomeai.ai.insight_scanner` logger; does not affect web startup. |
+| Cron run with no new inputs | Skipped before calling Claude; `insight_scan_state.last_skipped_reason='no_new_inputs'`; no token spend. Manual `scan-now` ignores this gate. |
 | Scanner recreates a soft-deleted insight | Prevented by extending `_deduplicate` to include `deleted_at IS NOT NULL` rows in dedup base. |
 | Empty `scanner_insights` post-cutover | UI empty state with manual scan CTA. Seed script ensures non-empty in demo. |
 
@@ -222,6 +240,11 @@ Extend / add:
 
 `tests/test_insight_scanner_dedup.py` (extend or new):
 - Scanner does not resurrect soft-deleted insight with same evidence
+
+`tests/test_insight_scanner_cron_gate.py` (new):
+- Cron path skips Claude call when no new timeline_events/alerts/sensor_anomalies since `last_scan_at`
+- Cron path runs Claude when new event has been added
+- Manual `scan-now` boundary endpoint runs Claude regardless of gate state
 
 ### 9.2 Playwright (live UI)
 
