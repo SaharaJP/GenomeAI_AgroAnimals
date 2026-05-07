@@ -1,9 +1,8 @@
 'use client';
 import { useAnalyticsTimeseries, emptyChart } from '@/lib/api/analytics-live';
-import { ChartCard } from './chart-card';
-import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
+import { BuiltInChartCard } from './built-in-chart-card';
 
 interface Props {
   onAddChart: () => void;
@@ -49,51 +48,58 @@ export function ProductionTab({
       {isVisible('milk_ecm') && (() => {
         const t = titleOf('milk_ecm', loading ? 'Надой и ECM — загрузка…' : 'Надой и ECM');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="milk_ecm"
             title={t}
             badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
             legend={milkEcm.series}
+            series={milkEcm.series}
+            labels={milkEcm.labels}
+            unit=" кг"
             alertThreshold={alertThresholds['milk_ecm']}
             onDelete={() => onRemoveBuiltin?.('milk_ecm')}
             onRename={() => onRequestRename?.('milk_ecm', t)}
             onAlert={() => onRequestAlert?.('milk_ecm', t)}
-          >
-            <BiChart type="line" series={milkEcm.series} labels={milkEcm.labels} unit=" кг" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('fat_protein') && (() => {
         const t = titleOf('fat_protein', loading ? 'Жир и белок % — загрузка…' : 'Жир и белок %');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="fat_protein"
             title={t}
             badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
             legend={fatProt.series}
+            series={fatProt.series}
+            labels={fatProt.labels}
+            unit="%"
             alertThreshold={alertThresholds['fat_protein']}
             onDelete={() => onRemoveBuiltin?.('fat_protein')}
             onRename={() => onRequestRename?.('fat_protein', t)}
             onAlert={() => onRequestAlert?.('fat_protein', t)}
-          >
-            <BiChart type="line" series={fatProt.series} labels={fatProt.labels} unit="%" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('scc') && (() => {
         const t = titleOf('scc', loading ? 'СКК — загрузка…' : 'Соматические клетки (СКК)');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="scc"
             title={t}
             badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
             legend={scc.series}
+            series={scc.series}
+            labels={scc.labels}
+            unit="k"
+            refLine={200}
             alertThreshold={alertThresholds['scc']}
             onDelete={() => onRemoveBuiltin?.('scc')}
             onRename={() => onRequestRename?.('scc', t)}
             onAlert={() => onRequestAlert?.('scc', t)}
-          >
-            <BiChart type="line" series={scc.series} labels={scc.labels} unit="k" refLine={200} />
-          </ChartCard>
+          />
         );
       })()}
 

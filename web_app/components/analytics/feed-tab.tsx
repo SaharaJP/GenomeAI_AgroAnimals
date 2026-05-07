@@ -4,10 +4,9 @@ import {
   getFeedCost,
   getFeedEfficiency,
 } from '@/lib/api/analytics';
-import { ChartCard } from './chart-card';
-import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
+import { BuiltInChartCard } from './built-in-chart-card';
 
 interface Props {
   onAddChart: () => void;
@@ -43,51 +42,57 @@ export function FeedTab({
       {isVisible('dmi') && (() => {
         const t = titleOf('dmi', 'Потребление сухого вещества (DMI)');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="dmi"
             title={t}
             badges={[{ icon: '🌾', label: 'По ферме' }, { icon: 'кг/гол', label: 'В сутки' }]}
             legend={dmi.series}
+            series={dmi.series}
+            labels={dmi.labels}
+            unit=" кг"
             alertThreshold={alertThresholds['dmi']}
             onDelete={() => onRemoveBuiltin?.('dmi')}
             onRename={() => onRequestRename?.('dmi', t)}
             onAlert={() => onRequestAlert?.('dmi', t)}
-          >
-            <BiChart type="line" series={dmi.series} labels={dmi.labels} unit=" кг" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('feed_cost') && (() => {
         const t = titleOf('feed_cost', 'Стоимость корма');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="feed_cost"
             title={t}
             badges={[{ icon: '💰', label: 'На корову/нед.' }]}
             legend={cost.series}
+            series={cost.series}
+            labels={cost.labels}
+            unit=" р"
             alertThreshold={alertThresholds['feed_cost']}
             onDelete={() => onRemoveBuiltin?.('feed_cost')}
             onRename={() => onRequestRename?.('feed_cost', t)}
             onAlert={() => onRequestAlert?.('feed_cost', t)}
-          >
-            <BiChart type="line" series={cost.series} labels={cost.labels} unit=" р" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('feed_efficiency') && (() => {
         const t = titleOf('feed_efficiency', 'Эффективность кормления');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="feed_efficiency"
             title={t}
             badges={[{ icon: '⚖️', label: 'кг молока / кг СВ' }]}
             legend={eff.series}
+            series={eff.series}
+            labels={eff.labels}
+            unit=""
             alertThreshold={alertThresholds['feed_efficiency']}
             onDelete={() => onRemoveBuiltin?.('feed_efficiency')}
             onRename={() => onRequestRename?.('feed_efficiency', t)}
             onAlert={() => onRequestAlert?.('feed_efficiency', t)}
-          >
-            <BiChart type="line" series={eff.series} labels={eff.labels} unit="" />
-          </ChartCard>
+          />
         );
       })()}
 

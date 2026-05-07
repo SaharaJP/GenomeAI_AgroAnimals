@@ -4,10 +4,9 @@ import {
   getBehaviorActivity,
   getBehaviorLying,
 } from '@/lib/api/analytics';
-import { ChartCard } from './chart-card';
-import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
+import { BuiltInChartCard } from './built-in-chart-card';
 
 interface Props {
   onAddChart: () => void;
@@ -43,51 +42,57 @@ export function BehaviorTab({
       {isVisible('rumination') && (() => {
         const t = titleOf('rumination', 'Жвачка (мин/день)');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="rumination"
             title={t}
             badges={[{ icon: '🐄', label: 'По стаду' }]}
             legend={rumination.series}
+            series={rumination.series}
+            labels={rumination.labels}
+            unit=" мин"
             alertThreshold={alertThresholds['rumination']}
             onDelete={() => onRemoveBuiltin?.('rumination')}
             onRename={() => onRequestRename?.('rumination', t)}
             onAlert={() => onRequestAlert?.('rumination', t)}
-          >
-            <BiChart type="line" series={rumination.series} labels={rumination.labels} unit=" мин" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('activity') && (() => {
         const t = titleOf('activity', 'Индекс активности');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="activity"
             title={t}
             badges={[{ icon: '⚡', label: 'По стаду' }]}
             legend={activity.series}
+            series={activity.series}
+            labels={activity.labels}
+            unit=""
             alertThreshold={alertThresholds['activity']}
             onDelete={() => onRemoveBuiltin?.('activity')}
             onRename={() => onRequestRename?.('activity', t)}
             onAlert={() => onRequestAlert?.('activity', t)}
-          >
-            <BiChart type="line" series={activity.series} labels={activity.labels} unit="" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('lying') && (() => {
         const t = titleOf('lying', 'Лёжка (часов/день)');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="lying"
             title={t}
             badges={[{ icon: '🛏️', label: 'По стаду' }]}
             legend={lying.series}
+            series={lying.series}
+            labels={lying.labels}
+            unit=" ч"
             alertThreshold={alertThresholds['lying']}
             onDelete={() => onRemoveBuiltin?.('lying')}
             onRename={() => onRequestRename?.('lying', t)}
             onAlert={() => onRequestAlert?.('lying', t)}
-          >
-            <BiChart type="line" series={lying.series} labels={lying.labels} unit=" ч" />
-          </ChartCard>
+          />
         );
       })()}
 

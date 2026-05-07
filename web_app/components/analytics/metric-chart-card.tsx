@@ -26,6 +26,7 @@ import {
   getHealthIssues,
 } from '@/lib/api/analytics';
 import type { AnalyticsData } from '@/lib/api/analytics';
+import { findWeekIndex } from '@/lib/api/analytics';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { METRICS } from './add-chart-dialog';
@@ -113,8 +114,8 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
   const qcOverlays = overlays.showQc ? (overlays.qcByMetric[metricId] ?? []).map((inc) => {
     const startIso = inc.period_start.slice(0, 10);
     const endIso = inc.period_end?.slice(0, 10) ?? null;
-    const startIdx = chart.labels.indexOf(startIso);
-    const endIdx = endIso ? chart.labels.indexOf(endIso) : null;
+    const startIdx = findWeekIndex(startIso);
+    const endIdx = endIso ? findWeekIndex(endIso) : null;
     return {
       incident_id: inc.incident_id,
       period_start_idx: startIdx >= 0 ? startIdx : 0,
@@ -127,7 +128,7 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
 
   const eventMarkers = overlays.showEvents ? (overlays.eventsByMetric[metricId] ?? []).map((ev) => ({
     event_id: ev.event_id,
-    date_idx: chart.labels.indexOf(ev.event_date.slice(0, 10)),
+    date_idx: findWeekIndex(ev.event_date.slice(0, 10)),
     title: ev.title,
     event_date: ev.event_date,
   })).filter((m) => m.date_idx >= 0) : [];

@@ -1,9 +1,8 @@
 'use client';
 import { useAnalyticsTimeseries, emptyChart } from '@/lib/api/analytics-live';
-import { ChartCard } from './chart-card';
-import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
+import { BuiltInChartCard } from './built-in-chart-card';
 
 interface Props {
   onAddChart: () => void;
@@ -46,34 +45,38 @@ export function HealthTab({
       {isVisible('mastitis') && (() => {
         const t = titleOf('mastitis', loading ? 'Мастит — загрузка…' : 'Мастит');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="mastitis"
             title={t}
             badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
             legend={mastitis.series}
+            series={mastitis.series}
+            labels={mastitis.labels}
+            unit=" гол"
             alertThreshold={alertThresholds['mastitis']}
             onDelete={() => onRemoveBuiltin?.('mastitis')}
             onRename={() => onRequestRename?.('mastitis', t)}
             onAlert={() => onRequestAlert?.('mastitis', t)}
-          >
-            <BiChart type="line" series={mastitis.series} labels={mastitis.labels} unit=" гол" />
-          </ChartCard>
+          />
         );
       })()}
 
       {isVisible('issues') && (() => {
         const t = titleOf('issues', loading ? 'Заболевания — загрузка…' : 'Заболевания по типам');
         return (
-          <ChartCard
+          <BuiltInChartCard
+            metricId="issues"
             title={t}
             badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
             legend={issues.series}
+            series={issues.series}
+            labels={issues.labels}
+            unit=" гол"
             alertThreshold={alertThresholds['issues']}
             onDelete={() => onRemoveBuiltin?.('issues')}
             onRename={() => onRequestRename?.('issues', t)}
             onAlert={() => onRequestAlert?.('issues', t)}
-          >
-            <BiChart type="line" series={issues.series} labels={issues.labels} unit=" гол" />
-          </ChartCard>
+          />
         );
       })()}
 

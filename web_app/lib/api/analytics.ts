@@ -36,6 +36,31 @@ function makeLabels(): string[] {
 
 export const WEEK_LABELS: string[] = makeLabels();
 
+function makeIsoDates(): string[] {
+  const out: string[] = [];
+  const start = new Date(2025, 9, 6);
+  for (let i = 0; i < N; i++) {
+    const d = new Date(start.getTime() + i * 7 * 24 * 3600 * 1000);
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+export const WEEK_ISO_DATES: string[] = makeIsoDates();
+
+/** Map an arbitrary ISO date (YYYY-MM-DD) to the index of the week
+ *  it belongs to in WEEK_LABELS. Returns -1 if outside the chart range.
+ */
+export function findWeekIndex(iso: string): number {
+  if (!iso) return -1;
+  const target = new Date(iso + 'T00:00:00Z').getTime();
+  const start = new Date(2025, 9, 6).getTime();
+  if (target < start) return -1;
+  const idx = Math.floor((target - start) / (7 * 24 * 3600 * 1000));
+  if (idx < 0 || idx >= N) return -1;
+  return idx;
+}
+
 function walk(
   rng: () => number,
   base: number,
