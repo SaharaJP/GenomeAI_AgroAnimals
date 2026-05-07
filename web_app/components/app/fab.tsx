@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, X, CalendarPlus, Sparkles } from 'lucide-react';
+import { Plus, X, CalendarPlus, Sparkles, Upload } from 'lucide-react';
 import { useAddEvent } from './add-event-context';
 import { AskFarmWidget } from '@/components/ai/ask-farm-widget';
+import { DataUploadDialog } from '@/components/data-upload/data-upload-dialog';
 
 const menuItemStyle: React.CSSProperties = {
   display: 'flex',
@@ -25,15 +26,16 @@ export function FAB() {
   const { openDialog } = useAddEvent();
   const [menuOpen, setMenuOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => {
-    if (!menuOpen && !aiOpen) return;
+    if (!menuOpen && !aiOpen && !uploadOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setMenuOpen(false); setAiOpen(false); }
+      if (e.key === 'Escape') { setMenuOpen(false); setAiOpen(false); setUploadOpen(false); }
     }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [menuOpen, aiOpen]);
+  }, [menuOpen, aiOpen, uploadOpen]);
 
   function handleAddEvent() {
     setMenuOpen(false);
@@ -43,6 +45,11 @@ export function FAB() {
   function handleAskAI() {
     setMenuOpen(false);
     setAiOpen(true);
+  }
+
+  function handleUpload() {
+    setMenuOpen(false);
+    setUploadOpen(true);
   }
 
   return (
@@ -93,6 +100,17 @@ export function FAB() {
           >
             <Sparkles size={16} color="var(--accent)" />
             Спросить ИИ-помощника
+          </button>
+          <div style={{ height: 1, background: 'var(--border)', margin: '0 12px' }} />
+          <button
+            role="menuitem"
+            onClick={handleUpload}
+            style={menuItemStyle}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-muted)'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+          >
+            <Upload size={16} color="var(--accent)" />
+            Загрузить данные
           </button>
         </div>
       )}
@@ -161,6 +179,8 @@ export function FAB() {
           <Plus size={24} strokeWidth={2} />
         </span>
       </button>
+
+      <DataUploadDialog open={uploadOpen} onClose={() => setUploadOpen(false)} />
     </>
   );
 }
