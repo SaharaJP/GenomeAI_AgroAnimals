@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from 'react';
-import { Info, AlertTriangle, Trash2, Pencil } from 'lucide-react';
+import { Info, AlertTriangle, Trash2, Pencil, Maximize2 } from 'lucide-react';
 import type { ChartSeries } from '@/lib/api/analytics';
 
 interface Badge {
@@ -15,13 +15,14 @@ interface Props extends PropsWithChildren {
   onAlert?: () => void;
   onDelete?: () => void;
   onRename?: () => void;
+  onMaximize?: () => void;
 }
 
 function fireChartAction(label: string) {
   window.dispatchEvent(new CustomEvent('chart-action', { detail: label }));
 }
 
-export function ChartCard({ title, badges, legend, alertThreshold, onAlert, onDelete, onRename, children }: Props) {
+export function ChartCard({ title, badges, legend, alertThreshold, onAlert, onDelete, onRename, onMaximize, children }: Props) {
   return (
     <div className="an-chart-card">
       <div className="an-chart-header">
@@ -37,6 +38,11 @@ export function ChartCard({ title, badges, legend, alertThreshold, onAlert, onDe
           </button>
         </div>
         <div className="an-chart-actions">
+          {onMaximize && (
+            <button className="an-chart-action-btn" title="Полный экран" onClick={onMaximize}>
+              <Maximize2 size={11} />
+            </button>
+          )}
           <button className="an-chart-action-btn" title="Алерт по графику"
             onClick={onAlert ?? (() => fireChartAction(`Алерт: ${title}`))}>
             <AlertTriangle size={11} />

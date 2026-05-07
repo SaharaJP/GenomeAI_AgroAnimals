@@ -12,12 +12,32 @@ const PB = 24; // bottom pad (X labels)
 const IW = W - PL - PR;
 const IH = H - PT - PB;
 
+export interface QcOverlay {
+  incident_id: string;
+  period_start_idx: number;
+  period_end_idx: number | null;
+  severity: 'info' | 'warn' | 'high';
+  root_cause: string | null;
+  ai_description: string | null;
+}
+
+export interface EventMarker {
+  event_id: string;
+  date_idx: number;
+  title: string;
+  event_date: string;
+}
+
 interface Props {
   type: 'line' | 'stacked-bar';
   series: ChartSeries[];
   labels: string[];
   unit?: string;
   refLine?: number;
+  qcOverlays?: QcOverlay[];
+  eventMarkers?: EventMarker[];
+  onQcClick?: (incident_id: string) => void;
+  onEventClick?: (event_id: string) => void;
 }
 
 function fmtVal(v: number, unit: string): string {
@@ -26,7 +46,10 @@ function fmtVal(v: number, unit: string): string {
   return `${s}${unit}`;
 }
 
-export function BiChart({ type, series, labels, unit = '', refLine }: Props) {
+export function BiChart({
+  type, series, labels, unit = '', refLine,
+  qcOverlays, eventMarkers, onQcClick, onEventClick,
+}: Props) {
   const [hovered, setHovered] = useState<number | null>(null);
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const n = labels.length;
@@ -54,7 +77,7 @@ export function BiChart({ type, series, labels, unit = '', refLine }: Props) {
   const barSlot = IW / n;
   const barW = barSlot * 0.62;
 
-  const handleMouseMove = (e: React.MouseEvent<SVGRectElement>) => {
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const relX = (e.clientX - rect.left) / rect.width;
     const viewX = relX * W;
@@ -115,6 +138,8 @@ export function BiChart({ type, series, labels, unit = '', refLine }: Props) {
         preserveAspectRatio="none"
         style={{ width: '100%', height: H, display: 'block' }}
         aria-hidden="true"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHovered(null)}
       >
         <defs>
           <linearGradient id={`grad-${uid}`} x1="0" y1="0" x2="0" y2="1">
@@ -125,6 +150,34 @@ export function BiChart({ type, series, labels, unit = '', refLine }: Props) {
             <rect x={PL} y={PT} width={IW} height={IH} />
           </clipPath>
         </defs>
+
+        {/* QC overlay rectangles — rendered BEFORE line so they sit behind */}
+        {qcOverlays && qcOverlays.length > 0 && (
+          <g>
+            {qcOverlays.map((q) => {
+              const startIdx = Math.max(0, q.period_start_idx);
+              const endIdx = q.period_end_idx ?? n - 1;
+              const x1 = getX(startIdx);
+              const x2 = getX(Math.max(endIdx, startIdx));
+              const w = Math.max(2, x2 - x1);
+              const fill = q.severity === 'high' ? 'rgba(239,68,68,0.22)'
+                         : q.severity === 'info' ? 'rgba(59,130,246,0.15)'
+                         : 'rgba(245,158,11,0.18)';
+              return (
+                <rect
+                  key={q.incident_id}
+                  x={x1} y={PT}
+                  width={w} height={IH}
+                  fill={fill}
+                  style={{ cursor: onQcClick ? 'pointer' : 'default' }}
+                  onClick={() => onQcClick?.(q.incident_id)}
+                >
+                  <title>{`${q.root_cause ?? 'QC'} — ${(q.ai_description ?? '').slice(0, 80)}`}</title>
+                </rect>
+              );
+            })}
+          </g>
+        )}
 
         {/* Grid lines + Y labels */}
         {yTicks.map(({ y, v }, i) => (
@@ -237,13 +290,30 @@ export function BiChart({ type, series, labels, unit = '', refLine }: Props) {
           </g>
         )}
 
-        {/* Transparent interaction overlay */}
+        {/* Event markers — vertical lines + dot at top */}
+        {eventMarkers && eventMarkers.length > 0 && (
+          <g>
+            {eventMarkers.map((e, ei) => {
+              if (e.date_idx < 0 || e.date_idx >= n) return null;
+              const x = getX(e.date_idx) + (ei % 3 - 1) * 1.5;
+              return (
+                <g key={e.event_id} style={{ cursor: onEventClick ? 'pointer' : 'default' }}
+                   onClick={() => onEventClick?.(e.event_id)}>
+                  <line x1={x} y1={PT} x2={x} y2={PT + IH}
+                        stroke="var(--accent, #0369a1)" strokeWidth={1} strokeDasharray="2 2" opacity={0.55} />
+                  <circle cx={x} cy={PT + 4} r={3} fill="var(--accent, #0369a1)" />
+                  <title>{`${e.title} — ${e.event_date}`}</title>
+                </g>
+              );
+            })}
+          </g>
+        )}
+
+        {/* Transparent interaction overlay (cursor + visual only — events on SVG root) */}
         <rect
           x={PL} y={PT} width={IW} height={IH}
           fill="transparent"
-          style={{ cursor: 'crosshair' }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={() => setHovered(null)}
+          style={{ cursor: 'crosshair', pointerEvents: 'none' }}
         />
       </svg>
     </div>

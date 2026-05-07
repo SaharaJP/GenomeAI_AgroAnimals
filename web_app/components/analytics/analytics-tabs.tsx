@@ -10,6 +10,8 @@ import { HerdTab } from './herd-tab';
 import { WeatherTab } from './weather-tab';
 import { FinanceTab } from './finance-tab';
 import { AddChartDialog } from './add-chart-dialog';
+import { AnalyticsOverlaysProvider, useOverlays } from './analytics-overlays-context';
+import { useAuth } from '@/components/auth/auth-provider';
 
 interface Tab {
   id: string;
@@ -111,7 +113,35 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
   );
 }
 
+function HeaderToggles() {
+  const { showQc, showEvents, setShowQc, setShowEvents } = useOverlays();
+  const btn = (active: boolean): React.CSSProperties => ({
+    padding: '4px 10px',
+    fontSize: 12,
+    border: '1px solid var(--border)',
+    borderRadius: 6,
+    background: active ? 'var(--accent-soft, #e0f2fe)' : 'transparent',
+    color: active ? 'var(--accent-text, #0369a1)' : 'var(--text-secondary)',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 6,
+  });
+  return (
+    <div style={{ display: 'flex', gap: 6 }}>
+      <button style={btn(showQc)} onClick={() => setShowQc(!showQc)} aria-pressed={showQc}>
+        ⚙ QC: {showQc ? 'вкл' : 'выкл'}
+      </button>
+      <button style={btn(showEvents)} onClick={() => setShowEvents(!showEvents)} aria-pressed={showEvents}>
+        📍 События: {showEvents ? 'вкл' : 'выкл'}
+      </button>
+    </div>
+  );
+}
+
 export function AnalyticsTabs() {
+  const { me } = useAuth();
+  const farmId = me?.scope?.active_farm_id ?? 'INV_FARM_001';
   const [tabs, setTabs] = useState<Tab[]>(INITIAL_TABS);
   const [activeId, setActiveId] = useState('production');
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -236,6 +266,7 @@ export function AnalyticsTabs() {
   const activeTab = tabs.find(t => t.id === activeId);
 
   return (
+    <AnalyticsOverlaysProvider farmId={farmId}>
     <div>
       {/* Tab bar + toolbar */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
@@ -280,6 +311,7 @@ export function AnalyticsTabs() {
             onClick={handleCopyPanel}>
             <Copy size={13} /> Копировать панель
           </button>
+          <HeaderToggles />
           <button
             className="button button-primary"
             style={{ fontSize: 12, padding: '5px 13px', gap: 5 }}
@@ -445,5 +477,6 @@ export function AnalyticsTabs() {
 
       {toast && <div className="toast">{toast}</div>}
     </div>
+    </AnalyticsOverlaysProvider>
   );
 }
