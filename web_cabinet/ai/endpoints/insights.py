@@ -1,6 +1,6 @@
 """POST /api/ai/insights/scan-now — ручной запуск сканера инсайтов (MVP-N15).
 
-Только для admin. В demo-режиме возвращает seeded данные.
+Now returns ScanNowResponse from packages.contracts.api_boundary_v1.
 """
 from __future__ import annotations
 
@@ -8,7 +8,8 @@ import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..models import ScanNowResponse, ScannerInsight
+from packages.contracts.api_boundary_v1 import ScanNowResponse
+from ..models import ScannerInsight
 
 logger = logging.getLogger("genomeai.ai.endpoint.insights")
 router = APIRouter()
@@ -18,9 +19,7 @@ router = APIRouter()
 async def scan_now(farm_id: str = Query(default="demo-farm-v1")) -> ScanNowResponse:
     """Запускает сканер инсайтов немедленно (manual trigger, admin only).
 
-    В demo-режиме возвращает pre-seeded insights без вызова Claude.
-    В production-режиме вызывает Claude Sonnet и возвращает реальные инсайты.
-    Также пушит SSE-событие в открытые соединения.
+    Returns ScanNowResponse with insight_ids list.
     """
     from ..background.insight_scanner import scan_for_new_insights
     from ..config import get_ai_settings
@@ -32,26 +31,18 @@ async def scan_now(farm_id: str = Query(default="demo-farm-v1")) -> ScanNowRespo
         new_insights = scan_for_new_insights(farm_id)
     except Exception as exc:
         logger.error(f"scan_now failed farm={farm_id}: {exc}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"scan_failed: {exc}") from exc
+        raise HTTPException(status_code=503, detail="ai_unavailable") from exc
 
-    count = len(new_insights)
+    ids = [i.insight_id for i in new_insights]
+    count = len(ids)
     if count:
-        broadcast_insights_event(farm_id=farm_id, count=count)
+        try:
+            broadcast_insights_event(farm_id=farm_id, count=count)
+        except Exception as exc:  # broadcasting is best-effort
+            logger.warning(f"broadcast_insights_event failed: {exc}")
         logger.info(f"scan_now completed farm={farm_id} new_insights={count}")
 
-    if count == 0:
-        msg = "Новых аномалий не обнаружено."
-    elif count == 1:
-        msg = "Обнаружен 1 новый инсайт."
-    else:
-        msg = f"Обнаружено {count} новых инсайтов."
-
-    return ScanNowResponse(
-        farm_id=farm_id,
-        new_insights=new_insights,
-        message=msg,
-        demo_mode=settings.GENOMEAI_AI_DEMO_MODE,
-    )
+    return ScanNowResponse(count=count, insight_ids=ids, skipped=False)
 
 
 @router.get("/insights/active", response_model=list[ScannerInsight])

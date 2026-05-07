@@ -357,6 +357,8 @@ class InsightItem(BaseModel):
     chart_label: Optional[str] = None
     chart_unit: Optional[str] = None
     recommendations: list[InsightRecommendation] = Field(default_factory=list)
+    edited_at: Optional[str] = None
+    edited_by: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -369,6 +371,32 @@ class InsightsListResponse(BaseModel):
 
 class InsightTransitionRequest(BaseModel):
     status: str
+
+
+class InsightUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    body: Optional[str] = None
+    action: Optional[str] = None
+    recommendations: Optional[list[InsightRecommendation]] = None
+
+
+class InsightSettings(BaseModel):
+    schema: str = 'genomeai.api.insight_settings.v1'
+    min_severity: str = 'info'
+    enabled_categories: list[str] = Field(
+        default_factory=lambda: [
+            'production', 'reproduction', 'health',
+            'feeding', 'welfare', 'economics',
+        ]
+    )
+
+
+class ScanNowResponse(BaseModel):
+    schema: str = 'genomeai.api.insights.scan_now.v1'
+    count: int = 0
+    insight_ids: list[str] = Field(default_factory=list)
+    skipped: bool = False
+    skip_reason: Optional[str] = None
 
 
 class ReadinessCheck(BaseModel):

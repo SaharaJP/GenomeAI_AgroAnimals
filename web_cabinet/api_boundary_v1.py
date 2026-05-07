@@ -25,8 +25,10 @@ from packages.contracts.api_boundary_v1 import (
     FeedbackMetrics,
     HealthMetrics,
     InsightItem,
+    InsightSettings,
     InsightsListResponse,
     InsightTransitionRequest,
+    InsightUpdateRequest,
     PilotPackItem,
     PilotResponse,
     PilotSummary,
@@ -40,6 +42,7 @@ from packages.contracts.api_boundary_v1 import (
     ReadinessSummary,
     ReportItem,
     ReportsListResponse,
+    ScanNowResponse,
     SupportResponse,
     SupportSummary,
     WorklistItem,
@@ -74,8 +77,12 @@ from genomeai.copilot_tools import load_copilot_tools_config, resolve_section_re
 from .auth import get_current_user, get_db
 from .feedback_v1 import compute_feedback_metrics, list_feedback
 from .insights_v1 import (
+    delete_insight as _delete_insight,
     get_insight as _get_insight,
+    get_settings as _get_settings,
     list_insights as _list_insights,
+    patch_insight as _patch_insight,
+    put_settings as _put_settings,
     transition_insight as _transition_insight,
 )
 from .observability import snapshot as obs_snapshot
@@ -1082,11 +1089,21 @@ def boundary_support(user=Depends(get_current_user)):
 @router.get('/insights', response_model=InsightsListResponse)
 def boundary_insights_list(
     status: Optional[str] = None,
+    farm_id: str = 'INV_FARM_001',
+    category: Optional[str] = None,
+    severity_min: Optional[str] = None,
     user=Depends(get_current_user),
 ):
     if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
         raise HTTPException(status_code=403)
-    return _list_insights(status=status)
+    user_id = str(user.get('user_id') or user.get('username') or 'unknown')
+    return _list_insights(
+        farm_id=farm_id,
+        status=status,
+        user_id=user_id,
+        category=category,
+        severity_min=severity_min,
+    )
 
 
 @router.get('/insights/{insight_id}', response_model=InsightItem)
@@ -1114,6 +1131,107 @@ def boundary_insights_transition(
     if item is None:
         raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or invalid status')
     return item
+
+
+@router.patch('/insights/{insight_id}', response_model=InsightItem)
+def boundary_insights_patch(
+    insight_id: str,
+    body: InsightUpdateRequest,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    edited_by = str(user.get('username') or user.get('user_id') or 'unknown')
+    item = _patch_insight(
+        insight_id,
+        title=body.title,
+        body=body.body,
+        action=body.action,
+        recommendations=[r.model_dump() for r in body.recommendations] if body.recommendations else None,
+        edited_by=edited_by,
+    )
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or deleted')
+    return item
+
+
+@router.delete('/insights/{insight_id}')
+def boundary_insights_delete(
+    insight_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    _delete_insight(insight_id)
+    return {"ok": True, "insight_id": insight_id}
+
+
+@router.get('/insights/settings', response_model=InsightSettings)
+def boundary_insights_settings_get(
+    farm_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view'):
+        raise HTTPException(status_code=403)
+    user_id = str(user.get('user_id') or user.get('username') or 'unknown')
+    return _get_settings(user_id=user_id, farm_id=farm_id)
+
+
+@router.put('/insights/settings', response_model=InsightSettings)
+def boundary_insights_settings_put(
+    body: InsightSettings,
+    farm_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view'):
+        raise HTTPException(status_code=403)
+    user_id = str(user.get('user_id') or user.get('username') or 'unknown')
+    return _put_settings(user_id=user_id, farm_id=farm_id, settings=body)
+
+
+@router.post('/insights/scan-now', response_model=ScanNowResponse)
+def boundary_insights_scan_now(
+    farm_id: str = 'INV_FARM_001',
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    import os as _os
+    from web_cabinet.ai.background.insight_scanner import scan_for_new_insights
+
+    redis_url = _os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')
+    client = None
+    try:
+        import redis as _redis  # type: ignore
+        client = _redis.Redis.from_url(redis_url)
+    except Exception:
+        client = None  # Redis pkg or connection unavailable
+
+    lock_key = f'insight_scanner:lock:{farm_id}'
+    acquired = False
+    if client is not None:
+        try:
+            acquired = bool(client.set(lock_key, '1', nx=True, ex=120))
+            if not acquired:
+                raise HTTPException(status_code=409, detail='scan_in_progress')
+        except HTTPException:
+            raise
+        except Exception:
+            client = None  # network blip — best-effort: run without lock
+
+    try:
+        insights = scan_for_new_insights(farm_id)
+        return ScanNowResponse(
+            count=len(insights),
+            insight_ids=[i.insight_id for i in insights],
+            skipped=False,
+        )
+    finally:
+        if client is not None and acquired:
+            try:
+                client.delete(lock_key)
+            except Exception:
+                pass
 
 
 @router.post('/timeline/events')
