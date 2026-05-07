@@ -28,6 +28,16 @@ from packages.contracts.api_boundary_v1 import (
     InsightsListResponse,
 )
 
+
+def _extract_date_part(raw: Optional[str]) -> str:
+    """Extract YYYY-MM-DD from either ISO 8601 or Postgres ::text timestamp."""
+    if not raw:
+        return ""
+    s = str(raw)
+    # Try 'T' separator first (ISO 8601), then space (Postgres ::text)
+    return s.split("T")[0].split(" ")[0]
+
+
 logger = logging.getLogger("genomeai.web_cabinet.insights_v1")
 
 _DEFAULT_CATEGORIES = [
@@ -119,7 +129,7 @@ def _row_to_item(row: dict[str, Any]) -> InsightItem:
         edited_at_iso = str(edited_at_val)
 
     generated_at = row.get("generated_at_utc") or ""
-    date_part = generated_at.split("T")[0] if isinstance(generated_at, str) and generated_at else ""
+    date_part = _extract_date_part(generated_at if isinstance(generated_at, str) else None)
 
     return InsightItem(
         insight_id=row["insight_id"],
@@ -215,6 +225,15 @@ def patch_insight(
     recommendations: Optional[list[dict]] = None,
     edited_by: Optional[str] = None,
 ) -> Optional[InsightItem]:
+    """Apply user edits to an insight, set edited_at/edited_by.
+
+    Returns the updated InsightItem, or None if the insight does not exist
+    (or was soft-deleted).
+
+    ``recommendations`` items are expected to be dicts shaped like
+    InsightRecommendation: ``{"id": str, "text": str, "deadline": Optional[str]}``.
+    Boundary callers should call ``InsightRecommendation.model_dump()`` before passing.
+    """
     sets: list[str] = []
     params: list[Any] = []
     if title is not None:

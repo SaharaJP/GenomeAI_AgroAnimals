@@ -1106,66 +1106,9 @@ def boundary_insights_list(
     )
 
 
-@router.get('/insights/{insight_id}', response_model=InsightItem)
-def boundary_insights_get(
-    insight_id: str,
-    user=Depends(get_current_user),
-):
-    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
-        raise HTTPException(status_code=403)
-    item = _get_insight(insight_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found')
-    return item
-
-
-@router.post('/insights/{insight_id}/transition', response_model=InsightItem)
-def boundary_insights_transition(
-    insight_id: str,
-    body: InsightTransitionRequest,
-    user=Depends(get_current_user),
-):
-    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
-        raise HTTPException(status_code=403)
-    item = _transition_insight(insight_id, body.status)
-    if item is None:
-        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or invalid status')
-    return item
-
-
-@router.patch('/insights/{insight_id}', response_model=InsightItem)
-def boundary_insights_patch(
-    insight_id: str,
-    body: InsightUpdateRequest,
-    user=Depends(get_current_user),
-):
-    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
-        raise HTTPException(status_code=403)
-    edited_by = str(user.get('username') or user.get('user_id') or 'unknown')
-    item = _patch_insight(
-        insight_id,
-        title=body.title,
-        body=body.body,
-        action=body.action,
-        recommendations=[r.model_dump() for r in body.recommendations] if body.recommendations else None,
-        edited_by=edited_by,
-    )
-    if item is None:
-        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or deleted')
-    return item
-
-
-@router.delete('/insights/{insight_id}')
-def boundary_insights_delete(
-    insight_id: str,
-    user=Depends(get_current_user),
-):
-    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
-        raise HTTPException(status_code=403)
-    _delete_insight(insight_id)
-    return {"ok": True, "insight_id": insight_id}
-
-
+# NOTE: Fixed-path /insights/* routes (settings, scan-now) MUST be registered
+# before /insights/{insight_id}, otherwise FastAPI matches them as
+# insight_id="settings" / "scan-now" against the path-parameterized handler.
 @router.get('/insights/settings', response_model=InsightSettings)
 def boundary_insights_settings_get(
     farm_id: str,
@@ -1232,6 +1175,66 @@ def boundary_insights_scan_now(
                 client.delete(lock_key)
             except Exception:
                 pass
+
+
+@router.get('/insights/{insight_id}', response_model=InsightItem)
+def boundary_insights_get(
+    insight_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
+        raise HTTPException(status_code=403)
+    item = _get_insight(insight_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found')
+    return item
+
+
+@router.post('/insights/{insight_id}/transition', response_model=InsightItem)
+def boundary_insights_transition(
+    insight_id: str,
+    body: InsightTransitionRequest,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    item = _transition_insight(insight_id, body.status)
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or invalid status')
+    return item
+
+
+@router.patch('/insights/{insight_id}', response_model=InsightItem)
+def boundary_insights_patch(
+    insight_id: str,
+    body: InsightUpdateRequest,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    edited_by = str(user.get('username') or user.get('user_id') or 'unknown')
+    item = _patch_insight(
+        insight_id,
+        title=body.title,
+        body=body.body,
+        action=body.action,
+        recommendations=[r.model_dump() for r in body.recommendations] if body.recommendations else None,
+        edited_by=edited_by,
+    )
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'Insight {insight_id} not found or deleted')
+    return item
+
+
+@router.delete('/insights/{insight_id}')
+def boundary_insights_delete(
+    insight_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    _delete_insight(insight_id)
+    return {"ok": True, "insight_id": insight_id}
 
 
 @router.post('/timeline/events')

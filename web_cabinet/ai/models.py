@@ -194,13 +194,6 @@ class ScannerInsight(BaseModel):
     generator: str = "ai_scanner"
 
 
-class ScanNowResponse(BaseModel):
-    farm_id: str
-    new_insights: list[ScannerInsight]
-    message: str
-    demo_mode: bool = True
-
-
 # ---------------------------------------------------------------------------
 # Impact Narrative (MVP-N16)
 # ---------------------------------------------------------------------------
