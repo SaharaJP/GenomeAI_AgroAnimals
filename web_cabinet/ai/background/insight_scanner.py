@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 import uuid
 from datetime import datetime, timedelta
@@ -93,37 +92,60 @@ def get_active_insights(farm_id: str) -> list[dict]:
 
 
 def save_insight(insight: ScannerInsight) -> None:
-    """Сохраняет инсайт в Postgres. Gracefully skips if DB unavailable."""
-    dsn = os.getenv("GENOMEAI_DB_DSN") or os.getenv("GENOMEAI_RUNTIME_POSTGRES_DSN")
-    if not dsn:
+    """Сохраняет инсайт в Postgres через psycopg shim. Gracefully skips on errors.
+
+    Также денормализует severity/body/action/animal_ids/recommendations
+    в типизированные колонки (миграция 20260507_12_insights_extend) — фронту
+    эти поля доступны без парсинга payload_json.
+    """
+    try:
+        from web_cabinet.insights_v1 import _conn
+    except Exception as exc:
+        logger.debug(f"save_insight: insights_v1 unavailable: {exc}")
         return
     try:
-        import psycopg2  # type: ignore[import-untyped]
-        conn = psycopg2.connect(dsn)
-        cur = conn.cursor()
-        cur.execute(
-            """
-            INSERT INTO scanner_insights
-              (insight_id, farm_id, title, category, priority, status,
-               generated_at_utc, generator, payload_json)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT (insight_id) DO NOTHING
-            """,
-            (
-                insight.insight_id,
-                insight.farm_id,
-                insight.title,
-                insight.category,
-                insight.priority,
-                insight.status,
-                insight.generated_at_utc.isoformat(),
-                insight.generator,
-                insight.model_dump_json(),
-            ),
-        )
-        conn.commit()
-        cur.close()
-        conn.close()
+        import json as _json
+        recs_json = _json.dumps([
+            r.model_dump() if hasattr(r, "model_dump") else dict(r)
+            for r in (insight.recommendations or [])
+        ])
+        animal_ids_json = _json.dumps(list(insight.affected_cow_ids or []))
+        body_text = getattr(insight, "description", "") or ""
+        action_text = ""
+        # If recommendations have an "action" field, prefer the first as `action`
+        if insight.recommendations:
+            first = insight.recommendations[0]
+            action_text = getattr(first, "action", "") or getattr(first, "text", "") or ""
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO scanner_insights
+                      (insight_id, farm_id, title, category, priority, status,
+                       generated_at_utc, generator, payload_json,
+                       severity, body, action, animal_ids, recommendations)
+                    VALUES (%s, %s, %s, %s, %s, %s,
+                            %s, %s, %s,
+                            %s, %s, %s, %s::jsonb, %s::jsonb)
+                    ON CONFLICT (insight_id) DO NOTHING
+                    """,
+                    (
+                        insight.insight_id,
+                        insight.farm_id,
+                        insight.title,
+                        insight.category,
+                        insight.priority,
+                        insight.status,
+                        insight.generated_at_utc.isoformat(),
+                        insight.generator,
+                        insight.model_dump_json(),
+                        insight.priority,           # severity mirrors priority for now
+                        body_text,
+                        action_text,
+                        animal_ids_json,
+                        recs_json,
+                    ),
+                )
         logger.info(f"insight saved insight_id={insight.insight_id} farm={insight.farm_id}")
     except Exception as exc:
         logger.warning(f"insight db save skipped: {exc}")
