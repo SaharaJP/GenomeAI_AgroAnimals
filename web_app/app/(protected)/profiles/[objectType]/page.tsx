@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { use } from 'react';
 import Link from 'next/link';
-import { Search, ChevronRight, Filter, X } from 'lucide-react';
+import { Search, ChevronRight, Filter, X, List, Grid3x3 } from 'lucide-react';
 
 type Animal = {
   animal_id: string;
@@ -17,6 +17,15 @@ type FilterOptions = {
   statuses: string[];
   pen_ids: string[];
 };
+
+type AnimalGroup = {
+  pen_id: string;
+  total: number;
+  breeds: Record<string, number>;
+  statuses: Record<string, number>;
+};
+
+type ViewMode = 'list' | 'groups';
 
 type ColumnFilters = {
   breed: string;
@@ -190,6 +199,111 @@ function FilterableHeader({
   );
 }
 
+function GroupsView({
+  groups,
+  loading,
+  onPickGroup,
+}: {
+  groups: AnimalGroup[];
+  loading: boolean;
+  onPickGroup: (penId: string) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="settings-card">
+        <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          Загрузка групп…
+        </div>
+      </div>
+    );
+  }
+
+  if (groups.length === 0) {
+    return (
+      <div className="settings-card">
+        <div className="empty-state" style={{ padding: '32px 0' }}>
+          Группы не найдены — у животных нет привязки к pen_id.
+        </div>
+      </div>
+    );
+  }
+
+  const totalAll = groups.reduce((s, g) => s + g.total, 0);
+
+  return (
+    <>
+      <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-muted)' }}>
+        Всего групп: <strong style={{ color: 'var(--text)' }}>{groups.length}</strong>
+        {' · '}
+        Голов: <strong style={{ color: 'var(--text)' }}>{totalAll}</strong>
+      </div>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: 12,
+        }}
+      >
+        {groups.map((g) => {
+          const breedRows = Object.entries(g.breeds).sort((a, b) => b[1] - a[1]);
+          const statusRows = Object.entries(g.statuses).sort((a, b) => b[1] - a[1]);
+          return (
+            <div
+              key={g.pen_id}
+              className="settings-card"
+              style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Группа {g.pen_id}</div>
+                <span className="badge badge-success" style={{ fontSize: 11 }}>{g.total} гол.</span>
+              </div>
+
+              {breedRows.length > 0 && (
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <div style={{ color: 'var(--text-muted)', marginBottom: 2, fontSize: 10, fontWeight: 600, letterSpacing: 0.4 }}>
+                    ПОРОДЫ
+                  </div>
+                  {breedRows.slice(0, 4).map(([breed, count]) => (
+                    <div key={breed} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
+                      <span>{breed}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {statusRows.length > 0 && (
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                  <div style={{ color: 'var(--text-muted)', marginBottom: 2, fontSize: 10, fontWeight: 600, letterSpacing: 0.4 }}>
+                    СТАТУСЫ
+                  </div>
+                  {statusRows.slice(0, 4).map(([status, count]) => (
+                    <div key={status} style={{ display: 'flex', justifyContent: 'space-between', padding: '1px 0' }}>
+                      <span>{status === 'active' ? 'Активные' : status}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button
+                className="btn-outline"
+                onClick={() => onPickGroup(g.pen_id)}
+                style={{
+                  marginTop: 4, fontSize: 12, padding: '5px 10px',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+                }}
+              >
+                Открыть список группы <ChevronRight size={12} />
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
 function AnimalListPage() {
   const [animals, setAnimals] = useState<Animal[]>([]);
   const [total, setTotal] = useState(0);
@@ -198,6 +312,9 @@ function AnimalListPage() {
   const [page, setPage] = useState(0);
   const [filters, setFilters] = useState<ColumnFilters>({ breed: '', status: '', pen_id: '' });
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({ breeds: [], statuses: [], pen_ids: [] });
+  const [view, setView] = useState<ViewMode>('list');
+  const [groups, setGroups] = useState<AnimalGroup[]>([]);
+  const [groupsLoading, setGroupsLoading] = useState(true);
   const PAGE_SIZE = 50;
 
   useEffect(() => {
@@ -205,6 +322,48 @@ function AnimalListPage() {
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d) setFilterOptions(d); })
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadGroups() {
+      setGroupsLoading(true);
+      try {
+        // Stream all animals (page-by-page) and aggregate by pen_id locally.
+        const PAGE = 500;
+        const acc: Record<string, AnimalGroup> = {};
+        let off = 0;
+        for (let safety = 0; safety < 50; safety++) {
+          const res = await fetch(
+            `/api/backend/api/app/v1/animals?limit=${PAGE}&offset=${off}`,
+            { cache: 'no-store' },
+          );
+          if (!res.ok) break;
+          const data = await res.json();
+          const batch: Animal[] = data.animals ?? [];
+          batch.forEach((a) => {
+            const pen = a.pen_id || '—';
+            const g = (acc[pen] ||= { pen_id: pen, total: 0, breeds: {}, statuses: {} });
+            g.total += 1;
+            const b = a.breed || '—';
+            g.breeds[b] = (g.breeds[b] ?? 0) + 1;
+            const s = a.status || 'unknown';
+            g.statuses[s] = (g.statuses[s] ?? 0) + 1;
+          });
+          off += batch.length;
+          if (batch.length < PAGE || off >= (data.total ?? 0)) break;
+        }
+        if (cancelled) return;
+        const ordered = Object.values(acc).sort((a, b) => a.pen_id.localeCompare(b.pen_id));
+        setGroups(ordered);
+      } catch {
+        if (!cancelled) setGroups([]);
+      } finally {
+        if (!cancelled) setGroupsLoading(false);
+      }
+    }
+    loadGroups();
+    return () => { cancelled = true; };
   }, []);
 
   const fetchAnimals = useCallback(async (q: string, pageNum: number, f: ColumnFilters) => {
@@ -257,7 +416,36 @@ function AnimalListPage() {
           <p className="page-subtitle">Все животные на ферме ({total} голов)</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {hasActiveFilters && (
+          <div style={{ display: 'inline-flex', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+            <button
+              type="button"
+              onClick={() => setView('list')}
+              title="Списком"
+              style={{
+                background: view === 'list' ? 'var(--bg-muted)' : 'transparent',
+                border: 'none', padding: '5px 10px', cursor: 'pointer',
+                color: view === 'list' ? 'var(--text)' : 'var(--text-muted)',
+                display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12,
+              }}
+            >
+              <List size={13} /> Список
+            </button>
+            <button
+              type="button"
+              onClick={() => setView('groups')}
+              title="По группам"
+              style={{
+                background: view === 'groups' ? 'var(--bg-muted)' : 'transparent',
+                border: 'none', padding: '5px 10px', cursor: 'pointer',
+                color: view === 'groups' ? 'var(--text)' : 'var(--text-muted)',
+                display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12,
+                borderLeft: '1px solid var(--border)',
+              }}
+            >
+              <Grid3x3 size={13} /> По группам
+            </button>
+          </div>
+          {hasActiveFilters && view === 'list' && (
             <button
               className="btn-outline"
               onClick={() => setFilters({ breed: '', status: '', pen_id: '' })}
@@ -266,19 +454,31 @@ function AnimalListPage() {
               <X size={12} /> Сбросить фильтры
             </button>
           )}
-          <div style={{ position: 'relative' }}>
-            <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input
-              className="input"
-              placeholder="Поиск по ID..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ paddingLeft: 32, width: 220 }}
-            />
-          </div>
+          {view === 'list' && (
+            <div style={{ position: 'relative' }}>
+              <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <input
+                className="input"
+                placeholder="Поиск по ID..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ paddingLeft: 32, width: 220 }}
+              />
+            </div>
+          )}
         </div>
       </div>
 
+      {view === 'groups' ? (
+        <GroupsView
+          groups={groups}
+          loading={groupsLoading}
+          onPickGroup={(penId) => {
+            setFilters({ breed: '', status: '', pen_id: penId });
+            setView('list');
+          }}
+        />
+      ) : (
       <div className="settings-card">
         {loading ? (
           <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)' }}>Загрузка...</div>
@@ -336,7 +536,9 @@ function AnimalListPage() {
         )}
       </div>
 
-      {totalPages > 1 && (
+      )}
+
+      {view === 'list' && totalPages > 1 && (
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
           <button
             className="btn-outline"

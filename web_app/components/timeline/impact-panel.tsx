@@ -138,6 +138,12 @@ GenomeAI AgroAnimals © ${new Date().getFullYear()}
       setFetchError(false);
       return;
     }
+    if (!event.has_impact) {
+      setImpact(null);
+      setFetchError(false);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     setLoading(true);
     setFetchError(false);
@@ -149,7 +155,7 @@ GenomeAI AgroAnimals © ${new Date().getFullYear()}
       }
     });
     return () => { cancelled = true; };
-  }, [event?.timeline_event_id, activeWindow]);
+  }, [event?.timeline_event_id, event?.has_impact, activeWindow]);
 
   if (!event) {
     return (

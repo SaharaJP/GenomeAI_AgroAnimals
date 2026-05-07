@@ -3,15 +3,31 @@ import { useAnalyticsTimeseries, emptyChart } from '@/lib/api/analytics-live';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
-import { METRICS } from './add-chart-dialog';
+import { MetricChartCard } from './metric-chart-card';
 
 interface Props {
   onAddChart: () => void;
   addedMetricIds?: string[];
   onRemoveChart?: (id: string) => void;
+  removedBuiltinIds?: string[];
+  onRemoveBuiltin?: (key: string) => void;
+  titleOverrides?: Record<string, string>;
+  alertThresholds?: Record<string, string>;
+  onRequestRename?: (key: string, currentTitle: string) => void;
+  onRequestAlert?: (key: string, currentTitle: string) => void;
 }
 
-export function ProductionTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
+export function ProductionTab({
+  onAddChart,
+  addedMetricIds = [],
+  onRemoveChart,
+  removedBuiltinIds = [],
+  onRemoveBuiltin,
+  titleOverrides = {},
+  alertThresholds = {},
+  onRequestRename,
+  onRequestAlert,
+}: Props) {
   const state = useAnalyticsTimeseries('production');
 
   const milkEcm = state.status === 'ok'
@@ -25,48 +41,73 @@ export function ProductionTab({ onAddChart, addedMetricIds = [], onRemoveChart }
     : emptyChart('СКК');
 
   const loading = state.status === 'loading';
+  const isVisible = (k: string) => !removedBuiltinIds.includes(k);
+  const titleOf = (k: string, def: string) => titleOverrides[k] ?? def;
 
   return (
     <div className="grid grid-2">
-      <ChartCard
-        title={loading ? 'Надой и ECM — загрузка…' : 'Надой и ECM'}
-        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
-        legend={milkEcm.series}
-      >
-        <BiChart type="line" series={milkEcm.series} labels={milkEcm.labels} unit=" кг" />
-      </ChartCard>
-
-      <ChartCard
-        title={loading ? 'Жир и белок % — загрузка…' : 'Жир и белок %'}
-        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
-        legend={fatProt.series}
-      >
-        <BiChart type="line" series={fatProt.series} labels={fatProt.labels} unit="%" />
-      </ChartCard>
-
-      <ChartCard
-        title={loading ? 'СКК — загрузка…' : 'Соматические клетки (СКК)'}
-        badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
-        legend={scc.series}
-      >
-        <BiChart type="line" series={scc.series} labels={scc.labels} unit="k" refLine={200} />
-      </ChartCard>
-
-      {addedMetricIds.map(id => {
-        const metric = METRICS.find(m => m.id === id);
+      {isVisible('milk_ecm') && (() => {
+        const t = titleOf('milk_ecm', loading ? 'Надой и ECM — загрузка…' : 'Надой и ECM');
         return (
           <ChartCard
-            key={id}
-            title={metric?.name ?? id}
-            badges={metric ? [{ icon: '📊', label: metric.group }] : []}
-            onDelete={() => onRemoveChart?.(id)}
+            title={t}
+            badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
+            legend={milkEcm.series}
+            alertThreshold={alertThresholds['milk_ecm']}
+            onDelete={() => onRemoveBuiltin?.('milk_ecm')}
+            onRename={() => onRequestRename?.('milk_ecm', t)}
+            onAlert={() => onRequestAlert?.('milk_ecm', t)}
           >
-            <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
-              {metric?.desc ?? 'Данные загружаются…'}
-            </div>
+            <BiChart type="line" series={milkEcm.series} labels={milkEcm.labels} unit=" кг" />
           </ChartCard>
         );
-      })}
+      })()}
+
+      {isVisible('fat_protein') && (() => {
+        const t = titleOf('fat_protein', loading ? 'Жир и белок % — загрузка…' : 'Жир и белок %');
+        return (
+          <ChartCard
+            title={t}
+            badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
+            legend={fatProt.series}
+            alertThreshold={alertThresholds['fat_protein']}
+            onDelete={() => onRemoveBuiltin?.('fat_protein')}
+            onRename={() => onRequestRename?.('fat_protein', t)}
+            onAlert={() => onRequestAlert?.('fat_protein', t)}
+          >
+            <BiChart type="line" series={fatProt.series} labels={fatProt.labels} unit="%" />
+          </ChartCard>
+        );
+      })()}
+
+      {isVisible('scc') && (() => {
+        const t = titleOf('scc', loading ? 'СКК — загрузка…' : 'Соматические клетки (СКК)');
+        return (
+          <ChartCard
+            title={t}
+            badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
+            legend={scc.series}
+            alertThreshold={alertThresholds['scc']}
+            onDelete={() => onRemoveBuiltin?.('scc')}
+            onRename={() => onRequestRename?.('scc', t)}
+            onAlert={() => onRequestAlert?.('scc', t)}
+          >
+            <BiChart type="line" series={scc.series} labels={scc.labels} unit="k" refLine={200} />
+          </ChartCard>
+        );
+      })()}
+
+      {addedMetricIds.map((id) => (
+        <MetricChartCard
+          key={id}
+          metricId={id}
+          titleOverride={titleOverrides[id]}
+          alertThreshold={alertThresholds[id]}
+          onDelete={() => onRemoveChart?.(id)}
+          onRename={onRequestRename}
+          onAlert={onRequestAlert}
+        />
+      ))}
 
       <EmptyChartSlot onAdd={onAddChart} />
     </div>

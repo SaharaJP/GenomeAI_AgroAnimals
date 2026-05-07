@@ -50,9 +50,14 @@ interface Props {
 
 export function AddChartDialog({ open, onClose, onAdd }: Props) {
   const [query, setQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) setQuery('');
+    if (!open) {
+      setQuery('');
+      setActiveGroup(null);
+    }
   }, [open]);
 
   useEffect(() => {
@@ -87,24 +92,39 @@ export function AddChartDialog({ open, onClose, onAdd }: Props) {
         </div>
 
         <div className="an-dialog-body">
-          {/* Tabs: Chart View / List View (visual only) */}
+          {/* Tabs: Chart View / List View */}
           <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
-            {['Карточки', 'Список'].map((label, i) => (
-              <button key={i} style={{
-                padding: '5px 14px',
-                fontSize: 12,
-                fontWeight: 500,
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius)',
-                background: i === 0 ? 'var(--bg-muted)' : 'transparent',
-                color: i === 0 ? 'var(--text)' : 'var(--text-muted)',
-                cursor: 'pointer',
-              }}>
-                {label}
-              </button>
-            ))}
+            {(['cards', 'list'] as const).map((mode) => {
+              const label = mode === 'cards' ? 'Карточки' : 'Список';
+              const active = viewMode === mode;
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setViewMode(mode)}
+                  aria-pressed={active}
+                  style={{
+                    padding: '5px 14px',
+                    fontSize: 12,
+                    fontWeight: 500,
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    background: active ? 'var(--bg-muted)' : 'transparent',
+                    color: active ? 'var(--text)' : 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
             <div style={{ flex: 1 }} />
             <button
+              type="button"
+              onClick={() => {
+                if (filtered.length > 0) onAdd(filtered[0].id);
+              }}
+              title="Добавить первую видимую метрику"
               style={{
                 padding: '5px 14px',
                 fontSize: 12,
@@ -141,25 +161,62 @@ export function AddChartDialog({ open, onClose, onAdd }: Props) {
           {filteredGroups.map(group => {
             const items = filtered.filter(m => m.group === group);
             if (items.length === 0) return null;
+            const collapsed = activeGroup !== null && activeGroup !== group;
             return (
               <div key={group}>
-                <div className="an-group-title">
-                  <span>▸</span> {group}
-                </div>
-                <div className="an-metric-grid">
-                  {items.map(metric => (
-                    <button
-                      key={metric.id}
-                      className="an-metric-card"
-                      onClick={() => onAdd(metric.id)}
-                    >
-                      {/* Mini chart preview placeholder */}
-                      <div className="an-metric-preview" />
-                      <div className="an-metric-card-title">{metric.name}</div>
-                      <div className="an-metric-card-desc">{metric.desc}</div>
-                    </button>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveGroup((g) => g === group ? null : group)}
+                  className="an-group-title"
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    padding: 0, color: 'inherit', textAlign: 'left', width: '100%',
+                  }}
+                >
+                  <span>{collapsed ? '▸' : '▾'}</span> {group}
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--text-muted)' }}>
+                    {items.length}
+                  </span>
+                </button>
+                {!collapsed && (
+                  viewMode === 'cards' ? (
+                    <div className="an-metric-grid">
+                      {items.map(metric => (
+                        <button
+                          key={metric.id}
+                          type="button"
+                          className="an-metric-card"
+                          onClick={() => onAdd(metric.id)}
+                        >
+                          <div className="an-metric-preview" />
+                          <div className="an-metric-card-title">{metric.name}</div>
+                          <div className="an-metric-card-desc">{metric.desc}</div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 12 }}>
+                      {items.map(metric => (
+                        <button
+                          key={metric.id}
+                          type="button"
+                          onClick={() => onAdd(metric.id)}
+                          style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                            gap: 12, padding: '8px 10px', borderRadius: 6,
+                            border: '1px solid var(--border)', background: 'transparent',
+                            cursor: 'pointer', textAlign: 'left', color: 'var(--text)',
+                          }}
+                        >
+                          <span style={{ fontSize: 13, fontWeight: 600 }}>{metric.name}</span>
+                          <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 1, textAlign: 'right' }}>
+                            {metric.desc}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
             );
           })}

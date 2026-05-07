@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, HelpCircle } from 'lucide-react';
 import { DEMO_TIMELINE_EVENTS } from '@/lib/api/timeline';
 import type { MetricWindow, TimelineEvent } from '@/lib/api/timeline';
 import { EventList } from '@/components/timeline/event-list';
@@ -197,9 +197,96 @@ export default function TimelinePage() {
     setSwipeStartX(null);
   }
 
+  function handleDownloadHelp() {
+    const text = `GenomeAI AgroAnimals — инструкции и математика системы
+================================================================
+
+ОБЩАЯ КАРТА СИСТЕМЫ
+• Главная (/dashboard) — KPI стада: надой, ECM, СКК, маржа.
+• Обзор (/daily-summary) — ежедневная сводка: алерты, действия, рабочие списки.
+• Инсайты (/insights) — алерты со сценариями реакции (acknowledge / resolve).
+• Аналитика (/analytics) — графики по 8 группам метрик: продуктивность, корм,
+  воспроизводство, здоровье, поведение, состав стада, погода, финансы.
+• Лента событий (/timeline) — хронология управленческих событий и их влияние.
+• Животные (/profiles/animal) — список и профили коров, фильтр по породе/статусу/группе.
+• Помощник (/copilot) — генерация недельных бриф-отчётов и Q&A.
+• Рабочие списки (/worklists) — задачи на сегодня с привязкой к решениям.
+
+МЕТОДОЛОГИЯ ВЛИЯНИЯ СОБЫТИЙ
+Лента событий сопоставляет управленческие решения с динамикой ключевых метрик стада.
+Для каждого события система формирует "до" и "после" на основе выбранного окна.
+
+ВРЕМЕННЫЕ ОКНА
+• 1 день  — 1 день до и 1 день после события
+• 3 дня   — 3 дня до и 3 дня после
+• 7 дней  — 7 дней до и 7 дней после
+• 14 дней — 14 дней до и 14 дней после
+
+ОСНОВНЫЕ МЕТРИКИ
+• Надой (кг/гол/день)        — основная производственная метрика
+• ECM (кг/гол/день)         — энергокорректированное молоко
+• Жир / белок (%)           — качество молока
+• СКК (тыс/мл)              — соматические клетки, индикатор здоровья вымени
+• DMI (кг СВ/гол/день)      — потребление сухого вещества
+• Жвачка (мин/гол/день)     — поведенческая метрика
+• Активность (индекс)       — поведенческая метрика
+• THI (индекс)              — индекс тепловой нагрузки
+• Pregnancy / Conception (%) — показатели воспроизводства
+• Days open (дн)            — дни открытого периода
+
+РАСЧЁТ ИЗМЕНЕНИЯ
+Δ      = (среднее "после") − (среднее "до")
+Δ%     = Δ / среднее "до" × 100%
+p-value = критерий Уэлча (Welch's t-test) на различие средних
+CI 95%  = bootstrap 1000 реплик
+Эффект  = классификация по |Cohen's d| (negligible / small / medium / large)
+
+ЦВЕТОВАЯ ЛОГИКА
+Зелёный — улучшение метрики относительно "до".
+Красный — ухудшение.
+Серый   — статистически незначимое изменение.
+
+КОГДА АНАЛИЗ НЕ ПРОВОДИТСЯ
+• Событие добавлено пользователем вручную и has_impact=false → анализ начнётся
+  автоматически после накопления статистики (обычно через 24–48 часов после события).
+• Окно меньше 1 дня от события — данных "после" ещё нет.
+• Меньше 5 наблюдений на стороне (treated/control) — выборка недостоверна.
+
+КОРОТКО О ДОСТОВЕРНОСТИ
+• Анализ носит информационный характер и не заменяет ветеринарное заключение.
+• Для надёжных выводов рекомендуется окно ≥ 7 дней.
+• Корреляция не означает причинно-следственную связь.
+
+GenomeAI AgroAnimals © ${new Date().getFullYear()}
+`;
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'genomeai-help-bundle.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Архив инструкций скачан');
+  }
+
   return (
     <>
-      <h1 className="page-title">Лента событий</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <h1 className="page-title" style={{ margin: 0 }}>Лента событий</h1>
+        <button
+          type="button"
+          onClick={handleDownloadHelp}
+          title="Скачать архив инструкций по системе и математике"
+          aria-label="Скачать архив инструкций"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: 'var(--text-muted)', padding: 4,
+            display: 'inline-flex', alignItems: 'center',
+          }}
+        >
+          <HelpCircle size={18} strokeWidth={1.5} />
+        </button>
+      </div>
       <p className="tl-page-subtitle">
         Хроника событий на ферме в хронологическом порядке, с оценкой их влияния.
       </p>

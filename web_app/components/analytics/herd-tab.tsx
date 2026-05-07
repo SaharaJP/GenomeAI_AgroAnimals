@@ -3,12 +3,18 @@ import { useAnalyticsTimeseries, emptyChart } from '@/lib/api/analytics-live';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { EmptyChartSlot } from './empty-chart-slot';
-import { METRICS } from './add-chart-dialog';
+import { MetricChartCard } from './metric-chart-card';
 
 interface Props {
   onAddChart: () => void;
   addedMetricIds?: string[];
   onRemoveChart?: (id: string) => void;
+  removedBuiltinIds?: string[];
+  onRemoveBuiltin?: (key: string) => void;
+  titleOverrides?: Record<string, string>;
+  alertThresholds?: Record<string, string>;
+  onRequestRename?: (key: string, currentTitle: string) => void;
+  onRequestAlert?: (key: string, currentTitle: string) => void;
 }
 
 function HerdBarChart({ series, labels }: { series: { name: string; color: string; data: number[] }[]; labels: string[] }) {
@@ -50,7 +56,17 @@ function HerdBarChart({ series, labels }: { series: { name: string; color: strin
   );
 }
 
-export function HerdTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Props) {
+export function HerdTab({
+  onAddChart,
+  addedMetricIds = [],
+  onRemoveChart,
+  removedBuiltinIds = [],
+  onRemoveBuiltin,
+  titleOverrides = {},
+  alertThresholds = {},
+  onRequestRename,
+  onRequestAlert,
+}: Props) {
   const state = useAnalyticsTimeseries('herd');
 
   const breedChart = state.status === 'ok'
@@ -64,57 +80,73 @@ export function HerdTab({ onAddChart, addedMetricIds = [], onRemoveChart }: Prop
     : null;
 
   const loading = state.status === 'loading';
+  const isVisible = (k: string) => !removedBuiltinIds.includes(k);
+  const titleOf = (k: string, def: string) => titleOverrides[k] ?? def;
 
   return (
     <div className="grid grid-2">
-      <ChartCard
-        title={loading ? 'Породы — загрузка…' : 'Состав по породам'}
-        badges={[{ icon: '🐄', label: 'Текущий срез' }]}
-        legend={breedChart?.series ?? []}
-      >
-        <HerdBarChart
-          series={breedChart?.series ?? []}
-          labels={breedChart?.labels ?? []}
-        />
-      </ChartCard>
-
-      <ChartCard
-        title={loading ? 'Статус стада — загрузка…' : 'Статус стада'}
-        badges={[{ icon: '📊', label: 'Текущий срез' }]}
-        legend={statusChart?.series ?? []}
-      >
-        <HerdBarChart
-          series={statusChart?.series ?? []}
-          labels={statusChart?.labels ?? []}
-        />
-      </ChartCard>
-
-      <ChartCard
-        title={loading ? 'Группы / Пены — загрузка…' : 'Распределение по группам'}
-        badges={[{ icon: '🏠', label: 'По пенам' }]}
-        legend={penChart?.series ?? []}
-      >
-        <HerdBarChart
-          series={penChart?.series ?? []}
-          labels={penChart?.labels ?? []}
-        />
-      </ChartCard>
-
-      {addedMetricIds.map(id => {
-        const metric = METRICS.find(m => m.id === id);
+      {isVisible('breed_distribution') && (() => {
+        const t = titleOf('breed_distribution', loading ? 'Породы — загрузка…' : 'Состав по породам');
         return (
           <ChartCard
-            key={id}
-            title={metric?.name ?? id}
-            badges={metric ? [{ icon: '📊', label: metric.group }] : []}
-            onDelete={() => onRemoveChart?.(id)}
+            title={t}
+            badges={[{ icon: '🐄', label: 'Текущий срез' }]}
+            legend={breedChart?.series ?? []}
+            alertThreshold={alertThresholds['breed_distribution']}
+            onDelete={() => onRemoveBuiltin?.('breed_distribution')}
+            onRename={() => onRequestRename?.('breed_distribution', t)}
+            onAlert={() => onRequestAlert?.('breed_distribution', t)}
           >
-            <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 12 }}>
-              {metric?.desc ?? 'Данные загружаются…'}
-            </div>
+            <HerdBarChart series={breedChart?.series ?? []} labels={breedChart?.labels ?? []} />
           </ChartCard>
         );
-      })}
+      })()}
+
+      {isVisible('status_distribution') && (() => {
+        const t = titleOf('status_distribution', loading ? 'Статус стада — загрузка…' : 'Статус стада');
+        return (
+          <ChartCard
+            title={t}
+            badges={[{ icon: '📊', label: 'Текущий срез' }]}
+            legend={statusChart?.series ?? []}
+            alertThreshold={alertThresholds['status_distribution']}
+            onDelete={() => onRemoveBuiltin?.('status_distribution')}
+            onRename={() => onRequestRename?.('status_distribution', t)}
+            onAlert={() => onRequestAlert?.('status_distribution', t)}
+          >
+            <HerdBarChart series={statusChart?.series ?? []} labels={statusChart?.labels ?? []} />
+          </ChartCard>
+        );
+      })()}
+
+      {isVisible('pen_distribution') && (() => {
+        const t = titleOf('pen_distribution', loading ? 'Группы / Пены — загрузка…' : 'Распределение по группам');
+        return (
+          <ChartCard
+            title={t}
+            badges={[{ icon: '🏠', label: 'По пенам' }]}
+            legend={penChart?.series ?? []}
+            alertThreshold={alertThresholds['pen_distribution']}
+            onDelete={() => onRemoveBuiltin?.('pen_distribution')}
+            onRename={() => onRequestRename?.('pen_distribution', t)}
+            onAlert={() => onRequestAlert?.('pen_distribution', t)}
+          >
+            <HerdBarChart series={penChart?.series ?? []} labels={penChart?.labels ?? []} />
+          </ChartCard>
+        );
+      })()}
+
+      {addedMetricIds.map((id) => (
+        <MetricChartCard
+          key={id}
+          metricId={id}
+          titleOverride={titleOverrides[id]}
+          alertThreshold={alertThresholds[id]}
+          onDelete={() => onRemoveChart?.(id)}
+          onRename={onRequestRename}
+          onAlert={onRequestAlert}
+        />
+      ))}
 
       <EmptyChartSlot onAdd={onAddChart} />
     </div>

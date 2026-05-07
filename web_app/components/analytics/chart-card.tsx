@@ -11,6 +11,7 @@ interface Props extends PropsWithChildren {
   title: string;
   badges?: Badge[];
   legend?: ChartSeries[];
+  alertThreshold?: string;
   onAlert?: () => void;
   onDelete?: () => void;
   onRename?: () => void;
@@ -20,7 +21,7 @@ function fireChartAction(label: string) {
   window.dispatchEvent(new CustomEvent('chart-action', { detail: label }));
 }
 
-export function ChartCard({ title, badges, legend, onAlert, onDelete, onRename, children }: Props) {
+export function ChartCard({ title, badges, legend, alertThreshold, onAlert, onDelete, onRename, children }: Props) {
   return (
     <div className="an-chart-card">
       <div className="an-chart-header">
@@ -57,6 +58,15 @@ export function ChartCard({ title, badges, legend, onAlert, onDelete, onRename, 
             {b.icon} {b.label}
           </span>
         ))}
+        {alertThreshold && (
+          <span
+            className="badge"
+            style={{ fontSize: 10, padding: '2px 7px', background: 'var(--danger-subtle, #fde2e2)', color: 'var(--danger, #b00020)' }}
+            title={`Алерт срабатывает при значениях > ${alertThreshold}`}
+          >
+            ⚠️ Алерт &gt; {alertThreshold}
+          </span>
+        )}
         {legend?.map(s => (
           <span key={s.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: 'var(--text-secondary)' }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, display: 'inline-block', flexShrink: 0 }} />

@@ -30,9 +30,9 @@ const INITIAL_TABS: Tab[] = [
 
 type ModalType =
   | { type: 'rename-panel'; currentLabel: string }
-  | { type: 'chart-alert'; chartTitle: string }
+  | { type: 'chart-alert'; chartTitle: string; tabId: string; chartKey: string }
   | { type: 'chart-info'; chartTitle: string }
-  | { type: 'chart-rename'; chartTitle: string }
+  | { type: 'chart-rename'; chartTitle: string; tabId: string; chartKey: string }
   | { type: 'compare' }
   | null;
 
@@ -45,6 +45,50 @@ function SoonState() {
         Этот таб появится в следующих версиях
       </p>
     </div>
+  );
+}
+
+function CompareModal({
+  initial,
+  onClose,
+  onCommit,
+}: {
+  initial?: { a: string; b: string };
+  onClose: () => void;
+  onCommit: (a: string, b: string) => void;
+}) {
+  const todayIso = new Date().toISOString().split('T')[0];
+  const monthAgoIso = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
+  const [a, setA] = useState(initial?.a ?? monthAgoIso);
+  const [b, setB] = useState(initial?.b ?? todayIso);
+  return (
+    <Modal title="Сравнить периоды" onClose={onClose}>
+      <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+        Выберите два периода для сравнения графиков текущей панели.
+      </p>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+        <div style={{ flex: 1 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>ПЕРИОД А</label>
+          <input type="date" className="input" style={{ width: '100%' }} value={a} onChange={(e) => setA(e.target.value)} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>ПЕРИОД Б</label>
+          <input type="date" className="input" style={{ width: '100%' }} value={b} onChange={(e) => setB(e.target.value)} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+        <button className="btn-outline" onClick={onClose}>Отмена</button>
+        <button
+          className="btn-primary-teal"
+          onClick={() => {
+            if (!a || !b) return;
+            onCommit(a, b);
+          }}
+        >
+          Сравнить
+        </button>
+      </div>
+    </Modal>
   );
 }
 
@@ -73,6 +117,10 @@ export function AnalyticsTabs() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [addedCharts, setAddedCharts] = useState<Record<string, string[]>>({});
+  const [removedBuiltins, setRemovedBuiltins] = useState<Record<string, string[]>>({});
+  const [chartTitles, setChartTitles] = useState<Record<string, Record<string, string>>>({});
+  const [chartAlerts, setChartAlerts] = useState<Record<string, Record<string, string>>>({});
+  const [comparePeriods, setComparePeriods] = useState<Record<string, { a: string; b: string }>>({});
   const [modal, setModal] = useState<ModalType>(null);
   const [renamePanelValue, setRenamePanelValue] = useState('');
   const [alertThreshold, setAlertThreshold] = useState('');
@@ -105,6 +153,45 @@ export function AnalyticsTabs() {
     setAddedCharts(prev => ({ ...prev, [tabId]: (prev[tabId] ?? []).filter(id => id !== metricId) }));
   }, []);
 
+  const handleRemoveBuiltin = useCallback((tabId: string, key: string) => {
+    setRemovedBuiltins(prev => ({
+      ...prev,
+      [tabId]: prev[tabId]?.includes(key) ? prev[tabId] : [...(prev[tabId] ?? []), key],
+    }));
+    showToast('График убран с панели');
+  }, [showToast]);
+
+  const handleRequestRename = useCallback((tabId: string, chartKey: string, currentTitle: string) => {
+    setChartRenameValue(currentTitle);
+    setModal({ type: 'chart-rename', chartTitle: currentTitle, tabId, chartKey });
+  }, []);
+
+  const handleRequestAlert = useCallback((tabId: string, chartKey: string, currentTitle: string) => {
+    setAlertThreshold(chartAlerts[tabId]?.[chartKey] ?? '');
+    setModal({ type: 'chart-alert', chartTitle: currentTitle, tabId, chartKey });
+  }, [chartAlerts]);
+
+  const commitChartRename = useCallback(() => {
+    const v = chartRenameValue.trim();
+    if (!v || !modal || modal.type !== 'chart-rename') { setModal(null); return; }
+    setChartTitles(prev => ({
+      ...prev,
+      [modal.tabId]: { ...(prev[modal.tabId] ?? {}), [modal.chartKey]: v },
+    }));
+    setModal(null);
+    showToast(`График переименован в «${v}»`);
+  }, [chartRenameValue, modal, showToast]);
+
+  const commitChartAlert = useCallback(() => {
+    if (!alertThreshold || !modal || modal.type !== 'chart-alert') return;
+    setChartAlerts(prev => ({
+      ...prev,
+      [modal.tabId]: { ...(prev[modal.tabId] ?? {}), [modal.chartKey]: alertThreshold },
+    }));
+    setModal(null);
+    showToast(`Алерт установлен: «${modal.chartTitle}» > ${alertThreshold}`);
+  }, [alertThreshold, modal, showToast]);
+
   // Panel actions
   const handleRenamePanel = () => {
     const active = tabs.find(t => t.id === activeId);
@@ -134,27 +221,17 @@ export function AnalyticsTabs() {
 
   const handleCompare = () => setModal({ type: 'compare' });
 
-  // Chart action events from child components
+  // Chart info modal still uses event for compactness (read-only — no save side effect)
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent<string>).detail;
-      if (detail.startsWith('Алерт: ')) {
-        setAlertThreshold('');
-        setModal({ type: 'chart-alert', chartTitle: detail.replace('Алерт: ', '') });
-      } else if (detail.startsWith('Информация: ')) {
+      if (detail.startsWith('Информация: ')) {
         setModal({ type: 'chart-info', chartTitle: detail.replace('Информация: ', '') });
-      } else if (detail.startsWith('Переименовать: ')) {
-        setChartRenameValue(detail.replace('Переименовать: ', ''));
-        setModal({ type: 'chart-rename', chartTitle: detail.replace('Переименовать: ', '') });
-      } else if (detail.startsWith('Удалить: ')) {
-        showToast(`График «${detail.replace('Удалить: ', '')}» удалён из панели`);
-      } else {
-        showToast(`${detail} — скоро`);
       }
     };
     window.addEventListener('chart-action', handler);
     return () => window.removeEventListener('chart-action', handler);
-  }, [showToast]);
+  }, []);
 
   const activeTab = tabs.find(t => t.id === activeId);
 
@@ -213,6 +290,37 @@ export function AnalyticsTabs() {
         </div>
       </div>
 
+      {comparePeriods[activeId] && (
+        <div
+          style={{
+            marginTop: 12, padding: '6px 10px',
+            background: 'var(--accent-subtle, #e6f7f5)', color: 'var(--accent-text, #0a6b6b)',
+            borderRadius: 8, fontSize: 12, display: 'flex', alignItems: 'center', gap: 8,
+          }}
+        >
+          <GitCompare size={12} />
+          Сравнение периодов: <strong>{comparePeriods[activeId].a}</strong>
+          <span>↔</span>
+          <strong>{comparePeriods[activeId].b}</strong>
+          <button
+            type="button"
+            onClick={() => setComparePeriods((prev) => {
+              const copy = { ...prev };
+              delete copy[activeId];
+              return copy;
+            })}
+            style={{
+              marginLeft: 'auto', background: 'none', border: 'none',
+              cursor: 'pointer', color: 'inherit', padding: 2, display: 'inline-flex',
+            }}
+            aria-label="Снять сравнение"
+            title="Снять сравнение"
+          >
+            <X size={11} />
+          </button>
+        </div>
+      )}
+
       {/* Tab content */}
       <div style={{ marginTop: 20 }}>
         {!activeTab ? (
@@ -220,23 +328,23 @@ export function AnalyticsTabs() {
         ) : activeTab.soon ? (
           <SoonState />
         ) : activeTab.id === 'production' ? (
-          <ProductionTab onAddChart={handleAddChart} addedMetricIds={addedCharts['production'] ?? []} onRemoveChart={(id) => handleRemoveChart('production', id)} />
+          <ProductionTab onAddChart={handleAddChart} addedMetricIds={addedCharts['production'] ?? []} onRemoveChart={(id) => handleRemoveChart('production', id)} removedBuiltinIds={removedBuiltins['production'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('production', k)} titleOverrides={chartTitles['production'] ?? {}} alertThresholds={chartAlerts['production'] ?? {}} onRequestRename={(k, t) => handleRequestRename('production', k, t)} onRequestAlert={(k, t) => handleRequestAlert('production', k, t)} />
         ) : activeTab.id === 'feed' ? (
-          <FeedTab onAddChart={handleAddChart} addedMetricIds={addedCharts['feed'] ?? []} onRemoveChart={(id) => handleRemoveChart('feed', id)} />
+          <FeedTab onAddChart={handleAddChart} addedMetricIds={addedCharts['feed'] ?? []} onRemoveChart={(id) => handleRemoveChart('feed', id)} removedBuiltinIds={removedBuiltins['feed'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('feed', k)} titleOverrides={chartTitles['feed'] ?? {}} alertThresholds={chartAlerts['feed'] ?? {}} onRequestRename={(k, t) => handleRequestRename('feed', k, t)} onRequestAlert={(k, t) => handleRequestAlert('feed', k, t)} />
         ) : activeTab.id === 'reproduction' ? (
-          <ReproductionTab />
+          <ReproductionTab onAddChart={handleAddChart} addedMetricIds={addedCharts['reproduction'] ?? []} onRemoveChart={(id) => handleRemoveChart('reproduction', id)} removedBuiltinIds={removedBuiltins['reproduction'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('reproduction', k)} titleOverrides={chartTitles['reproduction'] ?? {}} alertThresholds={chartAlerts['reproduction'] ?? {}} onRequestRename={(k, t) => handleRequestRename('reproduction', k, t)} onRequestAlert={(k, t) => handleRequestAlert('reproduction', k, t)} />
         ) : activeTab.id === 'health' ? (
-          <HealthTab onAddChart={handleAddChart} addedMetricIds={addedCharts['health'] ?? []} onRemoveChart={(id) => handleRemoveChart('health', id)} />
+          <HealthTab onAddChart={handleAddChart} addedMetricIds={addedCharts['health'] ?? []} onRemoveChart={(id) => handleRemoveChart('health', id)} removedBuiltinIds={removedBuiltins['health'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('health', k)} titleOverrides={chartTitles['health'] ?? {}} alertThresholds={chartAlerts['health'] ?? {}} onRequestRename={(k, t) => handleRequestRename('health', k, t)} onRequestAlert={(k, t) => handleRequestAlert('health', k, t)} />
         ) : activeTab.id === 'behavior' ? (
-          <BehaviorTab onAddChart={handleAddChart} addedMetricIds={addedCharts['behavior'] ?? []} onRemoveChart={(id) => handleRemoveChart('behavior', id)} />
+          <BehaviorTab onAddChart={handleAddChart} addedMetricIds={addedCharts['behavior'] ?? []} onRemoveChart={(id) => handleRemoveChart('behavior', id)} removedBuiltinIds={removedBuiltins['behavior'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('behavior', k)} titleOverrides={chartTitles['behavior'] ?? {}} alertThresholds={chartAlerts['behavior'] ?? {}} onRequestRename={(k, t) => handleRequestRename('behavior', k, t)} onRequestAlert={(k, t) => handleRequestAlert('behavior', k, t)} />
         ) : activeTab.id === 'herd' ? (
-          <HerdTab onAddChart={handleAddChart} addedMetricIds={addedCharts[activeTab.id] ?? []} onRemoveChart={(id) => handleRemoveChart(activeTab.id, id)} />
+          <HerdTab onAddChart={handleAddChart} addedMetricIds={addedCharts[activeTab.id] ?? []} onRemoveChart={(id) => handleRemoveChart(activeTab.id, id)} removedBuiltinIds={removedBuiltins[activeTab.id] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin(activeTab.id, k)} titleOverrides={chartTitles[activeTab.id] ?? {}} alertThresholds={chartAlerts[activeTab.id] ?? {}} onRequestRename={(k, t) => handleRequestRename(activeTab.id, k, t)} onRequestAlert={(k, t) => handleRequestAlert(activeTab.id, k, t)} />
         ) : activeTab.id === 'weather' ? (
-          <WeatherTab onAddChart={handleAddChart} addedMetricIds={addedCharts['weather'] ?? []} onRemoveChart={(id) => handleRemoveChart('weather', id)} />
+          <WeatherTab onAddChart={handleAddChart} addedMetricIds={addedCharts['weather'] ?? []} onRemoveChart={(id) => handleRemoveChart('weather', id)} removedBuiltinIds={removedBuiltins['weather'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('weather', k)} titleOverrides={chartTitles['weather'] ?? {}} alertThresholds={chartAlerts['weather'] ?? {}} onRequestRename={(k, t) => handleRequestRename('weather', k, t)} onRequestAlert={(k, t) => handleRequestAlert('weather', k, t)} />
         ) : activeTab.id === 'finance' ? (
-          <FinanceTab onAddChart={handleAddChart} addedMetricIds={addedCharts['finance'] ?? []} onRemoveChart={(id) => handleRemoveChart('finance', id)} />
+          <FinanceTab onAddChart={handleAddChart} addedMetricIds={addedCharts['finance'] ?? []} onRemoveChart={(id) => handleRemoveChart('finance', id)} removedBuiltinIds={removedBuiltins['finance'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('finance', k)} titleOverrides={chartTitles['finance'] ?? {}} alertThresholds={chartAlerts['finance'] ?? {}} onRequestRename={(k, t) => handleRequestRename('finance', k, t)} onRequestAlert={(k, t) => handleRequestAlert('finance', k, t)} />
         ) : activeTab.id.endsWith('_copy') || activeTab.id.includes('_copy_') ? (
-          <ProductionTab onAddChart={handleAddChart} addedMetricIds={addedCharts[activeTab.id] ?? []} onRemoveChart={(id) => handleRemoveChart(activeTab.id, id)} />
+          <ProductionTab onAddChart={handleAddChart} addedMetricIds={addedCharts[activeTab.id] ?? []} onRemoveChart={(id) => handleRemoveChart(activeTab.id, id)} removedBuiltinIds={removedBuiltins[activeTab.id] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin(activeTab.id, k)} titleOverrides={chartTitles[activeTab.id] ?? {}} alertThresholds={chartAlerts[activeTab.id] ?? {}} onRequestRename={(k, t) => handleRequestRename(activeTab.id, k, t)} onRequestAlert={(k, t) => handleRequestAlert(activeTab.id, k, t)} />
         ) : (
           <SoonState />
         )}
@@ -265,27 +373,15 @@ export function AnalyticsTabs() {
       )}
 
       {modal?.type === 'compare' && (
-        <Modal title="Сравнить периоды" onClose={() => setModal(null)}>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-            Выберите два периода для сравнения графиков текущей панели.
-          </p>
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>ПЕРИОД А</label>
-              <input type="date" className="input" style={{ width: '100%' }} defaultValue={new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>ПЕРИОД Б</label>
-              <input type="date" className="input" style={{ width: '100%' }} defaultValue={new Date().toISOString().split('T')[0]} />
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-            <button className="btn-outline" onClick={() => setModal(null)}>Отмена</button>
-            <button className="btn-primary-teal" onClick={() => { setModal(null); showToast('Сравнение запущено — результаты появятся в карточках'); }}>
-              Сравнить
-            </button>
-          </div>
-        </Modal>
+        <CompareModal
+          onClose={() => setModal(null)}
+          initial={comparePeriods[activeId]}
+          onCommit={(a, b) => {
+            setComparePeriods(prev => ({ ...prev, [activeId]: { a, b } }));
+            setModal(null);
+            showToast(`Сравнение применено: ${a} ↔ ${b}`);
+          }}
+        />
       )}
 
       {modal?.type === 'chart-alert' && (
@@ -306,11 +402,7 @@ export function AnalyticsTabs() {
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button className="btn-outline" onClick={() => setModal(null)}>Отмена</button>
-            <button className="btn-primary-teal" onClick={() => {
-              if (!alertThreshold) return;
-              setModal(null);
-              showToast(`Алерт установлен: ${modal.chartTitle} > ${alertThreshold}`);
-            }}>
+            <button className="btn-primary-teal" onClick={commitChartAlert}>
               <AlertTriangle size={12} /> Установить алерт
             </button>
           </div>
@@ -340,21 +432,13 @@ export function AnalyticsTabs() {
             className="input"
             value={chartRenameValue}
             onChange={(e) => setChartRenameValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                setModal(null);
-                showToast(`График переименован в «${chartRenameValue}»`);
-              }
-            }}
+            onKeyDown={(e) => { if (e.key === 'Enter') commitChartRename(); }}
             maxLength={80}
             style={{ width: '100%', marginBottom: 16 }}
           />
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
             <button className="btn-outline" onClick={() => setModal(null)}>Отмена</button>
-            <button className="btn-primary-teal" onClick={() => {
-              setModal(null);
-              showToast(`График переименован в «${chartRenameValue}»`);
-            }}>Сохранить</button>
+            <button className="btn-primary-teal" onClick={commitChartRename}>Сохранить</button>
           </div>
         </Modal>
       )}
