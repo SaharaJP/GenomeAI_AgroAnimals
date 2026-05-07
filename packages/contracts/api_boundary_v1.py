@@ -420,3 +420,30 @@ class ReadinessResponse(BaseModel):
     summary: ReadinessSummary = Field(default_factory=ReadinessSummary)
     checks: list[ReadinessCheck] = Field(default_factory=list)
     source_paths: dict[str, Any] = Field(default_factory=dict)
+
+
+class QcIncident(BaseModel):
+    incident_id: str
+    farm_id: str
+    metric_id: str
+    period_start: str
+    period_end: Optional[str] = None
+    detector_type: str
+    severity: str = 'warn'
+    affected_sensors: list[str] = Field(default_factory=list)
+    ai_description: Optional[str] = None
+    root_cause: Optional[str] = None
+    status: str = 'active'
+    detected_at: str
+
+
+class QcIncidentsListResponse(BaseModel):
+    schema: str = 'genomeai.api.qc.incidents.list.v1'
+    total: int = 0
+    items: list[QcIncident] = Field(default_factory=list)
+
+
+class QcDismissResponse(BaseModel):
+    schema: str = 'genomeai.api.qc.incidents.dismiss.v1'
+    incident_id: str
+    status: str

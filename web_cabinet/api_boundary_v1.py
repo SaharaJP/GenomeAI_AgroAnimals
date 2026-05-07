@@ -37,6 +37,9 @@ from packages.contracts.api_boundary_v1 import (
     PlannerSummary,
     ProfileResponse,
     ProfileSummary,
+    QcDismissResponse,
+    QcIncident,
+    QcIncidentsListResponse,
     ReadinessCheck,
     ReadinessResponse,
     ReadinessSummary,
@@ -86,6 +89,11 @@ from .insights_v1 import (
     transition_insight as _transition_insight,
 )
 from .observability import snapshot as obs_snapshot
+from .qc_v1 import (
+    list_incidents as _list_qc_incidents,
+    get_incident as _get_qc_incident,
+    dismiss_incident as _dismiss_qc_incident,
+)
 from .rbac import require_permissions
 from .reports_approvals_v1 import list_report_statuses
 from .utils import list_data_versions, list_report_versions
@@ -1235,6 +1243,42 @@ def boundary_insights_delete(
         raise HTTPException(status_code=403)
     _delete_insight(insight_id)
     return {"ok": True, "insight_id": insight_id}
+
+
+@router.get('/qc/incidents', response_model=QcIncidentsListResponse)
+def boundary_qc_incidents_list(
+    farm_id: str = 'INV_FARM_001',
+    metric_id: Optional[str] = None,
+    active: bool = True,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
+        raise HTTPException(status_code=403)
+    return _list_qc_incidents(farm_id=farm_id, metric_id=metric_id, active=active)
+
+
+@router.get('/qc/incidents/{incident_id}', response_model=QcIncident)
+def boundary_qc_incident_get(
+    incident_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
+        raise HTTPException(status_code=403)
+    item = _get_qc_incident(incident_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail=f'QC incident {incident_id} not found')
+    return item
+
+
+@router.post('/qc/incidents/{incident_id}/dismiss', response_model=QcDismissResponse)
+def boundary_qc_incident_dismiss(
+    incident_id: str,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    _dismiss_qc_incident(incident_id)
+    return QcDismissResponse(incident_id=incident_id, status='dismissed')
 
 
 @router.post('/timeline/events')

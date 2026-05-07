@@ -952,6 +952,22 @@ async def api_timeline_event_create(
         "source": "Добавлено вручную",
         "has_impact": False,
     }
+    # AI link new event to influenced metrics (best-effort, non-blocking)
+    try:
+        from web_cabinet.analytics.event_metric_linker import link_event_to_metrics
+        linked = link_event_to_metrics(body)
+        if linked:
+            conn.execute(
+                "UPDATE timeline_events SET linked_metric_ids = %s::jsonb "
+                "WHERE timeline_event_id = %s",
+                (json.dumps(linked), event_id),
+            )
+            new_event['linked_metric_ids'] = linked
+    except Exception as link_exc:  # noqa: BLE001
+        import logging as _lg
+        _lg.getLogger('genomeai.web_cabinet.app').debug(
+            f"link_event_to_metrics failed: {link_exc}"
+        )
     write_audit(
         conn,
         tenant_id=tenant_id,

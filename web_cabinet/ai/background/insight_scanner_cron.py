@@ -1,10 +1,10 @@
-"""APScheduler cron: проактивный сканер инсайтов каждые 6 часов (MVP-N15)."""
+"""APScheduler cron: insight_scanner (every 6h :15) + qc_detector (every 6h :30)."""
 from __future__ import annotations
 
 import logging
 import os
 
-logger = logging.getLogger("genomeai.ai.cron.insight_scanner")
+logger = logging.getLogger("genomeai.ai.cron")
 
 try:
     from apscheduler.schedulers.background import BackgroundScheduler
@@ -19,7 +19,7 @@ _scheduler: "BackgroundScheduler | None" = None  # type: ignore[type-arg]
 def start_cron() -> None:
     global _scheduler
     if not _HAS_APSCHEDULER:
-        logger.warning("apscheduler not installed — insight_scanner cron disabled")
+        logger.warning("apscheduler not installed — cron jobs disabled")
         return
 
     if _scheduler is not None and _scheduler.running:
@@ -41,7 +41,16 @@ def start_cron() -> None:
             run_date=run_at,
             id="insight_scanner_test",
         )
-        logger.info(f"insight_scanner cron TEST mode: will fire at {run_at.isoformat()}")
+        run_at_qc = datetime.now(tz) + timedelta(minutes=3)
+        _scheduler.add_job(
+            _run_qc_scanner,
+            "date",
+            run_date=run_at_qc,
+            id="qc_detector_test",
+        )
+        logger.info(
+            f"cron TEST mode: insight at {run_at.isoformat()}, qc at {run_at_qc.isoformat()}"
+        )
     else:
         _scheduler.add_job(
             _run_scanner,
@@ -50,7 +59,14 @@ def start_cron() -> None:
             minute=15,
             id="insight_scanner_6h",
         )
-        logger.info("insight_scanner cron registered: every 6h at :15 MSK")
+        _scheduler.add_job(
+            _run_qc_scanner,
+            "cron",
+            hour="*/6",
+            minute=30,
+            id="qc_detector_6h",
+        )
+        logger.info("cron registered: insight_scanner @*/6:15, qc_detector @*/6:30 MSK")
 
     _scheduler.start()
 
@@ -68,3 +84,11 @@ def _run_scanner() -> None:
         run_insight_scanner_for_all_farms()
     except Exception as exc:
         logger.error(f"insight_scanner cron job failed: {exc}", exc_info=True)
+
+
+def _run_qc_scanner() -> None:
+    from web_cabinet.analytics.qc_detector import run_qc_scan_for_all_farms
+    try:
+        run_qc_scan_for_all_farms()
+    except Exception as exc:
+        logger.error(f"qc_detector cron job failed: {exc}", exc_info=True)
