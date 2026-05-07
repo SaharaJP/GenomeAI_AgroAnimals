@@ -12,7 +12,7 @@ import re
 import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from ..config import get_ai_settings
 from ..models import ScannerInsight, ScannerRecommendation
@@ -46,37 +46,47 @@ def scan_for_new_insights(farm_id: str) -> list[ScannerInsight]:
 
     В demo-режиме возвращает seeded данные без вызова Claude.
     В production-режиме вызывает Claude Sonnet с full farm context.
+    Применяет фильтр enabled_categories из insight_settings (user_id='cron').
     """
     settings = get_ai_settings()
 
     if settings.GENOMEAI_AI_DEMO_MODE:
-        return _load_seeded_scan_insights(farm_id)
+        results = _load_seeded_scan_insights(farm_id)
+    else:
+        results = _run_live_scan(farm_id)
 
-    return _run_live_scan(farm_id)
+    enabled = _enabled_categories_for_farm(farm_id)
+    if enabled is not None:
+        results = [r for r in results if r.category in enabled]
+    return results
 
 
 def get_active_insights(farm_id: str) -> list[dict]:
-    """Загружает активные инсайты фермы из БД (или пустой список при недоступности)."""
-    dsn = os.getenv("GENOMEAI_DB_DSN") or os.getenv("GENOMEAI_RUNTIME_POSTGRES_DSN")
-    if not dsn:
+    """Загружает активные и недавно удалённые инсайты фермы из БД.
+
+    Включение soft-deleted строк — критично для дедупликации: AI-сканер не должен
+    воссоздавать инсайт, который пользователь уже удалил.
+    """
+    try:
+        from web_cabinet.insights_v1 import _conn
+    except Exception as exc:
+        logger.debug(f"get_active_insights: insights_v1 unavailable: {exc}")
         return []
     try:
-        import psycopg2  # type: ignore[import-untyped]
-        conn = psycopg2.connect(dsn)
-        cur = conn.cursor()
-        cur.execute(
-            """
-            SELECT payload_json FROM scanner_insights
-            WHERE farm_id = %s AND status IN ('to_check', 'to_follow_up')
-            ORDER BY generated_at_utc DESC
-            LIMIT 20
-            """,
-            (farm_id,),
-        )
-        rows = cur.fetchall()
-        cur.close()
-        conn.close()
-        return [json.loads(r[0]) for r in rows]
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT payload_json FROM scanner_insights
+                    WHERE farm_id = %s
+                      AND (status IN ('to_check', 'to_follow_up') OR deleted_at IS NOT NULL)
+                    ORDER BY generated_at_utc DESC
+                    LIMIT 50
+                    """,
+                    (farm_id,),
+                )
+                rows = cur.fetchall()
+        return [json.loads(r[0]) if isinstance(r[0], str) else (r[0] or {}) for r in rows]
     except Exception as exc:
         logger.debug(f"get_active_insights skipped: {exc}")
         return []
@@ -370,13 +380,23 @@ def _coerce_priority(raw: str) -> str:
 # ---------------------------------------------------------------------------
 
 def run_insight_scanner_for_all_farms() -> None:
-    """Точка входа для APScheduler: обходит все активные фермы."""
+    """Точка входа для APScheduler: обходит все активные фермы.
+
+    Применяет cron-only token-saver gate: пропускает Claude-вызов, если с
+    момента последнего скана не появилось новых событий, алертов или
+    sensor-аномалий. Manual scan-now не использует этот gate.
+    """
     from ..config import get_ai_settings
     settings = get_ai_settings()
     farms = [settings.GENOMEAI_DEMO_FARM_ID]
     logger.info(f"insight_scanner cron triggered farms={farms}")
     for farm_id in farms:
+        if cron_should_skip_scan(farm_id):
+            logger.info(f"insight_scanner skipped: no new inputs farm={farm_id}")
+            _record_scan_run(farm_id, skipped=True, reason="no_new_inputs")
+            continue
         insights = scan_for_new_insights(farm_id)
+        _record_scan_run(farm_id, skipped=False, reason=None)
         if insights:
             _broadcast_new_insights(farm_id, len(insights))
 
@@ -388,3 +408,136 @@ def _broadcast_new_insights(farm_id: str, count: int) -> None:
         broadcast_insights_event(farm_id=farm_id, count=count)
     except Exception as exc:
         logger.debug(f"broadcast_new_insights skipped: {exc}")
+
+
+def _enabled_categories_for_farm(farm_id: str) -> list[str] | None:
+    """Returns enabled_categories from insight_settings (cron user), or None when no row.
+
+    None means "no per-farm filter is configured" (allow all categories).
+    Empty list means "no categories enabled" (filter out all results).
+    """
+    try:
+        from web_cabinet.insights_v1 import _conn, _dict_cursor
+    except Exception as exc:
+        logger.debug(f"_enabled_categories_for_farm: insights_v1 unavailable: {exc}")
+        return None
+    try:
+        with _conn() as conn:
+            with _dict_cursor(conn) as cur:
+                cur.execute(
+                    "SELECT enabled_categories FROM insight_settings "
+                    "WHERE user_id='cron' AND farm_id=%s",
+                    (farm_id,),
+                )
+                row = cur.fetchone()
+        if not row:
+            return None
+        cats = row.get("enabled_categories") if isinstance(row, dict) else row[0]
+        if isinstance(cats, str):
+            cats = json.loads(cats)
+        return list(cats) if cats is not None else None
+    except Exception as exc:
+        logger.warning(f"_enabled_categories_for_farm failed farm={farm_id}: {exc}")
+        return None
+
+
+def cron_should_skip_scan(farm_id: str) -> bool:
+    """Returns True when no new inputs since last_scan_at — cron may skip Claude.
+
+    Inputs considered: timeline_events.created_at, alerts_v2.created_at,
+    sensor anomalies in the recent window. Fails open (returns False) on any
+    DB/error, so cron continues to run when state is uncertain.
+    """
+    try:
+        from web_cabinet.insights_v1 import _conn
+    except Exception as exc:
+        logger.debug(f"cron_should_skip_scan: insights_v1 unavailable: {exc}")
+        return False
+
+    try:
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT last_scan_at FROM insight_scan_state WHERE farm_id=%s",
+                    (farm_id,),
+                )
+                row = cur.fetchone()
+                last_scan_at = row[0] if row else None
+                if last_scan_at is None:
+                    return False  # never scanned -> always run
+
+                # Cast last_scan_at to text in Postgres so both sides of the
+                # comparison have the same canonical format (TIMESTAMPTZ::text
+                # vs the TEXT-stored created_at columns).
+                # 1. timeline_events (TEXT created_at; tenant_id may be farm_id or 'default')
+                cur.execute(
+                    """
+                    SELECT 1 FROM timeline_events
+                    WHERE tenant_id IN (%s, 'default')
+                      AND created_at > (%s::timestamptz)::text
+                    LIMIT 1
+                    """,
+                    (farm_id, last_scan_at),
+                )
+                if cur.fetchone():
+                    return False
+
+                # 2. alerts_v2 (best-effort; table may have different schema or be empty)
+                try:
+                    cur.execute(
+                        """
+                        SELECT 1 FROM alerts_v2
+                        WHERE tenant_id IN (%s, 'default')
+                          AND created_at > (%s::timestamptz)::text
+                        LIMIT 1
+                        """,
+                        (farm_id, last_scan_at),
+                    )
+                    if cur.fetchone():
+                        return False
+                except Exception as alerts_exc:
+                    logger.debug(f"cron_should_skip_scan: alerts_v2 check skipped: {alerts_exc}")
+
+        # 3. sensor anomalies (window roughly proportional to time-since-scan)
+        try:
+            from web_cabinet.analytics.sensor_bridge import detect_recent_sensor_anomalies
+            cutoff_naive = (
+                last_scan_at.replace(tzinfo=None)
+                if hasattr(last_scan_at, "replace")
+                else datetime.utcnow()
+            )
+            delta_days = max(1, (datetime.utcnow() - cutoff_naive).days + 1)
+            anomalies = detect_recent_sensor_anomalies(farm_id, lookback_days=delta_days)
+            if anomalies:
+                return False
+        except Exception as exc:
+            logger.debug(f"cron_should_skip_scan: sensor check skipped: {exc}")
+
+        return True
+    except Exception as exc:
+        logger.warning(f"cron_should_skip_scan check failed farm={farm_id}: {exc}")
+        return False  # fail open
+
+
+def _record_scan_run(farm_id: str, *, skipped: bool, reason: Optional[str]) -> None:
+    """Update insight_scan_state with the latest scan timestamp / skip reason."""
+    try:
+        from web_cabinet.insights_v1 import _conn
+    except Exception:
+        return
+    try:
+        with _conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO insight_scan_state (farm_id, last_scan_at, last_skipped_reason)
+                    VALUES (%s, NOW(), %s)
+                    ON CONFLICT (farm_id) DO UPDATE
+                      SET last_scan_at = NOW(),
+                          last_skipped_reason = EXCLUDED.last_skipped_reason
+                    """,
+                    (farm_id, reason if skipped else None),
+                )
+            conn.commit()
+    except Exception as exc:
+        logger.debug(f"_record_scan_run skipped: {exc}")
