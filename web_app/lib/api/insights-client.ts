@@ -13,11 +13,13 @@ export interface ScanNowResult {
 }
 
 export async function fetchInsights(params?: {
+  farmId?: string;
   status?: string;
   category?: string;
   severityMin?: string;
 }): Promise<{ total: number; items: InsightItem[] }> {
   const qs = new URLSearchParams();
+  if (params?.farmId) qs.set('farm_id', params.farmId);
   if (params?.status) qs.set('status', params.status);
   if (params?.category) qs.set('category', params.category);
   if (params?.severityMin) qs.set('severity_min', params.severityMin);

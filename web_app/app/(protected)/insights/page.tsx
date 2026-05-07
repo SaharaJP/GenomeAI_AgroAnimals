@@ -41,14 +41,14 @@ export default function InsightsPage() {
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchInsights();
+      const data = await fetchInsights({ farmId: farmLabel });
       setItems(data.items);
     } catch {
       toast('Ошибка загрузки инсайтов');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [farmLabel]);
 
   useEffect(() => { refetch(); }, [refetch]);
 
