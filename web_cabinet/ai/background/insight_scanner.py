@@ -9,7 +9,7 @@ import json
 import logging
 import re
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -523,12 +523,13 @@ def cron_should_skip_scan(farm_id: str) -> bool:
         # 3. sensor anomalies (window roughly proportional to time-since-scan)
         try:
             from web_cabinet.analytics.sensor_bridge import detect_recent_sensor_anomalies
+            now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
             cutoff_naive = (
                 last_scan_at.replace(tzinfo=None)
                 if hasattr(last_scan_at, "replace")
-                else datetime.utcnow()
+                else now_utc_naive
             )
-            delta_days = max(1, (datetime.utcnow() - cutoff_naive).days + 1)
+            delta_days = max(1, (now_utc_naive - cutoff_naive).days + 1)
             anomalies = detect_recent_sensor_anomalies(farm_id, lookback_days=delta_days)
             if anomalies:
                 return False
