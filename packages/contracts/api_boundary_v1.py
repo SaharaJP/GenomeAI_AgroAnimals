@@ -447,3 +447,54 @@ class QcDismissResponse(BaseModel):
     schema: str = 'genomeai.api.qc.incidents.dismiss.v1'
     incident_id: str
     status: str
+
+
+class UploadColumnSpec(BaseModel):
+    name: str
+    required: bool = True
+    kind: str = 'str'
+    description: str = ''
+    min_val: Optional[float] = None
+    max_val: Optional[float] = None
+    fk_table: Optional[str] = None
+
+
+class UploadTypeMeta(BaseModel):
+    schema: str = 'genomeai.api.uploads.type.v1'
+    type: str
+    label: str
+    target_table: str
+    instructions: str = ''
+    columns: list[UploadColumnSpec] = Field(default_factory=list)
+
+
+class UploadTypesListResponse(BaseModel):
+    schema: str = 'genomeai.api.uploads.types.list.v1'
+    items: list[UploadTypeMeta] = Field(default_factory=list)
+
+
+class UploadRowError(BaseModel):
+    row: int
+    field: Optional[str] = None
+    message: str
+
+
+class UploadPreviewResponse(BaseModel):
+    schema: str = 'genomeai.api.uploads.preview.v1'
+    type: str
+    total_rows: int = 0
+    valid: int = 0
+    duplicates: int = 0
+    errors: list[UploadRowError] = Field(default_factory=list)
+    preview_token: str = ''
+    valid_rows_sample: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class UploadCommitRequest(BaseModel):
+    preview_token: str
+
+
+class UploadCommitResponse(BaseModel):
+    schema: str = 'genomeai.api.uploads.commit.v1'
+    inserted: int = 0
+    skipped_duplicates: int = 0

@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
 
 from packages.contracts.api_boundary_v1 import (
     AlertItem,
@@ -48,6 +48,10 @@ from packages.contracts.api_boundary_v1 import (
     ScanNowResponse,
     SupportResponse,
     SupportSummary,
+    UploadCommitRequest,
+    UploadCommitResponse,
+    UploadPreviewResponse,
+    UploadTypesListResponse,
     WorklistItem,
     WorklistsListResponse,
 )
@@ -93,6 +97,14 @@ from .qc_v1 import (
     list_incidents as _list_qc_incidents,
     get_incident as _get_qc_incident,
     dismiss_incident as _dismiss_qc_incident,
+)
+from .uploads_v1 import (
+    list_types as _list_upload_types,
+    generate_template as _generate_template,
+    run_preview as _run_upload_preview,
+    commit_rows as _commit_upload_rows,
+    TokenExpired,
+    TenantMismatch,
 )
 from .rbac import require_permissions
 from .reports_approvals_v1 import list_report_statuses
@@ -1279,6 +1291,66 @@ def boundary_qc_incident_dismiss(
         raise HTTPException(status_code=403)
     _dismiss_qc_incident(incident_id)
     return QcDismissResponse(incident_id=incident_id, status='dismissed')
+
+
+@router.get('/uploads/types', response_model=UploadTypesListResponse)
+def boundary_uploads_types(user=Depends(get_current_user)):
+    if not _user_has_any(user, 'tasks.view'):
+        raise HTTPException(status_code=403)
+    return UploadTypesListResponse(items=_list_upload_types())
+
+
+@router.get('/uploads/template')
+def boundary_uploads_template(
+    type: str = Query(...),
+    fmt: str = Query('csv'),
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view'):
+        raise HTTPException(status_code=403)
+    try:
+        body, content_type, filename = _generate_template(type, fmt)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    return Response(
+        content=body,
+        media_type=content_type,
+        headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+    )
+
+
+@router.post('/uploads/preview', response_model=UploadPreviewResponse)
+async def boundary_uploads_preview(
+    type: str = Query(...),
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    body = await file.read()
+    if len(body) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail='file_too_large')
+    tenant_id = str(user.get('tenant_id') or 'default')
+    return _run_upload_preview(type, body, file.filename or 'upload', tenant_id)
+
+
+@router.post('/uploads/commit', response_model=UploadCommitResponse)
+def boundary_uploads_commit(
+    body: UploadCommitRequest,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'tasks.create'):
+        raise HTTPException(status_code=403)
+    tenant_id = str(user.get('tenant_id') or 'default')
+    farm_id = user.get('farm_id')
+    try:
+        return _commit_upload_rows(
+            body.preview_token, tenant_id=tenant_id, farm_id=farm_id,
+        )
+    except TokenExpired:
+        raise HTTPException(status_code=410, detail='token_expired')
+    except TenantMismatch:
+        raise HTTPException(status_code=403, detail='tenant_mismatch')
 
 
 @router.post('/timeline/events')
