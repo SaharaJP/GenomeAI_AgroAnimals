@@ -31,6 +31,7 @@ export function ReproductionSurface() {
     <div className="grid">
       <div className="topbar"><div><h1 className="page-title">Воспроизводство</h1><p className="page-subtitle">Оперативное управление воспроизводством стада: рабочие списки, алерты и планы.</p></div></div>
       <FactPackGuardrailNote />
+      {/* No reproduction logic is reimplemented in the browser — surface is read-only and reads from the canonical reproduction API. */}
       <ExplainabilityBlock title="Источник данных" reasons={[
         'Данные читаются с бэкенда: тип задачи reproduction, поля репродуктивного домена и согласования планировщика.',
         'Логика воспроизводства не переносится в браузер — только отображение.',
