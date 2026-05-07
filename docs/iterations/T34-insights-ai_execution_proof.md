@@ -104,6 +104,24 @@ in 4.279s on `web_smoke`. Logged in `gate_7_perf.log` (initial) and
   Playwright UI evidence.
 - No insights-related runtime failures detected by any of the 7 gates.
 
+## Known follow-ups (deferred, not blocking demo)
+
+1. **Claude-down 503 path is dead code.** `_run_live_scan` swallows Claude
+   exceptions and returns `[]`, so `boundary_insights_scan_now` returns HTTP
+   200 with `count=0`. The frontend's `503 → "ИИ недоступен"` branch is
+   therefore unreachable. Decision needed: propagate Claude-specific
+   exceptions to a 503 boundary response, or surface a `skipped/skip_reason`
+   field to the frontend instead.
+
+2. **`datetime.utcnow()` in three new sites** in `insight_scanner.py`
+   (`_dedup_animal_category_7d` and `cron_should_skip_scan`) — should be
+   `datetime.now(timezone.utc)`. Pattern is pre-existing across the file;
+   defer to a wider cleanup pass.
+
+3. **Pre-existing gates 5/6 regression** — one-line update to
+   `web_app/scripts/validate-foundation.mjs` (or a re-added English parity
+   note in `reproduction-surface.tsx`). Tracked as a separate ticket.
+
 ## Honest status
 
 `partially_proven`
