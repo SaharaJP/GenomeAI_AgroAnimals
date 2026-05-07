@@ -37,19 +37,21 @@ export function BuiltInChartCard({
   const [fullscreen, setFullscreen] = useState(false);
 
   const qcOverlays = overlays.showQc
-    ? (overlays.qcByMetric[metricId] ?? []).map((inc) => {
+    ? (overlays.qcByMetric[metricId] ?? []).flatMap((inc) => {
         const startIso = inc.period_start.slice(0, 10);
         const endIso = inc.period_end?.slice(0, 10) ?? null;
         const startIdx = findWeekIndex(startIso);
         const endIdx = endIso ? findWeekIndex(endIso) : null;
-        return {
+        // Skip if entire range is outside chart's visible date range
+        if (startIdx < 0 && (endIdx === null || endIdx < 0)) return [];
+        return [{
           incident_id: inc.incident_id,
           period_start_idx: startIdx >= 0 ? startIdx : 0,
           period_end_idx: endIdx === null ? null : (endIdx >= 0 ? endIdx : labels.length - 1),
           severity: inc.severity,
           root_cause: inc.root_cause,
           ai_description: inc.ai_description,
-        };
+        }];
       })
     : [];
 

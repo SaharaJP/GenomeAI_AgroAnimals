@@ -83,11 +83,18 @@ interface Props {
 }
 
 export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDelete, onRename, onAlert }: Props) {
+  // 1. Hooks first — always called (Rules of Hooks)
+  const overlays = useOverlays();
+  const router = useRouter();
+  const [openIncident, setOpenIncident] = useState<QcIncident | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  // 2. Derived values
   const meta = METRICS.find((m) => m.id === metricId);
   const spec = SPECS[metricId];
   const title = titleOverride ?? meta?.name ?? metricId;
 
-  // Fallback: unknown metric id
+  // 3. Fallback: unknown metric id (early return safe AFTER hooks)
   if (!spec) {
     return (
       <ChartCard
@@ -105,26 +112,27 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
     );
   }
 
-  const overlays = useOverlays();
-  const router = useRouter();
-  const [openIncident, setOpenIncident] = useState<QcIncident | null>(null);
-  const [fullscreen, setFullscreen] = useState(false);
+  // 4. Main path
   const chart = spec.data();
 
-  const qcOverlays = overlays.showQc ? (overlays.qcByMetric[metricId] ?? []).map((inc) => {
-    const startIso = inc.period_start.slice(0, 10);
-    const endIso = inc.period_end?.slice(0, 10) ?? null;
-    const startIdx = findWeekIndex(startIso);
-    const endIdx = endIso ? findWeekIndex(endIso) : null;
-    return {
-      incident_id: inc.incident_id,
-      period_start_idx: startIdx >= 0 ? startIdx : 0,
-      period_end_idx: endIdx === null ? null : (endIdx >= 0 ? endIdx : chart.labels.length - 1),
-      severity: inc.severity,
-      root_cause: inc.root_cause,
-      ai_description: inc.ai_description,
-    };
-  }) : [];
+  const qcOverlays = overlays.showQc
+    ? (overlays.qcByMetric[metricId] ?? []).flatMap((inc) => {
+        const startIso = inc.period_start.slice(0, 10);
+        const endIso = inc.period_end?.slice(0, 10) ?? null;
+        const startIdx = findWeekIndex(startIso);
+        const endIdx = endIso ? findWeekIndex(endIso) : null;
+        // Skip if entire range is outside chart's visible date range
+        if (startIdx < 0 && (endIdx === null || endIdx < 0)) return [];
+        return [{
+          incident_id: inc.incident_id,
+          period_start_idx: startIdx >= 0 ? startIdx : 0,
+          period_end_idx: endIdx === null ? null : (endIdx >= 0 ? endIdx : chart.labels.length - 1),
+          severity: inc.severity,
+          root_cause: inc.root_cause,
+          ai_description: inc.ai_description,
+        }];
+      })
+    : [];
 
   const eventMarkers = overlays.showEvents ? (overlays.eventsByMetric[metricId] ?? []).map((ev) => ({
     event_id: ev.event_id,

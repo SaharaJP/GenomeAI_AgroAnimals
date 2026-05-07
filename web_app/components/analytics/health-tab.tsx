@@ -65,7 +65,7 @@ export function HealthTab({
         const t = titleOf('issues', loading ? 'Заболевания — загрузка…' : 'Заболевания по типам');
         return (
           <BuiltInChartCard
-            metricId="issues"
+            metricId="health_issues"
             title={t}
             badges={[{ icon: '📊', label: 'По ферме' }, { icon: '📈', label: 'Реальные данные' }]}
             legend={issues.series}
