@@ -105,15 +105,21 @@ class AnthropicClient:
         self,
         model: str,
         task_type: str,
-        response: LLMResponse,
-        user_id: str = "system",
+        response: Optional[LLMResponse],
+        user_id: Optional[str],
         error: Optional[str] = None,
+        *,
+        endpoint: str = "unknown",
+        prompt: Optional[str] = None,
+        evidence_chips: Optional[list] = None,
+        tools_used: Optional[list] = None,
     ) -> None:
         record = {
             "event": "llm_call",
             "model": model,
             "task_type": task_type,
             "user_id": user_id,
+            "endpoint": endpoint,
             "input_tokens": response.input_tokens if response else 0,
             "output_tokens": response.output_tokens if response else 0,
             "cache_hit": response.cache_hit if response else False,
@@ -123,6 +129,35 @@ class AnthropicClient:
             "error": error,
         }
         logger.info(json.dumps(record, ensure_ascii=False))
+
+        # Best-effort persistence to ai_call_log (sync, swallows all errors).
+        try:
+            from core.infra.postgres_compat import connect_postgres_compat
+            from .call_log import persist_ai_call
+
+            conn = connect_postgres_compat()
+            try:
+                persist_ai_call(
+                    conn=conn,
+                    endpoint=endpoint,
+                    task_type=task_type,
+                    model=model,
+                    user_id=user_id,
+                    input_tokens=response.input_tokens if response else 0,
+                    output_tokens=response.output_tokens if response else 0,
+                    cache_creation_tokens=response.cache_creation_tokens if response else 0,
+                    cache_read_tokens=response.cache_read_tokens if response else 0,
+                    latency_ms=int(response.latency_ms) if response else 0,
+                    error=error,
+                    prompt=prompt,
+                    response=response.content if response else None,
+                    evidence_chips=evidence_chips,
+                    tools_used=tools_used,
+                )
+            finally:
+                conn.close()
+        except Exception as exc:
+            logger.warning("ai_call_log connect failed: %s", exc)
 
     def _model_for_task(self, task_type: str) -> str:
         return self._settings.model_for_task(task_type)
@@ -171,7 +206,10 @@ class AnthropicClient:
                     cache_read_tokens=getattr(usage, "cache_read_input_tokens", 0) or 0,
                     latency_ms=latency_ms,
                 )
-                self._log_call(target_model, task_type, result, user_id)
+                self._log_call(
+                    target_model, task_type, result, user_id,
+                    endpoint=task_type, prompt=user_message,
+                )
                 return result
 
             except Exception as exc:
@@ -192,7 +230,10 @@ class AnthropicClient:
                 time.sleep(delay)
 
         dummy = LLMResponse("", target_model, 0, 0)
-        self._log_call(target_model, task_type, dummy, user_id, error=str(last_error))
+        self._log_call(
+            target_model, task_type, dummy, user_id,
+            error=str(last_error), endpoint=task_type, prompt=user_message,
+        )
         raise last_error  # type: ignore[misc]
 
     async def agenerate(
@@ -239,7 +280,10 @@ class AnthropicClient:
                     cache_read_tokens=getattr(usage, "cache_read_input_tokens", 0) or 0,
                     latency_ms=latency_ms,
                 )
-                self._log_call(target_model, task_type, result, user_id)
+                self._log_call(
+                    target_model, task_type, result, user_id,
+                    endpoint=task_type, prompt=user_message,
+                )
                 return result
 
             except Exception as exc:
@@ -260,7 +304,10 @@ class AnthropicClient:
                 await asyncio.sleep(delay)
 
         dummy = LLMResponse("", target_model, 0, 0)
-        self._log_call(target_model, task_type, dummy, user_id, error=str(last_error))
+        self._log_call(
+            target_model, task_type, dummy, user_id,
+            error=str(last_error), endpoint=task_type, prompt=user_message,
+        )
         raise last_error  # type: ignore[misc]
 
     async def astream(
