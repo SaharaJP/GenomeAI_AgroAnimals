@@ -45,7 +45,7 @@ export type GroundingRate = {
 };
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(path, { credentials: 'include' });
+  const res = await fetch(path, { credentials: 'include', cache: 'no-store' });
   if (res.status === 403) throw new Error('forbidden');
   if (!res.ok) throw new Error(`request failed: ${res.status}`);
   return res.json() as Promise<T>;

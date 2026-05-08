@@ -24,7 +24,7 @@ export function AiObservability() {
   const [calls, setCalls] = useState<AiCallRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [openCallId, setOpenCallId] = useState<number | null>(null);
-  const [triggerBusy, setTriggerBusy] = useState<string | null>(null);
+  const [triggerBusy, setTriggerBusy] = useState<'morning' | 'scan' | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {

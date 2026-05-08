@@ -10,6 +10,15 @@ export function AiCallTraceDrawer({ callId, onClose }: Props) {
 
   useEffect(() => {
     if (callId == null) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [callId, onClose]);
+
+  useEffect(() => {
+    if (callId == null) return;
     setDetail(null);
     setError(null);
     let active = true;
@@ -28,7 +37,13 @@ export function AiCallTraceDrawer({ callId, onClose }: Props) {
   if (callId == null) return null;
   return (
     <div className="drawer-backdrop" onClick={onClose}>
-      <aside className="drawer" onClick={(e) => e.stopPropagation()}>
+      <aside
+        className="drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="AI call trace"
+        onClick={(e) => e.stopPropagation()}
+      >
         <header className="drawer-header">
           <h3>Trace #{callId}</h3>
           <button onClick={onClose} aria-label="Закрыть">✕</button>

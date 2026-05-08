@@ -3223,9 +3223,10 @@ button, input, select, textarea { font: inherit; }
 /* === AI Observability (P0-1) === */
 .period-tabs { display: flex; gap: 4px; }
 .period-tab { padding: 6px 12px; border: 1px solid #ddd; background: #fff; cursor: pointer; }
-.period-tab.active { background: #1a73e8; color: #fff; border-color: #1a73e8; }
+.period-tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
 .action-row { display: flex; gap: 12px; flex-wrap: wrap; }
-.action-row button { padding: 8px 16px; border: 1px solid #1a73e8; background: #1a73e8; color: #fff; cursor: pointer; }
+.action-row button { padding: 8px 16px; border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+.action-row button:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
 .action-row button:disabled { opacity: 0.6; cursor: wait; }
 .big-number { font-size: 48px; font-weight: 600; }
 .drawer-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
