@@ -1,6 +1,7 @@
 """Anthropic pricing per million tokens, USD; verified 2026-05.
 Revisit quarterly via https://www.anthropic.com/pricing
 """
+from __future__ import annotations
 
 PRICES_USD_PER_MTOK: dict[str, dict[str, float]] = {
     "claude-sonnet-4-6": {"input": 3.00, "output": 15.00, "cache_read": 0.30, "cache_create": 3.75},

@@ -15,6 +15,14 @@ def test_truncate_caps_at_50kb_with_marker():
     assert len(out) < 51_500  # marker + 50KB body
 
 
+def test_truncate_handles_4byte_char_at_boundary():
+    # 49999 ASCII bytes + a 4-byte emoji = 50003 bytes total.
+    s = "x" * 49_999 + "😀"
+    out = _truncate(s)
+    assert "�" not in out
+    assert out.startswith("[TRUNCATED:")
+
+
 def test_persist_inserts_row():
     fake_conn = MagicMock()
     fake_cursor = MagicMock()

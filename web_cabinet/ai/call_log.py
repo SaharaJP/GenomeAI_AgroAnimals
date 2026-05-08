@@ -1,4 +1,6 @@
 """Best-effort persistence of LLM call records into ai_call_log."""
+from __future__ import annotations
+
 import json
 import logging
 from typing import Any
@@ -17,7 +19,7 @@ def _truncate(text: str | None) -> str | None:
     if len(encoded) <= _MAX_TEXT_BYTES:
         return text
     kb = len(encoded) // 1024
-    body = encoded[:_MAX_TEXT_BYTES].decode("utf-8", errors="replace")
+    body = encoded[:_MAX_TEXT_BYTES].decode("utf-8", errors="ignore")
     return f"[TRUNCATED:{kb}kb]\n{body}"
 
 

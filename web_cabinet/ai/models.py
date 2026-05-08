@@ -247,3 +247,56 @@ class ImpactResponse(BaseModel):
     window: str
     results: list[KpiImpactResult]
     demo_mode: bool
+
+
+class AICallStatsResponse(BaseModel):
+    period_hours: int
+    count: int
+    p50_latency_ms: int
+    p95_latency_ms: int
+    total_input_tokens: int
+    total_output_tokens: int
+    total_tokens: int
+    total_cost_usd: float
+    error_count: int
+    error_rate: float
+
+
+class AICallRow(BaseModel):
+    id: int
+    created_at: str | None = None
+    endpoint: str
+    model: str
+    user_id: str | None = None
+    latency_ms: int
+    total_tokens: int
+    cost_usd: float
+    has_error: bool
+
+
+class AICallDetailResponse(BaseModel):
+    id: int
+    created_at: str | None = None
+    user_id: str | None = None
+    endpoint: str
+    task_type: str
+    model: str
+    input_tokens: int
+    output_tokens: int
+    cache_creation_tokens: int
+    cache_read_tokens: int
+    cost_usd: float
+    latency_ms: int
+    error: str | None = None
+    prompt: str | None = None
+    response: str | None = None
+    evidence_chips: list[str] | None = None
+    tools_used: list[dict] | None = None
+
+
+class AIGroundingRateResponse(BaseModel):
+    period_hours: int
+    with_evidence: int
+    without_evidence: int
+    total: int
+    rate_pct: float

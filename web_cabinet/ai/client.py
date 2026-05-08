@@ -385,7 +385,10 @@ class AnthropicClient:
             cache_read_tokens=getattr(usage, "cache_read_input_tokens", 0) or 0,
             latency_ms=latency_ms,
         )
-        self._log_call(target_model, task_type, result, user_id)
+        self._log_call(
+            target_model, task_type, result, user_id,
+            endpoint=task_type, prompt=user_message,
+        )
         return result
 
 

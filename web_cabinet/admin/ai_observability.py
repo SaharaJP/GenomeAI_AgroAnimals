@@ -1,10 +1,18 @@
 """Admin AI observability — /api/admin/ai/* endpoints."""
+from __future__ import annotations
+
 import json
 import logging
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..ai.models import (
+    AICallDetailResponse,
+    AICallRow,
+    AICallStatsResponse,
+    AIGroundingRateResponse,
+)
 from ..auth import get_db
 from ..rbac import require_permissions
 
@@ -21,6 +29,11 @@ def _validate_period(period_hours: int) -> int:
     return period_hours
 
 
+# compat: psycopg cursor-factory shim — connect_postgres_compat() does not
+# pin a row factory, so cursors may yield tuple rows or dict rows depending
+# on caller. Once a project-wide row factory is set on connect, delete this
+# helper and revert to direct indexing. Internal to this module — not a
+# public API contract; no entry in deprecation_policy.json required.
 def _row_get(row, idx: int, key: str):
     """Compatibility shim: psycopg dict_row vs tuple_row."""
     if isinstance(row, dict):
@@ -31,7 +44,7 @@ def _row_get(row, idx: int, key: str):
         return None
 
 
-@router.get("/stats")
+@router.get("/stats", response_model=AICallStatsResponse)
 def stats(
     period_hours: int = Query(24, ge=1, le=168),
     user=Depends(require_permissions("audit.view")),
@@ -71,7 +84,7 @@ def stats(
     }
 
 
-@router.get("/calls")
+@router.get("/calls", response_model=list[AICallRow])
 def calls(
     limit: int = Query(100, ge=1, le=500),
     endpoint: Optional[str] = Query(None),
@@ -121,7 +134,7 @@ def calls(
     return out
 
 
-@router.get("/calls/{call_id}")
+@router.get("/calls/{call_id}", response_model=AICallDetailResponse)
 def call_detail(
     call_id: int,
     user=Depends(require_permissions("audit.view")),
@@ -173,7 +186,7 @@ def call_detail(
     }
 
 
-@router.get("/grounding-rate")
+@router.get("/grounding-rate", response_model=AIGroundingRateResponse)
 def grounding_rate(
     period_hours: int = Query(24, ge=1, le=168),
     user=Depends(require_permissions("audit.view")),
