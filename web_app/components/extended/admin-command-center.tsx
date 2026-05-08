@@ -38,6 +38,7 @@ export function AdminCommandCenter() {
         <Card>
           <h3 className="card-title">Admin flows</h3>
           <div className="linked-inline-actions">
+            <Link href="/admin/ai">AI-наблюдаемость</Link>
             <Link href="/observability">Observability</Link>
             <Link href="/support">Support</Link>
             <Link href="/pilot">Pilot</Link>
