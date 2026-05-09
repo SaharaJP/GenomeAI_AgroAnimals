@@ -7,11 +7,7 @@ import { InsightNotificationBell } from '@/components/ai/insight-notification-be
 
 const pathLabels: Record<string, string> = {
   '/daily-summary': 'Обзор',
-  '/alerts':        'Инсайты',
-  '/reports':       'Аналитика',
-  '/planner':       'Лента событий',
   '/copilot':       'Помощник',
-  '/assistant':     'Помощник',
   '/worklists':     'Рабочие списки',
   '/reproduction':  'Воспроизводство',
   '/vet':           'Ветеринария',
@@ -23,9 +19,9 @@ const pathLabels: Record<string, string> = {
   '/readiness':     'Готовность системы',
   '/observability': 'Мониторинг',
   '/admin':         'Администрирование',
+  '/admin/ai':      'AI-наблюдаемость',
   '/settings':      'Настройки',
   '/connections':   'Мои подключения',
-  '/design-system': 'Дизайн-система',
 };
 
 function getPageLabel(pathname: string): string {
