@@ -123,7 +123,7 @@ function EmptyState({ onRefresh }: { onRefresh: () => void }) {
         Обычно это значит, что в runtime ещё нет записей в слоях алертов, задач или обратной связи.
       </div>
       <div style={{ marginTop: 12, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        <Link className="linked-action-card" href="/alerts">
+        <Link className="linked-action-card" href="/insights">
           <div>
             <div className="linked-action-title">Алерты</div>
             <div className="linked-action-caption">Проверить алерты и контракт бэкенда.</div>
@@ -291,7 +291,7 @@ export function DailyOperationsDashboard() {
 
               <SectionCard title="Связанные действия">
                 <div className="linked-actions-grid">
-                  <Link className="linked-action-card" href="/alerts">
+                  <Link className="linked-action-card" href="/insights">
                     <div className="linked-action-count">{data.totals.alertsOpen}</div>
                     <div>
                       <div className="linked-action-title">Триаж алертов</div>
