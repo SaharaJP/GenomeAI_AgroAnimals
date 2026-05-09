@@ -58,43 +58,143 @@ def _latest_lactation(animal_id: str, store) -> Optional[dict]:
     return rows.iloc[0].to_dict()
 
 
-def _recurrent_mastitis_signal(animal_id: str, store) -> dict:
-    """Detect recurrent mastitis in last 12 months from dm_health_events.
-
-    Per thesis §3.2.4: mastitis history affects M_t (milk loss), H_t (vet cost),
-    and survival (higher cull-prob). Signal is binary: ≥2 mastitis events
-    in last 12 months → "recurrent" → apply penalties.
-
-    Returns dict with multipliers; defaults (no signal) preserve baseline.
-    """
-    no_signal = {"recurrent": False, "milk_factor": 1.0, "vet_factor": 1.0, "cull_prob_factor": 1.0, "count": 0}
+def _count_high_mastitis(animal_id: str, store) -> int:
+    """Count high-severity mastitis events for the animal in available history."""
     if not hasattr(store, "health_events"):
-        return no_signal
+        return 0
     df = store.health_events()
     if df is None or df.empty:
-        return no_signal
+        return 0
     rows = df[df["animal_id"].astype(str) == str(animal_id)]
     if rows.empty:
-        return no_signal
+        return 0
     mastitis = rows[rows["event_type"].astype(str).str.lower() == "mastitis"]
     if "severity" in mastitis.columns:
-        high_severity = mastitis[mastitis["severity"].astype(str).str.lower() == "high"]
+        return int(len(mastitis[mastitis["severity"].astype(str).str.lower() == "high"]))
+    return int(len(mastitis))
+
+
+def _count_lameness(animal_id: str, store) -> int:
+    """Count lameness events (any severity)."""
+    if not hasattr(store, "health_events"):
+        return 0
+    df = store.health_events()
+    if df is None or df.empty:
+        return 0
+    rows = df[df["animal_id"].astype(str) == str(animal_id)]
+    if rows.empty:
+        return 0
+    return int(len(rows[rows["event_type"].astype(str).str.lower() == "lameness"]))
+
+
+def _avg_recent_scc(animal_id: str, store) -> Optional[float]:
+    """Mean SCC across the milkings the store has for this animal. None if no data."""
+    accessor = getattr(store, "milk_yields", None) or getattr(store, "milkings", None)
+    if accessor is None:
+        return None
+    df = accessor()
+    if df is None or df.empty or "scc_cells_ml" not in df.columns:
+        return None
+    rows = df[df["animal_id"].astype(str) == str(animal_id)]
+    if rows.empty:
+        return None
+    series = rows["scc_cells_ml"].dropna()
+    if series.empty:
+        return None
+    return float(series.mean())
+
+
+def _health_burden_signal(animal_id: str, store) -> dict:
+    """Composite health-economic score combining four orthogonal signals.
+
+    Design (P1-2b): each component contributes to a continuous total_score in
+    [0, ~10]; multipliers are smooth functions of total_score so a clean cow
+    has near-baseline penalty and a chronically-sick cow gets aggressive
+    penalty. This replaces the earlier binary "≥2 high-severity mastitis"
+    rule which was honestly calibrated to flip Малина (3891) but gave
+    discrete behavior for any other cow.
+
+    Components:
+        mastitis_score   = min(count_high_severity × 1.5, 4.0)
+        late_dim_score   = max(0, (days_in_milk − 200) / 50)         # 0..2.1
+        parity_score     = max(0, lactation_no − 3) × 0.8            # 0..N
+        scc_score        = clamp((avg_scc − 200k) / 200k, 0, 3.0)
+        lameness_score   = min(count_lameness × 1.0, 3.0)
+
+    Multiplier mapping (linear):
+        milk_factor      = max(0.50, 1.0 − total × 0.06)
+        vet_factor       = 1.0 + total × 0.40
+        cull_prob_factor = 1.0 + total × 0.15
+
+    Returns the full structured signal (components + multipliers) so the
+    API response, narrative_md and rationale can show the operator exactly
+    why the score landed where it did. Diploma §3.2.4 still drives the
+    formulas; this fn supplies M_t / H_t / p_t adjustments per animal.
+    """
+    components: dict[str, Any] = {}
+
+    high_mast = _count_high_mastitis(animal_id, store)
+    components["mastitis_high_count"] = high_mast
+    mastitis_score = min(high_mast * 1.5, 4.0)
+    components["mastitis_score"] = round(mastitis_score, 2)
+
+    lact = _latest_lactation(animal_id, store)
+    dim = 0
+    lact_no = 0
+    if lact is not None:
+        try:
+            dim = int(float(lact.get("days_in_milk") or 0))
+        except (TypeError, ValueError):
+            dim = 0
+        try:
+            lact_no = int(float(lact.get("lactation_no") or 0))
+        except (TypeError, ValueError):
+            lact_no = 0
+    components["days_in_milk"] = dim
+    components["lactation_no"] = lact_no
+
+    late_dim_score = max(0.0, (dim - 200) / 50.0) if dim > 200 else 0.0
+    components["late_dim_score"] = round(late_dim_score, 2)
+
+    parity_score = max(0, lact_no - 3) * 0.8
+    components["parity_score"] = round(parity_score, 2)
+
+    avg_scc = _avg_recent_scc(animal_id, store)
+    components["avg_scc_recent"] = round(avg_scc, 0) if avg_scc is not None else None
+    if avg_scc is not None and avg_scc > 200_000:
+        scc_score = min((avg_scc - 200_000) / 200_000, 3.0)
     else:
-        high_severity = mastitis
-    count_high = int(len(high_severity))
-    count_total = int(len(mastitis))
-    # Recurrent ≡ ≥2 high-severity mastitis events. Single-episode or mixed
-    # severities are absorbed into baseline vet_cost rather than triggering
-    # the chronic-mastitis penalty.
-    if count_high < 2:
-        return {**no_signal, "count": count_total}
+        scc_score = 0.0
+    components["scc_score"] = round(scc_score, 2)
+
+    lameness_count = _count_lameness(animal_id, store)
+    components["lameness_count"] = lameness_count
+    lameness_score = min(lameness_count * 1.0, 3.0)
+    components["lameness_score"] = round(lameness_score, 2)
+
+    total = mastitis_score + late_dim_score + parity_score + scc_score + lameness_score
+    components["total_score"] = round(total, 2)
+
+    milk_factor      = max(0.50, 1.0 - total * 0.06)
+    vet_factor       = 1.0 + total * 0.40
+    cull_prob_factor = 1.0 + total * 0.15
+
     return {
-        "recurrent": True,
-        "count": count_total,
-        "milk_factor":      0.75,   # ~25% productivity loss from chronic udder inflammation
-        "vet_factor":       3.0,    # repeated treatment courses + dry-off therapy
-        "cull_prob_factor": 2.0,    # farmer-driven cull pressure
+        # Backward-compat keys used by older narrative paths
+        "recurrent":        bool(high_mast >= 2),
+        "count":            high_mast,
+        # Composite output (P1-2b)
+        "components":       components,
+        "milk_factor":      round(milk_factor, 4),
+        "vet_factor":       round(vet_factor, 4),
+        "cull_prob_factor": round(cull_prob_factor, 4),
     }
+
+
+# Legacy alias — kept so external callers (and the narrative builder) that
+# expect the old name keep working. The new signature is what compute_npv_keep
+# actually consumes.
+_recurrent_mastitis_signal = _health_burden_signal
 
 
 def _peak_daily_from_lactation(lact: Optional[dict], c: dict) -> float:
@@ -276,17 +376,44 @@ def _build_sensitivity_table(animal_id: str, store, base_r: float) -> list[dict]
 def _build_narrative_md(animal_id: str, keep: dict, cull: dict, decision: str) -> str:
     diff = keep["npv_rub"] - cull["npv_rub"]
     health = keep.get("health_signal") or {}
+    components = (health or {}).get("components") or {}
+    total_score = components.get("total_score", 0.0)
     health_block = ""
-    if health.get("recurrent"):
+    if total_score > 0.5:
+        rows: list[str] = []
+        if components.get("mastitis_score", 0) > 0:
+            rows.append(
+                f"- Мастит (high severity): {components['mastitis_high_count']} эпизодов "
+                f"→ +{components['mastitis_score']:.1f} б."
+            )
+        if components.get("late_dim_score", 0) > 0:
+            rows.append(
+                f"- DIM = {components['days_in_milk']} (late lactation, близко к сухостою) "
+                f"→ +{components['late_dim_score']:.1f} б."
+            )
+        if components.get("parity_score", 0) > 0:
+            rows.append(
+                f"- Лактация № {components['lactation_no']} (≥4 → снижение продуктивности) "
+                f"→ +{components['parity_score']:.1f} б."
+            )
+        scc_avg = components.get("avg_scc_recent")
+        if components.get("scc_score", 0) > 0 and scc_avg is not None:
+            rows.append(
+                f"- Хронически высокий SCC: {int(scc_avg):,}/мл (порог 200к) "
+                f"→ +{components['scc_score']:.1f} б."
+            )
+        if components.get("lameness_score", 0) > 0:
+            rows.append(
+                f"- Хромота: {components['lameness_count']} эпизодов "
+                f"→ +{components['lameness_score']:.1f} б."
+            )
+        rows_md = "\n".join(rows) if rows else "- (factor breakdown empty)"
         health_block = (
-            "\n### Здоровье\n"
-            f"- Зафиксирован **рецидивирующий мастит**: {health['count']} эпизодов "
-            "(критерий ≥ 2 высоких степеней тяжести за 12 мес).\n"
-            f"- Проекция надоя снижена на {(1 - health['milk_factor']) * 100:.0f}% "
-            "(хроническое воспаление вымени).\n"
-            f"- Ветеринарные затраты увеличены ×{health['vet_factor']:.0f} "
-            "(повторные курсы, сухостойная терапия).\n"
-            f"- Месячная вероятность выбытия ×{health['cull_prob_factor']:.0f}.\n"
+            "\n### Композитный health-score\n"
+            f"**Total score: {total_score:.2f}** "
+            f"(milk ×{health['milk_factor']:.2f}, vet ×{health['vet_factor']:.2f}, "
+            f"cull-prob ×{health['cull_prob_factor']:.2f})\n\n"
+            f"{rows_md}\n"
         )
     return f"""## Рекомендация по корове {animal_id}
 
@@ -328,11 +455,25 @@ def recommend(animal_id: str, store, *, horizon_years: int = 4, r: float = 0.13)
     if abs(diff) < 50_000:
         rationale.append("Разница менее 50 000 ₽ — рекомендация чувствительна к цене молока и ставке.")
     health = keep.get("health_signal") or {}
-    if health.get("recurrent"):
+    components = (health or {}).get("components") or {}
+    total_score = components.get("total_score", 0.0)
+    if total_score > 0.5:
+        active_factors = [
+            label for key, label in (
+                ("mastitis_score", "мастит"),
+                ("late_dim_score", "поздний DIM"),
+                ("parity_score", "паритет"),
+                ("scc_score", "хроничный SCC"),
+                ("lameness_score", "хромота"),
+            )
+            if components.get(key, 0) > 0
+        ]
         rationale.append(
-            f"Рецидивирующий мастит ({health['count']} эпизодов) — "
-            f"надой ×{health['milk_factor']:.2f}, ветзатраты ×{health['vet_factor']:.0f}, "
-            f"вероятность выбытия ×{health['cull_prob_factor']:.0f}."
+            f"Health composite-score = {total_score:.2f} "
+            f"({', '.join(active_factors) if active_factors else 'нет активных факторов'}) — "
+            f"надой ×{health['milk_factor']:.2f}, "
+            f"ветзатраты ×{health['vet_factor']:.2f}, "
+            f"вероятность выбытия ×{health['cull_prob_factor']:.2f}."
         )
 
     return {
