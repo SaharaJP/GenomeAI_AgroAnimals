@@ -134,3 +134,43 @@ def test_grounding_rate(app_client, admin_token):
     assert body["total"] >= 3
     assert body["with_evidence"] >= 2
     assert body["without_evidence"] >= 1
+
+
+def test_grounding_rate_counts_tool_use_as_grounded(app_client, admin_token):
+    """P1-1d: a call with non-empty tools_used (and no evidence_chips) is grounded."""
+    from core.infra.postgres_compat import connect_postgres_compat
+    conn = connect_postgres_compat()
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM ai_call_log WHERE endpoint LIKE 'test_grounding_tooluse_%'")
+    conn.commit()
+    # Tool-use only — no evidence_chips
+    _seed_call(
+        conn,
+        endpoint="test_grounding_tooluse_with",
+        evidence_chips='[]',
+        tools_used='[{"name":"get_animal_profile","input":{"cow_id":"4821"}}]',
+    )
+    _seed_call(
+        conn,
+        endpoint="test_grounding_tooluse_with",
+        evidence_chips='[]',
+        tools_used='[{"name":"calculate_cull_npv","input":{"animal_id":"7001"}}]',
+    )
+    # Neither evidence_chips nor tools_used — counts as ungrounded
+    _seed_call(
+        conn,
+        endpoint="test_grounding_tooluse_without",
+        evidence_chips='[]',
+        tools_used='[]',
+    )
+    conn.close()
+
+    resp = app_client.get(
+        "/api/admin/ai/grounding-rate?period_hours=1",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+    assert resp.status_code == 200
+    body = resp.json()
+    # Must include both the 2 tool-use rows and the 1 ungrounded row introduced here
+    assert body["with_evidence"] >= 2
+    assert body["without_evidence"] >= 1

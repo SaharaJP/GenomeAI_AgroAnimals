@@ -193,12 +193,23 @@ def grounding_rate(
     conn=Depends(get_db),
 ) -> dict[str, Any]:
     _validate_period(period_hours)
+    # Grounded = ответ опирается на реальные данные фермы либо через
+    # evidence-маркеры [evidence: ID] в тексте (legacy ask-farm flow), либо
+    # через явный tool_use вызов канонического инструмента (P1-1 agent loop).
+    # Оба способа эквивалентны по смыслу — модель не «выдумала», а сослалась
+    # на проверяемый источник.
     with conn.cursor() as cur:
         cur.execute(
             """
             SELECT
-              COUNT(*) FILTER (WHERE jsonb_array_length(COALESCE(evidence_chips, '[]'::jsonb)) > 0) AS with_evidence,
-              COUNT(*) FILTER (WHERE jsonb_array_length(COALESCE(evidence_chips, '[]'::jsonb)) = 0) AS without_evidence,
+              COUNT(*) FILTER (
+                WHERE jsonb_array_length(COALESCE(evidence_chips, '[]'::jsonb)) > 0
+                   OR jsonb_array_length(COALESCE(tools_used,     '[]'::jsonb)) > 0
+              ) AS with_evidence,
+              COUNT(*) FILTER (
+                WHERE jsonb_array_length(COALESCE(evidence_chips, '[]'::jsonb)) = 0
+                  AND jsonb_array_length(COALESCE(tools_used,     '[]'::jsonb)) = 0
+              ) AS without_evidence,
               COUNT(*) AS total
             FROM ai_call_log
             WHERE created_at >= NOW() - make_interval(hours => %s)

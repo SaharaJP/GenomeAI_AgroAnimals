@@ -99,7 +99,7 @@ export function AiObservability() {
             <>
               <div className="big-number">{grounding.rate_pct.toFixed(1)}%</div>
               <p className="small-muted">
-                {grounding.with_evidence} из {grounding.total} с evidence
+                {grounding.with_evidence} из {grounding.total} с evidence или tool-use
               </p>
             </>
           ) : (
