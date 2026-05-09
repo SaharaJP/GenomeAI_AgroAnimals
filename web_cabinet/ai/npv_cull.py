@@ -20,6 +20,8 @@ from __future__ import annotations
 import datetime
 from typing import Any, Optional
 
+import pandas as pd
+
 DEFAULTS: dict[str, float | int] = {
     "milk_price_rub_per_kg":        30.0,
     "meat_price_rub_per_kg_live":  250.0,
@@ -58,6 +60,70 @@ def _age_years(animal_id: str, store, *, today: Optional[datetime.date] = None) 
         return None
     today = today or datetime.date.today()
     return round((today - birth).days / 365.25, 2)
+
+
+def _last_calving(animal_id: str, store) -> Optional[datetime.date]:
+    lact = _latest_lactation(animal_id, store)
+    if not lact or not lact.get("calving_date"):
+        return None
+    try:
+        return datetime.date.fromisoformat(str(lact["calving_date"])[:10])
+    except (TypeError, ValueError):
+        return None
+
+
+def _is_open_cow(
+    animal_id: str, store, *, today: Optional[datetime.date] = None
+) -> tuple[bool, int]:
+    """Return (is_open, days_since_calving). Open = >150 DIM and no
+    successful breeding after the latest calving."""
+    today = today or datetime.date.today()
+    calving = _last_calving(animal_id, store)
+    if not calving:
+        return False, 0
+    days_since = (today - calving).days
+    if days_since <= 150:
+        return False, days_since
+    accessor = getattr(store, "breedings", None)
+    if accessor is None:
+        return days_since > 200, days_since
+    df = accessor()
+    if df is None or df.empty or "animal_id" not in df.columns:
+        return days_since > 200, days_since
+    rows = df[df["animal_id"].astype(str) == str(animal_id)].copy()
+    if rows.empty or "date" not in rows.columns:
+        return True, days_since
+    rows["date"] = pd.to_datetime(rows["date"], errors="coerce")
+    rows = rows.dropna(subset=["date"])
+    rows = rows[rows["date"] >= pd.Timestamp(calving)]
+    if rows.empty:
+        return True, days_since
+    if "result" not in rows.columns:
+        return True, days_since
+    pregnant = rows[rows["result"].astype(str).str.lower() == "pregnant"]
+    return pregnant.empty, days_since
+
+
+def _treatment_recurrence_count(animal_id: str, store) -> int:
+    """Count pairs of same-treatment_type within 60 days for animal."""
+    accessor = getattr(store, "treatments", None)
+    if accessor is None:
+        return 0
+    df = accessor()
+    if df is None or df.empty or "animal_id" not in df.columns:
+        return 0
+    rows = df[df["animal_id"].astype(str) == str(animal_id)].copy()
+    if rows.empty or "treatment_type" not in rows.columns or "start_date" not in rows.columns:
+        return 0
+    rows["start_date"] = pd.to_datetime(rows["start_date"], errors="coerce")
+    rows = rows.dropna(subset=["start_date"]).sort_values("start_date")
+    pairs = 0
+    for _tt, dates in rows.groupby("treatment_type")["start_date"]:
+        dates_list = list(dates)
+        for i in range(len(dates_list) - 1):
+            if (dates_list[i + 1] - dates_list[i]).days <= 60:
+                pairs += 1
+    return pairs
 
 
 def _latest_lactation(animal_id: str, store) -> Optional[dict]:
@@ -195,7 +261,23 @@ def _health_burden_signal(animal_id: str, store) -> dict:
         age_score = min((age_years - 5.0) * 0.5, 4.0)
     components["age_score"] = round(age_score, 2)
 
-    total = mastitis_score + late_dim_score + parity_score + scc_score + lameness_score + age_score
+    is_open, days_since_calving = _is_open_cow(animal_id, store)
+    components["is_open_cow"] = is_open
+    components["days_since_calving"] = days_since_calving
+    days_open_score = 0.0
+    if is_open and days_since_calving > 150:
+        days_open_score = min((days_since_calving - 150) / 50.0, 3.0)
+    components["days_open_score"] = round(days_open_score, 2)
+
+    recurrence_count = _treatment_recurrence_count(animal_id, store)
+    components["treatment_recurrence_count"] = recurrence_count
+    treatment_score = min(recurrence_count * 1.0, 3.0)
+    components["treatment_recurrence_score"] = round(treatment_score, 2)
+
+    total = (
+        mastitis_score + late_dim_score + parity_score + scc_score
+        + lameness_score + age_score + days_open_score + treatment_score
+    )
     components["total_score"] = round(total, 2)
 
     milk_factor      = max(0.50, 1.0 - total * 0.06)
@@ -464,6 +546,16 @@ def _build_narrative_md(animal_id: str, keep: dict, cull: dict, decision: str) -
                 f"- Возраст {components['age_years']:.1f} лет (>5 — амортизация продуктивности) "
                 f"→ +{components['age_score']:.1f} б."
             )
+        if components.get("days_open_score", 0) > 0:
+            rows.append(
+                f"- Открытая корова: {components['days_since_calving']} дн. с отёла без подтверждённой стельности "
+                f"→ +{components['days_open_score']:.1f} б."
+            )
+        if components.get("treatment_recurrence_score", 0) > 0:
+            rows.append(
+                f"- Рецидивирующее лечение: {components['treatment_recurrence_count']} пар за 60 дн. "
+                f"→ +{components['treatment_recurrence_score']:.1f} б."
+            )
         rows_md = "\n".join(rows) if rows else "- (factor breakdown empty)"
         health_block = (
             "\n### Композитный health-score\n"
@@ -523,6 +615,8 @@ def recommend(animal_id: str, store, *, horizon_years: int = 4, r: float = 0.13)
                 ("scc_score", "хроничный SCC"),
                 ("lameness_score", "хромота"),
                 ("age_score", "возраст"),
+                ("days_open_score", "затянувшаяся открытость"),
+                ("treatment_recurrence_score", "рецидив лечения"),
             )
             if components.get(key, 0) > 0
         ]

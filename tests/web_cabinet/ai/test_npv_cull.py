@@ -1,10 +1,12 @@
 """Acceptance: NPV cull/keep model per thesis §3.2.4 + composite health-score (P1-2b)."""
 from __future__ import annotations
+import datetime
 import pandas as pd
 import pytest
 from web_cabinet.ai.npv_cull import (
     DEFAULTS, compute_npv_keep, compute_npv_cull, recommend,
     _health_burden_signal, _baseline_cull_prob, _age_years,
+    _is_open_cow, _treatment_recurrence_count,
 )
 from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
 
@@ -82,7 +84,8 @@ def test_malina_3891_recommends_cull(rich_store):
 # ── P1-2b composite health-score component tests ──────────────────────────
 
 
-def _store_with(animals=None, lactations=None, health=None, milk=None) -> DemoDataStore:
+def _store_with(animals=None, lactations=None, health=None, milk=None,
+                breedings=None, treatments=None) -> DemoDataStore:
     """Build a minimal DemoDataStore from inline DataFrames."""
     frames = {}
     frames["dm_animals"] = pd.DataFrame(animals or [
@@ -94,6 +97,10 @@ def _store_with(animals=None, lactations=None, health=None, milk=None) -> DemoDa
     frames["dm_health_events"] = pd.DataFrame(health or [])
     if milk is not None:
         frames["milk_yields"] = pd.DataFrame(milk)
+    if breedings is not None:
+        frames["breedings"] = pd.DataFrame(breedings)
+    if treatments is not None:
+        frames["dm_treatments"] = pd.DataFrame(treatments)
     return DemoDataStore.from_dataframes(**frames)
 
 
@@ -172,6 +179,7 @@ def test_health_signal_components_compose_additively():
     expected = (
         cs["mastitis_score"] + cs["late_dim_score"] + cs["parity_score"]
         + cs["scc_score"] + cs["lameness_score"] + cs["age_score"]
+        + cs["days_open_score"] + cs["treatment_recurrence_score"]
     )
     assert cs["total_score"] == pytest.approx(expected, abs=0.01)
     # All four configured signals fire (mastitis 3.0, late_dim ~1.8, parity 0.8, lameness 1.0)
@@ -266,3 +274,87 @@ def test_age_score_capped_at_4():
         is_alive=True, status="active")])
     sig = _health_burden_signal("C1", s)
     assert sig["components"]["age_score"] == 4.0
+
+
+# ── P1-2c days-open + treatment recurrence tests ──────────────────────────
+
+
+def test_is_open_cow_under_150_dim_returns_false():
+    today = datetime.date(2026, 5, 9)
+    s = _store_with(lactations=[dict(animal_id="C1", lactation_no=2,
+        calving_date="2026-03-01", dryoff_date="2026-12-01", days_in_milk=70,
+        milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)])
+    is_open, days = _is_open_cow("C1", s, today=today)
+    assert is_open is False
+    assert days == 69
+
+
+def test_is_open_cow_no_breedings_after_late_calving_is_open():
+    today = datetime.date(2026, 5, 9)
+    s = _store_with(
+        lactations=[dict(animal_id="C1", lactation_no=2,
+            calving_date="2025-08-01", dryoff_date="2026-05-01", days_in_milk=280,
+            milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)],
+        breedings=[],
+    )
+    is_open, days = _is_open_cow("C1", s, today=today)
+    assert is_open is True
+    assert days >= 150
+
+
+def test_is_open_cow_with_pregnant_breeding_is_not_open():
+    today = datetime.date(2026, 5, 9)
+    s = _store_with(
+        lactations=[dict(animal_id="C1", lactation_no=2,
+            calving_date="2025-08-01", dryoff_date="2026-05-01", days_in_milk=280,
+            milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)],
+        breedings=[dict(animal_id="C1", date="2025-12-01", result="pregnant")],
+    )
+    is_open, days = _is_open_cow("C1", s, today=today)
+    assert is_open is False
+    assert days >= 150
+
+
+def test_treatment_recurrence_two_in_60_days():
+    s = _store_with(treatments=[
+        dict(tenant_id="default", treatment_id="T1", animal_id="C1",
+             start_date="2026-02-01", treatment_type="mastitis_protocol"),
+        dict(tenant_id="default", treatment_id="T2", animal_id="C1",
+             start_date="2026-03-15", treatment_type="mastitis_protocol"),
+    ])
+    assert _treatment_recurrence_count("C1", s) == 1
+
+
+def test_treatment_recurrence_outside_60_days_not_counted():
+    s = _store_with(treatments=[
+        dict(tenant_id="default", treatment_id="T1", animal_id="C1",
+             start_date="2026-01-01", treatment_type="mastitis_protocol"),
+        dict(tenant_id="default", treatment_id="T2", animal_id="C1",
+             start_date="2026-04-15", treatment_type="mastitis_protocol"),
+    ])
+    assert _treatment_recurrence_count("C1", s) == 0
+
+
+def test_treatment_recurrence_different_types_not_counted():
+    s = _store_with(treatments=[
+        dict(tenant_id="default", treatment_id="T1", animal_id="C1",
+             start_date="2026-02-01", treatment_type="mastitis_protocol"),
+        dict(tenant_id="default", treatment_id="T2", animal_id="C1",
+             start_date="2026-02-15", treatment_type="lameness_protocol"),
+    ])
+    assert _treatment_recurrence_count("C1", s) == 0
+
+
+def test_health_signal_treatment_recurrence_lowers_milk_factor():
+    s = _store_with(
+        treatments=[
+            dict(tenant_id="default", treatment_id="T1", animal_id="C1",
+                 start_date="2026-02-01", treatment_type="mastitis_protocol"),
+            dict(tenant_id="default", treatment_id="T2", animal_id="C1",
+                 start_date="2026-03-01", treatment_type="mastitis_protocol"),
+        ],
+    )
+    sig = _health_burden_signal("C1", s)
+    assert sig["components"]["treatment_recurrence_count"] == 1
+    assert sig["components"]["treatment_recurrence_score"] == 1.0
+    assert sig["milk_factor"] < 1.0

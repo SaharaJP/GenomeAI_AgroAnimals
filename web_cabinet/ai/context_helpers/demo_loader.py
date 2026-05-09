@@ -76,6 +76,16 @@ class DemoDataStore:
     def repro_events(self) -> pd.DataFrame:
         return self._load("dm_repro_events")
 
+    def breedings(self) -> pd.DataFrame:
+        if "breedings" not in self._cache:
+            if self._dir is None:
+                return pd.DataFrame()
+            path = self._dir / "breedings.json"
+            self._cache["breedings"] = (
+                pd.read_json(path) if path.exists() else pd.DataFrame()
+            )
+        return self._cache["breedings"]
+
     def economics(self) -> pd.DataFrame:
         return self._load("dm_economics_daily")
 
