@@ -1,12 +1,30 @@
 'use client';
 import { X, AlertTriangle } from 'lucide-react';
 import { dismissQcIncident, type QcIncident } from '@/lib/api/qc-client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { fetchInsights } from '@/lib/api/insights-client';
+import type { InsightItem } from '@/lib/api/insights';
+import { useOverlays } from './analytics-overlays-context';
 
 interface Props {
   incident: QcIncident;
   onClose: () => void;
   onDismissed: (id: string) => void;
+}
+
+function inPeriod(eventDate: string, start: string, end: string | null): boolean {
+  const t = new Date(eventDate.slice(0, 10) + 'T00:00:00Z').getTime();
+  if (Number.isNaN(t)) return false;
+  const s = new Date(start.slice(0, 10) + 'T00:00:00Z').getTime();
+  const e = end ? new Date(end.slice(0, 10) + 'T00:00:00Z').getTime() : Date.now();
+  return t >= s && t <= e;
+}
+
+function matchesMetric(insight: InsightItem, metricId: string): boolean {
+  const m = metricId.toLowerCase();
+  if ((insight.type ?? '').toLowerCase().includes(m)) return true;
+  return (insight.tags ?? []).some((t) => t.toLowerCase().includes(m));
 }
 
 const SEVERITY_LABEL: Record<string, string> = {
@@ -23,6 +41,26 @@ const SEVERITY_COLOR: Record<string, string> = {
 export function QcIncidentCard({ incident, onClose, onDismissed }: Props) {
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [insights, setInsights] = useState<InsightItem[]>([]);
+  const router = useRouter();
+  const overlays = useOverlays();
+
+  // Cross-link: timeline events on this metric whose date falls inside the incident period.
+  const relatedEvents = (overlays.eventsByMetric[incident.metric_id] ?? [])
+    .filter((ev) => inPeriod(ev.event_date, incident.period_start, incident.period_end ?? null))
+    .slice(0, 6);
+
+  // Cross-link: insights whose type/tag mentions the metric (lazy fetch on open).
+  useEffect(() => {
+    let active = true;
+    fetchInsights({ status: 'to_check' })
+      .then((res) => {
+        if (!active) return;
+        setInsights((res.items ?? []).filter((it) => matchesMetric(it, incident.metric_id)).slice(0, 5));
+      })
+      .catch(() => { if (active) setInsights([]); });
+    return () => { active = false; };
+  }, [incident.metric_id]);
 
   async function handleDismiss() {
     setWorking(true);
@@ -79,6 +117,58 @@ export function QcIncidentCard({ incident, onClose, onDismissed }: Props) {
         {incident.affected_sensors.length > 0 && (
           <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
             Затронуто: {incident.affected_sensors.join(', ')}
+          </div>
+        )}
+
+        {relatedEvents.length > 0 && (
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+            <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+              Связанные события ленты ({relatedEvents.length})
+            </p>
+            {relatedEvents.map((ev) => (
+              <button
+                type="button"
+                key={ev.event_id}
+                onClick={() => router.push(`/timeline?event=${encodeURIComponent(ev.event_id)}`)}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  background: 'var(--accent-subtle, #eef6ff)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '6px 10px', marginBottom: 4,
+                  cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                <span style={{ color: 'var(--text-muted)', marginRight: 8 }}>
+                  {ev.event_date.slice(0, 10)}
+                </span>
+                <span style={{ color: 'var(--text)' }}>{ev.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {insights.length > 0 && (
+          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+            <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
+              Связанные инсайты ({insights.length})
+            </p>
+            {insights.map((it) => (
+              <button
+                type="button"
+                key={it.insight_id}
+                onClick={() => router.push(`/insights?id=${encodeURIComponent(it.insight_id)}`)}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  background: 'var(--surface-soft, #f7f9fc)', border: '1px solid var(--border)',
+                  borderRadius: 6, padding: '6px 10px', marginBottom: 4,
+                  cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                <span style={{ color: 'var(--text-muted)', marginRight: 8 }}>
+                  {(it.severity ?? '').toUpperCase()}
+                </span>
+                <span style={{ color: 'var(--text)' }}>{it.title}</span>
+              </button>
+            ))}
           </div>
         )}
 
