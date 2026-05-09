@@ -55,7 +55,7 @@ export function EconomicsMasterSurface() {
         <Card>
           <h3 className="card-title">Linked office flows</h3>
           <div className="linked-inline-actions">
-            <Link href="/reports">Open reports</Link>
+            <Link href="/analytics?tab=reports">Open reports</Link>
             {view ? <Link href={buildEconomicsAssistantHref(view)}>Explain in assistant</Link> : <Link href="/assistant">Explain in assistant</Link>}
             <Link href="/decisions?context=economics">Decision trail</Link>
             <Link href="/support?context=economics">Support / pilot evidence</Link>

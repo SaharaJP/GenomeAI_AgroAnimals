@@ -1,5 +1,6 @@
 'use client';
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { X, Plus, GitCompare, PenLine, Copy, BarChart2, AlertTriangle, Info, Pencil } from 'lucide-react';
 import { ProductionTab } from './production-tab';
 import { ReproductionTab } from './reproduction-tab';
@@ -12,6 +13,7 @@ import { FinanceTab } from './finance-tab';
 import { AddChartDialog } from './add-chart-dialog';
 import { AnalyticsOverlaysProvider, useOverlays } from './analytics-overlays-context';
 import { useAuth } from '@/components/auth/auth-provider';
+import { ReportsTab } from './reports-tab';
 
 interface Tab {
   id: string;
@@ -28,6 +30,7 @@ const INITIAL_TABS: Tab[] = [
   { id: 'herd',         label: 'Состав стада' },
   { id: 'weather',      label: 'Погода' },
   { id: 'finance',      label: 'Финансы' },
+  { id: 'reports',      label: 'Отчёты' },
 ];
 
 type ModalType =
@@ -142,8 +145,11 @@ function HeaderToggles() {
 export function AnalyticsTabs() {
   const { me } = useAuth();
   const farmId = me?.scope?.active_farm_id ?? 'INV_FARM_001';
+  const _sp = useSearchParams();
+  const _initialTab = _sp.get('tab');
+  const _validInitial = INITIAL_TABS.find((t) => t.id === _initialTab)?.id ?? 'production';
   const [tabs, setTabs] = useState<Tab[]>(INITIAL_TABS);
-  const [activeId, setActiveId] = useState('production');
+  const [activeId, setActiveId] = useState(_validInitial);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [addedCharts, setAddedCharts] = useState<Record<string, string[]>>({});
@@ -375,6 +381,8 @@ export function AnalyticsTabs() {
           <WeatherTab onAddChart={handleAddChart} addedMetricIds={addedCharts['weather'] ?? []} onRemoveChart={(id) => handleRemoveChart('weather', id)} removedBuiltinIds={removedBuiltins['weather'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('weather', k)} titleOverrides={chartTitles['weather'] ?? {}} alertThresholds={chartAlerts['weather'] ?? {}} onRequestRename={(k, t) => handleRequestRename('weather', k, t)} onRequestAlert={(k, t) => handleRequestAlert('weather', k, t)} />
         ) : activeTab.id === 'finance' ? (
           <FinanceTab onAddChart={handleAddChart} addedMetricIds={addedCharts['finance'] ?? []} onRemoveChart={(id) => handleRemoveChart('finance', id)} removedBuiltinIds={removedBuiltins['finance'] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin('finance', k)} titleOverrides={chartTitles['finance'] ?? {}} alertThresholds={chartAlerts['finance'] ?? {}} onRequestRename={(k, t) => handleRequestRename('finance', k, t)} onRequestAlert={(k, t) => handleRequestAlert('finance', k, t)} />
+        ) : activeTab.id === 'reports' ? (
+          <ReportsTab />
         ) : activeTab.id.endsWith('_copy') || activeTab.id.includes('_copy_') ? (
           <ProductionTab onAddChart={handleAddChart} addedMetricIds={addedCharts[activeTab.id] ?? []} onRemoveChart={(id) => handleRemoveChart(activeTab.id, id)} removedBuiltinIds={removedBuiltins[activeTab.id] ?? []} onRemoveBuiltin={(k) => handleRemoveBuiltin(activeTab.id, k)} titleOverrides={chartTitles[activeTab.id] ?? {}} alertThresholds={chartAlerts[activeTab.id] ?? {}} onRequestRename={(k, t) => handleRequestRename(activeTab.id, k, t)} onRequestAlert={(k, t) => handleRequestAlert(activeTab.id, k, t)} />
         ) : (

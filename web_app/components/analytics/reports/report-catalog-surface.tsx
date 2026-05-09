@@ -55,7 +55,7 @@ export function ReportCatalogSurface() {
                       <td>{item.approved_at || '—'}</td>
                       <td>
                         <div className="linked-inline-actions">
-                          <Link href={`/reports/${encodeURIComponent(item.data_version)}/${encodeURIComponent(item.report_version)}`}>Open view</Link>
+                          <Link href={`/analytics?tab=reports&data_version=${encodeURIComponent(item.data_version)}&report_version=${encodeURIComponent(item.report_version)}`}>Open view</Link>
                           <Link href={`/assistant?target=report&data_version=${encodeURIComponent(item.data_version)}&report_version=${encodeURIComponent(item.report_version)}`}>Assistant</Link>
                         </div>
                       </td>
