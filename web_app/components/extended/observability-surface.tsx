@@ -37,7 +37,7 @@ export function ObservabilitySurface() {
           <Link href="/support">Support</Link>
           <Link href="/readiness">Readiness</Link>
           <Link href="/admin">Admin</Link>
-          <Link href="/analytics?tab=reports">Reports</Link>
+          <Link href="/reports">Reports</Link>
         </div>
         <pre style={{ whiteSpace: 'pre-wrap', marginTop: 12 }}>{JSON.stringify(payload, null, 2)}</pre>
       </Card>

@@ -2,8 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { ExplainPanel } from '@/components/copilot/explain-panel';
 import { getSeededBrief, getAllSeededBriefs } from '@/lib/weekly-briefs';
 import type { WeeklyBrief } from '@/lib/weekly-briefs';
 import { CreateBriefCard } from '@/components/copilot/create-brief-card';
@@ -27,14 +25,6 @@ function weekAgoStr(): string {
 }
 
 export default function CopilotPage() {
-  const sp = useSearchParams();
-  const target = sp.get('target');
-  const taskId = sp.get('task_id');
-  const objectId = sp.get('object_id');
-  const dataVersion = sp.get('data_version');
-  const reportVersion = sp.get('report_version');
-  const hasExplainContext = Boolean(target || taskId || objectId || dataVersion || reportVersion);
-
   const [dateStart, setDateStart] = useState<string>(weekAgoStr());
   const [dateEnd, setDateEnd] = useState<string>(todayStr());
   const [brief, setBrief] = useState<WeeklyBrief | null>(null);
@@ -134,16 +124,7 @@ export default function CopilotPage() {
     showToast('Скачано как текст (PDF сервис недоступен)');
   }
 
-  const initialTarget = target || taskId || objectId || dataVersion || reportVersion || '';
-
   return (
-    <>
-      {hasExplainContext && (
-        <ExplainPanel
-          initialTarget={initialTarget}
-          initialDataVersion={dataVersion ?? undefined}
-        />
-      )}
     <div className="grid" style={{ maxWidth: 860 }}>
       <div>
         <h1 className="page-title">Помощник: Брифинг фермы</h1>
@@ -170,6 +151,5 @@ export default function CopilotPage() {
 
       {toast && <div className="toast">{toast}</div>}
     </div>
-    </>
   );
 }

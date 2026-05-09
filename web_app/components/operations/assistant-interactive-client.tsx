@@ -31,15 +31,15 @@ function formatAssistantError(detail: unknown): string {
   return 'Ошибка запроса к ассистенту';
 }
 
-type ExplainPanelProps = {
+type AssistantInteractiveClientProps = {
   initialTarget: string;
   initialDataVersion?: string;
 };
 
-export function ExplainPanel({
+export function AssistantInteractiveClient({
   initialTarget,
   initialDataVersion,
-}: ExplainPanelProps) {
+}: AssistantInteractiveClientProps) {
   const [dataVersion, setDataVersion] = useState(
     initialDataVersion || inferDataVersionFromTarget(initialTarget) || DEFAULT_DATA_VERSION,
   );

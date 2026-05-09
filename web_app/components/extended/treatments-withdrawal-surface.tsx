@@ -40,7 +40,7 @@ export function TreatmentsWithdrawalSurface() {
           <div className="linked-inline-actions">
             <Link href="/vet">Очереди ветеринарии</Link>
             <Link href="/copilot?target=treatments">Объяснить в ИИ-помощнике</Link>
-            <Link href="/analytics?tab=reports">Отчёт / экспорт</Link>
+            <Link href="/reports">Отчёт / экспорт</Link>
             <Link href="/support?context=treatments">Поддержка / диагностика</Link>
           </div>
           <p className="small-muted" style={{ marginTop: 12 }}>{view.parityNote}</p>

@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { ReportCatalogSurface } from '@/components/reports/report-catalog-surface';
 
-export default function ReportsPageRedirect() {
-  redirect('/analytics?tab=reports');
+export default function ReportsPage() {
+  return <ReportCatalogSurface />;
 }

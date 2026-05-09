@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Card, MetricCard } from '@/components/ui/card';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { FactPackGuardrailNote } from '@/components/explainability/fact-pack-guardrail-note';
-import { ExplainEntryPoints } from '@/components/copilot/explain-entry-points';
+import { AssistantEntryPoints } from '@/components/assistant/assistant-entry-points';
 import { fetchReportsCatalog } from '@/lib/api/profiles-reports-assistant';
 import type { ReportsListResponse } from '@/lib/api/contracts';
 
@@ -55,8 +55,8 @@ export function ReportCatalogSurface() {
                       <td>{item.approved_at || '—'}</td>
                       <td>
                         <div className="linked-inline-actions">
-                          <Link href={`/analytics?tab=reports&data_version=${encodeURIComponent(item.data_version)}&report_version=${encodeURIComponent(item.report_version)}`}>Open view</Link>
-                          <Link href={`/copilot?target=report&data_version=${encodeURIComponent(item.data_version)}&report_version=${encodeURIComponent(item.report_version)}`}>Assistant</Link>
+                          <Link href={`/reports/${encodeURIComponent(item.data_version)}/${encodeURIComponent(item.report_version)}`}>Open view</Link>
+                          <Link href={`/assistant?target=report&data_version=${encodeURIComponent(item.data_version)}&report_version=${encodeURIComponent(item.report_version)}`}>Assistant</Link>
                         </div>
                       </td>
                     </tr>
@@ -65,7 +65,7 @@ export function ReportCatalogSurface() {
               </table>
             </div>
           </Card>
-          <ExplainEntryPoints contextLabel="reports" />
+          <AssistantEntryPoints contextLabel="reports" />
         </>
       )}
     </div>

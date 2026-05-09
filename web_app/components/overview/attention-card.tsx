@@ -45,7 +45,7 @@ export function AttentionCard() {
               </div>
             ))}
             <Link
-              href="/insights"
+              href="/alerts"
               style={{ fontSize: 12, color: 'var(--accent-text)', fontWeight: 500, marginTop: 4 }}
             >
               Просмотреть все предупреждения →

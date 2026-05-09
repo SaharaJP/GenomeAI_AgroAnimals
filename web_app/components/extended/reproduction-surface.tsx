@@ -51,9 +51,9 @@ export function ReproductionSurface() {
               <h3 className="card-title">Связанные действия</h3>
               <p className="card-subtitle">Планировщик, отчёты и объяснения привязаны к одной доказательной базе.</p>
               <div className="linked-inline-actions">
-                <Link href="/timeline">Открыть планировщик</Link>
+                <Link href="/planner">Открыть планировщик</Link>
                 <Link href="/copilot?target=repro">Объяснить в ИИ-помощнике</Link>
-                <Link href="/analytics?tab=reports">Открыть отчёты</Link>
+                <Link href="/reports">Открыть отчёты</Link>
                 <Link href="/support?context=reproduction">Поддержка</Link>
               </div>
               <p className="small-muted" style={{ marginTop: 12 }}>{view.parityNote}</p>

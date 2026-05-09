@@ -1,12 +1,6 @@
-import { redirect } from 'next/navigation';
+import { ReportViewSurface } from '@/components/reports/report-view-surface';
 
-export default async function ReportsViewRedirect({
-  params,
-}: {
-  params: Promise<{ dataVersion: string; reportVersion: string }>;
-}) {
+export default async function ReportDetailPage({ params }: { params: Promise<{ dataVersion: string; reportVersion: string }> }) {
   const { dataVersion, reportVersion } = await params;
-  redirect(
-    `/analytics?tab=reports&data_version=${encodeURIComponent(dataVersion)}&report_version=${encodeURIComponent(reportVersion)}`,
-  );
+  return <ReportViewSurface dataVersion={dataVersion} reportVersion={reportVersion} />;
 }

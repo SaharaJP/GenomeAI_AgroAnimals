@@ -1,5 +1,2 @@
-import { redirect } from 'next/navigation';
-
-export default function AlertsPageRedirect() {
-  redirect('/insights');
-}
+import { AlertsSurface } from '@/components/operations/alerts-surface';
+export default function AlertsPage(){return <AlertsSurface />}
