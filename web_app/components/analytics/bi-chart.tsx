@@ -91,36 +91,42 @@ export function BiChart({
   };
 
   const yTicks = [0, 0.5, 1].map(t => ({ y: PT + t * IH, v: yMax - t * yRange }));
-  const tipX = hovered !== null ? getX(hovered) : 0;
-  const tipLeftPct = hovered !== null ? `${Math.max(5, Math.min(75, (tipX / W) * 100))}%` : '0%';
+  // Pin tooltip to whichever side is opposite the hovered week, so it
+  // doesn't sit on top of the QC bands / event markers around the cursor.
+  const isHoverOnLeft = hovered !== null && hovered < n / 2;
+  const tipSide: 'left' | 'right' = isHoverOnLeft ? 'right' : 'left';
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      {/* Tooltip */}
+      {/* Tooltip — corner-pinned so it never overlaps the data area near
+          the cursor. Side flips based on which half of the chart the
+          cursor is over. */}
       {hovered !== null && (
         <div style={{
           position: 'absolute',
           top: 2,
-          left: tipLeftPct,
-          transform: 'translateX(-50%)',
-          background: '#1e293b',
+          ...(tipSide === 'right'
+            ? { right: 6, left: 'auto' }
+            : { left: 6, right: 'auto' }),
+          background: 'rgba(30,41,59,0.92)',
           color: '#fff',
-          padding: '5px 10px',
+          padding: '4px 9px',
           borderRadius: 4,
           fontSize: 11,
           pointerEvents: 'none',
           whiteSpace: 'nowrap',
           zIndex: 10,
           boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          lineHeight: 1.75,
+          lineHeight: 1.5,
+          backdropFilter: 'blur(2px)',
         }}>
-          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10, marginBottom: 2 }}>
+          <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: 10, marginBottom: 1 }}>
             {labels[hovered]}
           </div>
           {series.map(s => (
             <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{
-                width: 8, height: 8,
+                width: 7, height: 7,
                 borderRadius: type === 'line' ? '50%' : 2,
                 background: s.color,
                 display: 'inline-block',
@@ -290,25 +296,41 @@ export function BiChart({
           </g>
         )}
 
-        {/* Event markers — vertical lines + dot at top */}
-        {eventMarkers && eventMarkers.length > 0 && (
+        {/* Event markers — dashed vertical guide + diamond marker placed
+            ON the data line itself (first series). Multiple events on the
+            same week stack vertically so they don't collide. */}
+        {eventMarkers && eventMarkers.length > 0 && type === 'line' && (
           <g>
-            {eventMarkers.map((e, ei) => {
-              if (e.date_idx < 0 || e.date_idx >= n) return null;
-              const x = getX(e.date_idx) + (ei % 3 - 1) * 1.5;
-              return (
-                <g key={e.event_id} style={{ cursor: onEventClick ? 'pointer' : 'default' }}
-                   onClick={() => onEventClick?.(e.event_id)}>
-                  <line x1={x} y1={PT} x2={x} y2={PT + IH}
-                        stroke="var(--accent, #0369a1)" strokeWidth={1} strokeDasharray="2 2" opacity={0.55} />
-                  {/* Visible dot */}
-                  <circle cx={x} cy={PT + 4} r={3.5} fill="var(--accent, #0369a1)" />
-                  {/* Larger transparent hit area to make the dot easier to click */}
-                  <circle cx={x} cy={PT + 4} r={9} fill="transparent" pointerEvents="all" />
-                  <title>{`${e.title} — ${e.event_date}`}</title>
-                </g>
-              );
-            })}
+            {(() => {
+              const byIdx = new Map<number, number>();
+              return eventMarkers.map((e) => {
+                if (e.date_idx < 0 || e.date_idx >= n) return null;
+                const x = getX(e.date_idx);
+                const dataY = getY(series[0].data[e.date_idx] ?? 0);
+                const stackPos = byIdx.get(e.date_idx) ?? 0;
+                byIdx.set(e.date_idx, stackPos + 1);
+                // Stack subsequent markers slightly above so they're all visible.
+                const cy = Math.max(PT + 6, dataY - stackPos * 9);
+                const size = 5;
+                return (
+                  <g key={e.event_id} style={{ cursor: onEventClick ? 'pointer' : 'default' }}
+                     onClick={() => onEventClick?.(e.event_id)}>
+                    <line x1={x} y1={PT} x2={x} y2={PT + IH}
+                          stroke="var(--accent, #0369a1)" strokeWidth={1} strokeDasharray="2 2" opacity={0.4} />
+                    {/* Diamond marker pinned to the line value */}
+                    <polygon
+                      points={`${x},${cy - size} ${x + size},${cy} ${x},${cy + size} ${x - size},${cy}`}
+                      fill="var(--accent, #0369a1)"
+                      stroke="#fff"
+                      strokeWidth={1.5}
+                    />
+                    {/* Larger transparent hit area for easier clicking */}
+                    <circle cx={x} cy={cy} r={10} fill="transparent" pointerEvents="all" />
+                    <title>{`${e.title} — ${e.event_date}`}</title>
+                  </g>
+                );
+              });
+            })()}
           </g>
         )}
 
