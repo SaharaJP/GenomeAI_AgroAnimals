@@ -69,13 +69,16 @@ def test_find_attention_cows_picks_high_scc(rich_store):
     assert "9002" in cow_ids, f"Ночка (9002, high SCC) missing from {cow_ids}"
 
 
-def test_calculate_cull_npv_stub_for_animal(rich_store):
-    """P1-1 stub: wraps existing economics_snapshot. Full P1-2 NPV later."""
+def test_calculate_cull_npv_full_p1_2_schema(rich_store):
+    """P1-2: tool delegates to npv_cull.recommend() and returns full §3.2.4 schema."""
     result = execute_tool("calculate_cull_npv", {"animal_id": "7001"}, rich_store)
     assert result.get("animal_id") == "7001"
-    assert "npv_snapshot" in result
-    assert result.get("p1_1_stub") is True
-    assert "evidence_chips" in result
+    assert result.get("decision") in ("keep", "cull")
+    for key in ("npv_keep", "npv_cull", "rationale", "sensitivity_table",
+                "narrative_md", "evidence_chips"):
+        assert key in result, f"missing key: {key}"
+    assert len(result["sensitivity_table"]) >= 9
+    assert result.get("p1_1_stub") is None  # legacy marker must be gone
     assert any(c.get("id") == "7001" for c in result["evidence_chips"])
 
 
