@@ -19,7 +19,7 @@ Source of truth: `web_cabinet/ai/tools.py` (`CANONICAL_TOOLS` and `EXTRA_TOOLS`)
 | 1 | `get_animal_profile` | canonical | `cow_id` | renamed from `get_cow_history` (P1-1) |
 | 2 | `analyze_event_impact` | canonical | `event_id` | added P1-1; delegates to `compute_event_impact` in `endpoints/impact_narrative.py` |
 | 3 | `forecast_milk_yield` | canonical | one of `animal_id` / `group_id` | added P1-1; linear regression on DIM |
-| 4 | `calculate_cull_npv` | canonical | `animal_id` | P1-2: full §3.2.4 NPV via npv_cull.recommend() |
+| 4 | `calculate_cull_npv` | canonical | `animal_id` | P1-2c: production-grade §3.2.4 NPV (Wood-curve, parity-stratified survival, 8-component health composite) via npv_cull.recommend() |
 | 5 | `find_attention_cows` | canonical | — (`threshold_count` optional, default 10) | added P1-1 |
 | 6 | `get_kpi_summary` | canonical | `group_id` | renamed from `get_group_metrics` (P1-1) |
 | 7 | `search_events_timeline` | canonical | — | renamed from `search_events` (P1-1) |
@@ -33,4 +33,4 @@ Agent loop: `web_cabinet/ai/client.py:AnthropicClient.tool_call_loop` (sync, bou
 
 | Path | Description | Source |
 |---|---|---|
-| `GET /api/animals/{animal_id}/cull-recommendation` | full §3.2.4 NPV cull/keep with sensitivity (≥9 cells), rationale, narrative_md; recurrent-mastitis health signal folded into M_t / H_t / survival; RBAC `kpi.view` | P1-2 |
+| `GET /api/animals/{animal_id}/cull-recommendation` | production-grade §3.2.4 NPV: per-cow Wood (1967) lactation curve, parity-stratified monthly cull-prob (Compton 2017), 8-component composite health-economic score (mastitis, late-DIM, parity, SCC, lameness, age, days-open, treatment-recurrence) folded into M_t / H_t / survival; sensitivity ≥9 cells, rationale, narrative_md; RBAC `kpi.view` | P1-2c |
