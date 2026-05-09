@@ -33,6 +33,7 @@ class LLMResponse:
         cache_creation_tokens: int = 0,
         cache_read_tokens: int = 0,
         latency_ms: float = 0.0,
+        tools_used: Optional[list] = None,
     ) -> None:
         self.content = content
         self.model = model
@@ -41,6 +42,7 @@ class LLMResponse:
         self.cache_creation_tokens = cache_creation_tokens
         self.cache_read_tokens = cache_read_tokens
         self.latency_ms = latency_ms
+        self.tools_used = tools_used or []
 
     @property
     def cache_hit(self) -> bool:
@@ -388,6 +390,104 @@ class AnthropicClient:
         self._log_call(
             target_model, task_type, result, user_id,
             endpoint=task_type, prompt=user_message,
+        )
+        return result
+
+    def tool_call_loop(
+        self,
+        user_message: str,
+        tools: list[dict],
+        *,
+        executor,  # Callable[[str, dict], dict]
+        system_prompt: str = "",
+        farm_context: Optional[str] = None,
+        task_type: str = "ask_farm_agent",
+        model: Optional[str] = None,
+        max_tokens: int = 2048,
+        max_iterations: int = 5,
+        user_id: str = "system",
+    ) -> LLMResponse:
+        """Bounded Anthropic agent loop: model → tool_use → execute → tool_result → ...
+
+        Iterates until either the model returns end_turn (final text response)
+        or max_iterations is reached (raises RuntimeError to surface a runaway
+        pattern early in production).
+
+        Returns:
+            LLMResponse where .content is the final text and .tools_used is a
+            list of {"name": str, "input": dict} entries in invocation order.
+
+        Raises:
+            RuntimeError: if max_iterations exceeded without end_turn.
+        """
+        target_model = model or self._model_for_task(task_type)
+        client = self._get_client()
+        system_blocks = self._build_system_blocks(system_prompt, farm_context) if system_prompt else []
+        messages: list[dict] = [{"role": "user", "content": user_message}]
+        tools_used: list[dict] = []
+        final_text = ""
+        last_response = None
+        t0 = time.monotonic()
+
+        for _ in range(max_iterations):
+            kwargs: dict[str, Any] = dict(
+                model=target_model,
+                max_tokens=max_tokens,
+                tools=tools,
+                messages=messages,
+            )
+            if system_blocks:
+                kwargs["system"] = system_blocks
+            last_response = client.messages.create(**kwargs)
+
+            # Append assistant turn (raw content blocks per Anthropic API conventions)
+            messages.append({"role": "assistant", "content": last_response.content})
+
+            if last_response.stop_reason != "tool_use":
+                final_text = " ".join(
+                    getattr(b, "text", "")
+                    for b in last_response.content
+                    if getattr(b, "type", "") == "text"
+                ).strip()
+                break
+
+            # Execute every tool_use block; collect tool_result blocks for the next user turn
+            tool_results: list[dict] = []
+            for block in last_response.content:
+                if getattr(block, "type", "") != "tool_use":
+                    continue
+                tools_used.append({"name": block.name, "input": block.input})
+                try:
+                    out = executor(block.name, block.input)
+                except Exception as exc:
+                    out = {"error": f"executor_failed: {type(exc).__name__}: {exc}"}
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": json.dumps(out, ensure_ascii=False, default=str),
+                })
+            messages.append({"role": "user", "content": tool_results})
+        else:
+            raise RuntimeError(
+                f"tool_call_loop exceeded max_iterations={max_iterations} "
+                f"(latest stop_reason={getattr(last_response, 'stop_reason', '?')})"
+            )
+
+        latency_ms = (time.monotonic() - t0) * 1000
+        usage = last_response.usage
+        result = LLMResponse(
+            content=final_text,
+            model=last_response.model,
+            input_tokens=usage.input_tokens,
+            output_tokens=usage.output_tokens,
+            cache_creation_tokens=getattr(usage, "cache_creation_input_tokens", 0) or 0,
+            cache_read_tokens=getattr(usage, "cache_read_input_tokens", 0) or 0,
+            latency_ms=latency_ms,
+            tools_used=tools_used,
+        )
+        self._log_call(
+            target_model, task_type, result, user_id,
+            endpoint=task_type, prompt=user_message, tools_used=tools_used,
         )
         return result
 
