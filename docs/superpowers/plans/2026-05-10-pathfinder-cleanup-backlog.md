@@ -1,6 +1,6 @@
-# Pathfinder Cleanup — Backlog for 2026-05-10
+# Backlog for 2026-05-10
 
-**Date queued:** 2026-05-09 (end-of-day after closing P2-1 and P3-1)
+**Date queued:** 2026-05-09 (end-of-day after closing P2-1 + P3-1 + UI/data sweep)
 **Source audit:** `PATHFINDER-2026-05-09/02-duplication-report.md`
 **Ready-to-paste prompts:** `PATHFINDER-2026-05-09/04-handoff-prompts.md`
 
@@ -43,6 +43,26 @@ After closing the thesis-alignment brief (P0-1, P1-1, P1-2/2b/2c, P2-1, P3-1 all
 - U7 — `_count_event_by_type` + `_require_event_exists` micro-helpers (~12 LOC)
 
 These can be folded opportunistically into any unrelated PR touching the affected files.
+
+---
+
+## UI/data follow-ups from the 2026-05-09 evening sweep
+
+### A. Timeline seed-on-demand backend persistence
+- **Why:** Frontend predicate at `web_app/components/timeline/event-card.tsx:53` was relaxed to allow edit/delete on all `TL_*` events, but seeded events (`TL_001..TL_012` from `data/demo/investor_v1/timeline_events_seeded.json`) live only in JSON merged at GET time — PATCH/DELETE will 404 on them.
+- **Fix:** In `web_cabinet/app.py` GET handler (around line 855), when merging seeded JSON, idempotently INSERT seeded rows into the `timeline_events` table on first read (`INSERT ... ON CONFLICT (timeline_event_id) DO NOTHING`). After that, PATCH and DELETE work uniformly.
+- **Acceptance:** edit + delete on any seeded event from the Timeline UI returns 200, audit row written; re-GET shows the change.
+- **Estimate:** ~30 min.
+
+### B. QC incidents on demo contour
+- The Analytics "QC" toggle relies on `/api/qc/incidents` which reads from Postgres `qc_incidents` table. `scripts/seed_demo_qc.py` was run during the 2026-05-09 sweep and seeded 2 incidents — enough to verify the overlay path works, but more variety would help the demo.
+- **Fix:** extend `seed_demo_qc.py` (or add `seed_demo_qc_extended.py`) to seed ~15 incidents across multiple metrics (`scc`, `milk_ecm`, `mastitis`, `health_issues`, `repro_rates`) and severities. Idempotent.
+- **Estimate:** ~20 min.
+
+### C. Animal profile sections — wire data accessors
+- After the 2026-05-09 data backfill (10 tables), `DemoDataStore` has new accessors needed by the profile-surface tabs (Health, Productivity, Tasks, History). Verify the React components actually read from the new tables (not the old empty paths).
+- **Fix:** for each tab in `web_app/components/profiles/profile-surface.tsx`, point the data fetch at `/api/animals/{id}/alerts`, `/api/animals/{id}/decisions`, `/api/animals/{id}/repro-events` (these endpoints may need to be added to web_cabinet).
+- **Estimate:** ~1-2 hours (depending on how many endpoints are missing).
 
 ## Execution rules (per CLAUDE.md)
 
