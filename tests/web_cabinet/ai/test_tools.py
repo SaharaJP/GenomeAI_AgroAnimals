@@ -258,10 +258,6 @@ class TestExecuteToolUnknown:
 class TestToolStubsReturnError:
     """execute_tool must convert NotImplementedError stubs into {'error': ...} dicts."""
 
-    def test_find_attention_cows_stub_returns_error_dict(self, rich_store):
-        result = execute_tool("find_attention_cows", {}, rich_store)
-        assert "error" in result and "not_implemented" in result["error"]
-
     def test_calculate_cull_npv_stub_returns_error_dict(self, rich_store):
         result = execute_tool("calculate_cull_npv", {"animal_id": "x"}, rich_store)
         assert "error" in result and "not_implemented" in result["error"]

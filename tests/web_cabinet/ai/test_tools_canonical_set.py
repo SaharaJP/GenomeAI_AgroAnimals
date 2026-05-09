@@ -42,3 +42,28 @@ def test_analyze_event_impact_returns_kpi_payload(rich_store):
     assert "delta" in result
     assert "evidence_chips" in result
     assert isinstance(result["evidence_chips"], list)
+
+
+def test_find_attention_cows_returns_top_n_with_reasons(rich_store):
+    """Smoke: must return cows[] sorted by score, each with cow_id+score+reasons."""
+    result = execute_tool("find_attention_cows", {"threshold_count": 3}, rich_store)
+    assert "cows" in result
+    assert isinstance(result["cows"], list)
+    assert len(result["cows"]) <= 3
+    # Sorted descending by score
+    scores = [c["score"] for c in result["cows"]]
+    assert scores == sorted(scores, reverse=True)
+    # Each cow has the expected shape
+    for c in result["cows"]:
+        assert "cow_id" in c
+        assert "score" in c
+        assert "reasons" in c
+        assert isinstance(c["reasons"], list)
+    assert "evidence_chips" in result
+
+
+def test_find_attention_cows_picks_high_scc(rich_store):
+    """Ночка (cow 9002, SCC 350k) must be in the attention set."""
+    result = execute_tool("find_attention_cows", {"threshold_count": 10}, rich_store)
+    cow_ids = {c["cow_id"] for c in result["cows"]}
+    assert "9002" in cow_ids, f"Ночка (9002, high SCC) missing from {cow_ids}"

@@ -755,7 +755,97 @@ def _exec_analyze_event_impact(inp: dict, store: Any) -> dict:
 
 
 def _exec_find_attention_cows(inp: dict, store: Any) -> dict:
-    raise NotImplementedError("P1-1 Phase 2 Task 2.2")
+    """P1-1 Task 2.2 — TOP-N cows by combined attention score.
+
+    Score components:
+      +min(scc/200000, 5.0)       if SCC > 200k (latest milking record)
+      +1.0                         if BCS < 2.5 or > 4.0 (if column exists)
+      +2.0                         if explicit attention flag (if column exists)
+      +1.5                         if active treatment exists (start <= today <= end)
+      +1.5                         if recent 7d milk delta < -10%
+
+    Returns sorted top-N with reasons[] explaining the score.
+    """
+    n = max(1, min(50, int(inp.get("threshold_count", 10))))
+    df_animals = store.animals()
+    if df_animals is None or df_animals.empty:
+        return {"cows": [], "total_scored": 0, "evidence_chips": []}
+
+    df_milkings = store.milkings()
+    df_treatments = store.treatments()
+
+    today_ts = pd.Timestamp(datetime.date.today())
+
+    scored: list[dict] = []
+    for _, row in df_animals.iterrows():
+        cow_id = str(row.get("animal_id"))
+        score = 0.0
+        reasons: list[str] = []
+
+        # SCC component + 7-day milk delta
+        if df_milkings is not None and not df_milkings.empty:
+            cow_milk = df_milkings[df_milkings["animal_id"] == cow_id].copy()
+            if not cow_milk.empty:
+                cow_milk["date"] = pd.to_datetime(cow_milk["date"], errors="coerce")
+                cow_milk = cow_milk.sort_values("date")
+
+                # Latest SCC
+                if "scc_cells_ml" in cow_milk.columns:
+                    latest_scc = float(cow_milk.iloc[-1].get("scc_cells_ml", 0) or 0)
+                    if latest_scc > 200_000:
+                        inc = min(latest_scc / 200_000.0, 5.0)
+                        score += inc
+                        reasons.append(f"SCC {int(latest_scc):,}")
+
+                # 7-day milk delta: compare avg of last 7 vs prior 7
+                if "milk_kg" in cow_milk.columns and len(cow_milk) >= 7:
+                    last_7 = cow_milk.tail(7)["milk_kg"].astype(float)
+                    prior = cow_milk.iloc[-14:-7]["milk_kg"].astype(float) if len(cow_milk) >= 14 else None
+                    if prior is not None and not prior.empty and prior.mean() > 0:
+                        delta_pct = (last_7.mean() - prior.mean()) / prior.mean() * 100
+                        if delta_pct < -10:
+                            score += 1.5
+                            reasons.append(f"надой -{abs(delta_pct):.0f}% (7д)")
+
+        # BCS component (column may not exist in all fixtures)
+        bcs_val = row.get("bcs") if "bcs" in df_animals.columns else None
+        if bcs_val is not None:
+            try:
+                bcs = float(bcs_val)
+                if bcs < 2.5 or bcs > 4.0:
+                    score += 1.0
+                    reasons.append(f"BCS {bcs}")
+            except (TypeError, ValueError):
+                pass
+
+        # Explicit attention flag (column may not exist)
+        if "attention" in df_animals.columns:
+            attention = row.get("attention", False)
+            if bool(attention):
+                score += 2.0
+                reasons.append("flag: attention")
+
+        # Active treatment: start_date <= today <= end_date
+        if df_treatments is not None and not df_treatments.empty:
+            tr = df_treatments[df_treatments["animal_id"] == cow_id].copy()
+            if not tr.empty:
+                tr["start_date"] = pd.to_datetime(tr["start_date"], errors="coerce")
+                tr["end_date"] = pd.to_datetime(tr["end_date"], errors="coerce")
+                active = tr[(tr["start_date"] <= today_ts) & (tr["end_date"] >= today_ts)]
+                if not active.empty:
+                    score += 1.5
+                    reasons.append("активное лечение")
+
+        if score > 0:
+            scored.append({"cow_id": cow_id, "score": round(score, 2), "reasons": reasons})
+
+    scored.sort(key=lambda x: x["score"], reverse=True)
+    top = scored[:n]
+    return {
+        "cows": top,
+        "total_scored": len(scored),
+        "evidence_chips": [{"type": "cow", "id": c["cow_id"]} for c in top],
+    }
 
 
 def _exec_calculate_cull_npv(inp: dict, store: Any) -> dict:
