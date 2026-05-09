@@ -307,7 +307,7 @@ export function DailyOperationsDashboard() {
                     </div>
                   </Link>
 
-                  <Link className="linked-action-card" href="/planner">
+                  <Link className="linked-action-card" href="/timeline">
                     <div className="linked-action-count">{data.totals.pendingApprovals}</div>
                     <div>
                       <div className="linked-action-title">Планировщик</div>

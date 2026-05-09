@@ -7,6 +7,7 @@ import { DEMO_TIMELINE_EVENTS } from '@/lib/api/timeline';
 import type { MetricWindow, TimelineEvent } from '@/lib/api/timeline';
 import { EventList } from '@/components/timeline/event-list';
 import { useAddEvent } from '@/components/app/add-event-context';
+import { WeeklyPlansSection } from '@/components/timeline/weekly-plans-section';
 
 const ImpactPanel = dynamic(
   () => import('@/components/timeline/impact-panel').then((m) => m.ImpactPanel),
@@ -271,6 +272,7 @@ GenomeAI AgroAnimals © ${new Date().getFullYear()}
 
   return (
     <>
+      <WeeklyPlansSection />
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
         <h1 className="page-title" style={{ margin: 0 }}>Лента событий</h1>
         <button
