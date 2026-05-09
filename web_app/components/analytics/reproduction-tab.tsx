@@ -5,6 +5,7 @@ import {
   getReproductionDaysOpen,
   getReproductionVwp,
   getReproductionVwpYoungstock,
+  WEEK_ISO_DATES,
 } from '@/lib/api/analytics';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
@@ -60,6 +61,7 @@ export function ReproductionTab({
             legend={inseminations.series}
             series={inseminations.series}
             labels={inseminations.labels}
+            isoDates={inseminations.iso_dates}
             unit=" гол"
             alertThreshold={alertThresholds['inseminations']}
             onDelete={() => onRemoveBuiltin?.('inseminations')}
@@ -79,6 +81,7 @@ export function ReproductionTab({
             legend={rates.series}
             series={rates.series}
             labels={rates.labels}
+            isoDates={WEEK_ISO_DATES}
             unit="%"
             alertThreshold={alertThresholds['repro_rates']}
             onDelete={() => onRemoveBuiltin?.('repro_rates')}
@@ -98,6 +101,7 @@ export function ReproductionTab({
             legend={daysOpen.series}
             series={daysOpen.series}
             labels={daysOpen.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" дн"
             alertThreshold={alertThresholds['days_open']}
             onDelete={() => onRemoveBuiltin?.('days_open')}
@@ -117,6 +121,7 @@ export function ReproductionTab({
             legend={vwp.series}
             series={vwp.series}
             labels={vwp.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" дн"
             alertThreshold={alertThresholds['vwp']}
             onDelete={() => onRemoveBuiltin?.('vwp')}
@@ -136,6 +141,7 @@ export function ReproductionTab({
             legend={vwpYoung.series}
             series={vwpYoung.series}
             labels={vwpYoung.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" дн"
             alertThreshold={alertThresholds['vwp_young']}
             onDelete={() => onRemoveBuiltin?.('vwp_young')}

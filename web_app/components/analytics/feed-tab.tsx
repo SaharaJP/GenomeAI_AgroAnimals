@@ -3,6 +3,7 @@ import {
   getFeedDmi,
   getFeedCost,
   getFeedEfficiency,
+  WEEK_ISO_DATES,
 } from '@/lib/api/analytics';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
@@ -49,6 +50,7 @@ export function FeedTab({
             legend={dmi.series}
             series={dmi.series}
             labels={dmi.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" кг"
             alertThreshold={alertThresholds['dmi']}
             onDelete={() => onRemoveBuiltin?.('dmi')}
@@ -68,6 +70,7 @@ export function FeedTab({
             legend={cost.series}
             series={cost.series}
             labels={cost.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" р"
             alertThreshold={alertThresholds['feed_cost']}
             onDelete={() => onRemoveBuiltin?.('feed_cost')}
@@ -87,6 +90,7 @@ export function FeedTab({
             legend={eff.series}
             series={eff.series}
             labels={eff.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=""
             alertThreshold={alertThresholds['feed_efficiency']}
             onDelete={() => onRemoveBuiltin?.('feed_efficiency')}

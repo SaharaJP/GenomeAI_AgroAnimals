@@ -3,6 +3,7 @@ import {
   getFinanceRevenue,
   getFinanceFeedCost,
   getFinanceMargin,
+  WEEK_ISO_DATES,
 } from '@/lib/api/analytics';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
@@ -49,6 +50,7 @@ export function FinanceTab({
             legend={revenue.series}
             series={revenue.series}
             labels={revenue.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" р"
             alertThreshold={alertThresholds['revenue']}
             onDelete={() => onRemoveBuiltin?.('revenue')}
@@ -68,6 +70,7 @@ export function FinanceTab({
             legend={feedCost.series}
             series={feedCost.series}
             labels={feedCost.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" р"
             alertThreshold={alertThresholds['feed_cost']}
             onDelete={() => onRemoveBuiltin?.('feed_cost')}
@@ -87,6 +90,7 @@ export function FinanceTab({
             legend={margin.series}
             series={margin.series}
             labels={margin.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" р"
             alertThreshold={alertThresholds['margin']}
             onDelete={() => onRemoveBuiltin?.('margin')}

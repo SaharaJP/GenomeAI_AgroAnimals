@@ -52,6 +52,7 @@ export function HealthTab({
             legend={mastitis.series}
             series={mastitis.series}
             labels={mastitis.labels}
+            isoDates={mastitis.iso_dates}
             unit=" гол"
             alertThreshold={alertThresholds['mastitis']}
             onDelete={() => onRemoveBuiltin?.('mastitis')}
@@ -71,6 +72,7 @@ export function HealthTab({
             legend={issues.series}
             series={issues.series}
             labels={issues.labels}
+            isoDates={issues.iso_dates}
             unit=" гол"
             alertThreshold={alertThresholds['issues']}
             onDelete={() => onRemoveBuiltin?.('issues')}

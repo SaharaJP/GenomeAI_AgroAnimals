@@ -5,6 +5,7 @@ import type { AnalyticsData } from './analytics';
 export interface TabTimeseries {
   tab: string;
   labels: string[];
+  iso_dates?: string[];
   charts: Record<string, AnalyticsData>;
 }
 

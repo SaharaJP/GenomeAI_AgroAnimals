@@ -8,7 +8,7 @@ import { QcIncidentCard } from './qc-incident-card';
 import { FullscreenChartModal } from './fullscreen-chart-modal';
 import type { QcIncident } from '@/lib/api/qc-client';
 import type { ChartSeries } from '@/lib/api/analytics';
-import { findWeekIndex } from '@/lib/api/analytics';
+import { findChartIndex } from '@/lib/api/analytics';
 
 interface Badge { icon: string; label: string }
 
@@ -19,6 +19,8 @@ interface Props {
   legend?: ChartSeries[];
   series: ChartSeries[];
   labels: string[];
+  /** ISO Monday dates parallel to `labels` — overlays use this to align by date. */
+  isoDates?: string[];
   unit?: string;
   refLine?: number;
   alertThreshold?: string;
@@ -28,7 +30,7 @@ interface Props {
 }
 
 export function BuiltInChartCard({
-  metricId, title, badges, legend, series, labels, unit, refLine,
+  metricId, title, badges, legend, series, labels, isoDates, unit, refLine,
   alertThreshold, onAlert, onDelete, onRename,
 }: Props) {
   const overlays = useOverlays();
@@ -36,12 +38,16 @@ export function BuiltInChartCard({
   const [openIncident, setOpenIncident] = useState<QcIncident | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
 
+  // Overlays align against the chart's own iso_dates (parallel to labels).
+  // Fallback empty array → all findChartIndex calls return -1 → overlays hidden.
+  const chartIso = isoDates ?? [];
+
   const qcOverlays = overlays.showQc
     ? (overlays.qcByMetric[metricId] ?? []).flatMap((inc) => {
         const startIso = inc.period_start.slice(0, 10);
         const endIso = inc.period_end?.slice(0, 10) ?? null;
-        const startIdx = findWeekIndex(startIso);
-        const endIdx = endIso ? findWeekIndex(endIso) : null;
+        const startIdx = findChartIndex(chartIso, startIso);
+        const endIdx = endIso ? findChartIndex(chartIso, endIso) : null;
         // Skip if entire range is outside chart's visible date range
         if (startIdx < 0 && (endIdx === null || endIdx < 0)) return [];
         return [{
@@ -58,7 +64,7 @@ export function BuiltInChartCard({
   const eventMarkers = overlays.showEvents
     ? (overlays.eventsByMetric[metricId] ?? []).map((ev) => ({
         event_id: ev.event_id,
-        date_idx: findWeekIndex(ev.event_date.slice(0, 10)),
+        date_idx: findChartIndex(chartIso, ev.event_date.slice(0, 10)),
         title: ev.title,
         event_date: ev.event_date,
       })).filter((m) => m.date_idx >= 0)

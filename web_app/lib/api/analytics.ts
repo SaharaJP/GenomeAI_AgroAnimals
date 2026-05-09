@@ -8,6 +8,37 @@ export interface ChartSeries {
 export interface AnalyticsData {
   labels: string[];
   series: ChartSeries[];
+  /** Optional ISO (YYYY-MM-DD) dates parallel to labels — used to align overlays. */
+  iso_dates?: string[];
+}
+
+/**
+ * Map an arbitrary ISO date to the chart's nearest week index using the
+ * chart's own iso_dates (each entry = Monday of that week). This is the
+ * preferred alignment path for live data — does NOT depend on the static
+ * WEEK_LABELS window.
+ *
+ * Strategy:
+ *   - Drop incident dates earlier than the first chart week → -1.
+ *   - Drop incident dates after (last_week_monday + 7d) → -1.
+ *   - Otherwise return index of the latest week whose Monday ≤ target.
+ */
+export function findChartIndex(isoDates: string[], targetIso: string): number {
+  if (!isoDates || isoDates.length === 0 || !targetIso) return -1;
+  const target = new Date(targetIso + 'T00:00:00Z').getTime();
+  if (Number.isNaN(target)) return -1;
+  const first = new Date(isoDates[0] + 'T00:00:00Z').getTime();
+  const last = new Date(isoDates[isoDates.length - 1] + 'T00:00:00Z').getTime();
+  if (target < first) return -1;
+  if (target > last + 7 * 24 * 3600 * 1000) return -1;
+  // Linear scan — N is small (≤104). Find the latest week whose Monday ≤ target.
+  let idx = -1;
+  for (let i = 0; i < isoDates.length; i++) {
+    const wkStart = new Date(isoDates[i] + 'T00:00:00Z').getTime();
+    if (wkStart <= target) idx = i;
+    else break;
+  }
+  return idx;
 }
 
 // Mulberry32 — fast, seeded, deterministic

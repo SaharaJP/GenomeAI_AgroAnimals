@@ -3,6 +3,7 @@ import {
   getBehaviorRumination,
   getBehaviorActivity,
   getBehaviorLying,
+  WEEK_ISO_DATES,
 } from '@/lib/api/analytics';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
@@ -49,6 +50,7 @@ export function BehaviorTab({
             legend={rumination.series}
             series={rumination.series}
             labels={rumination.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" мин"
             alertThreshold={alertThresholds['rumination']}
             onDelete={() => onRemoveBuiltin?.('rumination')}
@@ -68,6 +70,7 @@ export function BehaviorTab({
             legend={activity.series}
             series={activity.series}
             labels={activity.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=""
             alertThreshold={alertThresholds['activity']}
             onDelete={() => onRemoveBuiltin?.('activity')}
@@ -87,6 +90,7 @@ export function BehaviorTab({
             legend={lying.series}
             series={lying.series}
             labels={lying.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" ч"
             alertThreshold={alertThresholds['lying']}
             onDelete={() => onRemoveBuiltin?.('lying')}

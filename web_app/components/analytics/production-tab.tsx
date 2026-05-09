@@ -55,6 +55,7 @@ export function ProductionTab({
             legend={milkEcm.series}
             series={milkEcm.series}
             labels={milkEcm.labels}
+            isoDates={milkEcm.iso_dates}
             unit=" кг"
             alertThreshold={alertThresholds['milk_ecm']}
             onDelete={() => onRemoveBuiltin?.('milk_ecm')}
@@ -74,6 +75,7 @@ export function ProductionTab({
             legend={fatProt.series}
             series={fatProt.series}
             labels={fatProt.labels}
+            isoDates={fatProt.iso_dates}
             unit="%"
             alertThreshold={alertThresholds['fat_protein']}
             onDelete={() => onRemoveBuiltin?.('fat_protein')}
@@ -93,6 +95,7 @@ export function ProductionTab({
             legend={scc.series}
             series={scc.series}
             labels={scc.labels}
+            isoDates={scc.iso_dates}
             unit="k"
             refLine={200}
             alertThreshold={alertThresholds['scc']}

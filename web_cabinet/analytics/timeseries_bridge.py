@@ -17,9 +17,17 @@ _MONTHS_RU = ["Янв", "Фев", "Мар", "Апр", "Май", "Июн",
                "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек"]
 
 
+def _week_monday(d: datetime.date) -> datetime.date:
+    return d - datetime.timedelta(days=d.weekday())
+
+
 def _week_label(d: datetime.date) -> str:
-    monday = d - datetime.timedelta(days=d.weekday())
+    monday = _week_monday(d)
     return f"{monday.day:02d} {_MONTHS_RU[monday.month - 1]}"
+
+
+def _week_iso(d: datetime.date) -> str:
+    return _week_monday(d).isoformat()
 
 
 def _iso_week_key(d: datetime.date) -> str:
@@ -47,16 +55,17 @@ def _empty_production() -> dict:
     return {
         "tab": "production",
         "labels": [],
+        "iso_dates": [],
         "charts": {
-            "milk_ecm": {"labels": [], "series": [
+            "milk_ecm": {"labels": [], "iso_dates": [], "series": [
                 {"name": "Надой", "color": "#3B82F6", "data": []},
                 {"name": "ECM", "color": "#F59E0B", "data": []},
             ]},
-            "fat_protein": {"labels": [], "series": [
+            "fat_protein": {"labels": [], "iso_dates": [], "series": [
                 {"name": "Жир %", "color": "#3B82F6", "data": []},
                 {"name": "Белок %", "color": "#10B981", "data": []},
             ]},
-            "scc": {"labels": [], "series": [
+            "scc": {"labels": [], "iso_dates": [], "series": [
                 {"name": "СКК (тыс.)", "color": "#EF4444", "data": []},
             ]},
         },
@@ -109,11 +118,13 @@ def build_production_timeseries(
 
     sorted_weeks = sorted(by_week.keys())
     labels = []
+    iso_dates: list[str] = []
     milk_data, ecm_data, fat_data, protein_data, scc_data = [], [], [], [], []
 
     for wk in sorted_weeks:
         d = min(by_week[wk]["dates"])
         labels.append(_week_label(d))
+        iso_dates.append(_week_iso(d))
 
         milks = [v for v in by_week[wk]["milk"] if v is not None]
         fats = [v for v in by_week[wk]["fat"] if v is not None]
@@ -136,16 +147,17 @@ def build_production_timeseries(
     return {
         "tab": "production",
         "labels": labels,
+        "iso_dates": iso_dates,
         "charts": {
-            "milk_ecm": {"labels": labels, "series": [
+            "milk_ecm": {"labels": labels, "iso_dates": iso_dates, "series": [
                 {"name": "Надой", "color": "#3B82F6", "data": milk_data},
                 {"name": "ECM", "color": "#F59E0B", "data": ecm_data},
             ]},
-            "fat_protein": {"labels": labels, "series": [
+            "fat_protein": {"labels": labels, "iso_dates": iso_dates, "series": [
                 {"name": "Жир %", "color": "#3B82F6", "data": fat_data},
                 {"name": "Белок %", "color": "#10B981", "data": protein_data},
             ]},
-            "scc": {"labels": labels, "series": [
+            "scc": {"labels": labels, "iso_dates": iso_dates, "series": [
                 {"name": "СКК (тыс.)", "color": "#EF4444", "data": scc_data},
             ]},
         },
@@ -186,9 +198,9 @@ def build_health_timeseries(
         rows = []
 
     if not rows:
-        return {"tab": "health", "labels": [], "charts": {
-            "mastitis": {"labels": [], "series": [{"name": "Мастит", "color": "#EF4444", "data": []}]},
-            "issues": {"labels": [], "series": []},
+        return {"tab": "health", "labels": [], "iso_dates": [], "charts": {
+            "mastitis": {"labels": [], "iso_dates": [], "series": [{"name": "Мастит", "color": "#EF4444", "data": []}]},
+            "issues": {"labels": [], "iso_dates": [], "series": []},
         }}
 
     by_week: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
@@ -203,6 +215,7 @@ def build_health_timeseries(
 
     sorted_weeks = sorted(by_week.keys())
     labels = [_week_label(min(by_week[wk]["dates"])) for wk in sorted_weeks]
+    iso_dates = [_week_iso(min(by_week[wk]["dates"])) for wk in sorted_weeks]
 
     mastitis_data = [len(by_week[wk].get("mastitis", [])) for wk in sorted_weeks]
 
@@ -216,11 +229,12 @@ def build_health_timeseries(
     return {
         "tab": "health",
         "labels": labels,
+        "iso_dates": iso_dates,
         "charts": {
-            "mastitis": {"labels": labels, "series": [
+            "mastitis": {"labels": labels, "iso_dates": iso_dates, "series": [
                 {"name": "Мастит", "color": "#EF4444", "data": mastitis_data},
             ]},
-            "issues": {"labels": labels, "series": issues_series},
+            "issues": {"labels": labels, "iso_dates": iso_dates, "series": issues_series},
         },
     }
 
@@ -249,8 +263,8 @@ def build_reproduction_timeseries(
         _log.exception("timeseries_bridge: DB query failed for farm=%s tab=reproduction", farm_id)
         rows = []
 
-    empty = {"tab": "reproduction", "labels": [], "charts": {
-        "inseminations": {"labels": [], "series": [
+    empty = {"tab": "reproduction", "labels": [], "iso_dates": [], "charts": {
+        "inseminations": {"labels": [], "iso_dates": [], "series": [
             {"name": "Осеменения", "color": "#3B82F6", "data": []},
             {"name": "Стельные", "color": "#10B981", "data": []},
         ]},
@@ -273,14 +287,16 @@ def build_reproduction_timeseries(
 
     sorted_weeks = sorted(by_week.keys())
     labels = [_week_label(min(by_week[wk]["dates"])) for wk in sorted_weeks]
+    iso_dates = [_week_iso(min(by_week[wk]["dates"])) for wk in sorted_weeks]
     insem_data = [len(by_week[wk].get("insemination", [])) for wk in sorted_weeks]
     preg_data = [len(by_week[wk].get("pregnant", [])) for wk in sorted_weeks]
 
     return {
         "tab": "reproduction",
         "labels": labels,
+        "iso_dates": iso_dates,
         "charts": {
-            "inseminations": {"labels": labels, "series": [
+            "inseminations": {"labels": labels, "iso_dates": iso_dates, "series": [
                 {"name": "Осеменения", "color": "#3B82F6", "data": insem_data},
                 {"name": "Стельные", "color": "#10B981", "data": preg_data},
             ]},

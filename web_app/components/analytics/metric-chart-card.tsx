@@ -26,7 +26,7 @@ import {
   getHealthIssues,
 } from '@/lib/api/analytics';
 import type { AnalyticsData } from '@/lib/api/analytics';
-import { findWeekIndex } from '@/lib/api/analytics';
+import { findChartIndex, WEEK_ISO_DATES } from '@/lib/api/analytics';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { METRICS } from './add-chart-dialog';
@@ -115,12 +115,14 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
   // 4. Main path
   const chart = spec.data();
 
+  const chartIso = chart.iso_dates ?? WEEK_ISO_DATES;
+
   const qcOverlays = overlays.showQc
     ? (overlays.qcByMetric[metricId] ?? []).flatMap((inc) => {
         const startIso = inc.period_start.slice(0, 10);
         const endIso = inc.period_end?.slice(0, 10) ?? null;
-        const startIdx = findWeekIndex(startIso);
-        const endIdx = endIso ? findWeekIndex(endIso) : null;
+        const startIdx = findChartIndex(chartIso, startIso);
+        const endIdx = endIso ? findChartIndex(chartIso, endIso) : null;
         // Skip if entire range is outside chart's visible date range
         if (startIdx < 0 && (endIdx === null || endIdx < 0)) return [];
         return [{
@@ -136,7 +138,7 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
 
   const eventMarkers = overlays.showEvents ? (overlays.eventsByMetric[metricId] ?? []).map((ev) => ({
     event_id: ev.event_id,
-    date_idx: findWeekIndex(ev.event_date.slice(0, 10)),
+    date_idx: findChartIndex(chartIso, ev.event_date.slice(0, 10)),
     title: ev.title,
     event_date: ev.event_date,
   })).filter((m) => m.date_idx >= 0) : [];

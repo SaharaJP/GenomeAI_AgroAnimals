@@ -1,5 +1,5 @@
 'use client';
-import { getWeatherThi, getWeatherTemp, getWeatherHumidity } from '@/lib/api/analytics';
+import { getWeatherThi, getWeatherTemp, getWeatherHumidity, WEEK_ISO_DATES } from '@/lib/api/analytics';
 import { EmptyChartSlot } from './empty-chart-slot';
 import { MetricChartCard } from './metric-chart-card';
 import { BuiltInChartCard } from './built-in-chart-card';
@@ -46,6 +46,7 @@ export function WeatherTab({
             legend={thi.series}
             series={thi.series}
             labels={thi.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=""
             refLine={72}
             alertThreshold={alertThresholds['thi']}
@@ -66,6 +67,7 @@ export function WeatherTab({
             legend={temp.series}
             series={temp.series}
             labels={temp.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" °C"
             alertThreshold={alertThresholds['temp']}
             onDelete={() => onRemoveBuiltin?.('temp')}
@@ -85,6 +87,7 @@ export function WeatherTab({
             legend={humidity.series}
             series={humidity.series}
             labels={humidity.labels}
+            isoDates={WEEK_ISO_DATES}
             unit=" %"
             alertThreshold={alertThresholds['humidity']}
             onDelete={() => onRemoveBuiltin?.('humidity')}
