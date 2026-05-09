@@ -233,3 +233,67 @@ def test_build_farm_context_huge_budget_keeps_all():
     # All cell-cohesive top keys should survive
     assert "farm_summary" in ctx
     assert "today_kpi" in ctx
+
+
+# ── §P2-1 H1 acceptance on the demo farm ──────────────────────────────────
+
+
+def _is_seven_days_or_younger(event: dict, today: datetime.date) -> bool:
+    raw = event.get("event_date") or event.get("date")
+    if not raw:
+        return False
+    try:
+        d = datetime.date.fromisoformat(str(raw)[:10])
+    except (TypeError, ValueError):
+        return False
+    return 0 <= (today - d).days <= 7
+
+
+def test_h1_acceptance_demo_farm_budget_3000():
+    """Hypothesis H1 (§3.2.1, brief §P2-1): at budget=3000 on demo farm
+       keep KPI=100%, attention≥80%, events_7d≥90%, build time <2s."""
+    import time
+    from pathlib import Path
+    from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
+    from web_cabinet.ai.context import build_farm_context
+
+    store = DemoDataStore(base_dir=Path("data/demo/investor_v1"))
+    farm_id = "demo-farm-v1"
+
+    t0 = time.perf_counter()
+    ctx = build_farm_context(farm_id, store=store, period_days=30,
+                             context_token_budget=3000)
+    elapsed = time.perf_counter() - t0
+
+    full = build_farm_context(farm_id, store=store, period_days=30,
+                              context_token_budget=10**8)
+
+    # 1. KPI top-priority coverage = 100%
+    for k in ("farm_summary", "today_kpi"):
+        assert k in ctx, f"missing KPI key {k!r}"
+        assert ctx[k] == full[k], f"compressed {k!r} differs from full"
+
+    # 2. Attention coverage ≥ 80%
+    full_attn = full.get("attention_cows", []) or []
+    kept_attn = ctx.get("attention_cows", []) or []
+    if full_attn:
+        coverage = len(kept_attn) / len(full_attn)
+        assert coverage >= 0.80, f"attention coverage {coverage:.0%} < 80% (kept {len(kept_attn)}/{len(full_attn)})"
+
+    # 3. Recent events 7d coverage ≥ 90%
+    today = datetime.date.fromisoformat(ctx["farm_summary"]["date_as_of"])
+    full_7d = [e for e in (full.get("recent_events") or [])
+               if _is_seven_days_or_younger(e, today)]
+    kept_7d = [e for e in (ctx.get("recent_events") or [])
+               if _is_seven_days_or_younger(e, today)]
+    if full_7d:
+        coverage = len(kept_7d) / len(full_7d)
+        assert coverage >= 0.90, f"events_7d coverage {coverage:.0%} < 90% (kept {len(kept_7d)}/{len(full_7d)})"
+
+    # 4. Performance < 2s
+    assert elapsed < 2.0, f"build_farm_context took {elapsed:.2f}s ≥ 2.0s"
+
+    # 5. Compression stats sanity
+    cs = ctx["compression_stats"]
+    assert cs["used_tokens"] <= cs["budget_tokens"]
+    assert cs["kept_segments"] >= 5
