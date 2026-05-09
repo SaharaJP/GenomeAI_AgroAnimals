@@ -194,11 +194,13 @@ async def _stream_live(
     farm_id: str,
     messages_history: list[dict],
 ) -> AsyncIterator[str]:
-    """Стримит живой ответ от Claude, верифицирует evidence против farm context."""
+    """Live stream — runs the bounded agent loop, then streams final answer text."""
     from ..client import get_client
     from ..context import build_farm_context
+    from ..context_helpers.demo_loader import DemoDataStore
     from ..prompts.ask_farm import ASK_FARM_SYSTEM, build_ask_farm_message
     from ..session_memory import get_session_memory
+    from ..tools import ALL_TOOLS, execute_tool
 
     settings = get_ai_settings()
     model = settings.GENOMEAI_AI_DEFAULT_MODEL
@@ -216,74 +218,81 @@ async def _stream_live(
         logger.warning(f"farm_context build failed farm={farm_id}: {exc}")
 
     user_message = build_ask_farm_message(question)
-
-    history_messages = [
-        {"role": m["role"], "content": m["content"]}
-        for m in messages_history
-    ]
-
+    store = DemoDataStore()
     client = get_client()
-    full_text = ""
-    input_tokens = 0
-    output_tokens = 0
+
+    def _exec(name: str, inp: dict) -> dict:
+        return execute_tool(name, inp, store)
 
     try:
-        async for chunk in client.astream(
+        response = await asyncio.to_thread(
+            client.tool_call_loop,
             user_message=user_message,
+            tools=ALL_TOOLS,
+            executor=_exec,
             system_prompt=ASK_FARM_SYSTEM,
             farm_context=farm_ctx_text or None,
             task_type="ask_farm",
             user_id=user_id,
-        ):
-            full_text += chunk
-            yield _sse_event("token", {"text": chunk})
+        )
+    except Exception as exc:
+        logger.error(f"ask_farm agent loop error: {exc}")
+        yield _sse_event("error", {"message": "Ошибка AI-сервиса. Попробуйте позже."})
+        return
 
-        evidences = parse_evidence_from_response(full_text, known_event_ids)
-        for ev in evidences:
-            is_ctx_key = ev.event_id in _CONTEXT_KEY_LABELS
-            name = _CONTEXT_KEY_LABELS.get(ev.event_id, ev.event_id.replace("_", " "))
-            description = (
-                _build_context_key_description(ev.event_id, farm_ctx)
-                if is_ctx_key
-                else ev.description
-            )
-            ev_type = "farm_context" if is_ctx_key else "event"
-            yield _sse_event("evidence", {
-                "type": ev_type,
-                "id": ev.event_id,
-                "name": name,
-                "description": description,
-                "verified": ev.verified,
-            })
+    # Per-tool SSE events (frontend can show "Запрашиваю профиль…" UI hooks)
+    for tool in response.tools_used:
+        yield _sse_event("tool_used", {"name": tool["name"], "input": tool.get("input", {})})
 
-        unverified = sum(1 for e in evidences if not e.verified)
-        if unverified:
-            logger.warning(json.dumps({
-                "event": "unverified_evidence_detected",
-                "farm_id": farm_id,
-                "user_id": user_id,
-                "unverified_ids": [e.event_id for e in evidences if not e.verified],
-            }))
+    # Stream the final assistant text token-by-token (preserve frontend SSE contract)
+    full_text = response.content or ""
+    words = full_text.split(" ")
+    for i, word in enumerate(words):
+        token = word if i == 0 else " " + word
+        yield _sse_event("token", {"text": token})
+        await asyncio.sleep(0)
 
-        output_tokens = len(full_text) // 4
-
-        try:
-            mem = get_session_memory()
-            mem.append(session_id, "user", question)
-            mem.append(session_id, "assistant", full_text)
-        except Exception as exc:
-            logger.warning(f"session_memory.append error: {exc}")
-
-        yield _sse_event("done", {
-            "total_tokens": {"input": input_tokens, "output": output_tokens},
-            "evidence_ids": [e.event_id for e in evidences],
-            "validated_evidence": unverified == 0,
-            "unverified_count": unverified,
+    # Evidence parsing on the final text
+    evidences = parse_evidence_from_response(full_text, known_event_ids)
+    for ev in evidences:
+        is_ctx_key = ev.event_id in _CONTEXT_KEY_LABELS
+        name = _CONTEXT_KEY_LABELS.get(ev.event_id, ev.event_id.replace("_", " "))
+        description = (
+            _build_context_key_description(ev.event_id, farm_ctx)
+            if is_ctx_key
+            else ev.description
+        )
+        yield _sse_event("evidence", {
+            "type": "farm_context" if is_ctx_key else "event",
+            "id": ev.event_id,
+            "name": name,
+            "description": description,
+            "verified": ev.verified,
         })
 
+    unverified = sum(1 for e in evidences if not e.verified)
+    if unverified:
+        logger.warning(json.dumps({
+            "event": "unverified_evidence_detected",
+            "farm_id": farm_id,
+            "user_id": user_id,
+            "unverified_ids": [e.event_id for e in evidences if not e.verified],
+        }))
+
+    try:
+        mem = get_session_memory()
+        mem.append(session_id, "user", question)
+        mem.append(session_id, "assistant", full_text)
     except Exception as exc:
-        logger.error(f"ask_farm live stream error: {exc}")
-        yield _sse_event("error", {"message": "Ошибка AI-сервиса. Попробуйте позже."})
+        logger.warning(f"session_memory.append error: {exc}")
+
+    yield _sse_event("done", {
+        "total_tokens": {"input": response.input_tokens, "output": response.output_tokens},
+        "evidence_ids": [e.event_id for e in evidences],
+        "validated_evidence": unverified == 0,
+        "unverified_count": unverified,
+        "tools_used": [t["name"] for t in response.tools_used],
+    })
 
 
 class AskFarmStreamRequest(BaseModel):
