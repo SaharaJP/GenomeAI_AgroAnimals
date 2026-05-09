@@ -50,20 +50,20 @@ export function AiCallTraceDrawer({ callId, onClose }: Props) {
         </header>
         <div className="drawer-body">
           {error && <div className="error-text">Ошибка загрузки: {error}</div>}
-          {!detail && !error && <div className="muted">Загрузка…</div>}
+          {!detail && !error && <div className="small-muted">Загрузка…</div>}
           {detail && (
             <>
               <div className="grid grid-3">
                 <div>
-                  <div className="muted">Latency</div>
+                  <div className="small-muted">Latency</div>
                   <div>{detail.latency_ms} мс</div>
                 </div>
                 <div>
-                  <div className="muted">Токены</div>
+                  <div className="small-muted">Токены</div>
                   <div>{detail.input_tokens + detail.output_tokens}</div>
                 </div>
                 <div>
-                  <div className="muted">Стоимость</div>
+                  <div className="small-muted">Стоимость</div>
                   <div>${detail.cost_usd.toFixed(4)}</div>
                 </div>
               </div>
@@ -87,13 +87,13 @@ export function AiCallTraceDrawer({ callId, onClose }: Props) {
                   ))}
                 </ul>
               ) : (
-                <p className="muted">— нет evidence —</p>
+                <p className="small-muted">— нет evidence —</p>
               )}
               <h4>Tools used</h4>
               {detail.tools_used && detail.tools_used.length > 0 ? (
                 <pre className="trace-pre">{JSON.stringify(detail.tools_used, null, 2)}</pre>
               ) : (
-                <p className="muted">— инструменты не вызывались —</p>
+                <p className="small-muted">— инструменты не вызывались —</p>
               )}
             </>
           )}

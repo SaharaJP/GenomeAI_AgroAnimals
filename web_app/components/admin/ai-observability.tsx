@@ -65,7 +65,7 @@ export function AiObservability() {
 
   return (
     <div className="grid">
-      <div className="topbar">
+      <div className="page-header">
         <div>
           <h1 className="page-title">AI-наблюдаемость</h1>
           <p className="page-subtitle">Сводка вызовов LLM, grounding rate и trace отдельных вызовов.</p>
@@ -85,7 +85,7 @@ export function AiObservability() {
 
       {error && <div className="card error-text">{error}</div>}
 
-      <div className="grid grid-4">
+      <div className="grid grid-3">
         <MetricCard title={`Вызовов за ${PERIOD_LABEL[period]}`} value={stats ? stats.count : '—'} />
         <MetricCard title="p95 латентность" value={stats ? `${(stats.p95_latency_ms / 1000).toFixed(1)} с` : '—'} />
         <MetricCard title="Токенов всего" value={stats ? stats.total_tokens.toLocaleString('ru-RU') : '—'} />
@@ -103,7 +103,7 @@ export function AiObservability() {
               </p>
             </>
           ) : (
-            <p className="muted">—</p>
+            <p className="small-muted">—</p>
           )}
         </Card>
 

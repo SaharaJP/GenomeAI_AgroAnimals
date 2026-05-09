@@ -1199,6 +1199,15 @@ button, input, select, textarea { font: inherit; }
   padding-left: 28px;
 }
 
+/* ── Generic page header (h1 + subtitle on left, actions on right) ── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
 /* ── Insights triage ─────────────────────────── */
 .insights-page-header {
   display: flex;
