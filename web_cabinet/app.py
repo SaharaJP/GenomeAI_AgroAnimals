@@ -905,7 +905,7 @@ def api_timeline_events(
     all_db_ids: set[str] = set()
     try:
         rows = conn.execute(
-            "SELECT timeline_event_id, event_type, title, body, event_date, source, affected_groups "
+            "SELECT timeline_event_id, event_type, title, body, event_date, source, affected_groups, linked_metric_ids "
             "FROM timeline_events WHERE tenant_id = %s ORDER BY event_date DESC, id DESC",
             (tenant_id,),
         ).fetchall()
@@ -915,19 +915,41 @@ def api_timeline_events(
                 # Tombstone for a deleted seeded/user event — suppress from listing
                 # but keep its id in all_db_ids so the JSON seed copy is also hidden.
                 continue
+            raw_linked = r[7] if len(r) > 7 else None
+            if isinstance(raw_linked, (list, tuple)):
+                linked_metric_ids = list(raw_linked)
+            elif isinstance(raw_linked, str) and raw_linked:
+                try:
+                    linked_metric_ids = list(json.loads(raw_linked))
+                except (TypeError, ValueError):
+                    linked_metric_ids = []
+            else:
+                linked_metric_ids = []
             db_events.append({
                 "timeline_event_id": r[0],
+                "event_id": r[0],
                 "event_type": r[1],
                 "title": r[2],
                 "body": r[3] or "",
                 "date": r[4],
+                "event_date": r[4],
                 "source": r[5] or "Добавлено вручную",
                 "has_impact": False,
+                "linked_metric_ids": linked_metric_ids,
             })
     except Exception:
         pass
 
-    demo_events = [e for e in _load_timeline_events() if e.get("timeline_event_id") not in all_db_ids]
+    demo_events = []
+    for e in _load_timeline_events():
+        if e.get("timeline_event_id") in all_db_ids:
+            continue
+        # Mirror id and date under the field names overlay context expects.
+        ev = dict(e)
+        ev.setdefault("event_id", ev.get("timeline_event_id"))
+        ev.setdefault("event_date", ev.get("date"))
+        ev.setdefault("linked_metric_ids", ev.get("linked_metric_ids", []))
+        demo_events.append(ev)
     events = db_events + demo_events
 
     if start:
@@ -936,7 +958,8 @@ def api_timeline_events(
         events = [e for e in events if e.get("date", "") <= end]
     if event_type:
         events = [e for e in events if e.get("event_type") == event_type]
-    return {"events": events, "total": len(events)}
+    # Return both `events` (legacy) and `items` (overlay context) — same list.
+    return {"events": events, "items": events, "total": len(events)}
 
 
 @app.get("/api/timeline/events/{event_id}/impact")
