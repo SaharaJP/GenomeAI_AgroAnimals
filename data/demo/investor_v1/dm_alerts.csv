@@ -1,0 +1,155 @@
+tenant_id,alert_id,animal_id,alert_type,severity,status,dedupe_key,created_at,resolved_at,message
+default,AL_00001,4821,open_cow_long,medium,acknowledged,open_cow:4821,2026-05-08,,"DIM=174, нет подтверждённой стельности"
+default,AL_00002,3891,recurrent_mastitis,high,new,recurrent_mastitis:3891,2026-05-08,,≥2 эпизода клинического мастита за 90 дней
+default,AL_00003,3891,low_yield_drop,medium,new,low_yield:3891,2026-05-07,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00004,3142,low_yield_drop,medium,new,low_yield:3142,2026-05-02,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00005,3001,low_yield_drop,medium,new,low_yield:3001,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00006,3003,open_cow_long,medium,new,open_cow:3003,2026-05-06,,"DIM=250, нет подтверждённой стельности"
+default,AL_00007,3005,open_cow_long,medium,acknowledged,open_cow:3005,2026-05-04,,"DIM=288, нет подтверждённой стельности"
+default,AL_00008,3006,low_yield_drop,low,new,low_yield:3006,2026-05-08,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00009,3009,low_yield_drop,low,new,low_yield:3009,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00010,3010,open_cow_long,medium,acknowledged,open_cow:3010,2026-05-07,,"DIM=277, нет подтверждённой стельности"
+default,AL_00011,3015,open_cow_long,medium,new,open_cow:3015,2026-05-02,,"DIM=152, нет подтверждённой стельности"
+default,AL_00012,3023,open_cow_long,medium,new,open_cow:3023,2026-05-04,,"DIM=242, нет подтверждённой стельности"
+default,AL_00013,3024,open_cow_long,medium,acknowledged,open_cow:3024,2026-05-06,,"DIM=413, нет подтверждённой стельности"
+default,AL_00014,3027,lameness,medium,new,lameness:3027,2026-05-04,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00015,3028,open_cow_long,medium,acknowledged,open_cow:3028,2026-05-08,,"DIM=173, нет подтверждённой стельности"
+default,AL_00016,3029,open_cow_long,medium,new,open_cow:3029,2026-05-06,,"DIM=232, нет подтверждённой стельности"
+default,AL_00017,3033,open_cow_long,medium,new,open_cow:3033,2026-05-04,,"DIM=226, нет подтверждённой стельности"
+default,AL_00018,3034,open_cow_long,medium,acknowledged,open_cow:3034,2026-05-08,,"DIM=173, нет подтверждённой стельности"
+default,AL_00019,3034,low_yield_drop,medium,new,low_yield:3034,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00020,3035,open_cow_long,medium,acknowledged,open_cow:3035,2026-05-07,,"DIM=315, нет подтверждённой стельности"
+default,AL_00021,3037,low_yield_drop,low,new,low_yield:3037,2026-04-29,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00022,3038,lameness,medium,new,lameness:3038,2026-05-08,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00023,3044,open_cow_long,medium,acknowledged,open_cow:3044,2026-05-02,,"DIM=332, нет подтверждённой стельности"
+default,AL_00024,3048,open_cow_long,medium,acknowledged,open_cow:3048,2026-05-04,,"DIM=240, нет подтверждённой стельности"
+default,AL_00025,3049,low_yield_drop,low,new,low_yield:3049,2026-05-05,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00026,3051,lameness,medium,new,lameness:3051,2026-05-08,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00027,3052,open_cow_long,medium,acknowledged,open_cow:3052,2026-05-07,,"DIM=322, нет подтверждённой стельности"
+default,AL_00028,3053,low_yield_drop,low,new,low_yield:3053,2026-05-01,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00029,3055,open_cow_long,medium,new,open_cow:3055,2026-05-02,,"DIM=305, нет подтверждённой стельности"
+default,AL_00030,3055,low_yield_drop,low,new,low_yield:3055,2026-05-03,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00031,3060,open_cow_long,medium,acknowledged,open_cow:3060,2026-05-06,,"DIM=187, нет подтверждённой стельности"
+default,AL_00032,3062,open_cow_long,medium,acknowledged,open_cow:3062,2026-05-05,,"DIM=160, нет подтверждённой стельности"
+default,AL_00033,3063,open_cow_long,medium,new,open_cow:3063,2026-05-02,,"DIM=178, нет подтверждённой стельности"
+default,AL_00034,3066,open_cow_long,medium,acknowledged,open_cow:3066,2026-05-05,,"DIM=207, нет подтверждённой стельности"
+default,AL_00035,3069,open_cow_long,medium,acknowledged,open_cow:3069,2026-05-06,,"DIM=254, нет подтверждённой стельности"
+default,AL_00036,3070,low_yield_drop,low,new,low_yield:3070,2026-05-02,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00037,3071,open_cow_long,medium,acknowledged,open_cow:3071,2026-05-08,,"DIM=334, нет подтверждённой стельности"
+default,AL_00038,3074,open_cow_long,medium,new,open_cow:3074,2026-05-04,,"DIM=216, нет подтверждённой стельности"
+default,AL_00039,3077,low_yield_drop,medium,new,low_yield:3077,2026-05-06,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00040,3082,open_cow_long,medium,acknowledged,open_cow:3082,2026-05-06,,"DIM=179, нет подтверждённой стельности"
+default,AL_00041,3083,open_cow_long,medium,acknowledged,open_cow:3083,2026-05-07,,"DIM=171, нет подтверждённой стельности"
+default,AL_00042,3085,open_cow_long,medium,acknowledged,open_cow:3085,2026-05-04,,"DIM=347, нет подтверждённой стельности"
+default,AL_00043,3086,open_cow_long,medium,acknowledged,open_cow:3086,2026-05-02,,"DIM=188, нет подтверждённой стельности"
+default,AL_00044,3087,low_yield_drop,medium,new,low_yield:3087,2026-04-29,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00045,3090,open_cow_long,medium,acknowledged,open_cow:3090,2026-05-07,,"DIM=171, нет подтверждённой стельности"
+default,AL_00046,3093,open_cow_long,medium,new,open_cow:3093,2026-05-03,,"DIM=252, нет подтверждённой стельности"
+default,AL_00047,3098,open_cow_long,medium,acknowledged,open_cow:3098,2026-05-05,,"DIM=219, нет подтверждённой стельности"
+default,AL_00048,3103,open_cow_long,medium,new,open_cow:3103,2026-05-03,,"DIM=364, нет подтверждённой стельности"
+default,AL_00049,3105,open_cow_long,medium,new,open_cow:3105,2026-05-07,,"DIM=312, нет подтверждённой стельности"
+default,AL_00050,3106,open_cow_long,medium,new,open_cow:3106,2026-05-08,,"DIM=175, нет подтверждённой стельности"
+default,AL_00051,3106,low_yield_drop,medium,new,low_yield:3106,2026-04-29,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00052,3108,open_cow_long,medium,acknowledged,open_cow:3108,2026-05-05,,"DIM=220, нет подтверждённой стельности"
+default,AL_00053,3111,open_cow_long,medium,acknowledged,open_cow:3111,2026-05-06,,"DIM=212, нет подтверждённой стельности"
+default,AL_00054,3114,open_cow_long,medium,new,open_cow:3114,2026-05-05,,"DIM=321, нет подтверждённой стельности"
+default,AL_00055,3116,low_yield_drop,low,new,low_yield:3116,2026-05-02,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00056,3118,open_cow_long,medium,new,open_cow:3118,2026-05-03,,"DIM=415, нет подтверждённой стельности"
+default,AL_00057,3123,low_yield_drop,low,new,low_yield:3123,2026-05-01,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00058,3124,low_yield_drop,medium,new,low_yield:3124,2026-05-03,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00059,3126,open_cow_long,medium,new,open_cow:3126,2026-05-07,,"DIM=389, нет подтверждённой стельности"
+default,AL_00060,3128,open_cow_long,medium,new,open_cow:3128,2026-05-06,,"DIM=188, нет подтверждённой стельности"
+default,AL_00061,3130,open_cow_long,medium,new,open_cow:3130,2026-05-03,,"DIM=408, нет подтверждённой стельности"
+default,AL_00062,3133,open_cow_long,medium,new,open_cow:3133,2026-05-06,,"DIM=191, нет подтверждённой стельности"
+default,AL_00063,3139,low_yield_drop,low,new,low_yield:3139,2026-04-29,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00064,3141,open_cow_long,medium,acknowledged,open_cow:3141,2026-05-02,,"DIM=287, нет подтверждённой стельности"
+default,AL_00065,3143,open_cow_long,medium,acknowledged,open_cow:3143,2026-05-05,,"DIM=158, нет подтверждённой стельности"
+default,AL_00066,3144,open_cow_long,medium,new,open_cow:3144,2026-05-04,,"DIM=361, нет подтверждённой стельности"
+default,AL_00067,3148,open_cow_long,medium,acknowledged,open_cow:3148,2026-05-08,,"DIM=246, нет подтверждённой стельности"
+default,AL_00068,3149,lameness,medium,new,lameness:3149,2026-05-05,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00069,3150,open_cow_long,medium,acknowledged,open_cow:3150,2026-05-05,,"DIM=418, нет подтверждённой стельности"
+default,AL_00070,3152,open_cow_long,medium,new,open_cow:3152,2026-05-05,,"DIM=170, нет подтверждённой стельности"
+default,AL_00071,3155,low_yield_drop,medium,new,low_yield:3155,2026-05-07,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00072,3159,open_cow_long,medium,acknowledged,open_cow:3159,2026-05-07,,"DIM=203, нет подтверждённой стельности"
+default,AL_00073,3160,open_cow_long,medium,new,open_cow:3160,2026-05-04,,"DIM=278, нет подтверждённой стельности"
+default,AL_00074,3163,open_cow_long,medium,new,open_cow:3163,2026-05-02,,"DIM=268, нет подтверждённой стельности"
+default,AL_00075,3166,open_cow_long,medium,new,open_cow:3166,2026-05-08,,"DIM=243, нет подтверждённой стельности"
+default,AL_00076,3167,low_yield_drop,medium,new,low_yield:3167,2026-04-29,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00077,3168,open_cow_long,medium,acknowledged,open_cow:3168,2026-05-04,,"DIM=276, нет подтверждённой стельности"
+default,AL_00078,3169,lameness,medium,new,lameness:3169,2026-05-07,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00079,3173,open_cow_long,medium,new,open_cow:3173,2026-05-08,,"DIM=202, нет подтверждённой стельности"
+default,AL_00080,3175,open_cow_long,medium,acknowledged,open_cow:3175,2026-05-05,,"DIM=179, нет подтверждённой стельности"
+default,AL_00081,3175,low_yield_drop,low,new,low_yield:3175,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00082,3176,open_cow_long,medium,acknowledged,open_cow:3176,2026-05-05,,"DIM=262, нет подтверждённой стельности"
+default,AL_00083,3177,open_cow_long,medium,new,open_cow:3177,2026-05-02,,"DIM=348, нет подтверждённой стельности"
+default,AL_00084,3178,lameness,medium,new,lameness:3178,2026-05-05,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00085,3181,open_cow_long,medium,acknowledged,open_cow:3181,2026-05-08,,"DIM=255, нет подтверждённой стельности"
+default,AL_00086,3186,open_cow_long,medium,acknowledged,open_cow:3186,2026-05-07,,"DIM=204, нет подтверждённой стельности"
+default,AL_00087,3186,low_yield_drop,medium,new,low_yield:3186,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00088,3187,open_cow_long,medium,new,open_cow:3187,2026-05-07,,"DIM=273, нет подтверждённой стельности"
+default,AL_00089,3195,open_cow_long,medium,new,open_cow:3195,2026-05-02,,"DIM=186, нет подтверждённой стельности"
+default,AL_00090,3195,low_yield_drop,medium,new,low_yield:3195,2026-05-04,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00091,3198,open_cow_long,medium,acknowledged,open_cow:3198,2026-05-04,,"DIM=331, нет подтверждённой стельности"
+default,AL_00092,3202,open_cow_long,medium,new,open_cow:3202,2026-05-06,,"DIM=174, нет подтверждённой стельности"
+default,AL_00093,3204,open_cow_long,medium,acknowledged,open_cow:3204,2026-05-06,,"DIM=332, нет подтверждённой стельности"
+default,AL_00094,3208,low_yield_drop,low,new,low_yield:3208,2026-05-07,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00095,3209,low_yield_drop,low,new,low_yield:3209,2026-05-08,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00096,3212,open_cow_long,medium,new,open_cow:3212,2026-05-02,,"DIM=216, нет подтверждённой стельности"
+default,AL_00097,3213,open_cow_long,medium,new,open_cow:3213,2026-05-04,,"DIM=302, нет подтверждённой стельности"
+default,AL_00098,3216,open_cow_long,medium,acknowledged,open_cow:3216,2026-05-05,,"DIM=192, нет подтверждённой стельности"
+default,AL_00099,3220,low_yield_drop,low,new,low_yield:3220,2026-05-03,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00100,3223,lameness,medium,new,lameness:3223,2026-05-08,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00101,3223,low_yield_drop,medium,new,low_yield:3223,2026-05-08,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00102,3226,open_cow_long,medium,new,open_cow:3226,2026-05-04,,"DIM=249, нет подтверждённой стельности"
+default,AL_00103,3226,low_yield_drop,medium,new,low_yield:3226,2026-05-03,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00104,3229,low_yield_drop,medium,new,low_yield:3229,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00105,3230,open_cow_long,medium,acknowledged,open_cow:3230,2026-05-04,,"DIM=194, нет подтверждённой стельности"
+default,AL_00106,3232,low_yield_drop,medium,new,low_yield:3232,2026-05-03,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00107,3235,open_cow_long,medium,new,open_cow:3235,2026-05-03,,"DIM=339, нет подтверждённой стельности"
+default,AL_00108,3241,low_yield_drop,low,new,low_yield:3241,2026-05-04,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00109,3242,low_yield_drop,medium,new,low_yield:3242,2026-05-07,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00110,3246,low_yield_drop,medium,new,low_yield:3246,2026-05-02,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00111,3248,open_cow_long,medium,new,open_cow:3248,2026-05-05,,"DIM=194, нет подтверждённой стельности"
+default,AL_00112,3251,open_cow_long,medium,new,open_cow:3251,2026-05-02,,"DIM=181, нет подтверждённой стельности"
+default,AL_00113,3252,open_cow_long,medium,acknowledged,open_cow:3252,2026-05-08,,"DIM=162, нет подтверждённой стельности"
+default,AL_00114,3255,open_cow_long,medium,acknowledged,open_cow:3255,2026-05-04,,"DIM=176, нет подтверждённой стельности"
+default,AL_00115,3256,lameness,medium,new,lameness:3256,2026-05-08,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00116,3257,low_yield_drop,medium,new,low_yield:3257,2026-05-05,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00117,3261,low_yield_drop,low,new,low_yield:3261,2026-05-08,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00118,3264,open_cow_long,medium,acknowledged,open_cow:3264,2026-05-06,,"DIM=189, нет подтверждённой стельности"
+default,AL_00119,3268,open_cow_long,medium,acknowledged,open_cow:3268,2026-05-06,,"DIM=408, нет подтверждённой стельности"
+default,AL_00120,3268,low_yield_drop,low,new,low_yield:3268,2026-05-04,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00121,3269,open_cow_long,medium,acknowledged,open_cow:3269,2026-05-03,,"DIM=186, нет подтверждённой стельности"
+default,AL_00122,3271,lameness,medium,new,lameness:3271,2026-05-08,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00123,3272,open_cow_long,medium,acknowledged,open_cow:3272,2026-05-04,,"DIM=195, нет подтверждённой стельности"
+default,AL_00124,3275,open_cow_long,medium,acknowledged,open_cow:3275,2026-05-08,,"DIM=161, нет подтверждённой стельности"
+default,AL_00125,3277,open_cow_long,medium,new,open_cow:3277,2026-05-04,,"DIM=331, нет подтверждённой стельности"
+default,AL_00126,3282,open_cow_long,medium,new,open_cow:3282,2026-05-02,,"DIM=330, нет подтверждённой стельности"
+default,AL_00127,3285,open_cow_long,medium,new,open_cow:3285,2026-05-05,,"DIM=181, нет подтверждённой стельности"
+default,AL_00128,3287,lameness,medium,new,lameness:3287,2026-05-04,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00129,3289,open_cow_long,medium,acknowledged,open_cow:3289,2026-05-05,,"DIM=212, нет подтверждённой стельности"
+default,AL_00130,3297,open_cow_long,medium,new,open_cow:3297,2026-05-06,,"DIM=301, нет подтверждённой стельности"
+default,AL_00131,3299,open_cow_long,medium,acknowledged,open_cow:3299,2026-05-04,,"DIM=331, нет подтверждённой стельности"
+default,AL_00132,3301,open_cow_long,medium,new,open_cow:3301,2026-05-06,,"DIM=217, нет подтверждённой стельности"
+default,AL_00133,3306,open_cow_long,medium,new,open_cow:3306,2026-05-08,,"DIM=331, нет подтверждённой стельности"
+default,AL_00134,3312,open_cow_long,medium,new,open_cow:3312,2026-05-07,,"DIM=377, нет подтверждённой стельности"
+default,AL_00135,3313,open_cow_long,medium,new,open_cow:3313,2026-05-03,,"DIM=281, нет подтверждённой стельности"
+default,AL_00136,3314,open_cow_long,medium,new,open_cow:3314,2026-05-08,,"DIM=400, нет подтверждённой стельности"
+default,AL_00137,3314,lameness,medium,new,lameness:3314,2026-05-05,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00138,3315,open_cow_long,medium,acknowledged,open_cow:3315,2026-05-08,,"DIM=275, нет подтверждённой стельности"
+default,AL_00139,3317,open_cow_long,medium,new,open_cow:3317,2026-05-08,,"DIM=218, нет подтверждённой стельности"
+default,AL_00140,3318,open_cow_long,medium,acknowledged,open_cow:3318,2026-05-04,,"DIM=230, нет подтверждённой стельности"
+default,AL_00141,3322,open_cow_long,medium,acknowledged,open_cow:3322,2026-05-08,,"DIM=212, нет подтверждённой стельности"
+default,AL_00142,3322,low_yield_drop,low,new,low_yield:3322,2026-05-02,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00143,3324,lameness,medium,new,lameness:3324,2026-05-08,,"Зарегистрирован эпизод хромоты, требуется осмотр"
+default,AL_00144,3325,open_cow_long,medium,acknowledged,open_cow:3325,2026-05-02,,"DIM=203, нет подтверждённой стельности"
+default,AL_00145,3327,open_cow_long,medium,acknowledged,open_cow:3327,2026-05-05,,"DIM=390, нет подтверждённой стельности"
+default,AL_00146,3327,low_yield_drop,low,new,low_yield:3327,2026-04-29,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00147,3328,open_cow_long,medium,acknowledged,open_cow:3328,2026-05-07,,"DIM=243, нет подтверждённой стельности"
+default,AL_00148,3333,open_cow_long,medium,acknowledged,open_cow:3333,2026-05-03,,"DIM=240, нет подтверждённой стельности"
+default,AL_00149,3334,open_cow_long,medium,acknowledged,open_cow:3334,2026-05-03,,"DIM=388, нет подтверждённой стельности"
+default,AL_00150,3336,low_yield_drop,medium,new,low_yield:3336,2026-04-30,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00151,3341,open_cow_long,medium,new,open_cow:3341,2026-05-06,,"DIM=375, нет подтверждённой стельности"
+default,AL_00152,3343,low_yield_drop,low,new,low_yield:3343,2026-05-07,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00153,3344,low_yield_drop,low,new,low_yield:3344,2026-05-05,,Падение надоя >15% за 7 дней относительно baseline
+default,AL_00154,3347,low_yield_drop,medium,new,low_yield:3347,2026-05-05,,Падение надоя >15% за 7 дней относительно baseline
