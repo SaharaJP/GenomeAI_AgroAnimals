@@ -27,9 +27,9 @@ class TestToolDefinitions:
     def test_tool_names(self):
         names = {t["name"] for t in ALL_TOOLS}
         expected = {
-            "get_cow_history",
-            "get_group_metrics",
-            "search_events",
+            "get_animal_profile",
+            "get_kpi_summary",
+            "search_events_timeline",
             "get_treatment_records",
             "get_reproduction_status",
             "get_milk_quality_trend",
@@ -42,28 +42,28 @@ class TestGetCowHistory4821:
     """Returns all events for Звёздочка including mastitis episode."""
 
     def test_returns_dict_with_rows(self, rich_store):
-        result = execute_tool("get_cow_history", {"cow_id": "4821", "days_back": 60}, rich_store)
+        result = execute_tool("get_animal_profile", {"cow_id": "4821", "days_back": 60}, rich_store)
         assert isinstance(result, dict)
         assert "rows" in result
 
     def test_includes_mastitis_in_health_events(self, rich_store):
-        result = execute_tool("get_cow_history", {"cow_id": "4821", "days_back": 70}, rich_store)
+        result = execute_tool("get_animal_profile", {"cow_id": "4821", "days_back": 70}, rich_store)
         he = result["rows"]["health_events"]
         types = [e["event_type"] for e in he]
         assert "mastitis" in types, f"No mastitis event found. Got: {types}"
 
     def test_includes_milkings(self, rich_store):
-        result = execute_tool("get_cow_history", {"cow_id": "4821", "days_back": 30}, rich_store)
+        result = execute_tool("get_animal_profile", {"cow_id": "4821", "days_back": 30}, rich_store)
         milkings = result["rows"]["milkings"]
         assert len(milkings) > 0, "No milking records for Звёздочка"
 
     def test_includes_treatments(self, rich_store):
-        result = execute_tool("get_cow_history", {"cow_id": "4821", "days_back": 30}, rich_store)
+        result = execute_tool("get_animal_profile", {"cow_id": "4821", "days_back": 30}, rich_store)
         treatments = result["rows"]["treatments"]
         assert len(treatments) > 0, "No treatment records for Звёздочка"
 
     def test_unknown_cow_returns_empty_rows(self, rich_store):
-        result = execute_tool("get_cow_history", {"cow_id": "NONEXISTENT_999"}, rich_store)
+        result = execute_tool("get_animal_profile", {"cow_id": "NONEXISTENT_999"}, rich_store)
         assert isinstance(result, dict)
         # All sub-lists should be empty
         for key, val in result["rows"].items():
@@ -75,7 +75,7 @@ class TestSearchEventsByType:
 
     def test_mastitis_filter(self, rich_store):
         result = execute_tool(
-            "search_events",
+            "search_events_timeline",
             {"event_types": ["mastitis"]},
             rich_store,
         )
@@ -85,7 +85,7 @@ class TestSearchEventsByType:
 
     def test_treatment_filter(self, rich_store):
         result = execute_tool(
-            "search_events",
+            "search_events_timeline",
             {"event_types": ["treatment"]},
             rich_store,
         )
@@ -98,7 +98,7 @@ class TestSearchEventsByType:
         date_from = (datetime.date(2026, 4, 22) - datetime.timedelta(days=5)).isoformat()
         date_to = datetime.date(2026, 4, 22).isoformat()
         result = execute_tool(
-            "search_events",
+            "search_events_timeline",
             {"event_types": ["health"], "date_from": date_from, "date_to": date_to},
             rich_store,
         )
@@ -109,7 +109,7 @@ class TestSearchEventsByType:
 
     def test_cow_id_filter(self, rich_store):
         result = execute_tool(
-            "search_events",
+            "search_events_timeline",
             {"event_types": ["health", "treatment"], "cow_ids": ["4821"]},
             rich_store,
         )
@@ -118,7 +118,7 @@ class TestSearchEventsByType:
 
     def test_all_returns_multiple_types(self, rich_store):
         result = execute_tool(
-            "search_events",
+            "search_events_timeline",
             {"event_types": ["all"]},
             rich_store,
         )
@@ -127,14 +127,14 @@ class TestSearchEventsByType:
 
     def test_limit_respected(self, rich_store):
         result = execute_tool(
-            "search_events",
+            "search_events_timeline",
             {"event_types": ["all"], "limit": 2},
             rich_store,
         )
         assert len(result["rows"]) <= 2
 
     def test_result_has_evidence_id(self, rich_store):
-        result = execute_tool("search_events", {"event_types": ["health"]}, rich_store)
+        result = execute_tool("search_events_timeline", {"event_types": ["health"]}, rich_store)
         for row in result["rows"]:
             assert "evidence_id" in row
 

@@ -11,7 +11,7 @@ import pandas as pd
 # ---------------------------------------------------------------------------
 
 COW_HISTORY_TOOL = {
-    "name": "get_cow_history",
+    "name": "get_animal_profile",
     "description": (
         "Получить полную историю коровы: события за N дней, лечения, удой по дням, BCS, "
         "переводы групп. Используй когда нужны детали конкретной коровы."
@@ -31,7 +31,7 @@ COW_HISTORY_TOOL = {
 }
 
 GROUP_METRICS_TOOL = {
-    "name": "get_group_metrics",
+    "name": "get_kpi_summary",
     "description": (
         "Получить агрегированные метрики по группе/стаду за период: удой, SCC, "
         "события здоровья, воспроизводство. Используй для сравнения групп или "
@@ -56,7 +56,7 @@ GROUP_METRICS_TOOL = {
 }
 
 EVENT_SEARCH_TOOL = {
-    "name": "search_events",
+    "name": "search_events_timeline",
     "description": (
         "Поиск событий по ферме с фильтрацией: болезни, лечения, осеменения, "
         "отёлы, выбраковки. Используй когда нужно найти конкретный тип событий "
@@ -227,9 +227,9 @@ def execute_tool(tool_name: str, tool_input: dict, store: Any) -> dict:
     JSON-serialisable dict, max ~5000 tokens.
     """
     handlers = {
-        "get_cow_history": _exec_cow_history,
-        "get_group_metrics": _exec_group_metrics,
-        "search_events": _exec_search_events,
+        "get_animal_profile": _exec_cow_history,
+        "get_kpi_summary": _exec_group_metrics,
+        "search_events_timeline": _exec_search_events,
         "get_treatment_records": _exec_treatment_records,
         "get_reproduction_status": _exec_reproduction_status,
         "get_milk_quality_trend": _exec_milk_quality_trend,
