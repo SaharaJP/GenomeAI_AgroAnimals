@@ -5,11 +5,11 @@ import datetime
 
 import pytest
 
-from web_cabinet.ai.tools import execute_tool, ALL_TOOLS
+from web_cabinet.ai.tools import execute_tool, ALL_TOOLS, CANONICAL_TOOLS, EXTRA_TOOLS
 
 
 class TestToolDefinitions:
-    """All 7 tools must have proper Anthropic format."""
+    """All 10 tools must have proper Anthropic format (7 canonical + 3 extras)."""
 
     def test_all_tools_have_required_keys(self):
         for tool in ALL_TOOLS:
@@ -21,19 +21,29 @@ class TestToolDefinitions:
             schema = tool["input_schema"]
             assert schema.get("type") == "object", f"Tool {tool['name']} schema type != 'object'"
 
-    def test_seven_tools_defined(self):
-        assert len(ALL_TOOLS) == 7, f"Expected 7 tools, got {len(ALL_TOOLS)}"
+    def test_ten_tools_defined(self):
+        assert len(ALL_TOOLS) == 10, f"Expected 10 tools, got {len(ALL_TOOLS)}"
+
+    def test_canonical_extra_split(self):
+        assert len(CANONICAL_TOOLS) == 7, f"Expected 7 canonical tools, got {len(CANONICAL_TOOLS)}"
+        assert len(EXTRA_TOOLS) == 3, f"Expected 3 extra tools, got {len(EXTRA_TOOLS)}"
+        assert ALL_TOOLS == CANONICAL_TOOLS + EXTRA_TOOLS
 
     def test_tool_names(self):
         names = {t["name"] for t in ALL_TOOLS}
         expected = {
+            # canonical 7
             "get_animal_profile",
             "get_kpi_summary",
             "search_events_timeline",
+            "analyze_event_impact",
+            "forecast_milk_yield",
+            "calculate_cull_npv",
+            "find_attention_cows",
+            # extras 3
             "get_treatment_records",
             "get_reproduction_status",
             "get_milk_quality_trend",
-            "get_economics_snapshot",
         }
         assert names == expected
 

@@ -176,15 +176,113 @@ ECONOMICS_TOOL = {
     },
 }
 
-ALL_TOOLS = [
-    COW_HISTORY_TOOL,
-    GROUP_METRICS_TOOL,
-    EVENT_SEARCH_TOOL,
+# ── Canonical aliases (point to existing dicts; introduced for P1-1 registry split) ──
+ANIMAL_PROFILE_TOOL = COW_HISTORY_TOOL
+KPI_SUMMARY_TOOL = GROUP_METRICS_TOOL
+SEARCH_EVENTS_TIMELINE_TOOL = EVENT_SEARCH_TOOL
+
+ANALYZE_EVENT_IMPACT_TOOL = {
+    "name": "analyze_event_impact",
+    "description": (
+        "Запустить импакт-анализ влияния события (смена рациона, лечение, "
+        "перевод группы) на KPI стада. Возвращает дельту KPI и доверительный "
+        "интервал."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "event_id": {"type": "string", "description": "ID события для анализа"},
+            "kpi": {
+                "type": "string",
+                "enum": ["milk_kg", "scc", "fat_pct", "protein_pct"],
+                "default": "milk_kg",
+                "description": "KPI для импакт-анализа",
+            },
+            "window_days": {
+                "type": "integer",
+                "default": 14,
+                "description": "Окно (дней) до/после события",
+            },
+        },
+        "required": ["event_id"],
+    },
+}
+
+FIND_ATTENTION_COWS_TOOL = {
+    "name": "find_attention_cows",
+    "description": (
+        "Топ-N коров «под наблюдением» по комбинированному скору: высокий SCC, "
+        "падение надоя, активные лечения, отклонения BCS. Используй когда оператор "
+        "спрашивает «кто требует внимания» или «кого посмотреть сегодня»."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "threshold_count": {
+                "type": "integer",
+                "default": 10,
+                "description": "Сколько коров вернуть",
+            },
+        },
+    },
+}
+
+CALCULATE_CULL_NPV_TOOL = {
+    "name": "calculate_cull_npv",
+    "description": (
+        "Расчёт NPV для выбраковки конкретной коровы: NPV_keep, NPV_cull, "
+        "рекомендация. P1-1 — обёртка над economics_snapshot; полный NPV приходит в P1-2."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "animal_id": {"type": "string", "description": "ID коровы"},
+        },
+        "required": ["animal_id"],
+    },
+}
+
+FORECAST_MILK_YIELD_TOOL = {
+    "name": "forecast_milk_yield",
+    "description": (
+        "Прогноз надоя на 7–30 дней вперёд на уровне коровы или группы. "
+        "Линейная регрессия по DIM (минимальная модель, без сложных признаков)."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "animal_id": {"type": "string", "description": "ID коровы (или null для группы)"},
+            "group_id": {"type": "string", "description": "ID группы (или null для коровы)"},
+            "horizon_days": {
+                "type": "integer",
+                "default": 7,
+                "description": "Горизонт прогноза (7–30 дней)",
+            },
+        },
+    },
+}
+
+# Канонические 7 инструментов соответствуют разделу 3.1.4 ВКР
+# (Таблица 3.1.4 — 7 канонических tools со специфичными именами).
+CANONICAL_TOOLS = [
+    ANIMAL_PROFILE_TOOL,
+    ANALYZE_EVENT_IMPACT_TOOL,
+    FORECAST_MILK_YIELD_TOOL,
+    CALCULATE_CULL_NPV_TOOL,
+    FIND_ATTENTION_COWS_TOOL,
+    KPI_SUMMARY_TOOL,
+    SEARCH_EVENTS_TIMELINE_TOOL,
+]
+
+# Дополнительные 3 — production-расширения, не упоминаются в дипломе как часть
+# канонических 7, но оставляются в реестре для совместимости.
+EXTRA_TOOLS = [
     TREATMENT_TOOL,
     REPRODUCTION_TOOL,
     MILK_QUALITY_TOOL,
-    ECONOMICS_TOOL,
 ]
+
+ALL_TOOLS = CANONICAL_TOOLS + EXTRA_TOOLS  # 10 total
 
 # ---------------------------------------------------------------------------
 # Tool executor
@@ -236,6 +334,10 @@ def execute_tool(tool_name: str, tool_input: dict, store: Any) -> dict:
         "get_reproduction_status": _exec_reproduction_status,
         "get_milk_quality_trend": _exec_milk_quality_trend,
         "get_economics_snapshot": _exec_economics_snapshot,
+        "analyze_event_impact": _exec_analyze_event_impact,
+        "find_attention_cows": _exec_find_attention_cows,
+        "calculate_cull_npv": _exec_calculate_cull_npv,
+        "forecast_milk_yield": _exec_forecast_milk_yield,
     }
     handler = handlers.get(tool_name)
     if handler is None:
@@ -637,3 +739,19 @@ def _df_to_records(df: pd.DataFrame) -> list[dict]:
         {k: (str(v) if isinstance(v, pd.Timestamp) else v) for k, v in row.items()}
         for row in df.to_dict("records")
     ]
+
+
+def _exec_analyze_event_impact(inp: dict, store: Any) -> dict:
+    raise NotImplementedError("P1-1 Phase 2 Task 2.1")
+
+
+def _exec_find_attention_cows(inp: dict, store: Any) -> dict:
+    raise NotImplementedError("P1-1 Phase 2 Task 2.2")
+
+
+def _exec_calculate_cull_npv(inp: dict, store: Any) -> dict:
+    raise NotImplementedError("P1-1 Phase 2 Task 2.3")
+
+
+def _exec_forecast_milk_yield(inp: dict, store: Any) -> dict:
+    raise NotImplementedError("P1-1 Phase 2 Task 2.4")
