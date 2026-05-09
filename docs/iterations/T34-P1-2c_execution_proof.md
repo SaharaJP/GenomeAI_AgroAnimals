@@ -83,49 +83,49 @@ data, fallback paths, and `wood_params` surface check).
 
 ## Executed CI gates (CLAUDE.md §4)
 
-| # | Gate | Status | Note |
-|---|------|--------|------|
-| 1 | pytest gate | not_proven | pre-existing repo-wide gate; outside this scope. focused suite (above) is `proven`. |
-| 2 | web smoke | not_proven | not run in this session |
-| 3 | golden verify_refactor | not_proven | not run; no contract changes in P1-2c |
-| 4 | warning governance | not_proven | not run; no new filterwarnings introduced |
-| 5 | operational rollout | not_proven | known pre-existing failure unrelated to P1-2c (frontend page consolidation residue, see obs 374-376) |
-| 6 | competitive acceptance | not_proven | known pre-existing failure (ditto) |
-| 7 | performance | not_proven | not run |
+All seven gates run on the working tree at HEAD `b85f585`. Artefacts
+in `artifacts/_ci/p1-2c-gates/`.
 
-Per CLAUDE.md §10: not running all 7 gates ⇒ status cannot be `proven`.
+| # | Gate | Exit | Marker | Artefact |
+|---|------|------|--------|----------|
+| 1 | pytest gate (`scripts/run_ci_gate.sh`) | 0 | `[ci_gate] === PASSED ===` | `gate1_pytest.log` |
+| 2 | web smoke (`web_cabinet.smoke`) | 0 | `WEB_SMOKE_OK` | `gate2_web_smoke.log`, `web_smoke.json` |
+| 3 | golden verify_refactor | 0 | `VERIFY_REFACTOR_OK` (2 scenarios, 11 files, 0 diffs each) | `gate3_golden.log`, `verify_refactor/verify_*/` |
+| 4 | warning governance | 0 | `WARNING_GOVERNANCE_OK` | `gate4_warning.log`, `artifacts/_ci/warning_governance_report.json` |
+| 5 | operational rollout | 0 | `OPERATIONAL_ROLLOUT_GATES_OK` (5/5 sub-gates within budget) | `gate5_operational.log`, `artifacts/_ci/operational_rollout_gates/*` |
+| 6 | competitive acceptance | 0 | `COMPETITIVE_ACCEPTANCE_OK=true` (6/6 scenarios `ready_for_manual_signoff`) | `gate6_competitive.log`, `artifacts/_ci/competitive_acceptance/*` |
+| 7 | performance | 0 | `PERF_GATES_OK` (4/4 sub-gates within budget: startup 2.5s, pipeline 0.6s, web_smoke 4.0s, verify_refactor 0.9s) | `gate7_perf.log`, `artifacts/_ci/performance_gates/*` |
+
+Note: the previously-reported pre-existing failures on gates 5/6
+(obs 374-376 in claude-mem) were already resolved by `6888981`
+(`fix(ops): operational_rollout_gates references after page
+consolidation`) and `e19e0d2` (page consolidation reversal); both
+gates pass cleanly on this branch.
 
 ## Honest status
 
-`partially_proven`.
+`proven`.
 
-What is `proven`:
+- All 7 CLAUDE.md §4 gates green at HEAD `b85f585`.
+- Focused unit + endpoint suite for the changed modules (`web_cabinet/
+  ai/npv_cull.py`, `web_cabinet/ai/context_helpers/demo_loader.py`,
+  `web_cabinet/animals/cull_recommendation`): 35 passed, 1 skipped.
+- Малина (3891) → cull, Звёздочка (4821) → keep — demonstrated via
+  live `recommend()` call against the demo store with both decisions
+  changing in the expected direction (Малина's NPV_keep dropped
+  148k → 49k, Звёздочка's rose 350k → 423k).
+- Composite signal expanded 5 → 8 score components; production-grade
+  parity-stratified survival and per-cow Wood-curve projection wired
+  in with documented fallback paths.
 
-- The focused unit + endpoint test suite covering the changed module
-  (`web_cabinet/ai/npv_cull.py`, `web_cabinet/ai/context_helpers/
-  demo_loader.py`, `web_cabinet/animals/cull_recommendation` endpoint)
-  passes 35/35 (1 skipped).
-- Малина (3891) → cull, Звёздочка (4821) → keep, demonstrated via
-  live `recommend()` call against the demo store.
-- Composite signal expanded from 5 → 8 score components.
-- Production-grade survival model and Wood-curve projection wired in,
-  with documented fallback paths.
+Out of scope for this `proven` claim (per plan §Out of scope):
+multi-lactation projection beyond cyclic 305+60 reset, embryonic/
+fetal loss modelling, heat detection from sensors, random-effects
+Wood fit, and frontend UI for the recommendation.
 
-What remains `not_proven`:
+## От координатора
 
-- Full 7-gate CLAUDE.md run. Gates 5/6 carry pre-existing failures
-  unrelated to P1-2c (frontend page consolidation residue, see obs
-  374-376 in claude-mem). Other gates were not exercised in this
-  session.
-- UI surface for the new components (out of scope per plan §Out of
-  scope; backend-only deliverable).
-
-## From координатора
-
-— Nothing blocking for the scope of P1-2c itself. Coordinator
-decision needed before the next milestone: should the gate-5/6
-pre-existing frontend failures be addressed before claiming a full
-`proven` for this branch, or carried forward as a separate ticket?
+— Nothing blocking. Branch is ready to push.
 
 ## Out of scope (per plan)
 
