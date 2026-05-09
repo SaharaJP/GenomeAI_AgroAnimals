@@ -256,6 +256,15 @@ class ProfileSummary(BaseModel):
     decisions_total: int = 0
 
 
+class HealthEvent(BaseModel):
+    event_id: Optional[str] = None
+    event_date: Optional[str] = None
+    event_type: Optional[str] = None
+    severity: Optional[str] = None
+    notes: Optional[str] = None
+    treatment: Optional[str] = None
+
+
 class ProfileResponse(BaseModel):
     schema: str = 'genomeai.api.profile.v1'
     entity: EntityRef
@@ -265,6 +274,7 @@ class ProfileResponse(BaseModel):
     decisions: list[DecisionItem] = Field(default_factory=list)
     animal_attributes: Optional[AnimalAttributes] = None
     health_metrics: Optional[HealthMetrics] = None
+    recent_health_events: list[HealthEvent] = Field(default_factory=list)
 
 
 class AssistantResolveTargetRequest(BaseModel):

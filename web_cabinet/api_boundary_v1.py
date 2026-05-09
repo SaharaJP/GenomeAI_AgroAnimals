@@ -23,6 +23,7 @@ from packages.contracts.api_boundary_v1 import (
     FeedbackItem,
     FeedbackListResponse,
     FeedbackMetrics,
+    HealthEvent,
     HealthMetrics,
     InsightItem,
     InsightSettings,
@@ -150,6 +151,94 @@ _DEMO_HEALTH_METRICS: dict[str, dict] = {
 }
 
 
+def _demo_health_metrics_for(object_id: str) -> dict:
+    """Deterministic demo health metrics for any animal_id — keeps profile
+    Health tab from being empty when the animal isn't one of the 4 hand-picked
+    demo cards. Hash-based so the same id always returns the same numbers.
+    """
+    if object_id in _DEMO_HEALTH_METRICS:
+        return dict(_DEMO_HEALTH_METRICS[object_id])
+    import hashlib
+    h = hashlib.sha1(object_id.encode("utf-8")).digest()
+    # Spread bytes across distinct features so they don't correlate.
+    activity = 35.0 + (h[0] % 50)               # 35..85
+    scc = 70 + (h[1] % 280) + (h[2] % 80)        # 70..430
+    bcs = round(2.4 + (h[3] % 30) / 25.0, 1)     # 2.4..3.6
+    yield_kg = round(8.0 + (h[4] % 22) + (h[5] % 5) / 10.0, 1)  # 8..30
+    trend = ("↑", "→", "↓")[h[6] % 3]
+    return dict(
+        activity_score=float(activity),
+        scc=int(scc),
+        scc_trend=trend,
+        daily_milk_yield_kg=yield_kg,
+        body_condition_score=bcs,
+    )
+
+
+_DEMO_HEALTH_EVENT_TYPES = ["мастит", "хромота", "кетоз", "метрит", "лечение", "вакцинация"]
+_DEMO_HEALTH_SEVERITIES = ["info", "warn", "high"]
+
+
+def _demo_health_events_for(object_id: str, limit: int = 5) -> list[HealthEvent]:
+    """Deterministic mock health events for a given animal id. Used as a
+    fallback when dm_health_events has no rows for this animal.
+    """
+    import hashlib, datetime as _dt
+    h = hashlib.sha1(object_id.encode("utf-8")).digest()
+    today = _dt.date.today()
+    out: list[HealthEvent] = []
+    n = max(1, min(limit, 1 + h[7] % limit))
+    for i in range(n):
+        days_back = 3 + (h[(i * 3) % 20] % 110)
+        etype = _DEMO_HEALTH_EVENT_TYPES[h[(i * 5 + 2) % 20] % len(_DEMO_HEALTH_EVENT_TYPES)]
+        sev = _DEMO_HEALTH_SEVERITIES[h[(i * 7 + 4) % 20] % 3]
+        out.append(HealthEvent(
+            event_id=f"demo_he_{object_id}_{i}",
+            event_date=(today - _dt.timedelta(days=days_back)).isoformat(),
+            event_type=etype,
+            severity=sev,
+            notes=f"Демо-событие #{i + 1} для {object_id}",
+            treatment=None,
+        ))
+    out.sort(key=lambda e: e.event_date or "", reverse=True)
+    return out
+
+
+def _fetch_dm_health_events(conn, tenant_id: str, object_id: str, limit: int = 10) -> list[HealthEvent]:
+    """Pull recent health events for a single animal from dm_health_events.
+    Returns [] silently if table missing or query fails — caller decides
+    whether to substitute demo events.
+    """
+    try:
+        rows = conn.execute(
+            "SELECT event_date, event_type, severity, notes, treatment "
+            "FROM dm_health_events "
+            "WHERE tenant_id = %s AND animal_id = %s "
+            "ORDER BY event_date DESC LIMIT %s",
+            (tenant_id, object_id, int(limit)),
+        ).fetchall()
+    except Exception:
+        return []
+    out: list[HealthEvent] = []
+    for r in rows or []:
+        # Both dict and tuple cursor flavours are in play across drivers.
+        try:
+            ed = r["event_date"]; et = r["event_type"]; sev = r["severity"]
+            notes = r.get("notes") if isinstance(r, dict) else r["notes"]
+            treat = r.get("treatment") if isinstance(r, dict) else r["treatment"]
+        except (KeyError, TypeError, IndexError):
+            ed, et, sev, notes, treat = r[0], r[1], r[2], (r[3] if len(r) > 3 else None), (r[4] if len(r) > 4 else None)
+        out.append(HealthEvent(
+            event_id=None,
+            event_date=str(ed) if ed else None,
+            event_type=str(et) if et else None,
+            severity=str(sev) if sev else None,
+            notes=str(notes) if notes else None,
+            treatment=str(treat) if treat else None,
+        ))
+    return out
+
+
 def _build_db_animal_fields(conn, tenant_id: str, object_id: str) -> tuple:
     """Fetch animal attributes and health metrics from Postgres."""
     import datetime
@@ -201,9 +290,8 @@ def _build_db_animal_fields(conn, tenant_id: str, object_id: str) -> tuple:
 
 def _build_demo_animal_fields(object_id: str) -> tuple:
     attrs_data = _DEMO_ANIMAL_ATTRS.get(object_id)
-    metrics_data = _DEMO_HEALTH_METRICS.get(object_id)
     attrs = AnimalAttributes(**attrs_data) if attrs_data else None
-    metrics = HealthMetrics(**metrics_data) if metrics_data else None
+    metrics = HealthMetrics(**_demo_health_metrics_for(object_id))
     return attrs, metrics
 
 router = APIRouter(prefix='/api/app/v1', tags=['app-boundary-v1'])
@@ -755,6 +843,7 @@ def boundary_profile(
 
     animal_attributes = None
     health_metrics = None
+    recent_health_events: list[HealthEvent] = []
     if object_type == 'animal':
         try:
             from web_cabinet.ai.config import get_ai_settings as _get_ai
@@ -762,9 +851,19 @@ def boundary_profile(
                 animal_attributes, health_metrics = _build_demo_animal_fields(object_id)
             else:
                 animal_attributes, health_metrics = _build_db_animal_fields(conn, tenant_id, object_id)
+                # In DB mode, still fall back to deterministic demo metrics
+                # if the DB has no record for this animal — keeps the Health
+                # tab from showing an empty card.
+                if health_metrics is None:
+                    health_metrics = HealthMetrics(**_demo_health_metrics_for(object_id))
         except Exception as exc:
             import logging as _logging
             _logging.getLogger(__name__).warning("animal fields failed: %s", exc)
+            health_metrics = HealthMetrics(**_demo_health_metrics_for(object_id))
+
+        recent_health_events = _fetch_dm_health_events(conn, tenant_id, object_id, limit=10)
+        if not recent_health_events:
+            recent_health_events = _demo_health_events_for(object_id, limit=5)
 
     return ProfileResponse(
         entity=EntityRef(object_type=object_type, object_id=object_id),
@@ -774,6 +873,7 @@ def boundary_profile(
         decisions=decisions,
         animal_attributes=animal_attributes,
         health_metrics=health_metrics,
+        recent_health_events=recent_health_events,
     )
 
 

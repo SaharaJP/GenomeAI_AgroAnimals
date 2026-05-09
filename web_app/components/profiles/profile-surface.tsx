@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { fetchProfile } from '@/lib/api/profiles-reports-assistant';
-import type { AlertItem, AnimalAttributes, DecisionItem, HealthMetrics, ProfileResponse, WorklistItem } from '@/lib/api/contracts';
+import type { AlertItem, AnimalAttributes, DecisionItem, HealthEvent, HealthMetrics, ProfileResponse, WorklistItem } from '@/lib/api/contracts';
 
 type Tab = 'health' | 'productivity' | 'tasks' | 'history';
 
@@ -85,7 +85,11 @@ function MetricCard({ label, value, sub, valueClass }: {
   );
 }
 
-function TabHealth({ metrics, alerts }: { metrics: HealthMetrics | null | undefined; alerts: AlertItem[] }) {
+function TabHealth({ metrics, alerts, events }: {
+  metrics: HealthMetrics | null | undefined;
+  alerts: AlertItem[];
+  events: HealthEvent[];
+}) {
   const actClass = metrics?.activity_score != null
     ? (metrics.activity_score < 40 ? 'profile-metric-value--bad' : metrics.activity_score < 60 ? 'profile-metric-value--warn' : 'profile-metric-value--ok')
     : undefined;
@@ -128,6 +132,29 @@ function TabHealth({ metrics, alerts }: { metrics: HealthMetrics | null | undefi
             </p>
           </div>
         ))}
+      </div>
+      <div className="card">
+        <p className="profile-kv-title">Последние события здоровья</p>
+        {events.length === 0 ? (
+          <p className="profile-empty">Событий нет</p>
+        ) : events.map((ev, i) => {
+          const sevDot = ev.severity === 'high' ? 'profile-task-dot--high'
+                        : ev.severity === 'warn' ? 'profile-task-dot--medium'
+                        : 'profile-task-dot--low';
+          return (
+            <div key={ev.event_id ?? `he_${i}`} className="profile-task-row">
+              <div className={`profile-task-dot ${sevDot}`} />
+              <div>
+                <p className="profile-task-title">{ev.event_type ?? '—'}</p>
+                <p className="profile-task-meta">
+                  {ev.event_date ? formatDate(ev.event_date) : '—'}
+                  {ev.treatment ? ` · ${ev.treatment}` : ''}
+                  {ev.notes ? ` · ${ev.notes}` : ''}
+                </p>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );
@@ -270,6 +297,7 @@ export function ProfileSurface({ objectType, objectId }: { objectType: string; o
   if (!profile) return <div className="card">Загрузка профиля…</div>;
 
   const { entity, summary, alerts, worklists, decisions, animal_attributes, health_metrics } = profile;
+  const recentHealthEvents: HealthEvent[] = profile.recent_health_events ?? [];
 
   return (
     <div className="grid">
@@ -296,7 +324,7 @@ export function ProfileSurface({ objectType, objectId }: { objectType: string; o
           </div>
 
           {activeTab === 'health' && (
-            <TabHealth metrics={health_metrics} alerts={alerts} />
+            <TabHealth metrics={health_metrics} alerts={alerts} events={recentHealthEvents} />
           )}
           {activeTab === 'productivity' && (
             <TabProductivity attrs={animal_attributes} metrics={health_metrics} />

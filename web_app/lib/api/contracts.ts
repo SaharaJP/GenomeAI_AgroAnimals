@@ -207,6 +207,15 @@ export type HealthMetrics = {
   daily_milk_yield_kg?: number | null;
 };
 
+export type HealthEvent = {
+  event_id?: string | null;
+  event_date?: string | null;
+  event_type?: string | null;
+  severity?: string | null;
+  notes?: string | null;
+  treatment?: string | null;
+};
+
 export type ProfileResponse = {
   schema: string;
   entity: EntityRef;
@@ -220,6 +229,7 @@ export type ProfileResponse = {
   decisions: DecisionItem[];
   animal_attributes?: AnimalAttributes | null;
   health_metrics?: HealthMetrics | null;
+  recent_health_events?: HealthEvent[];
 };
 
 export type DecisionIntelligenceResponse = {
