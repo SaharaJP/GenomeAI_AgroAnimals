@@ -1,0 +1,107 @@
+{
+  "model": {
+    "type": "LogisticRegression",
+    "regularization": "L2",
+    "best_C": 0.01,
+    "cv_folds": 5,
+    "class_weight": "balanced",
+    "seed": 42,
+    "horizon_days": 14
+  },
+  "data": {
+    "feature_rows": 35103,
+    "positive_labels": 455,
+    "positive_rate": 0.013,
+    "train_rows": 24240,
+    "test_rows": 10863,
+    "n_train_cows": 237,
+    "n_test_cows": 101
+  },
+  "metrics_lr": {
+    "roc_auc": 0.687,
+    "roc_auc_ci_lo": 0.643,
+    "roc_auc_ci_hi": 0.731,
+    "best_f1_threshold": 0.85,
+    "best_f1": 0.548,
+    "best_f1_precision": 0.988,
+    "best_f1_recall": 0.379
+  },
+  "metrics_baseline_scc_400k": {
+    "roc_auc": 0.814,
+    "precision": 0.761,
+    "recall": 0.384,
+    "predicted_positives": 113
+  },
+  "metrics_baseline_random": {
+    "roc_auc": 0.488,
+    "precision": 0.027,
+    "recall": 0.013
+  },
+  "feature_importances": {
+    "scc_cells_ml": -0.0257,
+    "milk_avg3": 0.4807,
+    "delta_scc": 0.8941,
+    "dim": 0.2497,
+    "lactation_no": 0.0374,
+    "milk_drop_3d_pct": -0.7173,
+    "days_since_mast": 0.5562,
+    "quarter": 0.1167
+  },
+  "impact_analysis": [
+    {
+      "event_id": "EV_4821_MAST_01",
+      "cow": "4821",
+      "event_date": "2026-03-10",
+      "delta_milk": -7.64,
+      "t_stat": 23.781,
+      "p_value": 0.0,
+      "significant_at_005": true,
+      "n_pre": 14,
+      "n_post": 14
+    },
+    {
+      "event_id": "EV_3891_MAST_01",
+      "cow": "3891",
+      "event_date": "2026-02-20",
+      "delta_milk": -5.39,
+      "t_stat": 5.564,
+      "p_value": 0.0001,
+      "significant_at_005": true,
+      "n_pre": 14,
+      "n_post": 14
+    },
+    {
+      "event_id": "EV_3891_MAST_02",
+      "cow": "3891",
+      "event_date": "2026-03-22",
+      "delta_milk": -4.56,
+      "t_stat": 4.909,
+      "p_value": 0.0003,
+      "significant_at_005": true,
+      "n_pre": 14,
+      "n_post": 14
+    },
+    {
+      "event_id": "EV_3002_MAST_01",
+      "cow": "3002",
+      "event_date": "2026-02-10",
+      "delta_milk": -0.31,
+      "t_stat": 0.318,
+      "p_value": 0.7546,
+      "significant_at_005": false,
+      "n_pre": 14,
+      "n_post": 14
+    },
+    {
+      "event_id": "EV_3010_MAST_01",
+      "cow": "3010",
+      "event_date": "2026-04-07",
+      "delta_milk": -3.46,
+      "t_stat": 7.364,
+      "p_value": 0.0,
+      "significant_at_005": true,
+      "n_pre": 14,
+      "n_post": 14
+    }
+  ]
+}
