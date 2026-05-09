@@ -253,3 +253,26 @@ class TestExecuteToolUnknown:
     def test_unknown_tool_returns_error(self, rich_store):
         result = execute_tool("nonexistent_tool", {}, rich_store)
         assert "error" in result
+
+
+class TestToolStubsReturnError:
+    """execute_tool must convert NotImplementedError stubs into {'error': ...} dicts."""
+
+    def test_analyze_event_impact_stub_returns_error_dict(self, rich_store):
+        result = execute_tool("analyze_event_impact", {"event_id": "x"}, rich_store)
+        assert isinstance(result, dict)
+        assert "error" in result
+        assert "not_implemented" in result["error"]
+        assert "P1-1 Phase 2 Task 2.1" in result["error"]
+
+    def test_find_attention_cows_stub_returns_error_dict(self, rich_store):
+        result = execute_tool("find_attention_cows", {}, rich_store)
+        assert "error" in result and "not_implemented" in result["error"]
+
+    def test_calculate_cull_npv_stub_returns_error_dict(self, rich_store):
+        result = execute_tool("calculate_cull_npv", {"animal_id": "x"}, rich_store)
+        assert "error" in result and "not_implemented" in result["error"]
+
+    def test_forecast_milk_yield_stub_returns_error_dict(self, rich_store):
+        result = execute_tool("forecast_milk_yield", {"animal_id": "x"}, rich_store)
+        assert "error" in result and "not_implemented" in result["error"]

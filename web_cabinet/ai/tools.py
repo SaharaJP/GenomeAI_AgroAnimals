@@ -230,8 +230,8 @@ FIND_ATTENTION_COWS_TOOL = {
 CALCULATE_CULL_NPV_TOOL = {
     "name": "calculate_cull_npv",
     "description": (
-        "Расчёт NPV для выбраковки конкретной коровы: NPV_keep, NPV_cull, "
-        "рекомендация. P1-1 — обёртка над economics_snapshot; полный NPV приходит в P1-2."
+        "Расчёт NPV для выбраковки конкретной коровы: сравнение NPV_keep и NPV_cull с рекомендацией. "
+        "Используй когда оператор спрашивает, стоит ли выбраковать корову."
     ),
     "input_schema": {
         "type": "object",
@@ -245,14 +245,14 @@ CALCULATE_CULL_NPV_TOOL = {
 FORECAST_MILK_YIELD_TOOL = {
     "name": "forecast_milk_yield",
     "description": (
-        "Прогноз надоя на 7–30 дней вперёд на уровне коровы или группы. "
-        "Линейная регрессия по DIM (минимальная модель, без сложных признаков)."
+        "Прогноз надоя на 7–30 дней вперёд на уровне коровы или группы "
+        "(укажи ровно одно из animal_id или group_id). Линейная регрессия по DIM."
     ),
     "input_schema": {
         "type": "object",
         "properties": {
-            "animal_id": {"type": "string", "description": "ID коровы (или null для группы)"},
-            "group_id": {"type": "string", "description": "ID группы (или null для коровы)"},
+            "animal_id": {"type": "string", "description": "ID коровы (укажи если нужен прогноз по одному животному; иначе укажи group_id)"},
+            "group_id": {"type": "string", "description": "ID группы (укажи если нужен групповой прогноз; иначе укажи animal_id)"},
             "horizon_days": {
                 "type": "integer",
                 "default": 7,
@@ -342,7 +342,10 @@ def execute_tool(tool_name: str, tool_input: dict, store: Any) -> dict:
     handler = handlers.get(tool_name)
     if handler is None:
         return {"error": f"unknown tool: {tool_name}"}
-    result = handler(tool_input, store)
+    try:
+        result = handler(tool_input, store)
+    except NotImplementedError as exc:
+        return {"error": f"not_implemented: {exc}"}
     return _truncate(result, tool_name)
 
 
