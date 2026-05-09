@@ -208,6 +208,82 @@ def _compute_window_metrics(event_id: str, window: str, farm_id: str) -> tuple[d
     )
 
 
+def compute_event_impact(
+    event_id: str,
+    kpi: str = "milk_kg",
+    window_days: int = 14,
+    farm_id: str = "demo-farm-v1",
+) -> dict:
+    """Pure statistical impact computation — no LLM call.
+
+    Returns:
+        {
+            "event_id": str,
+            "event_type": str,
+            "kpi": str,                       # echoes input
+            "window_days": int,
+            "before": {"value": float|None, "period": str},
+            "after":  {"value": float|None, "period": str},
+            "delta":  float|None,             # after - before
+            "delta_pct": float|None,          # (after - before) / before * 100, None if before==0/None
+            "evidence_chips": [{"type": "event", "id": event_id}],
+        }
+    """
+    # Map window_days → closest existing window string
+    if window_days <= 4:
+        window = "3d"
+    elif window_days <= 10:
+        window = "1w"
+    elif window_days <= 20:
+        window = "2w"
+    else:
+        window = "4w"
+
+    event = _load_event(event_id, farm_id)
+    event_type = event.get("event_type", "unknown")
+
+    before_raw, after_raw = _compute_window_metrics(event_id, window, farm_id)
+
+    # The metric key inside before/after is "milk_yield" — only milk_kg/milk_yield supported
+    metric_key = "milk_yield"
+    if kpi not in ("milk_kg", "milk_yield"):
+        before_val = None
+        after_val = None
+        before_period = before_raw.get(metric_key, {}).get("period", f"до события ({window_days}д)")
+        after_period = after_raw.get(metric_key, {}).get("period", f"после события ({window_days}д)")
+        delta = None
+        delta_pct = None
+    else:
+        before_entry = before_raw.get(metric_key, {})
+        after_entry = after_raw.get(metric_key, {})
+        before_val = before_entry.get("value")
+        after_val = after_entry.get("value")
+        before_period = before_entry.get("period", f"до события ({window_days}д)")
+        after_period = after_entry.get("period", f"после события ({window_days}д)")
+
+        if before_val is not None and after_val is not None:
+            delta = round(after_val - before_val, 4)
+            if before_val != 0:
+                delta_pct = round((after_val - before_val) / before_val * 100, 2)
+            else:
+                delta_pct = None
+        else:
+            delta = None
+            delta_pct = None
+
+    return {
+        "event_id": event_id,
+        "event_type": event_type,
+        "kpi": kpi,
+        "window_days": window_days,
+        "before": {"value": before_val, "period": before_period},
+        "after": {"value": after_val, "period": after_period},
+        "delta": delta,
+        "delta_pct": delta_pct,
+        "evidence_chips": [{"type": "event", "id": event_id}],
+    }
+
+
 def _load_related_events(event_id: str, window: str, farm_id: str) -> list[dict]:
     """Загружает смежные события в окне для учёта confounders."""
     try:

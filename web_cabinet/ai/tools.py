@@ -745,7 +745,13 @@ def _df_to_records(df: pd.DataFrame) -> list[dict]:
 
 
 def _exec_analyze_event_impact(inp: dict, store: Any) -> dict:
-    raise NotImplementedError("P1-1 Phase 2 Task 2.1")
+    """P1-1 Task 2.1 — delegates to compute_event_impact."""
+    from .endpoints.impact_narrative import compute_event_impact
+    event_id = str(inp["event_id"])
+    kpi = str(inp.get("kpi", "milk_kg"))
+    window_days = int(inp.get("window_days", 14))
+    farm_id = str(inp.get("farm_id", "demo-farm-v1"))
+    return compute_event_impact(event_id=event_id, kpi=kpi, window_days=window_days, farm_id=farm_id)
 
 
 def _exec_find_attention_cows(inp: dict, store: Any) -> dict:
