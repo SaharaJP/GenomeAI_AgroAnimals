@@ -67,3 +67,13 @@ def test_find_attention_cows_picks_high_scc(rich_store):
     result = execute_tool("find_attention_cows", {"threshold_count": 10}, rich_store)
     cow_ids = {c["cow_id"] for c in result["cows"]}
     assert "9002" in cow_ids, f"Ночка (9002, high SCC) missing from {cow_ids}"
+
+
+def test_calculate_cull_npv_stub_for_animal(rich_store):
+    """P1-1 stub: wraps existing economics_snapshot. Full P1-2 NPV later."""
+    result = execute_tool("calculate_cull_npv", {"animal_id": "7001"}, rich_store)
+    assert result.get("animal_id") == "7001"
+    assert "npv_snapshot" in result
+    assert result.get("p1_1_stub") is True
+    assert "evidence_chips" in result
+    assert any(c.get("id") == "7001" for c in result["evidence_chips"])

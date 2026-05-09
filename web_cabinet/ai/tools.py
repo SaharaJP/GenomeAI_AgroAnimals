@@ -849,7 +849,16 @@ def _exec_find_attention_cows(inp: dict, store: Any) -> dict:
 
 
 def _exec_calculate_cull_npv(inp: dict, store: Any) -> dict:
-    raise NotImplementedError("P1-1 Phase 2 Task 2.3")
+    """P1-1 Task 2.3 stub. Full NPV_keep vs NPV_cull comes in P1-2."""
+    animal_id = str(inp["animal_id"])
+    snapshot = _exec_economics_snapshot({"cow_id": animal_id}, store)
+    return {
+        "animal_id": animal_id,
+        "npv_snapshot": snapshot,
+        "p1_1_stub": True,
+        "note": "Полная модель NPV_keep vs NPV_cull появится в P1-2.",
+        "evidence_chips": [{"type": "cow", "id": animal_id}],
+    }
 
 
 def _exec_forecast_milk_yield(inp: dict, store: Any) -> dict:
