@@ -175,6 +175,7 @@ from .rendering import render_template
 from .api_boundary_v1 import router as api_boundary_v1_router
 from .analytics_v1 import router as analytics_v1_router
 from .admin.ai_observability import router as admin_ai_obs_router
+from .animals.cull_recommendation import router as animals_cull_router
 from core.security import PermissionDenied as CorePermissionDenied, ensure_permissions as core_ensure_permissions, has_any_permission as core_has_any_permission, permission_denied_detail
 from core.observability import (
     correlation_scope,
@@ -657,6 +658,7 @@ app.include_router(auth_boundary_v1_router)
 app.include_router(api_boundary_v1_router)
 app.include_router(analytics_v1_router)
 app.include_router(admin_ai_obs_router)
+app.include_router(animals_cull_router)
 
 from web_cabinet.ai.endpoints import register_ai_routes
 register_ai_routes(app)
