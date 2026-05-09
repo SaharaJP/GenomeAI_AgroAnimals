@@ -852,6 +852,46 @@ def _load_impact_analyses() -> list:
     return []
 
 
+def _materialize_seeded_timeline_event(conn, tenant_id: str, event_id: str, user: dict) -> bool:
+    """Insert seeded TL_-event into Postgres on first edit/delete.
+
+    Returns True if a row exists (or was just inserted) for (event_id, tenant_id),
+    False if the id has no seed match and no DB row.
+    """
+    row = conn.execute(
+        "SELECT 1 FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
+        (event_id, tenant_id),
+    ).fetchone()
+    if row:
+        return True
+
+    seed = next((e for e in _load_timeline_events() if e.get("timeline_event_id") == event_id), None)
+    if not seed:
+        return False
+
+    conn.execute(
+        "INSERT INTO timeline_events "
+        "(timeline_event_id, tenant_id, event_type, title, body, event_date, "
+        " animal_ids, affected_groups, source, created_at, created_by, created_by_username, linked_metric_ids) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'seed', %s, %s, %s, %s::jsonb)",
+        (
+            event_id,
+            tenant_id,
+            seed.get("event_type", ""),
+            seed.get("title", ""),
+            seed.get("body", ""),
+            seed.get("date", ""),
+            json.dumps(seed.get("animal_ids", [])),
+            json.dumps(seed.get("affected_groups", [])),
+            utc_date_str(),
+            int(user.get("id", 0)),
+            user.get("username", "system"),
+            json.dumps(seed.get("linked_metric_ids", [])),
+        ),
+    )
+    return True
+
+
 @app.get("/api/timeline/events")
 def api_timeline_events(
     start: Optional[str] = None,
@@ -862,6 +902,7 @@ def api_timeline_events(
 ):
     tenant_id = user.get("tenant_id", "default")
     db_events = []
+    all_db_ids: set[str] = set()
     try:
         rows = conn.execute(
             "SELECT timeline_event_id, event_type, title, body, event_date, source, affected_groups "
@@ -869,6 +910,11 @@ def api_timeline_events(
             (tenant_id,),
         ).fetchall()
         for r in rows:
+            all_db_ids.add(r[0])
+            if r[5] == "deleted":
+                # Tombstone for a deleted seeded/user event — suppress from listing
+                # but keep its id in all_db_ids so the JSON seed copy is also hidden.
+                continue
             db_events.append({
                 "timeline_event_id": r[0],
                 "event_type": r[1],
@@ -881,7 +927,7 @@ def api_timeline_events(
     except Exception:
         pass
 
-    demo_events = _load_timeline_events()
+    demo_events = [e for e in _load_timeline_events() if e.get("timeline_event_id") not in all_db_ids]
     events = db_events + demo_events
 
     if start:
@@ -1001,11 +1047,7 @@ async def api_timeline_event_update(
     user_id = int(user.get("id", 0))
     username = user.get("username", "unknown")
 
-    row = conn.execute(
-        "SELECT id FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
-        (event_id, tenant_id),
-    ).fetchone()
-    if not row:
+    if not _materialize_seeded_timeline_event(conn, tenant_id, event_id, user):
         raise HTTPException(status_code=404, detail="Event not found")
 
     fields, values = [], []
@@ -1053,15 +1095,14 @@ def api_timeline_event_delete(
     user_id = int(user.get("id", 0))
     username = user.get("username", "unknown")
 
-    row = conn.execute(
-        "SELECT id FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
-        (event_id, tenant_id),
-    ).fetchone()
-    if not row:
+    if not _materialize_seeded_timeline_event(conn, tenant_id, event_id, user):
         raise HTTPException(status_code=404, detail="Event not found")
 
+    # Soft-delete: mark as 'deleted' so seeded copies don't reappear from JSON
+    # on subsequent GETs, and existing user rows stay tombstoned for audit.
     conn.execute(
-        "DELETE FROM timeline_events WHERE timeline_event_id = %s AND tenant_id = %s",
+        "UPDATE timeline_events SET source = 'deleted' "
+        "WHERE timeline_event_id = %s AND tenant_id = %s",
         (event_id, tenant_id),
     )
     write_audit(
