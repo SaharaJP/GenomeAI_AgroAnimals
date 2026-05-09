@@ -18,9 +18,12 @@ arguments to compute_*().
 from __future__ import annotations
 
 import datetime
+import math
 from typing import Any, Optional
 
+import numpy as np
 import pandas as pd
+from scipy.optimize import curve_fit
 
 DEFAULTS: dict[str, float | int] = {
     "milk_price_rub_per_kg":        30.0,
@@ -360,17 +363,94 @@ def _peak_daily_from_lactation(lact: Optional[dict], c: dict) -> float:
 
 
 def _project_monthly_milk(peak_kg: float, lactation_dim_start: int, horizon_months: int) -> list[float]:
-    """Project monthly milk production (kg/month) from a Wood-style stylized curve.
-
-    Use a simplified shape: rises to peak by 60 DIM, then declines by ~5%/month.
-    For this MVP we approximate as: month_milk = peak_daily · 30 · decay_factor.
-    decay_factor: m=1 → 1.0; m=2 → 0.95; m=3 → 0.90; … capped at 0.40.
+    """Stylized monthly milk projection (kg/month). Used for the heifer scenario
+    in compute_npv_cull where there is no animal-specific history. Per-cow
+    projections in compute_npv_keep go through _project_monthly_milk_wood.
     """
     months: list[float] = []
     for m in range(horizon_months):
         decay = max(0.40, 1.0 - 0.05 * m)
         months.append(round(peak_kg * 30.0 * decay, 1))
     return months
+
+
+# Holstein breed-average Wood (1967) parameters.
+_WOOD_DEFAULTS = {"a": 25.0, "b": 0.20, "c": 0.003}
+
+
+def _wood_curve(t, a: float, b: float, c: float):
+    """Wood (1967) lactation curve. t = DIM in days."""
+    t_safe = np.maximum(np.asarray(t, dtype=float), 1.0)
+    return a * np.power(t_safe, b) * np.exp(-c * t_safe)
+
+
+def _fit_wood_for_animal(animal_id: str, store) -> dict:
+    """Fit Wood (a,b,c) on the animal's milk history; fallback to defaults."""
+    accessor = getattr(store, "milk_yields", None) or getattr(store, "milkings", None)
+    if accessor is None:
+        return {**_WOOD_DEFAULTS, "fit": "fallback_no_accessor"}
+    df = accessor()
+    if df is None or df.empty or "animal_id" not in df.columns:
+        return {**_WOOD_DEFAULTS, "fit": "fallback_empty"}
+    rows = df[df["animal_id"].astype(str) == str(animal_id)]
+    if len(rows) < 30:
+        return {**_WOOD_DEFAULTS, "fit": f"fallback_insufficient_{len(rows)}"}
+
+    lact = _latest_lactation(animal_id, store)
+    if not lact or not lact.get("calving_date"):
+        return {**_WOOD_DEFAULTS, "fit": "fallback_no_calving"}
+    try:
+        calving = datetime.date.fromisoformat(str(lact["calving_date"])[:10])
+    except (TypeError, ValueError):
+        return {**_WOOD_DEFAULTS, "fit": "fallback_bad_calving"}
+
+    rows = rows.copy()
+    rows["date"] = pd.to_datetime(rows["date"], errors="coerce")
+    rows = rows.dropna(subset=["date", "milk_kg"])
+    rows["dim"] = (rows["date"].dt.date - calving).apply(
+        lambda d: d.days if d is not None else None
+    )
+    rows = rows[(rows["dim"] >= 5) & (rows["dim"] <= 305)]
+    if len(rows) < 30:
+        return {**_WOOD_DEFAULTS, "fit": f"fallback_after_filter_{len(rows)}"}
+
+    t = rows["dim"].astype(float).to_numpy()
+    y = rows["milk_kg"].astype(float).to_numpy()
+    try:
+        popt, _ = curve_fit(_wood_curve, t, y, p0=[25.0, 0.20, 0.003], maxfev=2000)
+        a, b, c = float(popt[0]), float(popt[1]), float(popt[2])
+        if not (5.0 < a < 80.0 and 0.05 < b < 0.40 and 0.001 < c < 0.01):
+            return {**_WOOD_DEFAULTS, "fit": f"fallback_implausible_a{a:.1f}_b{b:.2f}_c{c:.4f}"}
+        return {"a": a, "b": b, "c": c, "fit": f"per_cow_n{len(rows)}"}
+    except Exception as exc:
+        return {**_WOOD_DEFAULTS, "fit": f"fallback_curve_fit_error_{type(exc).__name__}"}
+
+
+def _project_monthly_milk_wood(
+    animal_id: str, store, horizon_months: int
+) -> tuple[list[float], dict]:
+    """Per-cow Wood-curve projection. Returns (monthly_milk_kg, params)."""
+    params = _fit_wood_for_animal(animal_id, store)
+    lact = _latest_lactation(animal_id, store)
+    dim_start = 1
+    if lact:
+        try:
+            dim_start = max(1, int(float(lact.get("days_in_milk") or 1)))
+        except (TypeError, ValueError):
+            dim_start = 1
+    monthly: list[float] = []
+    for m in range(horizon_months):
+        t0 = dim_start + m * 30
+        # Cyclic 1..365 (305 milking + 60 dry); >305 = dry month → 0.
+        t_in_lact = ((t0 - 1) % 365) + 1
+        if t_in_lact > 305:
+            monthly.append(0.0)
+            continue
+        ts = np.array([t_in_lact, t_in_lact + 7, t_in_lact + 15,
+                       min(t_in_lact + 22, 305)], dtype=float)
+        daily_kg = _wood_curve(ts, params["a"], params["b"], params["c"]).mean()
+        monthly.append(round(float(daily_kg) * 30.0, 1))
+    return monthly, params
 
 
 def compute_npv_keep(
@@ -388,9 +468,10 @@ def compute_npv_keep(
     peak_daily = _peak_daily_from_lactation(lact, c)
     health = _recurrent_mastitis_signal(animal_id, store)
 
-    monthly_milk = _project_monthly_milk(
-        peak_daily * health["milk_factor"], 0, horizon_months,
+    raw_milk, wood_params = _project_monthly_milk_wood(
+        animal_id, store, horizon_months
     )
+    monthly_milk = [m * health["milk_factor"] for m in raw_milk]
     monthly_vet = c["vet_cost_rub_per_year"] * health["vet_factor"] / 12.0
     parity = (lact or {}).get("lactation_no") or 0
     try:
@@ -431,6 +512,7 @@ def compute_npv_keep(
         "discount_rate": r,
         "peak_kg_used": peak_daily,
         "baseline_cull_prob": baseline_cull,
+        "wood_params": wood_params,
         "salvage_rub_pv": round(salvage_pv, 2),
         "npv_rub": round(npv, 2),
         "monthly_breakdown": breakdown,

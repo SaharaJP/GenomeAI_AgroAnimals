@@ -7,7 +7,9 @@ from web_cabinet.ai.npv_cull import (
     DEFAULTS, compute_npv_keep, compute_npv_cull, recommend,
     _health_burden_signal, _baseline_cull_prob, _age_years,
     _is_open_cow, _treatment_recurrence_count,
+    _fit_wood_for_animal, _project_monthly_milk_wood, _WOOD_DEFAULTS,
 )
+import math
 from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
 
 
@@ -358,3 +360,83 @@ def test_health_signal_treatment_recurrence_lowers_milk_factor():
     assert sig["components"]["treatment_recurrence_count"] == 1
     assert sig["components"]["treatment_recurrence_score"] == 1.0
     assert sig["milk_factor"] < 1.0
+
+
+# ── P1-2c Wood-curve milk projection tests ────────────────────────────────
+
+
+def test_wood_fit_falls_back_when_no_history():
+    s = _store_with()
+    params = _fit_wood_for_animal("C1", s)
+    assert params["a"] == _WOOD_DEFAULTS["a"]
+    assert params["fit"].startswith("fallback_")
+
+
+def test_wood_fit_falls_back_below_30_records():
+    rows = []
+    base = datetime.date(2025, 12, 1)
+    for d in range(5, 100, 10):  # 10 records
+        rows.append(dict(animal_id="C1",
+                         date=(base + datetime.timedelta(days=d)).isoformat(),
+                         milk_kg=20.0, scc_cells_ml=200_000, fat_pct=3.8, protein_pct=3.2))
+    s = _store_with(
+        lactations=[dict(animal_id="C1", lactation_no=2, calving_date="2025-12-01",
+                         dryoff_date="2026-09-01", days_in_milk=100,
+                         milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)],
+        milk=rows,
+    )
+    params = _fit_wood_for_animal("C1", s)
+    assert params["fit"].startswith("fallback_insufficient_") or params["fit"].startswith("fallback_after_filter_")
+
+
+def test_wood_fit_recovers_known_params_from_synthetic_curve():
+    a_true, b_true, c_true = 22.0, 0.22, 0.0035
+    rows = []
+    base = datetime.date(2025, 12, 1)
+    for d in range(5, 280, 4):  # ~70 records, all within 5..305 DIM
+        y = float(a_true * (d ** b_true) * math.exp(-c_true * d))
+        rows.append(dict(animal_id="C1",
+                         date=(base + datetime.timedelta(days=d)).isoformat(),
+                         milk_kg=y, scc_cells_ml=200_000, fat_pct=3.8, protein_pct=3.2))
+    s = _store_with(
+        lactations=[dict(animal_id="C1", lactation_no=2, calving_date="2025-12-01",
+                         dryoff_date="2026-09-01", days_in_milk=100,
+                         milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)],
+        milk=rows,
+    )
+    params = _fit_wood_for_animal("C1", s)
+    assert params["fit"].startswith("per_cow_"), f"got: {params['fit']}"
+    assert 0.75 * a_true < params["a"] < 1.25 * a_true
+
+
+def test_project_monthly_milk_wood_horizon_length_and_positive():
+    rows = []
+    base = datetime.date(2025, 12, 1)
+    for d in range(5, 280, 4):
+        y = float(22.0 * (d ** 0.22) * math.exp(-0.0035 * d))
+        rows.append(dict(animal_id="C1",
+                         date=(base + datetime.timedelta(days=d)).isoformat(),
+                         milk_kg=y, scc_cells_ml=200_000, fat_pct=3.8, protein_pct=3.2))
+    s = _store_with(
+        lactations=[dict(animal_id="C1", lactation_no=2, calving_date="2025-12-01",
+                         dryoff_date="2026-09-01", days_in_milk=100,
+                         milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)],
+        milk=rows,
+    )
+    monthly, params = _project_monthly_milk_wood("C1", s, horizon_months=48)
+    assert len(monthly) == 48
+    assert all(m >= 0 for m in monthly)
+    # First 6 months should produce milk (cow is mid-lactation at start)
+    assert sum(monthly[:6]) > 0
+
+
+def test_compute_npv_keep_surfaces_wood_params():
+    s = _store_with(
+        lactations=[dict(animal_id="C1", lactation_no=2, calving_date="2025-12-01",
+                         dryoff_date="2026-09-01", days_in_milk=100,
+                         milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)],
+    )
+    keep = compute_npv_keep("C1", s, horizon_years=4, r=0.13)
+    assert "wood_params" in keep
+    assert "fit" in keep["wood_params"]
+    assert "a" in keep["wood_params"] and "b" in keep["wood_params"] and "c" in keep["wood_params"]
