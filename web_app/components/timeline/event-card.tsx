@@ -50,9 +50,10 @@ type Props = {
   onEdit?: (event: TimelineEvent) => void;
 };
 
-const isUserEvent = (e: TimelineEvent) =>
-  e.timeline_event_id.startsWith('TL_') &&
-  (e.source === 'Добавлено вручную' || e.source === 'user');
+// Allow edit/delete on any timeline event with a TL_ ID. The previous
+// stricter predicate (source === 'user' / 'Добавлено вручную') hid the
+// buttons on seeded events even though their IDs are TL_001..TL_012.
+const isUserEvent = (e: TimelineEvent) => e.timeline_event_id.startsWith('TL_');
 
 export function EventCard({ event, selected, onClick, onDelete, onEdit }: Props) {
   const icon = ICONS[event.event_type] ?? <Clock size={15} />;
