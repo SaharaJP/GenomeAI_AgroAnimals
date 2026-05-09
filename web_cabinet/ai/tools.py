@@ -862,4 +862,56 @@ def _exec_calculate_cull_npv(inp: dict, store: Any) -> dict:
 
 
 def _exec_forecast_milk_yield(inp: dict, store: Any) -> dict:
-    raise NotImplementedError("P1-1 Phase 2 Task 2.4")
+    """P1-1 Task 2.4 — linear regression on DIM (minimal model)."""
+    import numpy as np
+
+    animal_id = inp.get("animal_id")
+    group_id = inp.get("group_id")
+    horizon = int(inp.get("horizon_days", 7))
+    horizon = max(7, min(30, horizon))
+
+    if not animal_id and not group_id:
+        return {"error": "either animal_id or group_id required"}
+
+    df_milk = store.milkings()
+    if df_milk is None or df_milk.empty:
+        return {"error": "no milking data", "horizon_days": horizon, "forecast": []}
+
+    if animal_id:
+        cow_milk = df_milk[df_milk["animal_id"] == str(animal_id)].copy()
+    else:
+        # Group-level: resolve cows by pen/group column.
+        df_animals = store.animals()
+        if df_animals is None or df_animals.empty:
+            return {"error": "no animals data for group", "horizon_days": horizon, "forecast": []}
+        group_col = "current_pen_id" if "current_pen_id" in df_animals.columns else "group_id"
+        cow_ids = df_animals[df_animals[group_col] == str(group_id)]["animal_id"].astype(str).tolist()
+        cow_milk = df_milk[df_milk["animal_id"].astype(str).isin(cow_ids)].copy()
+
+    if cow_milk.empty or len(cow_milk) < 3:
+        return {"error": "need >= 3 milk records", "horizon_days": horizon, "forecast": []}
+
+    # Compute DIM as days from earliest record in this cow's history.
+    cow_milk["date"] = pd.to_datetime(cow_milk["date"], errors="coerce")
+    cow_milk = cow_milk.sort_values("date")
+    earliest = cow_milk["date"].min()
+    cow_milk["dim"] = (cow_milk["date"] - earliest).dt.days
+
+    x = cow_milk["dim"].astype(float).to_numpy()
+    y = cow_milk["milk_kg"].astype(float).to_numpy()
+    slope, intercept = np.polyfit(x, y, 1)
+    last_dim = float(x.max())
+    forecast = [
+        {"dim": int(last_dim + d), "milk_kg": round(float(slope * (last_dim + d) + intercept), 2)}
+        for d in range(1, horizon + 1)
+    ]
+    chips = [{"type": "cow" if animal_id else "group", "id": str(animal_id or group_id)}]
+    return {
+        "animal_id": animal_id,
+        "group_id": group_id,
+        "horizon_days": horizon,
+        "forecast": forecast,
+        "method": "linear_regression_dim",
+        "slope_per_day": round(float(slope), 4),
+        "evidence_chips": chips,
+    }

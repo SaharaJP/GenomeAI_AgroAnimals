@@ -77,3 +77,26 @@ def test_calculate_cull_npv_stub_for_animal(rich_store):
     assert result.get("p1_1_stub") is True
     assert "evidence_chips" in result
     assert any(c.get("id") == "7001" for c in result["evidence_chips"])
+
+
+def test_forecast_milk_yield_animal_linear_regression(rich_store):
+    """7-day forecast for Звёздочка (4821) via linear regression on DIM."""
+    result = execute_tool(
+        "forecast_milk_yield",
+        {"animal_id": "4821", "horizon_days": 7},
+        rich_store,
+    )
+    assert result.get("horizon_days") == 7
+    assert "forecast" in result
+    assert isinstance(result["forecast"], list)
+    assert len(result["forecast"]) == 7
+    assert result.get("method") == "linear_regression_dim"
+    # Each forecast row has dim + milk_kg
+    for row in result["forecast"]:
+        assert "dim" in row and "milk_kg" in row
+    assert "evidence_chips" in result
+
+
+def test_forecast_milk_yield_requires_animal_or_group(rich_store):
+    result = execute_tool("forecast_milk_yield", {"horizon_days": 7}, rich_store)
+    assert "error" in result

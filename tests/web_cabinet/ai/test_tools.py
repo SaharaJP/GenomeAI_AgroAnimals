@@ -255,9 +255,4 @@ class TestExecuteToolUnknown:
         assert "error" in result
 
 
-class TestToolStubsReturnError:
-    """execute_tool must convert NotImplementedError stubs into {'error': ...} dicts."""
-
-    def test_forecast_milk_yield_stub_returns_error_dict(self, rich_store):
-        result = execute_tool("forecast_milk_yield", {"animal_id": "x"}, rich_store)
-        assert "error" in result and "not_implemented" in result["error"]
+# TestToolStubsReturnError removed — all 3 Phase 2 stubs are now implemented (P1-1).
