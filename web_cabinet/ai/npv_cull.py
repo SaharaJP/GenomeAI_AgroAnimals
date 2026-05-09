@@ -17,6 +17,7 @@ arguments to compute_*().
 """
 from __future__ import annotations
 
+import datetime
 from typing import Any, Optional
 
 DEFAULTS: dict[str, float | int] = {
@@ -42,6 +43,21 @@ def _animal_record(animal_id: str, store) -> Optional[dict]:
     if rows.empty:
         return None
     return rows.iloc[0].to_dict()
+
+
+def _age_years(animal_id: str, store, *, today: Optional[datetime.date] = None) -> Optional[float]:
+    rec = _animal_record(animal_id, store)
+    if not rec:
+        return None
+    bd = rec.get("birth_date")
+    if not bd:
+        return None
+    try:
+        birth = datetime.date.fromisoformat(str(bd)[:10])
+    except (TypeError, ValueError):
+        return None
+    today = today or datetime.date.today()
+    return round((today - birth).days / 365.25, 2)
 
 
 def _latest_lactation(animal_id: str, store) -> Optional[dict]:
@@ -172,7 +188,14 @@ def _health_burden_signal(animal_id: str, store) -> dict:
     lameness_score = min(lameness_count * 1.0, 3.0)
     components["lameness_score"] = round(lameness_score, 2)
 
-    total = mastitis_score + late_dim_score + parity_score + scc_score + lameness_score
+    age_years = _age_years(animal_id, store)
+    components["age_years"] = age_years
+    age_score = 0.0
+    if age_years is not None and age_years > 5.0:
+        age_score = min((age_years - 5.0) * 0.5, 4.0)
+    components["age_score"] = round(age_score, 2)
+
+    total = mastitis_score + late_dim_score + parity_score + scc_score + lameness_score + age_score
     components["total_score"] = round(total, 2)
 
     milk_factor      = max(0.50, 1.0 - total * 0.06)
@@ -436,6 +459,11 @@ def _build_narrative_md(animal_id: str, keep: dict, cull: dict, decision: str) -
                 f"- Хромота: {components['lameness_count']} эпизодов "
                 f"→ +{components['lameness_score']:.1f} б."
             )
+        if components.get("age_score", 0) > 0 and components.get("age_years") is not None:
+            rows.append(
+                f"- Возраст {components['age_years']:.1f} лет (>5 — амортизация продуктивности) "
+                f"→ +{components['age_score']:.1f} б."
+            )
         rows_md = "\n".join(rows) if rows else "- (factor breakdown empty)"
         health_block = (
             "\n### Композитный health-score\n"
@@ -494,6 +522,7 @@ def recommend(animal_id: str, store, *, horizon_years: int = 4, r: float = 0.13)
                 ("parity_score", "паритет"),
                 ("scc_score", "хроничный SCC"),
                 ("lameness_score", "хромота"),
+                ("age_score", "возраст"),
             )
             if components.get(key, 0) > 0
         ]

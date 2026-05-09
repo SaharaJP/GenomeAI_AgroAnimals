@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from web_cabinet.ai.npv_cull import (
     DEFAULTS, compute_npv_keep, compute_npv_cull, recommend,
-    _health_burden_signal, _baseline_cull_prob,
+    _health_burden_signal, _baseline_cull_prob, _age_years,
 )
 from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
 
@@ -87,7 +87,7 @@ def _store_with(animals=None, lactations=None, health=None, milk=None) -> DemoDa
     frames = {}
     frames["dm_animals"] = pd.DataFrame(animals or [
         dict(tenant_id="default", animal_id="C1", farm_id="F", ear_tag="C1",
-             breed="Holstein", sex="F", birth_date="2020-01-01",
+             breed="Holstein", sex="F", birth_date="2024-01-01",
              is_alive=True, status="active"),
     ])
     frames["dm_lactations"] = pd.DataFrame(lactations or [])
@@ -169,7 +169,10 @@ def test_health_signal_components_compose_additively():
     )
     signal = _health_burden_signal("C1", s)
     cs = signal["components"]
-    expected = cs["mastitis_score"] + cs["late_dim_score"] + cs["parity_score"] + cs["scc_score"] + cs["lameness_score"]
+    expected = (
+        cs["mastitis_score"] + cs["late_dim_score"] + cs["parity_score"]
+        + cs["scc_score"] + cs["lameness_score"] + cs["age_score"]
+    )
     assert cs["total_score"] == pytest.approx(expected, abs=0.01)
     # All four configured signals fire (mastitis 3.0, late_dim ~1.8, parity 0.8, lameness 1.0)
     assert cs["mastitis_score"] > 0
@@ -218,3 +221,48 @@ def test_compute_npv_keep_uses_stratified_cull(rich_store):
     assert "baseline_cull_prob" in npv_low
     assert "baseline_cull_prob" in npv_high
     assert npv_high["baseline_cull_prob"] > npv_low["baseline_cull_prob"]
+
+
+# ── P1-2c age signal tests ────────────────────────────────────────────────
+
+
+def test_age_years_helper_parses_birth_date():
+    s = _store_with(animals=[dict(tenant_id="default", animal_id="C1", farm_id="F",
+        ear_tag="C1", breed="Holstein", sex="F", birth_date="2018-05-09",
+        is_alive=True, status="active")])
+    age = _age_years("C1", s, today=__import__("datetime").date(2026, 5, 9))
+    assert age == pytest.approx(8.0, abs=0.01)
+
+
+def test_age_years_returns_none_for_missing_birth_date():
+    s = _store_with(animals=[dict(tenant_id="default", animal_id="C1", farm_id="F",
+        ear_tag="C1", breed="Holstein", sex="F", birth_date=None,
+        is_alive=True, status="active")])
+    assert _age_years("C1", s) is None
+
+
+def test_age_score_zero_for_young_cow():
+    s = _store_with(animals=[dict(tenant_id="default", animal_id="C1", farm_id="F",
+        ear_tag="C1", breed="Holstein", sex="F", birth_date="2024-01-01",
+        is_alive=True, status="active")])
+    sig = _health_burden_signal("C1", s)
+    assert sig["components"]["age_score"] == 0.0
+
+
+def test_age_score_increases_for_old_cow():
+    s = _store_with(animals=[dict(tenant_id="default", animal_id="C1", farm_id="F",
+        ear_tag="C1", breed="Holstein", sex="F", birth_date="2018-01-01",
+        is_alive=True, status="active")])
+    sig = _health_burden_signal("C1", s)
+    # ~8 years old at 2026-05-09 → (8.36-5)*0.5 ≈ 1.68
+    assert sig["components"]["age_years"] >= 8.0
+    assert sig["components"]["age_score"] >= 1.5
+    assert sig["components"]["age_score"] <= 4.0
+
+
+def test_age_score_capped_at_4():
+    s = _store_with(animals=[dict(tenant_id="default", animal_id="C1", farm_id="F",
+        ear_tag="C1", breed="Holstein", sex="F", birth_date="2010-01-01",
+        is_alive=True, status="active")])
+    sig = _health_burden_signal("C1", s)
+    assert sig["components"]["age_score"] == 4.0
