@@ -11,7 +11,6 @@ const pathLabels: Record<string, string> = {
   '/reports':       'Аналитика',
   '/planner':       'Лента событий',
   '/copilot':       'Помощник',
-  '/assistant':     'Помощник',
   '/worklists':     'Рабочие списки',
   '/reproduction':  'Воспроизводство',
   '/vet':           'Ветеринария',
@@ -23,9 +22,9 @@ const pathLabels: Record<string, string> = {
   '/readiness':     'Готовность системы',
   '/observability': 'Мониторинг',
   '/admin':         'Администрирование',
+  '/admin/ai':      'AI-наблюдаемость',
   '/settings':      'Настройки',
   '/connections':   'Мои подключения',
-  '/design-system': 'Дизайн-система',
 };
 
 function getPageLabel(pathname: string): string {

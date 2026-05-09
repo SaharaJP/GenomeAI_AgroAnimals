@@ -23,7 +23,7 @@ const mustExist = [
   'components/app/app-shell.tsx',
   'components/operations/daily-operations-dashboard.tsx',
   'components/profiles/profile-surface.tsx',
-  'components/reports/report-view-surface.tsx',
+  'components/analytics/reports/report-view-surface.tsx',
   'components/extended/reproduction-surface.tsx',
   'components/extended/vet-queues-surface.tsx',
   'components/extended/treatments-withdrawal-surface.tsx',
