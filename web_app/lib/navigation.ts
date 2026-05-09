@@ -35,7 +35,6 @@ const sections: NavigationSection[] = [
       { label: 'Готовность системы', href: '/readiness', minPermissions: ['support.read', 'audit.view'] },
       { label: 'Мониторинг', href: '/observability', minPermissions: ['audit.view', 'jobs.view'] },
       { label: 'Администрирование', href: '/admin', minPermissions: ['audit.view'] },
-      { label: 'AI-наблюдаемость', href: '/admin/ai', minPermissions: ['audit.view'] },
     ],
   },
 ];
