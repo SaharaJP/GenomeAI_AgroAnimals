@@ -58,6 +58,45 @@ def _latest_lactation(animal_id: str, store) -> Optional[dict]:
     return rows.iloc[0].to_dict()
 
 
+def _recurrent_mastitis_signal(animal_id: str, store) -> dict:
+    """Detect recurrent mastitis in last 12 months from dm_health_events.
+
+    Per thesis §3.2.4: mastitis history affects M_t (milk loss), H_t (vet cost),
+    and survival (higher cull-prob). Signal is binary: ≥2 mastitis events
+    in last 12 months → "recurrent" → apply penalties.
+
+    Returns dict with multipliers; defaults (no signal) preserve baseline.
+    """
+    no_signal = {"recurrent": False, "milk_factor": 1.0, "vet_factor": 1.0, "cull_prob_factor": 1.0, "count": 0}
+    if not hasattr(store, "health_events"):
+        return no_signal
+    df = store.health_events()
+    if df is None or df.empty:
+        return no_signal
+    rows = df[df["animal_id"].astype(str) == str(animal_id)]
+    if rows.empty:
+        return no_signal
+    mastitis = rows[rows["event_type"].astype(str).str.lower() == "mastitis"]
+    if "severity" in mastitis.columns:
+        high_severity = mastitis[mastitis["severity"].astype(str).str.lower() == "high"]
+    else:
+        high_severity = mastitis
+    count_high = int(len(high_severity))
+    count_total = int(len(mastitis))
+    # Recurrent ≡ ≥2 high-severity mastitis events. Single-episode or mixed
+    # severities are absorbed into baseline vet_cost rather than triggering
+    # the chronic-mastitis penalty.
+    if count_high < 2:
+        return {**no_signal, "count": count_total}
+    return {
+        "recurrent": True,
+        "count": count_total,
+        "milk_factor":      0.75,   # ~25% productivity loss from chronic udder inflammation
+        "vet_factor":       3.0,    # repeated treatment courses + dry-off therapy
+        "cull_prob_factor": 2.0,    # farmer-driven cull pressure
+    }
+
+
 def _peak_daily_from_lactation(lact: Optional[dict], c: dict) -> float:
     """Derive peak daily milk (kg) from a lactation record.
 
@@ -120,7 +159,13 @@ def compute_npv_keep(
 
     lact = _latest_lactation(animal_id, store)
     peak_daily = _peak_daily_from_lactation(lact, c)
-    monthly_milk = _project_monthly_milk(peak_daily, 0, horizon_months)
+    health = _recurrent_mastitis_signal(animal_id, store)
+
+    monthly_milk = _project_monthly_milk(
+        peak_daily * health["milk_factor"], 0, horizon_months,
+    )
+    monthly_vet = c["vet_cost_rub_per_year"] * health["vet_factor"] / 12.0
+    monthly_cull_prob = c["monthly_cull_prob"] * health["cull_prob_factor"]
 
     npv = 0.0
     breakdown: list[dict] = []
@@ -128,9 +173,9 @@ def compute_npv_keep(
     for t, milk_kg in enumerate(monthly_milk, start=1):
         revenue   = milk_kg * c["milk_price_rub_per_kg"]
         feed_cost = milk_kg * c["feed_cost_rub_per_kg_milk"]
-        vet_cost  = c["vet_cost_rub_per_year"] / 12.0
+        vet_cost  = monthly_vet
         cash_flow = revenue - feed_cost - vet_cost
-        survival *= (1.0 - c["monthly_cull_prob"])
+        survival *= (1.0 - monthly_cull_prob)
         discount  = (1.0 + r) ** (t / 12.0)
         contrib   = cash_flow * survival / discount
         npv += contrib
@@ -155,6 +200,7 @@ def compute_npv_keep(
         "salvage_rub_pv": round(salvage_pv, 2),
         "npv_rub": round(npv, 2),
         "monthly_breakdown": breakdown,
+        "health_signal": health,
     }
 
 
@@ -229,6 +275,19 @@ def _build_sensitivity_table(animal_id: str, store, base_r: float) -> list[dict]
 
 def _build_narrative_md(animal_id: str, keep: dict, cull: dict, decision: str) -> str:
     diff = keep["npv_rub"] - cull["npv_rub"]
+    health = keep.get("health_signal") or {}
+    health_block = ""
+    if health.get("recurrent"):
+        health_block = (
+            "\n### Здоровье\n"
+            f"- Зафиксирован **рецидивирующий мастит**: {health['count']} эпизодов "
+            "(критерий ≥ 2 высоких степеней тяжести за 12 мес).\n"
+            f"- Проекция надоя снижена на {(1 - health['milk_factor']) * 100:.0f}% "
+            "(хроническое воспаление вымени).\n"
+            f"- Ветеринарные затраты увеличены ×{health['vet_factor']:.0f} "
+            "(повторные курсы, сухостойная терапия).\n"
+            f"- Месячная вероятность выбытия ×{health['cull_prob_factor']:.0f}.\n"
+        )
     return f"""## Рекомендация по корове {animal_id}
 
 **Решение: {'оставить' if decision == 'keep' else 'выбраковать'}**
@@ -236,7 +295,7 @@ def _build_narrative_md(animal_id: str, keep: dict, cull: dict, decision: str) -
 - NPV(оставить) = {keep['npv_rub']:,.0f} ₽
 - NPV(выбраковать) = {cull['npv_rub']:,.0f} ₽
 - Разница: {diff:,.0f} ₽ ({'в пользу оставления' if diff > 0 else 'в пользу выбраковки'})
-
+{health_block}
 ### Ключевые параметры
 - Горизонт: {keep['horizon_months'] // 12} лет
 - Ставка дисконтирования: {keep['discount_rate']:.1%}
@@ -247,7 +306,8 @@ def _build_narrative_md(animal_id: str, keep: dict, cull: dict, decision: str) -
 ### Ограничения модели
 - Параметры цен и стоимостей зашиты в код (investor_v1 dataset не содержит dm_prices.csv).
 - Кривая надоя — упрощённая (∝ peak · decay), без полной аппроксимации Wood-curve.
-- Вероятность выбытия — постоянная для породы (Holstein ~2.2%/мес).
+- Базовая вероятность выбытия — постоянная для породы (Holstein ~2.2%/мес).
+- Здоровье: учитывается только бинарный сигнал «рецидивирующий мастит» (≥2 high-severity).
 
 См. также: §3.2.4 ВКР, формулы 3.18–3.20.
 """.strip()
@@ -267,6 +327,13 @@ def recommend(animal_id: str, store, *, horizon_years: int = 4, r: float = 0.13)
     rationale.append(f"Разница {diff:+,.0f} ₽ ({'в пользу оставления' if diff > 0 else 'в пользу выбраковки'})")
     if abs(diff) < 50_000:
         rationale.append("Разница менее 50 000 ₽ — рекомендация чувствительна к цене молока и ставке.")
+    health = keep.get("health_signal") or {}
+    if health.get("recurrent"):
+        rationale.append(
+            f"Рецидивирующий мастит ({health['count']} эпизодов) — "
+            f"надой ×{health['milk_factor']:.2f}, ветзатраты ×{health['vet_factor']:.0f}, "
+            f"вероятность выбытия ×{health['cull_prob_factor']:.0f}."
+        )
 
     return {
         "animal_id": str(animal_id),
