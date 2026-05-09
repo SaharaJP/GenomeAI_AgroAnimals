@@ -38,7 +38,7 @@ class TestToolDefinitions:
         assert names == expected
 
 
-class TestGetCowHistory4821:
+class TestGetAnimalProfile4821:
     """Returns all events for Звёздочка including mastitis episode."""
 
     def test_returns_dict_with_rows(self, rich_store):

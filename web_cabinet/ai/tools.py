@@ -226,6 +226,8 @@ def execute_tool(tool_name: str, tool_input: dict, store: Any) -> dict:
     -------
     JSON-serialisable dict, max ~5000 tokens.
     """
+    # Public tool names follow thesis §3.1.4 canonical naming; internal _exec_*
+    # function names retain pre-rename identifiers (deferred rename — P1-1b).
     handlers = {
         "get_animal_profile": _exec_cow_history,
         "get_kpi_summary": _exec_group_metrics,
