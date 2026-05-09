@@ -190,5 +190,141 @@
       "dmi",
       "group"
     ]
+  },
+  {
+    "insight_id": "INS_101",
+    "type": "open_cow_long",
+    "severity": "high",
+    "date": "2026-05-08",
+    "animal_ids": [
+      "4821"
+    ],
+    "title": "№4821: DIM=174, нет подтверждённой стельности",
+    "body": "Алерт AL_00001 (severity=medium, status=acknowledged). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "open_cow_long",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_102",
+    "type": "recurrent_mastitis",
+    "severity": "urgent",
+    "date": "2026-05-08",
+    "animal_ids": [
+      "3891"
+    ],
+    "title": "№3891: ≥2 эпизода клинического мастита за 90 дней",
+    "body": "Алерт AL_00002 (severity=high, status=new). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "recurrent_mastitis",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_103",
+    "type": "low_yield_drop",
+    "severity": "medium",
+    "date": "2026-05-07",
+    "animal_ids": [
+      "3891"
+    ],
+    "title": "№3891: Падение надоя >15% за 7 дней относительно baseline",
+    "body": "Алерт AL_00003 (severity=medium, status=new). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "low_yield_drop",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_104",
+    "type": "low_yield_drop",
+    "severity": "medium",
+    "date": "2026-05-02",
+    "animal_ids": [
+      "3142"
+    ],
+    "title": "№3142: Падение надоя >15% за 7 дней относительно baseline",
+    "body": "Алерт AL_00004 (severity=medium, status=new). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "low_yield_drop",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_105",
+    "type": "low_yield_drop",
+    "severity": "medium",
+    "date": "2026-04-30",
+    "animal_ids": [
+      "3001"
+    ],
+    "title": "№3001: Падение надоя >15% за 7 дней относительно baseline",
+    "body": "Алерт AL_00005 (severity=medium, status=new). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "low_yield_drop",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_106",
+    "type": "open_cow_long",
+    "severity": "high",
+    "date": "2026-05-06",
+    "animal_ids": [
+      "3003"
+    ],
+    "title": "№3003: DIM=250, нет подтверждённой стельности",
+    "body": "Алерт AL_00006 (severity=medium, status=new). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "open_cow_long",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_107",
+    "type": "open_cow_long",
+    "severity": "high",
+    "date": "2026-05-04",
+    "animal_ids": [
+      "3005"
+    ],
+    "title": "№3005: DIM=288, нет подтверждённой стельности",
+    "body": "Алерт AL_00007 (severity=medium, status=acknowledged). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "open_cow_long",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
+  },
+  {
+    "insight_id": "INS_108",
+    "type": "low_yield_drop",
+    "severity": "medium",
+    "date": "2026-05-08",
+    "animal_ids": [
+      "3006"
+    ],
+    "title": "№3006: Падение надоя >15% за 7 дней относительно baseline",
+    "body": "Алерт AL_00008 (severity=low, status=new). Сигнал интегрирован в композитный health-score (P1-2c) и в P2-1 knapsack farm-context.",
+    "action": "Открыть карточку животного, проверить рекомендацию NPV",
+    "tags": [
+      "low_yield_drop",
+      "auto_generated",
+      "p1_2c_signal"
+    ]
   }
 ]

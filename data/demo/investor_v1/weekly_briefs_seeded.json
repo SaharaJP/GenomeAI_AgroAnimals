@@ -2,7 +2,10 @@
   {
     "brief_id": "WBRIEF_20260421",
     "farm_id": "demo-farm-v1",
-    "period": {"start": "2026-04-14", "end": "2026-04-21"},
+    "period": {
+      "start": "2026-04-14",
+      "end": "2026-04-21"
+    },
     "generated_at_utc": "2026-04-21T07:00:00",
     "title": "Недельный отчёт: 14–21 апреля 2026",
     "executive_summary": "Неделя прошла с умеренным снижением надоя: средний показатель 28,4 кг/день — на 0,7 кг ниже предыдущей недели, что связано с маститом у коровы №3142 и ростом SCC до 312 тыс/мл по стаду. Главный успех — рекордный показатель стельности PR=24%: за неделю подтверждены 5 стельностей из 6 осеменений предыдущего цикла. Требует немедленного внимания: повторный мастит у №3142 (2-й случай за 30 дней), изоляция молока от танка обязательна.",
@@ -15,7 +18,11 @@
           "SCC стада 312 тыс/мл — превышение нормы 300 тыс/мл [evt_scc_herd_0421_001]",
           "Группы B и C стабильны, источник проблемы — группа A"
         ],
-        "evidence_ids": ["evt_milk_groupA_0421_001", "evt_scc_herd_0421_001", "evt_health_3142_002"]
+        "evidence_ids": [
+          "evt_milk_groupA_0421_001",
+          "evt_scc_herd_0421_001",
+          "evt_health_3142_002"
+        ]
       },
       {
         "heading": "Воспроизводство",
@@ -25,7 +32,11 @@
           "5 подтверждённых стельностей из 6 осеменений [evt_repro_confirm_0421_001]",
           "Отёл №4217: тёлочка 38 кг, оценка 8/10 [evt_calving_4217_001]"
         ],
-        "evidence_ids": ["evt_repro_pr_0421_001", "evt_repro_confirm_0421_001", "evt_calving_4217_001"]
+        "evidence_ids": [
+          "evt_repro_pr_0421_001",
+          "evt_repro_confirm_0421_001",
+          "evt_calving_4217_001"
+        ]
       },
       {
         "heading": "Здоровье",
@@ -35,7 +46,11 @@
           "SCC №3142: 1 240 тыс/мл, молоко от танка изолировано [evt_scc_3142_002]",
           "Индекс здоровья стада 94% — в норме"
         ],
-        "evidence_ids": ["evt_health_3142_002", "evt_scc_3142_002", "evt_treatment_3142_002"]
+        "evidence_ids": [
+          "evt_health_3142_002",
+          "evt_scc_3142_002",
+          "evt_treatment_3142_002"
+        ]
       },
       {
         "heading": "Кормление",
@@ -53,28 +68,37 @@
         "priority": "high",
         "rationale": "Рецидивный мастит через 24 дня [evt_health_3142_002]: риск хронизации Staph. aureus и распространения по стаду через доильное оборудование",
         "expected_outcome": "Снижение SCC стада с 312 до <280 тыс/мл за 7-10 дней",
-        "affected_entities": ["cow_3142"]
+        "affected_entities": [
+          "cow_3142"
+        ]
       },
       {
         "recommendation": "Назначить бактериологический посев молока №3142 и принять решение о дальнейшей судьбе коровы по результату",
         "priority": "high",
         "rationale": "Повторный мастит у коровы 3-й лактации в сезон — экономический триггер: NPV содержания ниже NPV выбраковки при Staph. aureus [evt_health_3142_002]",
         "expected_outcome": "Обоснованное решение: лечение vs выбраковка — экономия 15-25 тыс. руб.",
-        "affected_entities": ["cow_3142"]
+        "affected_entities": [
+          "cow_3142"
+        ]
       },
       {
         "recommendation": "Повторить heat detection в пятницу 25 апреля — выявить новую волну охоты",
         "priority": "medium",
         "rationale": "PR 24% — рекорд, heat detection волна 18 апреля принесла 8 коров в охоте [evt_repro_pr_0421_001]. Следующий 21-дневный цикл начинается 25 апреля",
         "expected_outcome": "Поддержать PR ≥22% на следующей неделе, 5-8 осеменений",
-        "affected_entities": ["group_a", "group_b"]
+        "affected_entities": [
+          "group_a",
+          "group_b"
+        ]
       },
       {
         "recommendation": "Провести индивидуальный CMT-тест всем коровам группы A с SCC >200 тыс/мл",
         "priority": "medium",
         "rationale": "SCC группы A вырос с 301 до 328 тыс/мл за неделю [evt_scc_herd_0421_001]. Ранняя диагностика субклинического мастита снизит риск потерь надоя",
         "expected_outcome": "Выявление субклинических случаев до перехода в клиническую форму, снижение SCC группы A ниже 300 тыс/мл",
-        "affected_entities": ["group_a"]
+        "affected_entities": [
+          "group_a"
+        ]
       },
       {
         "recommendation": "Заказать дополнительный набор CMT-реагентов и бактериологические флаконы до 26 апреля",
@@ -88,7 +112,9 @@
         "priority": "low",
         "rationale": "УЗИ-подтверждение выполнено 16 апреля [evt_repro_confirm_0421_001], запись в системе отсутствует",
         "expected_outcome": "Корректная отчётность по PR, исключение ложного осеменения",
-        "affected_entities": ["cow_4821"]
+        "affected_entities": [
+          "cow_4821"
+        ]
       }
     ],
     "anomalies_detected": [
@@ -109,18 +135,51 @@
       }
     ],
     "kpi_table": {
-      "avg_milk_yield_kg": {"value": 28.4, "prev_period": 29.1, "delta_pct": -2.4, "unit": "кг/день"},
-      "scc_thousands": {"value": 312, "prev_period": 287, "delta_pct": 8.7, "unit": "тыс/мл"},
-      "pregnancy_rate_pct": {"value": 24, "prev_period": 21, "delta_pct": 14.3, "unit": "%"},
-      "health_index_pct": {"value": 94, "prev_period": 95, "delta_pct": -1.1, "unit": "%"},
-      "calvings": {"value": 1, "prev_period": 2, "delta_pct": -50.0, "unit": "гол"},
-      "ai_treatments": {"value": 6, "prev_period": 11, "delta_pct": -45.5, "unit": "ед"}
+      "avg_milk_yield_kg": {
+        "value": 28.4,
+        "prev_period": 29.1,
+        "delta_pct": -2.4,
+        "unit": "кг/день"
+      },
+      "scc_thousands": {
+        "value": 312,
+        "prev_period": 287,
+        "delta_pct": 8.7,
+        "unit": "тыс/мл"
+      },
+      "pregnancy_rate_pct": {
+        "value": 24,
+        "prev_period": 21,
+        "delta_pct": 14.3,
+        "unit": "%"
+      },
+      "health_index_pct": {
+        "value": 94,
+        "prev_period": 95,
+        "delta_pct": -1.1,
+        "unit": "%"
+      },
+      "calvings": {
+        "value": 1,
+        "prev_period": 2,
+        "delta_pct": -50.0,
+        "unit": "гол"
+      },
+      "ai_treatments": {
+        "value": 6,
+        "prev_period": 11,
+        "delta_pct": -45.5,
+        "unit": "ед"
+      }
     }
   },
   {
     "brief_id": "WBRIEF_20260414",
     "farm_id": "demo-farm-v1",
-    "period": {"start": "2026-04-07", "end": "2026-04-14"},
+    "period": {
+      "start": "2026-04-07",
+      "end": "2026-04-14"
+    },
     "generated_at_utc": "2026-04-14T07:00:00",
     "title": "Недельный отчёт: 7–14 апреля 2026",
     "executive_summary": "Продуктивная неделя с рекордным надоем 29,1 кг/день — лучший показатель с января 2026. Два успешных отёла, волна heat detection принесла 11 осеменений. SCC стада стабилен: 287 тыс/мл (-6,6% к предыдущей неделе). Единственная угроза: первый случай мастита у коровы №3142 — требует наблюдения на предмет рецидива.",
@@ -133,7 +192,10 @@
           "SCC 287 тыс/мл — впервые ниже 300 тыс/мл за 6 недель",
           "Все три группы показали положительную динамику"
         ],
-        "evidence_ids": ["evt_milk_herd_0414_001", "evt_scc_herd_0414_001"]
+        "evidence_ids": [
+          "evt_milk_herd_0414_001",
+          "evt_scc_herd_0414_001"
+        ]
       },
       {
         "heading": "Воспроизводство",
@@ -143,7 +205,11 @@
           "2 отёла без осложнений [evt_calving_3891_001, evt_calving_4102_001]",
           "PR 21%, конверсия 67%"
         ],
-        "evidence_ids": ["evt_repro_wave_0414_001", "evt_calving_3891_001", "evt_calving_4102_001"]
+        "evidence_ids": [
+          "evt_repro_wave_0414_001",
+          "evt_calving_3891_001",
+          "evt_calving_4102_001"
+        ]
       },
       {
         "heading": "Здоровье",
@@ -152,7 +218,10 @@
           "Первый мастит у №3142 — своевременно выявлен [evt_health_3142_001]",
           "Индекс здоровья стада 95% — норма превышена"
         ],
-        "evidence_ids": ["evt_health_3142_001", "evt_treatment_3142_001"]
+        "evidence_ids": [
+          "evt_health_3142_001",
+          "evt_treatment_3142_001"
+        ]
       },
       {
         "heading": "Кормление",
@@ -170,14 +239,19 @@
         "priority": "high",
         "rationale": "Первый клинический мастит [evt_health_3142_001] — риск рецидива и хронизации требует строгого мониторинга",
         "expected_outcome": "Раннее выявление рецидива, исключение хронической формы",
-        "affected_entities": ["cow_3142"]
+        "affected_entities": [
+          "cow_3142"
+        ]
       },
       {
         "recommendation": "Поддержать heat detection в следующий цикл 21-26 апреля — ожидается новая волна",
         "priority": "high",
         "rationale": "11 осеменений на этой неделе [evt_repro_wave_0414_001] — через 3 недели ожидается волна из 8-12 коров",
         "expected_outcome": "Поддержать PR ≥21%, 8-10 осеменений",
-        "affected_entities": ["group_a", "group_b"]
+        "affected_entities": [
+          "group_a",
+          "group_b"
+        ]
       },
       {
         "recommendation": "Продолжить весенний рецепт TMR без изменений — рост надоя подтверждает правильность перехода",
@@ -191,7 +265,10 @@
         "priority": "low",
         "rationale": "Рождение телят №3891/1 и №4102/1 требует обязательной регистрации в течение 3 дней [evt_calving_3891_001]",
         "expected_outcome": "Соответствие требованиям ветнадзора",
-        "affected_entities": ["cow_3891", "cow_4102"]
+        "affected_entities": [
+          "cow_3891",
+          "cow_4102"
+        ]
       }
     ],
     "anomalies_detected": [
@@ -202,18 +279,51 @@
       }
     ],
     "kpi_table": {
-      "avg_milk_yield_kg": {"value": 29.1, "prev_period": 28.2, "delta_pct": 3.2, "unit": "кг/день"},
-      "scc_thousands": {"value": 287, "prev_period": 307, "delta_pct": -6.5, "unit": "тыс/мл"},
-      "pregnancy_rate_pct": {"value": 21, "prev_period": 18, "delta_pct": 16.7, "unit": "%"},
-      "health_index_pct": {"value": 95, "prev_period": 93, "delta_pct": 2.2, "unit": "%"},
-      "calvings": {"value": 2, "prev_period": 0, "delta_pct": null, "unit": "гол"},
-      "ai_treatments": {"value": 11, "prev_period": 5, "delta_pct": 120.0, "unit": "ед"}
+      "avg_milk_yield_kg": {
+        "value": 29.1,
+        "prev_period": 28.2,
+        "delta_pct": 3.2,
+        "unit": "кг/день"
+      },
+      "scc_thousands": {
+        "value": 287,
+        "prev_period": 307,
+        "delta_pct": -6.5,
+        "unit": "тыс/мл"
+      },
+      "pregnancy_rate_pct": {
+        "value": 21,
+        "prev_period": 18,
+        "delta_pct": 16.7,
+        "unit": "%"
+      },
+      "health_index_pct": {
+        "value": 95,
+        "prev_period": 93,
+        "delta_pct": 2.2,
+        "unit": "%"
+      },
+      "calvings": {
+        "value": 2,
+        "prev_period": 0,
+        "delta_pct": null,
+        "unit": "гол"
+      },
+      "ai_treatments": {
+        "value": 11,
+        "prev_period": 5,
+        "delta_pct": 120.0,
+        "unit": "ед"
+      }
     }
   },
   {
     "brief_id": "WBRIEF_20260407",
     "farm_id": "demo-farm-v1",
-    "period": {"start": "2026-03-31", "end": "2026-04-07"},
+    "period": {
+      "start": "2026-03-31",
+      "end": "2026-04-07"
+    },
     "generated_at_utc": "2026-04-07T07:00:00",
     "title": "Недельный отчёт: 31 марта — 7 апреля 2026",
     "executive_summary": "Стабильная неделя с умеренными показателями: надой 28,2 кг/день, SCC 307 тыс/мл — незначительно выше нормы первого сорта. Воспроизводство в штатном режиме: 5 осеменений, 3 подтверждения стельности. Начало планового перехода на весенний рацион. Здоровье стада хорошее: индекс 93%, плановые вакцинации выполнены.",
@@ -225,7 +335,9 @@
           "Надой 28,2 кг/день — базовый уровень",
           "SCC 307 тыс/мл — чуть выше порога 300 тыс/мл"
         ],
-        "evidence_ids": ["evt_milk_herd_0407_001"]
+        "evidence_ids": [
+          "evt_milk_herd_0407_001"
+        ]
       },
       {
         "heading": "Воспроизводство",
@@ -235,7 +347,9 @@
           "PR 18% — план 20%",
           "Ожидается волна охоты 7-14 апреля"
         ],
-        "evidence_ids": ["evt_repro_0407_001"]
+        "evidence_ids": [
+          "evt_repro_0407_001"
+        ]
       },
       {
         "heading": "Здоровье",
@@ -244,7 +358,9 @@
           "Индекс здоровья 93%, плановые вакцинации выполнены",
           "Хромота №2814 — назначено лечение [evt_health_2814_001]"
         ],
-        "evidence_ids": ["evt_health_2814_001"]
+        "evidence_ids": [
+          "evt_health_2814_001"
+        ]
       }
     ],
     "key_recommendations": [
@@ -253,7 +369,11 @@
         "priority": "high",
         "rationale": "По данным синхронизации ожидается 10-14 коров в охоте — максимум квартала [evt_repro_0407_001]",
         "expected_outcome": "Охват 90%+ коров в охоте, 9-12 осеменений",
-        "affected_entities": ["group_a", "group_b", "group_c"]
+        "affected_entities": [
+          "group_a",
+          "group_b",
+          "group_c"
+        ]
       },
       {
         "recommendation": "Контролировать адаптацию стада к весеннему рациону — ежедневный мониторинг поедаемости",
@@ -267,7 +387,9 @@
         "priority": "medium",
         "rationale": "Хромота у коровы в 1-й лактации — риск снижения молочности и вовлечения в субклинический мастит [evt_health_2814_001]",
         "expected_outcome": "Подтверждение эффективности ванночек, исключение мастита как сопутствующей патологии",
-        "affected_entities": ["cow_2814"]
+        "affected_entities": [
+          "cow_2814"
+        ]
       }
     ],
     "anomalies_detected": [
@@ -278,12 +400,114 @@
       }
     ],
     "kpi_table": {
-      "avg_milk_yield_kg": {"value": 28.2, "prev_period": 28.0, "delta_pct": 0.7, "unit": "кг/день"},
-      "scc_thousands": {"value": 307, "prev_period": 315, "delta_pct": -2.5, "unit": "тыс/мл"},
-      "pregnancy_rate_pct": {"value": 18, "prev_period": 19, "delta_pct": -5.3, "unit": "%"},
-      "health_index_pct": {"value": 93, "prev_period": 93, "delta_pct": 0.0, "unit": "%"},
-      "calvings": {"value": 0, "prev_period": 1, "delta_pct": null, "unit": "гол"},
-      "ai_treatments": {"value": 5, "prev_period": 7, "delta_pct": -28.6, "unit": "ед"}
+      "avg_milk_yield_kg": {
+        "value": 28.2,
+        "prev_period": 28.0,
+        "delta_pct": 0.7,
+        "unit": "кг/день"
+      },
+      "scc_thousands": {
+        "value": 307,
+        "prev_period": 315,
+        "delta_pct": -2.5,
+        "unit": "тыс/мл"
+      },
+      "pregnancy_rate_pct": {
+        "value": 18,
+        "prev_period": 19,
+        "delta_pct": -5.3,
+        "unit": "%"
+      },
+      "health_index_pct": {
+        "value": 93,
+        "prev_period": 93,
+        "delta_pct": 0.0,
+        "unit": "%"
+      },
+      "calvings": {
+        "value": 0,
+        "prev_period": 1,
+        "delta_pct": null,
+        "unit": "гол"
+      },
+      "ai_treatments": {
+        "value": 5,
+        "prev_period": 7,
+        "delta_pct": -28.6,
+        "unit": "ед"
+      }
     }
+  },
+  {
+    "brief_id": "WBRIEF_20260509",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-09T07:00:00",
+    "week_start": "2026-05-03",
+    "week_end": "2026-05-09",
+    "executive_summary": "За неделю 2026-05-03 — 2026-05-09: новых алертов 121, принятых решений 75. Доля high-severity 1/121 (1%). Композитный health-score выявил 1 случаев рецидивирующего мастита — кандидаты на NPV-cull review.",
+    "sections": [
+      {
+        "title": "Здоровье стада",
+        "body": "Зарегистрировано 121 алертов, из них 1 рецидивирующих маститов, 12 эпизодов хромоты."
+      },
+      {
+        "title": "Воспроизводство",
+        "body": "Открытых коров с DIM>150: 86. Рекомендация — пакет ресинхронизации для всех с приоритетом 2-я неделя."
+      },
+      {
+        "title": "Экономика",
+        "body": "Расчётная маржа на корову — стабильна. Принятые решения cull_recommended: 22."
+      }
+    ],
+    "key_recommendations": [
+      {
+        "text": "Провести NPV-review всех recurrent_mastitis кандидатов до конца недели",
+        "priority": "high"
+      },
+      {
+        "text": "Запустить OvSynch на всех open_cow_long >180 DIM",
+        "priority": "medium"
+      },
+      {
+        "text": "Контроль качества лактации в группе High Production",
+        "priority": "low"
+      }
+    ]
+  },
+  {
+    "brief_id": "WBRIEF_20260502",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-02T07:00:00",
+    "week_start": "2026-04-26",
+    "week_end": "2026-05-02",
+    "executive_summary": "За неделю 2026-04-26 — 2026-05-02: новых алертов 33, принятых решений 12. Доля high-severity 0/33 (0%). Композитный health-score выявил 0 случаев рецидивирующего мастита — кандидаты на NPV-cull review.",
+    "sections": [
+      {
+        "title": "Здоровье стада",
+        "body": "Зарегистрировано 33 алертов, из них 0 рецидивирующих маститов, 0 эпизодов хромоты."
+      },
+      {
+        "title": "Воспроизводство",
+        "body": "Открытых коров с DIM>150: 13. Рекомендация — пакет ресинхронизации для всех с приоритетом 2-я неделя."
+      },
+      {
+        "title": "Экономика",
+        "body": "Расчётная маржа на корову — стабильна. Принятые решения cull_recommended: 1."
+      }
+    ],
+    "key_recommendations": [
+      {
+        "text": "Провести NPV-review всех recurrent_mastitis кандидатов до конца недели",
+        "priority": "high"
+      },
+      {
+        "text": "Запустить OvSynch на всех open_cow_long >180 DIM",
+        "priority": "medium"
+      },
+      {
+        "text": "Контроль качества лактации в группе High Production",
+        "priority": "low"
+      }
+    ]
   }
 ]

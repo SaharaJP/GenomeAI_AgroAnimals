@@ -52,7 +52,10 @@
       "Следующая инвентаризация стада: пятница 25 апреля"
     ],
     "generation_model": "demo-seeded",
-    "generation_tokens": {"input": 0, "output": 0}
+    "generation_tokens": {
+      "input": 0,
+      "output": 0
+    }
   },
   {
     "brief_id": "MBRIEF_20260421",
@@ -90,6 +93,225 @@
       "Средний удой 28.2 кг — в норме"
     ],
     "generation_model": "demo-seeded",
-    "generation_tokens": {"input": 0, "output": 0}
+    "generation_tokens": {
+      "input": 0,
+      "output": 0
+    }
+  },
+  {
+    "brief_id": "MBRIEF_20260509",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-09T03:00:00",
+    "date": "2026-05-09",
+    "headline": "Активных алертов: 154 (recurrent_mast=1, open_cow=99, lameness=12, low_yield=42)",
+    "main_takeaway": "За ночь зафиксировано 3 новых сигналов. Текущий приоритет — 1 high-severity случай(ев) требует осмотра ветврачом до полудня. Дополнительно открытых коров с длинным DIM: 99; всё это попадает в P2-1 NPV-расчёт автоматически.",
+    "overnight_changes": [
+      {
+        "text": "№4821: DIM=174, нет подтверждённой стельности [evidence: AL_00001]",
+        "evidence_id": "AL_00001"
+      },
+      {
+        "text": "№3891: ≥2 эпизода клинического мастита за 90 дней [evidence: AL_00002]",
+        "evidence_id": "AL_00002"
+      },
+      {
+        "text": "№3006: Падение надоя >15% за 7 дней относительно baseline [evidence: AL_00008]",
+        "evidence_id": "AL_00008"
+      }
+    ],
+    "today_actions": [
+      {
+        "action": "Осмотр №3891: клиническая оценка рецидивирующего мастита, NPV-анализ",
+        "priority": "high",
+        "due": "до 11:00",
+        "role": "vet"
+      },
+      {
+        "action": "№4821: ресинхронизация (OvSynch) или решение по выбраковке",
+        "priority": "medium",
+        "due": "сегодня",
+        "role": "zootech"
+      },
+      {
+        "action": "№3006: проверить потребление концентратов, отбор молока на тест",
+        "priority": "medium",
+        "due": "до 14:00",
+        "role": "zootech"
+      }
+    ],
+    "kpi_snapshot": {
+      "total_milk_kg": 2900,
+      "avg_scc_k": 255,
+      "active_alerts": 100,
+      "completed_decisions": 54
+    }
+  },
+  {
+    "brief_id": "MBRIEF_20260508",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-08T03:00:00",
+    "date": "2026-05-08",
+    "headline": "Активных алертов: 154 (recurrent_mast=1, open_cow=99, lameness=12, low_yield=42)",
+    "main_takeaway": "За ночь зафиксировано 3 новых сигналов. Текущий приоритет — 1 high-severity случай(ев) требует осмотра ветврачом до полудня. Дополнительно открытых коров с длинным DIM: 99; всё это попадает в P2-1 NPV-расчёт автоматически.",
+    "overnight_changes": [
+      {
+        "text": "№4821: DIM=174, нет подтверждённой стельности [evidence: AL_00001]",
+        "evidence_id": "AL_00001"
+      },
+      {
+        "text": "№3891: ≥2 эпизода клинического мастита за 90 дней [evidence: AL_00002]",
+        "evidence_id": "AL_00002"
+      },
+      {
+        "text": "№3006: Падение надоя >15% за 7 дней относительно baseline [evidence: AL_00008]",
+        "evidence_id": "AL_00008"
+      }
+    ],
+    "today_actions": [
+      {
+        "action": "Осмотр №3891: клиническая оценка рецидивирующего мастита, NPV-анализ",
+        "priority": "high",
+        "due": "до 11:00",
+        "role": "vet"
+      },
+      {
+        "action": "№4821: ресинхронизация (OvSynch) или решение по выбраковке",
+        "priority": "medium",
+        "due": "сегодня",
+        "role": "zootech"
+      },
+      {
+        "action": "№3006: проверить потребление концентратов, отбор молока на тест",
+        "priority": "medium",
+        "due": "до 14:00",
+        "role": "zootech"
+      }
+    ],
+    "kpi_snapshot": {
+      "total_milk_kg": 2888,
+      "avg_scc_k": 259,
+      "active_alerts": 100,
+      "completed_decisions": 54
+    }
+  },
+  {
+    "brief_id": "MBRIEF_20260507",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-07T03:00:00",
+    "date": "2026-05-07",
+    "headline": "Активных алертов: 154 (recurrent_mast=1, open_cow=99, lameness=12, low_yield=42)",
+    "main_takeaway": "За ночь зафиксировано 3 новых сигналов. Текущий приоритет — 0 high-severity случай(ев) требует осмотра ветврачом до полудня. Дополнительно открытых коров с длинным DIM: 99; всё это попадает в P2-1 NPV-расчёт автоматически.",
+    "overnight_changes": [
+      {
+        "text": "№3891: Падение надоя >15% за 7 дней относительно baseline [evidence: AL_00003]",
+        "evidence_id": "AL_00003"
+      },
+      {
+        "text": "№3010: DIM=277, нет подтверждённой стельности [evidence: AL_00010]",
+        "evidence_id": "AL_00010"
+      },
+      {
+        "text": "№3035: DIM=315, нет подтверждённой стельности [evidence: AL_00020]",
+        "evidence_id": "AL_00020"
+      }
+    ],
+    "today_actions": [
+      {
+        "action": "№3010: ресинхронизация (OvSynch) или решение по выбраковке",
+        "priority": "medium",
+        "due": "сегодня",
+        "role": "zootech"
+      },
+      {
+        "action": "№3891: проверить потребление концентратов, отбор молока на тест",
+        "priority": "medium",
+        "due": "до 14:00",
+        "role": "zootech"
+      }
+    ],
+    "kpi_snapshot": {
+      "total_milk_kg": 2876,
+      "avg_scc_k": 263,
+      "active_alerts": 100,
+      "completed_decisions": 54
+    }
+  },
+  {
+    "brief_id": "MBRIEF_20260506",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-06T03:00:00",
+    "date": "2026-05-06",
+    "headline": "Активных алертов: 154 (recurrent_mast=1, open_cow=99, lameness=12, low_yield=42)",
+    "main_takeaway": "За ночь зафиксировано 3 новых сигналов. Текущий приоритет — 0 high-severity случай(ев) требует осмотра ветврачом до полудня. Дополнительно открытых коров с длинным DIM: 99; всё это попадает в P2-1 NPV-расчёт автоматически.",
+    "overnight_changes": [
+      {
+        "text": "№3003: DIM=250, нет подтверждённой стельности [evidence: AL_00006]",
+        "evidence_id": "AL_00006"
+      },
+      {
+        "text": "№3024: DIM=413, нет подтверждённой стельности [evidence: AL_00013]",
+        "evidence_id": "AL_00013"
+      },
+      {
+        "text": "№3029: DIM=232, нет подтверждённой стельности [evidence: AL_00016]",
+        "evidence_id": "AL_00016"
+      }
+    ],
+    "today_actions": [
+      {
+        "action": "№3003: ресинхронизация (OvSynch) или решение по выбраковке",
+        "priority": "medium",
+        "due": "сегодня",
+        "role": "zootech"
+      }
+    ],
+    "kpi_snapshot": {
+      "total_milk_kg": 2864,
+      "avg_scc_k": 267,
+      "active_alerts": 100,
+      "completed_decisions": 54
+    }
+  },
+  {
+    "brief_id": "MBRIEF_20260505",
+    "farm_id": "demo-farm-v1",
+    "generated_at_utc": "2026-05-05T03:00:00",
+    "date": "2026-05-05",
+    "headline": "Активных алертов: 154 (recurrent_mast=1, open_cow=99, lameness=12, low_yield=42)",
+    "main_takeaway": "За ночь зафиксировано 3 новых сигналов. Текущий приоритет — 0 high-severity случай(ев) требует осмотра ветврачом до полудня. Дополнительно открытых коров с длинным DIM: 99; всё это попадает в P2-1 NPV-расчёт автоматически.",
+    "overnight_changes": [
+      {
+        "text": "№3049: Падение надоя >15% за 7 дней относительно baseline [evidence: AL_00025]",
+        "evidence_id": "AL_00025"
+      },
+      {
+        "text": "№3062: DIM=160, нет подтверждённой стельности [evidence: AL_00032]",
+        "evidence_id": "AL_00032"
+      },
+      {
+        "text": "№3066: DIM=207, нет подтверждённой стельности [evidence: AL_00034]",
+        "evidence_id": "AL_00034"
+      }
+    ],
+    "today_actions": [
+      {
+        "action": "№3062: ресинхронизация (OvSynch) или решение по выбраковке",
+        "priority": "medium",
+        "due": "сегодня",
+        "role": "zootech"
+      },
+      {
+        "action": "№3049: проверить потребление концентратов, отбор молока на тест",
+        "priority": "medium",
+        "due": "до 14:00",
+        "role": "zootech"
+      }
+    ],
+    "kpi_snapshot": {
+      "total_milk_kg": 2852,
+      "avg_scc_k": 271,
+      "active_alerts": 100,
+      "completed_decisions": 54
+    }
   }
 ]
