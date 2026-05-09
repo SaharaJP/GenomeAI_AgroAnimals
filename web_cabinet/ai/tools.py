@@ -1,4 +1,24 @@
-"""Tool definitions + executors for Anthropic tool use (MVP-N12)."""
+"""Canonical 7 AI tools (thesis §3.1.4) + 3 production extras.
+
+Canonical (mentioned in dissertation Table 3.1.4):
+    1. get_animal_profile        — карточка коровы
+    2. analyze_event_impact      — импакт-анализ события
+    3. forecast_milk_yield       — прогноз надоя
+    4. calculate_cull_npv        — NPV выбраковки (P1-1: stub; P1-2: full)
+    5. find_attention_cows       — TOP-N коров под наблюдением
+    6. get_kpi_summary           — KPI агрегаты
+    7. search_events_timeline    — поиск событий по timeline
+
+Extras (production-only, not in thesis):
+    8. get_treatment_records
+    9. get_reproduction_status
+   10. get_milk_quality_trend
+
+The dispatcher in execute_tool() additionally accepts get_economics_snapshot
+as an internal helper — it is not exposed in ALL_TOOLS / CANONICAL_TOOLS /
+EXTRA_TOOLS, so the model never sees it; calculate_cull_npv (Phase 2 stub)
+delegates to it.
+"""
 from __future__ import annotations
 
 import datetime
