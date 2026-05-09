@@ -6,9 +6,9 @@ profiles:
       budget_sec: 8.0
       pages:
         - web_app/app/(protected)/daily-summary/page.tsx
-        - web_app/app/(protected)/alerts/page.tsx
-        - web_app/app/(protected)/planner/page.tsx
-        - web_app/app/(protected)/reports/page.tsx
+        - web_app/app/(protected)/insights/page.tsx
+        - web_app/app/(protected)/timeline/page.tsx
+        - web_app/app/(protected)/analytics/page.tsx
         - web_app/app/(protected)/observability/page.tsx
     role_scenarios:
       enabled: true
@@ -27,7 +27,7 @@ profiles:
       pages:
         - web_app/app/(protected)/daily-summary/page.tsx
         - web_app/app/(protected)/profiles/[objectType]/[objectId]/page.tsx
-        - web_app/app/(protected)/reports/page.tsx
+        - web_app/app/(protected)/analytics/page.tsx
       scripts:
         - scripts/smoke_t32_05_react_daily_operations.sh
         - scripts/smoke_t32_06_react_profiles_reports_assistant.sh
