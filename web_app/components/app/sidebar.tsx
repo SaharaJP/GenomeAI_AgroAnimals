@@ -18,21 +18,45 @@ import {
   Leaf,
   Home,
   Beef,
+  ListChecks,
+  HeartPulse,
+  Stethoscope,
+  Pill,
+  GitBranch,
+  Wallet,
+  LifeBuoy,
+  FlaskConical,
+  ShieldCheck,
+  Activity,
+  Shield,
+  Eye,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getNavigationSections } from '@/lib/navigation';
 
 type Props = { collapsed: boolean; onToggle: () => void };
 
-// Maps href → Lucide icon for primary nav items
-const primaryIconMap: Record<string, React.ReactNode> = {
-  '/dashboard':     <Home size={18} strokeWidth={1.5} />,
-  '/daily-summary': <LayoutDashboard size={18} strokeWidth={1.5} />,
-  '/insights':      <Lightbulb size={18} strokeWidth={1.5} />,
-  '/analytics':     <BarChart2 size={18} strokeWidth={1.5} />,
+// Maps href → Lucide icon for nav items across all sections
+const iconMap: Record<string, React.ReactNode> = {
+  '/dashboard':        <Home size={18} strokeWidth={1.5} />,
+  '/daily-summary':    <LayoutDashboard size={18} strokeWidth={1.5} />,
+  '/insights':         <Lightbulb size={18} strokeWidth={1.5} />,
+  '/analytics':        <BarChart2 size={18} strokeWidth={1.5} />,
   '/timeline':         <Clock size={18} strokeWidth={1.5} />,
   '/profiles/animal':  <Beef size={18} strokeWidth={1.5} />,
-  '/assistant':        <Bot size={18} strokeWidth={1.5} />,
+  '/copilot':          <Bot size={18} strokeWidth={1.5} />,
+  '/worklists':        <ListChecks size={18} strokeWidth={1.5} />,
+  '/reproduction':     <HeartPulse size={18} strokeWidth={1.5} />,
+  '/vet':              <Stethoscope size={18} strokeWidth={1.5} />,
+  '/treatments':       <Pill size={18} strokeWidth={1.5} />,
+  '/decisions':        <GitBranch size={18} strokeWidth={1.5} />,
+  '/economics':        <Wallet size={18} strokeWidth={1.5} />,
+  '/support':          <LifeBuoy size={18} strokeWidth={1.5} />,
+  '/pilot':            <FlaskConical size={18} strokeWidth={1.5} />,
+  '/readiness':        <ShieldCheck size={18} strokeWidth={1.5} />,
+  '/observability':    <Activity size={18} strokeWidth={1.5} />,
+  '/admin':            <Shield size={18} strokeWidth={1.5} />,
+  '/admin/ai':         <Eye size={18} strokeWidth={1.5} />,
 };
 
 export function Sidebar({ collapsed, onToggle }: Props) {
@@ -41,8 +65,10 @@ export function Sidebar({ collapsed, onToggle }: Props) {
   const { me } = useAuth() as { me: any; loading: boolean; refresh: () => Promise<void> };
 
   const sections = getNavigationSections(me);
-  // Show only "Основное" section items in the sidebar top nav
-  const primaryItems = sections.find((s) => s.title === 'Основное')?.items ?? [];
+  // Bottom utility section (Connections / Settings / Support) is rendered below
+  // separately from the user-facing sections; filter those hrefs out so they
+  // don't render twice.
+  const bottomHrefs = new Set(['/connections', '/settings', '/support']);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
@@ -65,21 +91,33 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         )}
       </Link>
 
-      {/* Primary nav */}
+      {/* Primary nav: render every section returned by navigation config,
+          minus the items that the bottom utility column owns. */}
       <nav className="sidebar-nav" aria-label="Основная навигация">
-        {primaryItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
-            title={collapsed ? item.label : undefined}
-          >
-            <span className="nav-link-icon">
-              {primaryIconMap[item.href] ?? <LayoutDashboard size={18} strokeWidth={1.5} />}
-            </span>
-            <span className="nav-link-label">{item.label}</span>
-          </Link>
-        ))}
+        {sections.map((section) => {
+          const items = section.items.filter((it) => !bottomHrefs.has(it.href));
+          if (items.length === 0) return null;
+          return (
+            <div key={section.title} className="sidebar-section">
+              {!collapsed && (
+                <div className="sidebar-section-heading">{section.title}</div>
+              )}
+              {items.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <span className="nav-link-icon">
+                    {iconMap[item.href] ?? <LayoutDashboard size={18} strokeWidth={1.5} />}
+                  </span>
+                  <span className="nav-link-label">{item.label}</span>
+                </Link>
+              ))}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Spacer */}
