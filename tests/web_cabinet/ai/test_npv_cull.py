@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 from web_cabinet.ai.npv_cull import (
     DEFAULTS, compute_npv_keep, compute_npv_cull, recommend,
-    _health_burden_signal,
+    _health_burden_signal, _baseline_cull_prob,
 )
 from web_cabinet.ai.context_helpers.demo_loader import DemoDataStore
 
@@ -189,3 +189,32 @@ def test_health_signal_single_high_mastitis_does_not_trigger_recurrent_flag():
     signal = _health_burden_signal("C1", s)
     assert signal["recurrent"] is False
     assert signal["components"]["mastitis_score"] == 1.5  # 1 × 1.5
+
+
+# ── P1-2c parity-stratified survival tests ────────────────────────────────
+
+
+def test_baseline_cull_prob_stratified_by_parity():
+    """_baseline_cull_prob must return strictly ordered rates per literature."""
+    assert _baseline_cull_prob(1) < _baseline_cull_prob(4)
+    assert _baseline_cull_prob(5) > _baseline_cull_prob(2)
+    assert _baseline_cull_prob(0) == _baseline_cull_prob(2)  # fallback for unknown parity
+    # L6+ should use L5 rate (0.035) since it's ≥5
+    assert _baseline_cull_prob(6) == _baseline_cull_prob(5)
+
+
+def test_compute_npv_keep_uses_stratified_cull(rich_store):
+    """High-parity cow gets aggressive cull-prob → lower NPV_keep vs low-parity cow."""
+    s_low = _store_with(lactations=[dict(animal_id="C1", lactation_no=2,
+        calving_date="2025-12-01", dryoff_date="2026-09-01", days_in_milk=100,
+        milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)])
+    s_high = _store_with(lactations=[dict(animal_id="C1", lactation_no=6,
+        calving_date="2025-12-01", dryoff_date="2026-09-01", days_in_milk=100,
+        milk_305d_kg=9000, fat_pct=3.8, protein_pct=3.2)])
+    npv_low  = compute_npv_keep("C1", s_low,  horizon_years=4, r=0.13)
+    npv_high = compute_npv_keep("C1", s_high, horizon_years=4, r=0.13)
+    assert npv_high["npv_rub"] < npv_low["npv_rub"]
+    # baseline_cull_prob must be surfaced in return dict
+    assert "baseline_cull_prob" in npv_low
+    assert "baseline_cull_prob" in npv_high
+    assert npv_high["baseline_cull_prob"] > npv_low["baseline_cull_prob"]

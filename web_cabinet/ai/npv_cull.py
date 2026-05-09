@@ -27,7 +27,7 @@ DEFAULTS: dict[str, float | int] = {
     "vet_cost_rub_per_year":      5_000.0,
     "discount_rate_default":          0.13,
     "horizon_years_default":          4,
-    "monthly_cull_prob":               0.022,   # ~25%/year Holstein
+    "monthly_cull_prob":               0.022,   # legacy fallback; production uses _baseline_cull_prob(parity)
     "live_weight_kg_default":         620.0,    # Holstein adult
     "breed_avg_peak_kg":              42.0,     # used to scale M_t per cow
     "peak_fallback_ratio":             1.4,     # peak ≈ 1.4 × avg_daily (305d curve)
@@ -197,6 +197,28 @@ def _health_burden_signal(animal_id: str, store) -> dict:
 _recurrent_mastitis_signal = _health_burden_signal
 
 
+# Holstein cull-prob per month, stratified by parity (Compton 2017).
+_PARITY_CULL_PROB = {
+    1: 0.018,  # L1 — heifers, low cull
+    2: 0.020,  # L2-3
+    3: 0.020,
+    4: 0.025,  # L4 — productivity declines
+    5: 0.035,  # L5+ — aggressive cull pressure
+}
+
+
+def _baseline_cull_prob(lactation_no: int) -> float:
+    """Return monthly baseline cull probability stratified by parity.
+
+    Uses Holstein survival literature (Hadley 2006, Compton 2017).
+    Falls back to DEFAULTS["monthly_cull_prob"] (0.022) via L2 entry for
+    unknown/zero parity. For parity ≥5, uses the L5 rate (0.035).
+    """
+    if lactation_no <= 0:
+        return _PARITY_CULL_PROB[2]  # default mid-parity
+    return _PARITY_CULL_PROB.get(lactation_no, _PARITY_CULL_PROB[5])
+
+
 def _peak_daily_from_lactation(lact: Optional[dict], c: dict) -> float:
     """Derive peak daily milk (kg) from a lactation record.
 
@@ -265,7 +287,13 @@ def compute_npv_keep(
         peak_daily * health["milk_factor"], 0, horizon_months,
     )
     monthly_vet = c["vet_cost_rub_per_year"] * health["vet_factor"] / 12.0
-    monthly_cull_prob = c["monthly_cull_prob"] * health["cull_prob_factor"]
+    parity = (lact or {}).get("lactation_no") or 0
+    try:
+        parity = int(float(parity))
+    except (TypeError, ValueError):
+        parity = 0
+    baseline_cull = _baseline_cull_prob(parity)
+    monthly_cull_prob = baseline_cull * health["cull_prob_factor"]
 
     npv = 0.0
     breakdown: list[dict] = []
@@ -297,6 +325,7 @@ def compute_npv_keep(
         "horizon_months": horizon_months,
         "discount_rate": r,
         "peak_kg_used": peak_daily,
+        "baseline_cull_prob": baseline_cull,
         "salvage_rub_pv": round(salvage_pv, 2),
         "npv_rub": round(npv, 2),
         "monthly_breakdown": breakdown,
