@@ -34,27 +34,47 @@ def main() -> int:
     # runs — the unique constraint (farm_id, metric_id, detector_type,
     # period_start) only protects us when the timestamp is stable.
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    # ~15 incidents across production / health / repro / behavior / feed / weather
+    # so analytics overlays render on most tabs. Dedup is handled by the unique
+    # (farm_id, metric_id, detector_type, period_start) constraint, so re-running
+    # this seeder is idempotent.
+    specs = [
+        # Production tab
+        ("milk_ecm", "gap", "warn", -10, -8, ["milk_meter_01"], "Пропуск данных надоев"),
+        ("scc", "stuck", "warn", -14, -7, ["scc_meter_03"], "Залипание SCC-датчика"),
+        ("scc", "range", "high", -8, -5, ["scc_meter_03"], "Средний SCC выше 350k — пересмотр гигиены"),
+        ("fat_protein", "stuck", "warn", -28, -23, ["milk_analyzer_02"], "Соотношение жир/белок не меняется — повтор анализатора"),
+        # Health tab
+        ("mastitis", "range", "warn", -42, -38, [], "Высокая частота мастита: 4 случая за неделю"),
+        ("mastitis", "gap", "warn", -20, -19, [], "Пропуск регистрации маститов в гр. 2"),
+        ("health_issues", "range", "high", -35, -28, [], "Резкий рост клинических случаев — 3× от baseline"),
+        # Reproduction tab
+        ("inseminations", "gap", "warn", -25, -22, [], "Пропуск регистрации осеменений (АИ-техник offline)"),
+        ("repro_rates", "flatline", "warn", -50, -44, [], "CR застрял на 32% — подозрение на неточность регистрации"),
+        ("days_open", "range", "warn", -32, -28, [], "Days open поднялся выше 145д — триггер пересмотра ВВП"),
+        ("vwp", "range", "warn", -38, -33, [], "ВВП ушёл выше 65д — корректировка протокола"),
+        # Behavior tab
+        ("rumination", "stuck", "warn", -45, -39, ["collar_grp4"], "Залипание датчиков жвачки в гр. 4"),
+        ("activity", "gap", "warn", -18, -14, ["wifi_barn1"], "Пропуск активности — Wi-Fi сбой в коровнике 1"),
+        # Feed tab
+        ("dmi", "range", "warn", -40, -34, ["mixer_02"], "DMI падение -8% при стабильной загрузке миксера"),
+        ("dmi", "flatline", "warn", -22, -19, ["scale_grp3"], "DMI плоский 4 дня — подозрение на залипание весов"),
+        ("feed_cost", "gap", "warn", -12, -10, [], "Пропуск ввода цен по компонентам рациона"),
+        # Weather tab
+        ("thi", "range", "high", -55, -50, ["weather_station"], "THI 78+ — heat-stress alert в группе 4"),
+    ]
     incidents = [
         {
-            "incident_id": f"qc_seed_gap_{uuid.uuid4().hex[:6]}",
-            "metric_id": "milk_ecm",
-            "period_start": today - timedelta(days=10),
-            "period_end": today - timedelta(days=8),
-            "detector_type": "gap",
-            "severity": "warn",
-            "affected_sensors": ["milk_meter_01"],
-            "root_cause": "Пропуск данных надоев",
-        },
-        {
-            "incident_id": f"qc_seed_stuck_{uuid.uuid4().hex[:6]}",
-            "metric_id": "scc",
-            "period_start": today - timedelta(days=14),
-            "period_end": today - timedelta(days=7),
-            "detector_type": "stuck",
-            "severity": "warn",
-            "affected_sensors": ["scc_meter_03"],
-            "root_cause": "Залипание SCC-датчика",
-        },
+            "incident_id": f"qc_seed_{metric}_{detector}_{uuid.uuid4().hex[:6]}",
+            "metric_id": metric,
+            "period_start": today + timedelta(days=ds),
+            "period_end": today + timedelta(days=de),
+            "detector_type": detector,
+            "severity": severity,
+            "affected_sensors": sensors,
+            "root_cause": cause,
+        }
+        for metric, detector, severity, ds, de, sensors, cause in specs
     ]
     inserted = 0
     with _conn() as conn:
