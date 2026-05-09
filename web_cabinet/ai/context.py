@@ -73,6 +73,7 @@ def build_farm_context(
     include_cow_details: bool = False,
     specific_cow_ids: Optional[list[str]] = None,
     period_days: int = 7,
+    context_token_budget: int = 3000,
 ) -> Any:
     """
     Build farm snapshot for Claude injection.
@@ -169,11 +170,18 @@ def build_farm_context(
             for cow_id in specific_cow_ids
         }
 
-    # ---- token count ----
-    ctx_text = json.dumps(ctx, ensure_ascii=False, default=str)
-    ctx["token_count"] = _count_tokens(ctx_text)
+    # ---- §3.2.1 knapsack compression ----
+    from web_cabinet.ai.context_compression import (
+        segment_farm_context, compress_farm_context as _compress,
+        reconstruct_ctx, compression_stats,
+    )
+    segments = segment_farm_context(ctx, as_of=as_of)
+    kept = _compress(segments, budget=context_token_budget)
+    compressed = reconstruct_ctx(kept)
+    compressed["compression_stats"] = compression_stats(kept, budget=context_token_budget)
+    compressed["token_count"] = compressed["compression_stats"]["used_tokens"]
 
-    return ctx
+    return compressed
 
 
 # ---------------------------------------------------------------------------
