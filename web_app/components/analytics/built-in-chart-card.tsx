@@ -1,10 +1,10 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
-import { useOverlays } from './analytics-overlays-context';
+import { useOverlays, type OverlayEvent } from './analytics-overlays-context';
 import { QcIncidentCard } from './qc-incident-card';
+import { EventPreviewCard } from './event-preview-card';
 import { FullscreenChartModal } from './fullscreen-chart-modal';
 import type { QcIncident } from '@/lib/api/qc-client';
 import type { ChartSeries } from '@/lib/api/analytics';
@@ -34,8 +34,8 @@ export function BuiltInChartCard({
   alertThreshold, onAlert, onDelete, onRename,
 }: Props) {
   const overlays = useOverlays();
-  const router = useRouter();
   const [openIncident, setOpenIncident] = useState<QcIncident | null>(null);
+  const [openEvent, setOpenEvent] = useState<OverlayEvent | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
 
   // Overlays align against the chart's own iso_dates (parallel to labels).
@@ -75,7 +75,8 @@ export function BuiltInChartCard({
     if (inc) setOpenIncident(inc);
   }
   function onEventClick(event_id: string) {
-    router.push(`/timeline?event=${encodeURIComponent(event_id)}`);
+    const ev = (overlays.eventsByMetric[metricId] ?? []).find((e) => e.event_id === event_id);
+    if (ev) setOpenEvent(ev);
   }
 
   return (
@@ -108,6 +109,9 @@ export function BuiltInChartCard({
           onClose={() => setOpenIncident(null)}
           onDismissed={() => { setOpenIncident(null); overlays.refetch(); }}
         />
+      )}
+      {openEvent && (
+        <EventPreviewCard event={openEvent} onClose={() => setOpenEvent(null)} />
       )}
       <FullscreenChartModal
         open={fullscreen}

@@ -301,7 +301,10 @@ export function BiChart({
                    onClick={() => onEventClick?.(e.event_id)}>
                   <line x1={x} y1={PT} x2={x} y2={PT + IH}
                         stroke="var(--accent, #0369a1)" strokeWidth={1} strokeDasharray="2 2" opacity={0.55} />
-                  <circle cx={x} cy={PT + 4} r={3} fill="var(--accent, #0369a1)" />
+                  {/* Visible dot */}
+                  <circle cx={x} cy={PT + 4} r={3.5} fill="var(--accent, #0369a1)" />
+                  {/* Larger transparent hit area to make the dot easier to click */}
+                  <circle cx={x} cy={PT + 4} r={9} fill="transparent" pointerEvents="all" />
                   <title>{`${e.title} — ${e.event_date}`}</title>
                 </g>
               );

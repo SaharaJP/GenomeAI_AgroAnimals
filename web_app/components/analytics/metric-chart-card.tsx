@@ -31,9 +31,9 @@ import { ChartCard } from './chart-card';
 import { BiChart } from './bi-chart';
 import { METRICS } from './add-chart-dialog';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useOverlays } from './analytics-overlays-context';
+import { useOverlays, type OverlayEvent } from './analytics-overlays-context';
 import { QcIncidentCard } from './qc-incident-card';
+import { EventPreviewCard } from './event-preview-card';
 import { FullscreenChartModal } from './fullscreen-chart-modal';
 import type { QcIncident } from '@/lib/api/qc-client';
 
@@ -85,8 +85,8 @@ interface Props {
 export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDelete, onRename, onAlert }: Props) {
   // 1. Hooks first — always called (Rules of Hooks)
   const overlays = useOverlays();
-  const router = useRouter();
   const [openIncident, setOpenIncident] = useState<QcIncident | null>(null);
+  const [openEvent, setOpenEvent] = useState<OverlayEvent | null>(null);
   const [fullscreen, setFullscreen] = useState(false);
 
   // 2. Derived values
@@ -148,7 +148,8 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
     if (inc) setOpenIncident(inc);
   }
   function onEventClick(event_id: string) {
-    router.push(`/timeline?event=${encodeURIComponent(event_id)}`);
+    const ev = (overlays.eventsByMetric[metricId] ?? []).find((e) => e.event_id === event_id);
+    if (ev) setOpenEvent(ev);
   }
 
   return (
@@ -181,6 +182,9 @@ export function MetricChartCard({ metricId, titleOverride, alertThreshold, onDel
           onClose={() => setOpenIncident(null)}
           onDismissed={() => { setOpenIncident(null); overlays.refetch(); }}
         />
+      )}
+      {openEvent && (
+        <EventPreviewCard event={openEvent} onClose={() => setOpenEvent(null)} />
       )}
       <FullscreenChartModal
         open={fullscreen}

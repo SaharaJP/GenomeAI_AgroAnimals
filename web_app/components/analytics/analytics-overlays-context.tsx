@@ -7,6 +7,9 @@ export interface OverlayEvent {
   title: string;
   event_date: string;
   linked_metric_ids: string[];
+  body?: string;
+  event_type?: string;
+  source?: string;
 }
 
 interface OverlaysCtx {
@@ -60,11 +63,24 @@ export function AnalyticsOverlaysProvider({ farmId, children }: { farmId: string
       const r = await fetch(`/api/backend/api/timeline/events?farm_id=${encodeURIComponent(farmId)}`, { cache: 'no-store' });
       if (r.ok) {
         const data = await r.json();
-        const items: OverlayEvent[] = (data.items || []).map((e: { event_id?: string; timeline_event_id?: string; title?: string; event_date?: string; date?: string; linked_metric_ids?: string[] }) => ({
+        const items: OverlayEvent[] = (data.items || []).map((e: {
+          event_id?: string;
+          timeline_event_id?: string;
+          title?: string;
+          event_date?: string;
+          date?: string;
+          linked_metric_ids?: string[];
+          body?: string;
+          event_type?: string;
+          source?: string;
+        }) => ({
           event_id: e.event_id ?? e.timeline_event_id ?? '',
           title: e.title ?? '',
           event_date: e.event_date ?? e.date ?? '',
           linked_metric_ids: e.linked_metric_ids ?? [],
+          body: e.body ?? '',
+          event_type: e.event_type ?? '',
+          source: e.source ?? '',
         }));
         const grouped: Record<string, OverlayEvent[]> = {};
         for (const ev of items) {
