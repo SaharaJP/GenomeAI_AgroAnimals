@@ -24,7 +24,7 @@ function buildEconomicsAssistantHref(view: EconomicsViewModel): string {
       : '';
   const dataVersion = scenarioDataVersion || firstReportDataVersion(view.reportItems as Array<Record<string, unknown>>) || DEFAULT_DATA_VERSION;
   const target = `genomeai://copilot/fact?data_version=${encodeURIComponent(dataVersion)}&section=modules.economics&table=summary_farm_top`;
-  return `/assistant?data_version=${encodeURIComponent(dataVersion)}&target=${encodeURIComponent(target)}`;
+  return `/copilot?data_version=${encodeURIComponent(dataVersion)}&target=${encodeURIComponent(target)}`;
 }
 
 export function EconomicsMasterSurface() {
@@ -56,7 +56,7 @@ export function EconomicsMasterSurface() {
           <h3 className="card-title">Linked office flows</h3>
           <div className="linked-inline-actions">
             <Link href="/analytics?tab=reports">Open reports</Link>
-            {view ? <Link href={buildEconomicsAssistantHref(view)}>Explain in assistant</Link> : <Link href="/assistant">Explain in assistant</Link>}
+            {view ? <Link href={buildEconomicsAssistantHref(view)}>Explain in assistant</Link> : <Link href="/copilot">Explain in assistant</Link>}
             <Link href="/decisions?context=economics">Decision trail</Link>
             <Link href="/support?context=economics">Support / pilot evidence</Link>
           </div>

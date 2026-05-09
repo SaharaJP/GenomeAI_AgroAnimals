@@ -5,7 +5,7 @@ import { Card, MetricCard } from '@/components/ui/card';
 import { FactPackGuardrailNote } from '@/components/explainability/fact-pack-guardrail-note';
 import { SourceLinkagePanel } from '@/components/explainability/source-linkage-panel';
 import { ObjectExplainabilityPanel } from '@/components/explainability/object-explainability-panel';
-import { AssistantEntryPoints } from '@/components/assistant/assistant-entry-points';
+import { ExplainEntryPoints } from '@/components/copilot/explain-entry-points';
 import { DecisionIntelligenceWidgets } from '@/components/decision/decision-intelligence-widgets';
 import { ReportGovernancePanel } from '@/components/analytics/reports/report-governance-panel';
 import { fetchDecisionIntelligence, fetchFeedbackFeed, fetchReportsCatalog, type ReportApprovalState } from '@/lib/api/profiles-reports-assistant';
@@ -79,7 +79,7 @@ export function ReportViewSurface({ dataVersion, reportVersion }: { dataVersion:
       </div>
       <div className="grid grid-2">
         <SourceLinkagePanel items={linkageSummary} />
-        <AssistantEntryPoints dataVersion={dataVersion} reportVersion={reportVersion} contextLabel="report_view" />
+        <ExplainEntryPoints dataVersion={dataVersion} reportVersion={reportVersion} contextLabel="report_view" />
       </div>
       <ObjectExplainabilityPanel
         title="Объяснимость отчёта"
@@ -92,7 +92,7 @@ export function ReportViewSurface({ dataVersion, reportVersion }: { dataVersion:
       <Card>
         <h3 className="card-title">Связанные действия</h3>
         <div className="linked-inline-actions">
-          <Link href={`/assistant?target=report&data_version=${encodeURIComponent(dataVersion)}&report_version=${encodeURIComponent(reportVersion)}`}>Объяснить в ассистенте</Link>
+          <Link href={`/copilot?target=report&data_version=${encodeURIComponent(dataVersion)}&report_version=${encodeURIComponent(reportVersion)}`}>Объяснить в ассистенте</Link>
           <Link href={`/decisions?report_version=${encodeURIComponent(reportVersion)}`}>Решение</Link>
           <Link href={`/support?report_version=${encodeURIComponent(reportVersion)}`}>Обратная связь / поддержка</Link>
           <Link href="/analytics?tab=reports">К каталогу отчётов</Link>
