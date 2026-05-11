@@ -14,6 +14,8 @@ from packages.contracts.api_boundary_v1 import (
     AssistantResolveTargetResponse,
     BriefingScheduleRequest,
     BriefingScheduleResponse,
+    RecommendedTask,
+    RecommendedTasksListResponse,
     DecisionIntelligenceResponse,
     DecisionIntelligenceSummary,
     DecisionIntelligenceTopAction,
@@ -75,6 +77,7 @@ from core.workflow.briefing_schedule import (
     upsert_briefing_schedule,
     validate_schedule_input,
 )
+from core.workflow.recommended_tasks import build_recommended_tasks_from_insights
 from core.workflow.decisions import list_decisions_for_object
 from core.workflow.summaries import operational_summary_use_case, overdue_tasks_use_case
 from core.workflow.tasks import list_tasks_for_object
@@ -1363,6 +1366,35 @@ def boundary_insights_delete(
         raise HTTPException(status_code=403)
     _delete_insight(insight_id)
     return {"ok": True, "insight_id": insight_id}
+
+
+@router.get('/recommended-tasks', response_model=RecommendedTasksListResponse)
+def boundary_recommended_tasks_list(
+    farm_id: str = 'INV_FARM_001',
+    status: Optional[str] = None,
+    category: Optional[str] = None,
+    severity_min: Optional[str] = None,
+    only_active: bool = True,
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'tasks.view', 'alerts.view', 'reports.view'):
+        raise HTTPException(status_code=403)
+    user_id = str(user.get('user_id') or user.get('username') or 'unknown')
+    insights_resp = _list_insights(
+        farm_id=farm_id,
+        status=status,
+        user_id=user_id,
+        category=category,
+        severity_min=severity_min,
+    )
+    proposals = build_recommended_tasks_from_insights(
+        insights_resp.items,
+        only_active=bool(only_active),
+    )
+    return RecommendedTasksListResponse(
+        total=len(proposals),
+        items=[RecommendedTask(**p) for p in proposals],
+    )
 
 
 @router.get('/qc/incidents', response_model=QcIncidentsListResponse)

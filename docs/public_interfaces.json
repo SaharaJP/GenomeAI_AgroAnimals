@@ -1448,6 +1448,12 @@
         ]
       },
       {
+        "path": "/recommended-tasks",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
         "path": "/qc/run",
         "methods": [
           "POST"

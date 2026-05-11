@@ -510,6 +510,25 @@ class UploadCommitResponse(BaseModel):
     skipped_duplicates: int = 0
 
 
+class RecommendedTask(BaseModel):
+    recommended_task_id: str
+    source_insight_id: str
+    title: str
+    description: Optional[str] = None
+    priority: int = 3
+    due_at: Optional[str] = None
+    assignee_role: Optional[str] = None
+    assignee_user_id: Optional[int] = None
+    domain: Optional[str] = None
+    why_summary: str = ''
+
+
+class RecommendedTasksListResponse(BaseModel):
+    schema: str = 'genomeai.api.recommended_tasks.list.v1'
+    total: int = 0
+    items: list[RecommendedTask] = Field(default_factory=list)
+
+
 class BriefingScheduleRequest(BaseModel):
     periodicity: str
     time_of_day: str
