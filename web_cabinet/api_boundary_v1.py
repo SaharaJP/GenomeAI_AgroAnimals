@@ -12,6 +12,8 @@ from packages.contracts.api_boundary_v1 import (
     ApiLinkage,
     AssistantResolveTargetRequest,
     AssistantResolveTargetResponse,
+    BriefingScheduleRequest,
+    BriefingScheduleResponse,
     DecisionIntelligenceResponse,
     DecisionIntelligenceSummary,
     DecisionIntelligenceTopAction,
@@ -68,9 +70,15 @@ from core.security import has_any_permission as core_has_any_permission
 from core.support_sla_incident import build_support_sla_incident_summary
 from core.workflow import list_alerts, list_decisions, list_tasks
 from core.workflow.alerts import list_alerts_for_object
+from core.workflow.briefing_schedule import (
+    get_briefing_schedule,
+    upsert_briefing_schedule,
+    validate_schedule_input,
+)
 from core.workflow.decisions import list_decisions_for_object
 from core.workflow.summaries import operational_summary_use_case, overdue_tasks_use_case
 from core.workflow.tasks import list_tasks_for_object
+from core.audit.events import write_audit
 from genomeai.ai_assistant_rag import build_fact_pack_for_assistant, load_copilot_answer_config
 from genomeai.copilot_target_resolver import (
     build_copilot_api_target,
@@ -1476,3 +1484,64 @@ async def boundary_timeline_event_create(
         'affected_groups': body.get('affected_groups', []),
     }
     return {'event_id': event_id, 'event': new_event, 'status': 'pending_analysis', 'demo': True}
+
+
+def _briefing_response(payload: dict) -> BriefingScheduleResponse:
+    return BriefingScheduleResponse(
+        tenant_id=str(payload.get('tenant_id') or 'default'),
+        periodicity=str(payload.get('periodicity') or 'weekly'),
+        time_of_day=str(payload.get('time_of_day') or '07:00'),
+        auto_create_tasks=bool(payload.get('auto_create_tasks') or False),
+        updated_at=payload.get('updated_at'),
+        updated_by=payload.get('updated_by'),
+    )
+
+
+@router.get('/briefing/schedule', response_model=BriefingScheduleResponse)
+def boundary_briefing_schedule_get(
+    user=Depends(require_permissions('briefing.schedule.view')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    return _briefing_response(get_briefing_schedule(conn, tenant_id=tenant_id))
+
+
+@router.put('/briefing/schedule', response_model=BriefingScheduleResponse)
+def boundary_briefing_schedule_put(
+    body: BriefingScheduleRequest,
+    request: Request,
+    user=Depends(require_permissions('briefing.schedule.manage')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    err = validate_schedule_input(periodicity=body.periodicity, time_of_day=body.time_of_day)
+    if err:
+        raise HTTPException(status_code=400, detail={'error': 'briefing.schedule.invalid', 'detail': err})
+
+    before, after = upsert_briefing_schedule(
+        conn,
+        tenant_id=tenant_id,
+        periodicity=body.periodicity,
+        time_of_day=body.time_of_day,
+        auto_create_tasks=body.auto_create_tasks,
+        user_id=user.get('user_id') or 0,
+    )
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='briefing.schedule.update',
+            object_type='briefing_schedule',
+            object_id=tenant_id,
+            before=before,
+            after=after,
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    return _briefing_response(after)

@@ -85,6 +85,10 @@ PERM_COLLAB_RECOMMENDATIONS_WRITE = "collaboration.recommendations.write"
 PERM_COLLAB_APPROVAL_REQUEST = "collaboration.approvals.request"
 PERM_COLLAB_APPROVAL_REVIEW = "collaboration.approvals.review"
 
+# --- P1-1 Briefing schedule ---
+PERM_BRIEFING_SCHEDULE_VIEW = "briefing.schedule.view"
+PERM_BRIEFING_SCHEDULE_MANAGE = "briefing.schedule.manage"
+
 ALL_PERMISSIONS: list[str] = [
     PERM_KPI_VIEW,
     PERM_DRILLDOWN_VIEW,
@@ -155,6 +159,10 @@ ALL_PERMISSIONS: list[str] = [
     PERM_COLLAB_RECOMMENDATIONS_WRITE,
     PERM_COLLAB_APPROVAL_REQUEST,
     PERM_COLLAB_APPROVAL_REVIEW,
+
+    # P1-1 Briefing schedule
+    PERM_BRIEFING_SCHEDULE_VIEW,
+    PERM_BRIEFING_SCHEDULE_MANAGE,
 ]
 
 # ---- Role catalog ----
@@ -231,6 +239,10 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         PERM_COLLAB_RECOMMENDATIONS_WRITE,
         PERM_COLLAB_APPROVAL_REQUEST,
         PERM_COLLAB_APPROVAL_REVIEW,
+
+        # P1-1 briefing schedule
+        PERM_BRIEFING_SCHEDULE_VIEW,
+        PERM_BRIEFING_SCHEDULE_MANAGE,
     ],
     ROLE_ZOOTECH: [
         PERM_KPI_VIEW,
@@ -289,6 +301,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
 
         # T12-04 reports (read)
         PERM_REPORTS_VIEW,
+
+        # P1-1 briefing schedule (read-only)
+        PERM_BRIEFING_SCHEDULE_VIEW,
     ],
     ROLE_VET: [
         PERM_KPI_VIEW,

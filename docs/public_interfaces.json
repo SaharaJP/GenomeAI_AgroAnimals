@@ -1189,6 +1189,13 @@
         ]
       },
       {
+        "path": "/briefing/schedule",
+        "methods": [
+          "GET",
+          "PUT"
+        ]
+      },
+      {
         "path": "/configs",
         "methods": [
           "GET"

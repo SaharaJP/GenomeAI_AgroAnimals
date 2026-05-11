@@ -508,3 +508,19 @@ class UploadCommitResponse(BaseModel):
     schema: str = 'genomeai.api.uploads.commit.v1'
     inserted: int = 0
     skipped_duplicates: int = 0
+
+
+class BriefingScheduleRequest(BaseModel):
+    periodicity: str
+    time_of_day: str
+    auto_create_tasks: bool
+
+
+class BriefingScheduleResponse(BaseModel):
+    schema: str = 'genomeai.api.briefing.schedule.v1'
+    tenant_id: str
+    periodicity: str = 'weekly'
+    time_of_day: str = '07:00'
+    auto_create_tasks: bool = False
+    updated_at: Optional[str] = None
+    updated_by: Optional[int] = None
