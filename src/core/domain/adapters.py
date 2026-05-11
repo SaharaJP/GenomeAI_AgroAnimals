@@ -96,6 +96,7 @@ def task_from_row(row: Mapping[str, Any]) -> Task:
         latest_outcome_by=(int(payload.get("latest_outcome_by")) if payload.get("latest_outcome_by") not in (None, "") else None),
         latest_outcome_comment=payload.get("latest_outcome_comment"),
         outcome_metrics=dict(payload.get("outcome_metrics") or {}),
+        source_insight_id=payload.get("source_insight_id"),
     )
 
 

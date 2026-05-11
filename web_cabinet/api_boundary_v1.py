@@ -16,6 +16,9 @@ from packages.contracts.api_boundary_v1 import (
     BriefingScheduleResponse,
     RecommendedTask,
     RecommendedTasksListResponse,
+    WorklistsFromRecommendedRequest,
+    WorklistsFromRecommendedResponse,
+    WorklistsFromRecommendedItem,
     DecisionIntelligenceResponse,
     DecisionIntelligenceSummary,
     DecisionIntelligenceTopAction,
@@ -78,6 +81,8 @@ from core.workflow.briefing_schedule import (
     validate_schedule_input,
 )
 from core.workflow.recommended_tasks import build_recommended_tasks_from_insights
+from core.workflow.tasks import create_task as _create_task
+from core.domain import TaskCreate as _DomainTaskCreate
 from core.workflow.decisions import list_decisions_for_object
 from core.workflow.summaries import operational_summary_use_case, overdue_tasks_use_case
 from core.workflow.tasks import list_tasks_for_object
@@ -1366,6 +1371,117 @@ def boundary_insights_delete(
         raise HTTPException(status_code=403)
     _delete_insight(insight_id)
     return {"ok": True, "insight_id": insight_id}
+
+
+_ROLE_TO_TEAM: dict[str, str] = {
+    'Vet': 'team-health',
+    'Zootech': 'team-data',
+    'Director': 'team-econ',
+}
+_DOMAIN_TO_TEAM: dict[str, str] = {
+    'health': 'team-health',
+    'welfare': 'team-health',
+    'reproduction': 'team-repro',
+    'production': 'team-data',
+    'feeding': 'team-data',
+    'economics': 'team-econ',
+}
+
+
+def _team_for_role_or_domain(*, role: Optional[str], domain: Optional[str]) -> Optional[str]:
+    if role and role in _ROLE_TO_TEAM:
+        return _ROLE_TO_TEAM[role]
+    if domain and str(domain).lower() in _DOMAIN_TO_TEAM:
+        return _DOMAIN_TO_TEAM[str(domain).lower()]
+    return None
+
+
+@router.post('/worklists/from-recommended', response_model=WorklistsFromRecommendedResponse)
+def boundary_worklists_from_recommended(
+    body: WorklistsFromRecommendedRequest,
+    request: Request,
+    user=Depends(require_permissions('tasks.write')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    out_items: list[WorklistsFromRecommendedItem] = []
+    created_count = 0
+    reused_count = 0
+
+    for rec in body.items:
+        if not rec.source_insight_id or not rec.recommended_task_id:
+            raise HTTPException(
+                status_code=400,
+                detail={'error': 'recommended_task.invalid', 'detail': 'source_insight_id and recommended_task_id are required'},
+            )
+        dedupe_key = f'insight:{rec.source_insight_id}:{rec.recommended_task_id}'
+
+        existing = conn.execute(
+            "SELECT task_id FROM tasks_v1 WHERE tenant_id=? AND dedupe_key=? LIMIT 1",
+            (tenant_id, dedupe_key),
+        ).fetchone()
+        if existing:
+            out_items.append(WorklistsFromRecommendedItem(
+                recommended_task_id=rec.recommended_task_id,
+                source_insight_id=rec.source_insight_id,
+                task_id=str(dict(existing)['task_id']),
+                created=False,
+            ))
+            reused_count += 1
+            continue
+
+        team = _team_for_role_or_domain(role=rec.assignee_role, domain=rec.domain)
+        task_payload = _DomainTaskCreate(
+            task_type='insight_followup',
+            title=rec.title,
+            domain=rec.domain,
+            priority=int(rec.priority or 3),
+            due_at=rec.due_at,
+            owner_user_id=rec.assignee_user_id,
+            assignee_team=team,
+            related_alert=rec.source_insight_id,
+            why={
+                'summary': rec.why_summary,
+                'description': rec.description or '',
+                'assignee_role_hint': rec.assignee_role or '',
+            },
+            dedupe_key=dedupe_key,
+            source_insight_id=rec.source_insight_id,
+        )
+        new_task_id = _create_task(conn, tenant_id=tenant_id, t=task_payload)
+        out_items.append(WorklistsFromRecommendedItem(
+            recommended_task_id=rec.recommended_task_id,
+            source_insight_id=rec.source_insight_id,
+            task_id=new_task_id,
+            created=True,
+        ))
+        created_count += 1
+
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='tasks.bulk_create_from_insights',
+            object_type='tasks_v1',
+            object_id=f'bulk:{created_count}+{reused_count}',
+            before=None,
+            after={'created': created_count, 'reused': reused_count, 'items': [i.model_dump() for i in out_items]},
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+
+    return WorklistsFromRecommendedResponse(
+        total=len(out_items),
+        created=created_count,
+        reused=reused_count,
+        items=out_items,
+    )
 
 
 @router.get('/recommended-tasks', response_model=RecommendedTasksListResponse)

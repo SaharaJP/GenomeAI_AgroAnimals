@@ -182,6 +182,7 @@ class Task:
     latest_outcome_by: Optional[int] = None
     latest_outcome_comment: Optional[str] = None
     outcome_metrics: dict[str, Any] | None = None
+    source_insight_id: Optional[str] = None
 
 
 TaskCreate = Task

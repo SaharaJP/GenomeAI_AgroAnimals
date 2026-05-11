@@ -275,6 +275,7 @@ def create_task(conn: Any, *, tenant_id: str, t: TaskCreate) -> str:
             "scoring_run": t.scoring_run,
             "report_version": t.report_version,
             "dedupe_key": t.dedupe_key,
+            "source_insight_id": t.source_insight_id,
         },
     )
 

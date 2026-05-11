@@ -529,6 +529,25 @@ class RecommendedTasksListResponse(BaseModel):
     items: list[RecommendedTask] = Field(default_factory=list)
 
 
+class WorklistsFromRecommendedRequest(BaseModel):
+    items: list[RecommendedTask] = Field(default_factory=list)
+
+
+class WorklistsFromRecommendedItem(BaseModel):
+    recommended_task_id: str
+    source_insight_id: str
+    task_id: str
+    created: bool
+
+
+class WorklistsFromRecommendedResponse(BaseModel):
+    schema: str = 'genomeai.api.worklists.from_recommended.v1'
+    total: int = 0
+    created: int = 0
+    reused: int = 0
+    items: list[WorklistsFromRecommendedItem] = Field(default_factory=list)
+
+
 class BriefingScheduleRequest(BaseModel):
     periodicity: str
     time_of_day: str

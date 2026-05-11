@@ -392,8 +392,8 @@ class TasksRepo(BaseSqlRepo):
               worklist_type, confidence, linked_decision_id, linked_task_id, linked_source_facts_json,
               attachments_json, why_json, what_to_do_json,
               data_version, qc_run, model_version, scoring_run, report_version,
-              dedupe_key
-            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+              dedupe_key, source_insight_id
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 task_id,
@@ -428,6 +428,7 @@ class TasksRepo(BaseSqlRepo):
                 payload.get("scoring_run"),
                 payload.get("report_version"),
                 payload.get("dedupe_key"),
+                payload.get("source_insight_id"),
             ),
         )
         self.conn.commit()

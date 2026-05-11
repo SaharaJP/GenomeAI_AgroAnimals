@@ -1454,6 +1454,12 @@
         ]
       },
       {
+        "path": "/worklists/from-recommended",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
         "path": "/qc/run",
         "methods": [
           "POST"
