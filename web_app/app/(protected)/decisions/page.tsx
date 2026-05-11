@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { apiFetch } from '@/lib/api/client';
 import { normalizeListResponse, type ListResponse } from '@/lib/api/contracts';
+import { pathLabels } from '@/lib/navigation';
 
 type DecisionRow = {
   decision_id?: string;
@@ -86,7 +87,7 @@ export default function DecisionsPage() {
     <div className="grid">
       <div className="topbar">
         <div>
-          <h1 className="page-title">Решения</h1>
+          <h1 className="page-title">{pathLabels['/decisions']}</h1>
           <p className="page-subtitle">
             Журнал решений по животным (keep / cull / treat / defer) с привязкой
             к рекомендациям, аудит-трейлом и автором.
@@ -121,7 +122,7 @@ export default function DecisionsPage() {
       <Card>
         <h3 className="card-title">Журнал решений</h3>
         <FilterBar placeholder="Поиск по решениям…" onChange={setQuery} />
-        {loading && <div style={{ marginTop: 12 }}>Загрузка…</div>}
+        {loading && <div className="card" style={{ marginTop: 12 }}>Загрузка…</div>}
         {!loading && error && <div className="error-text" style={{ marginTop: 12 }}>{error}</div>}
         {!loading && !error && filtered.length === 0 && (
           <EmptyState

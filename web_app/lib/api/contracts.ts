@@ -318,7 +318,7 @@ export type ReadinessResponse = {
     failed: number;
   };
   checks: ReadinessCheck[];
-  source_paths: Record<string, string>;
+  source_paths: Record<string, unknown>;
 };
 
 export type ListResponse<T> = {

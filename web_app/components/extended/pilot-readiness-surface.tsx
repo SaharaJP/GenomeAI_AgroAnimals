@@ -1,8 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { Card, MetricCard } from '@/components/ui/card';
+import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { fetchExtendedBundle } from '@/lib/api/extended-surfaces';
 import type { PilotResponse, ReadinessResponse, ReadinessCheck } from '@/lib/api/contracts';
+import { pathLabels } from '@/lib/navigation';
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: 'var(--danger, #d33)',
@@ -75,17 +77,25 @@ function ChecksTable({ checks }: { checks: ReadinessCheck[] }) {
   );
 }
 
-function SourcePathsList({ paths }: { paths: Record<string, string> }) {
+function SourcePathsList({ paths }: { paths: Record<string, unknown> }) {
   const entries = Object.entries(paths);
   if (!entries.length) return null;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12 }}>
-      {entries.map(([key, value]) => (
-        <div key={key} style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-          <span style={{ color: 'var(--muted, #888)', minWidth: 110 }}>{key}</span>
-          <code style={{ fontFamily: 'var(--mono, monospace)', fontSize: 11, color: 'var(--muted-strong, #555)' }}>{value}</code>
-        </div>
-      ))}
+      {entries.map(([key, value]) => {
+        const isScalar = value === null || typeof value !== 'object';
+        const rendered = isScalar ? String(value ?? '') : JSON.stringify(value, null, 2);
+        return (
+          <div key={key} style={{ display: 'flex', gap: 8, alignItems: isScalar ? 'baseline' : 'flex-start' }}>
+            <span style={{ color: 'var(--muted, #888)', minWidth: 110 }}>{key}</span>
+            {isScalar ? (
+              <code style={{ fontFamily: 'var(--mono, monospace)', fontSize: 11, color: 'var(--muted-strong, #555)' }}>{rendered}</code>
+            ) : (
+              <pre style={{ fontFamily: 'var(--mono, monospace)', fontSize: 11, color: 'var(--muted-strong, #555)', margin: 0, whiteSpace: 'pre-wrap' }}>{rendered}</pre>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -102,7 +112,7 @@ export function PilotSurface() {
     <div className="grid">
       <div className="topbar">
         <div>
-          <h1 className="page-title">Пилот</h1>
+          <h1 className="page-title">{pathLabels['/pilot']}</h1>
           <p className="page-subtitle">
             Сводка пилот-фермы: data versions, упакованные релизы, статус выгрузок.
           </p>
@@ -166,7 +176,7 @@ export function ReadinessSurface() {
     <div className="grid">
       <div className="topbar">
         <div>
-          <h1 className="page-title">Готовность системы</h1>
+          <h1 className="page-title">{pathLabels['/readiness']}</h1>
           <p className="page-subtitle">
             Чек-лист готовности контура к pilot rollout: secret-leak gates, Postgres-only profile lockdown,
             миграции, audit retention, support-bundle. Соответствует CLAUDE.md §4 (operational rollout).
@@ -191,6 +201,15 @@ export function ReadinessSurface() {
               value={`${payload.summary.warnings} / ${payload.summary.failed}`}
             />
           </div>
+
+          <ExplainabilityBlock
+            title="Принципы работы"
+            reasons={[
+              'Чек-лист готовности агрегируется бэкендом и отражает фактические production-проверки (secret leak gates, Postgres-only lockdown, audit retention, support-bundle).',
+              'У каждой проверки есть severity и status — UI не интерпретирует значения, а отображает канонический контракт.',
+              'Источники данных (source paths) публикуются для аудита и трассировки происхождения каждого чека.',
+            ]}
+          />
 
           <Card>
             <h3 className="card-title">Сводка по статусам</h3>
