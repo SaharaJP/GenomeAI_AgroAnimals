@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Lightbulb, BarChart2, Clock, Menu } from 'lucide-react';
 
 const tabs = [
-  { label: 'Обзор',    href: '/daily-summary', icon: <LayoutDashboard size={20} strokeWidth={1.5} /> },
+  { label: 'Брифинг',  href: '/daily-summary', icon: <LayoutDashboard size={20} strokeWidth={1.5} /> },
   { label: 'Инсайты',  href: '/alerts',        icon: <Lightbulb size={20} strokeWidth={1.5} /> },
   { label: 'Аналитика',href: '/reports',       icon: <BarChart2 size={20} strokeWidth={1.5} /> },
   { label: 'Лента',    href: '/timeline',      icon: <Clock size={20} strokeWidth={1.5} /> },

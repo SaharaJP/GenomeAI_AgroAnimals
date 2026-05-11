@@ -4,30 +4,13 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Leaf } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { InsightNotificationBell } from '@/components/ai/insight-notification-bell';
-
-const pathLabels: Record<string, string> = {
-  '/daily-summary': 'Обзор',
-  '/copilot':       'Помощник',
-  '/worklists':     'Рабочие списки',
-  '/reproduction':  'Воспроизводство',
-  '/vet':           'Ветеринария',
-  '/treatments':    'Лечение / каренция',
-  '/decisions':     'Решения',
-  '/economics':     'Экономика / сценарии',
-  '/support':       'Поддержка',
-  '/pilot':         'Пилот',
-  '/readiness':     'Готовность системы',
-  '/observability': 'Мониторинг',
-  '/admin':         'Администрирование',
-  '/admin/ai':      'AI-наблюдаемость',
-  '/settings':      'Настройки',
-  '/connections':   'Мои подключения',
-};
+import { pathLabels } from '@/lib/navigation';
 
 function getPageLabel(pathname: string): string {
   if (pathLabels[pathname]) return pathLabels[pathname];
-  // match prefix for nested routes
-  const prefix = Object.keys(pathLabels).find((k) => pathname.startsWith(`${k}/`));
+  const prefix = Object.keys(pathLabels)
+    .filter((k) => pathname.startsWith(`${k}/`))
+    .sort((a, b) => b.length - a.length)[0];
   return prefix ? pathLabels[prefix] : 'Страница';
 }
 

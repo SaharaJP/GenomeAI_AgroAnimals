@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { use } from 'react';
 import Link from 'next/link';
 import { Search, ChevronRight, Filter, X, List, Grid3x3 } from 'lucide-react';
+import { pathLabels } from '@/lib/navigation';
 
 type Animal = {
   animal_id: string;
@@ -412,7 +413,7 @@ function AnimalListPage() {
     <>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
         <div>
-          <h1 className="page-title">Животные</h1>
+          <h1 className="page-title">{pathLabels['/profiles/animal']}</h1>
           <p className="page-subtitle">Все животные на ферме ({total} голов)</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

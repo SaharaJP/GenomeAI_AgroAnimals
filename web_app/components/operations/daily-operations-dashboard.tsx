@@ -10,6 +10,7 @@ import {
   type DailyOperationsViewModel,
   type WorklistVm,
 } from '@/lib/api/daily-operations';
+import { pathLabels } from '@/lib/navigation';
 
 function buttonStyle(): React.CSSProperties {
   return {
@@ -131,7 +132,7 @@ function EmptyState({ onRefresh }: { onRefresh: () => void }) {
         </Link>
         <Link className="linked-action-card" href="/worklists">
           <div>
-            <div className="linked-action-title">Рабочие списки</div>
+            <div className="linked-action-title">{pathLabels['/worklists']}</div>
             <div className="linked-action-caption">Убедиться, что очередь задач пуста.</div>
           </div>
         </Link>
@@ -302,7 +303,7 @@ export function DailyOperationsDashboard() {
                   <Link className="linked-action-card" href="/worklists">
                     <div className="linked-action-count">{data.totals.worklistsOpen}</div>
                     <div>
-                      <div className="linked-action-title">Рабочие списки</div>
+                      <div className="linked-action-title">{pathLabels['/worklists']}</div>
                       <div className="linked-action-caption">Открыть очереди ролей и связанные задачи.</div>
                     </div>
                   </Link>

@@ -7,6 +7,7 @@ import { DEMO_TIMELINE_EVENTS } from '@/lib/api/timeline';
 import type { MetricWindow, TimelineEvent } from '@/lib/api/timeline';
 import { EventList } from '@/components/timeline/event-list';
 import { useAddEvent } from '@/components/app/add-event-context';
+import { pathLabels } from '@/lib/navigation';
 
 const ImpactPanel = dynamic(
   () => import('@/components/timeline/impact-panel').then((m) => m.ImpactPanel),
@@ -202,15 +203,15 @@ export default function TimelinePage() {
 ================================================================
 
 ОБЩАЯ КАРТА СИСТЕМЫ
-• Главная (/dashboard) — KPI стада: надой, ECM, СКК, маржа.
-• Обзор (/daily-summary) — ежедневная сводка: алерты, действия, рабочие списки.
-• Инсайты (/insights) — алерты со сценариями реакции (acknowledge / resolve).
-• Аналитика (/analytics) — графики по 8 группам метрик: продуктивность, корм,
+• ${pathLabels['/dashboard']} (/dashboard) — KPI стада: надой, ECM, СКК, маржа.
+• ${pathLabels['/daily-summary']} (/daily-summary) — ежедневная сводка: алерты, действия, задачи.
+• ${pathLabels['/insights']} (/insights) — алерты со сценариями реакции (acknowledge / resolve).
+• ${pathLabels['/analytics']} (/analytics) — графики по 8 группам метрик: продуктивность, корм,
   воспроизводство, здоровье, поведение, состав стада, погода, финансы.
-• Лента событий (/timeline) — хронология управленческих событий и их влияние.
-• Животные (/profiles/animal) — список и профили коров, фильтр по породе/статусу/группе.
-• Помощник (/copilot) — генерация недельных бриф-отчётов и Q&A.
-• Рабочие списки (/worklists) — задачи на сегодня с привязкой к решениям.
+• ${pathLabels['/timeline']} (/timeline) — хронология управленческих событий и их влияние.
+• ${pathLabels['/profiles/animal']} (/profiles/animal) — список и профили коров, фильтр по породе/статусу/группе.
+• ${pathLabels['/copilot']} (/copilot) — генерация недельных бриф-отчётов и Q&A.
+• ${pathLabels['/worklists']} (/worklists) — задачи на сегодня с привязкой к решениям.
 
 МЕТОДОЛОГИЯ ВЛИЯНИЯ СОБЫТИЙ
 Лента событий сопоставляет управленческие решения с динамикой ключевых метрик стада.

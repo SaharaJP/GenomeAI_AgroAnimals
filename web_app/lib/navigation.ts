@@ -8,21 +8,20 @@ const sections: NavigationSection[] = [
     title: 'Основное',
     items: [
       { label: 'Главная', href: '/dashboard' },
-      { label: 'Обзор', href: '/daily-summary' },
+      { label: 'Брифинг', href: '/daily-summary' },
       { label: 'Инсайты', href: '/insights', minPermissions: ['alerts.view', 'alerts.manage', 'alerts.read'] },
       { label: 'Аналитика', href: '/analytics', minPermissions: ['reports.view', 'reports.read', 'reports.approve'] },
       { label: 'Лента событий', href: '/timeline' },
-      { label: 'Животные', href: '/profiles/animal' },
+      { label: 'Стадо', href: '/profiles/animal' },
       { label: 'Помощник', href: '/copilot', minPermissions: ['assistant.ask'] },
     ],
   },
   {
     title: 'Управление',
     items: [
-      { label: 'Рабочие списки', href: '/worklists', minPermissions: ['tasks.view', 'tasks.read', 'tasks.manage'] },
+      { label: 'Задачи', href: '/worklists', minPermissions: ['tasks.view', 'tasks.read', 'tasks.manage'] },
       { label: 'Воспроизводство', href: '/reproduction', minPermissions: ['kpi.view'] },
       { label: 'Ветеринария', href: '/vet', minPermissions: ['kpi.view'] },
-      { label: 'Лечение / каренция', href: '/treatments', minPermissions: ['kpi.view'] },
       { label: 'Решения', href: '/decisions', minPermissions: ['decisionlog.view', 'decisions.read'] },
       { label: 'Экономика', href: '/economics', minPermissions: ['economics.read', 'whatif.scenarios.view'] },
     ],
@@ -38,6 +37,23 @@ const sections: NavigationSection[] = [
     ],
   },
 ];
+
+const extraPathLabels: Record<string, string> = {
+  '/treatments': 'Лечение',
+  '/admin/ai': 'AI-наблюдаемость',
+  '/settings': 'Настройки',
+  '/connections': 'Мои подключения',
+};
+
+export const pathLabels: Record<string, string> = (() => {
+  const out: Record<string, string> = { ...extraPathLabels };
+  for (const section of sections) {
+    for (const item of section.items) {
+      out[item.href] = item.label;
+    }
+  }
+  return out;
+})();
 
 export function getNavigationSections(me: AuthMeResponse | null): NavigationSection[] {
   const permissions = new Set(me?.user.permissions || []);
