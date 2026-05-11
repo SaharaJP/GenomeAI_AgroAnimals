@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Settings, History } from 'lucide-react';
 import { MorningBriefCard } from '@/components/overview/morning-brief-card';
@@ -13,6 +13,9 @@ import { BriefingHistoryModal } from '@/components/copilot/briefing-history-moda
 import { getAllSeededBriefs, getSeededBrief } from '@/lib/weekly-briefs';
 import type { WeeklyBrief } from '@/lib/weekly-briefs';
 import { pathLabels } from '@/lib/navigation';
+import { apiFetch } from '@/lib/api/client';
+import type { BriefingScheduleResponse } from '@/lib/api/contracts';
+import { useAuth } from '@/components/auth/auth-provider';
 
 const BriefPreview = dynamic(
   () => import('@/components/copilot/brief-preview').then((m) => m.BriefPreview),
@@ -46,12 +49,37 @@ export default function DailySummaryPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [weeklyEmailEnabled, setWeeklyEmailEnabled] = useState(false);
   const [schedule, setSchedule] = useState<BriefingSchedule>(DEFAULT_BRIEFING_SCHEDULE);
+  const [isSavingSchedule, setIsSavingSchedule] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+
+  const auth = useAuth() as { me: { user?: { permissions?: string[] } } | null };
+  const permissions = auth.me?.user?.permissions ?? [];
+  const canViewSchedule = permissions.includes('briefing.schedule.view') || permissions.includes('briefing.schedule.manage');
+  const canManageSchedule = permissions.includes('briefing.schedule.manage');
 
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   }
+
+  useEffect(() => {
+    if (!canViewSchedule) return;
+    let active = true;
+    void apiFetch<BriefingScheduleResponse>('/briefing/schedule')
+      .then((res) => {
+        if (!active) return;
+        setSchedule({
+          periodicity: res.periodicity,
+          timeOfDay: res.time_of_day,
+          autoCreateTasks: res.auto_create_tasks,
+        });
+      })
+      .catch((err) => {
+        if (!active) return;
+        showToast(`Не удалось загрузить расписание: ${err instanceof Error ? err.message : String(err)}`);
+      });
+    return () => { active = false; };
+  }, [canViewSchedule]);
 
   async function handleGenerate() {
     setIsGenerating(true);
@@ -78,8 +106,32 @@ export default function DailySummaryPage() {
     );
   }
 
-  function handleSaveSchedule() {
-    showToast('Расписание сохранено локально. Подключение к бэкенду — P1-1b.');
+  async function handleSaveSchedule() {
+    if (!canManageSchedule) {
+      showToast('Нет разрешения briefing.schedule.manage.');
+      return;
+    }
+    setIsSavingSchedule(true);
+    try {
+      const res = await apiFetch<BriefingScheduleResponse>('/briefing/schedule', {
+        method: 'PUT',
+        body: JSON.stringify({
+          periodicity: schedule.periodicity,
+          time_of_day: schedule.timeOfDay,
+          auto_create_tasks: schedule.autoCreateTasks,
+        }),
+      });
+      setSchedule({
+        periodicity: res.periodicity,
+        timeOfDay: res.time_of_day,
+        autoCreateTasks: res.auto_create_tasks,
+      });
+      showToast('Расписание сохранено.');
+    } catch (err) {
+      showToast(`Ошибка сохранения: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsSavingSchedule(false);
+    }
   }
 
   return (
@@ -139,6 +191,8 @@ export default function DailySummaryPage() {
         schedule={schedule}
         onScheduleChange={setSchedule}
         onSaveSchedule={handleSaveSchedule}
+        canManage={canManageSchedule}
+        isSaving={isSavingSchedule}
       />
 
       <BriefingHistoryModal

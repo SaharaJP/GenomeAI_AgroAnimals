@@ -321,6 +321,22 @@ export type ReadinessResponse = {
   source_paths: Record<string, unknown>;
 };
 
+export type BriefingScheduleResponse = {
+  schema: string;
+  tenant_id: string;
+  periodicity: 'daily' | 'weekly' | 'monthly';
+  time_of_day: string;
+  auto_create_tasks: boolean;
+  updated_at?: string | null;
+  updated_by?: number | null;
+};
+
+export type BriefingScheduleRequest = {
+  periodicity: 'daily' | 'weekly' | 'monthly';
+  time_of_day: string;
+  auto_create_tasks: boolean;
+};
+
 export type ListResponse<T> = {
   schema: string;
   total: number;

@@ -38,6 +38,8 @@ type Props = {
   schedule: BriefingSchedule;
   onScheduleChange: (next: BriefingSchedule) => void;
   onSaveSchedule: () => void;
+  canManage?: boolean;
+  isSaving?: boolean;
 };
 
 export function BriefingConfigModal({
@@ -54,6 +56,8 @@ export function BriefingConfigModal({
   schedule,
   onScheduleChange,
   onSaveSchedule,
+  canManage = true,
+  isSaving = false,
 }: Props) {
   return (
     <Modal open={open} onClose={onClose} title="Настройка брифинга" width={680}>
@@ -66,7 +70,13 @@ export function BriefingConfigModal({
         isLoading={isGenerating}
       />
       <SettingsCard enabled={weeklyEmailEnabled} onToggle={onToggleWeeklyEmail} />
-      <ScheduleCard schedule={schedule} onChange={onScheduleChange} onSave={onSaveSchedule} />
+      <ScheduleCard
+        schedule={schedule}
+        onChange={onScheduleChange}
+        onSave={onSaveSchedule}
+        canManage={canManage}
+        isSaving={isSaving}
+      />
     </Modal>
   );
 }
@@ -75,15 +85,14 @@ type ScheduleCardProps = {
   schedule: BriefingSchedule;
   onChange: (next: BriefingSchedule) => void;
   onSave: () => void;
+  canManage: boolean;
+  isSaving: boolean;
 };
 
-function ScheduleCard({ schedule, onChange, onSave }: ScheduleCardProps) {
-  const [savedFlash, setSavedFlash] = useState(false);
-
+function ScheduleCard({ schedule, onChange, onSave, canManage, isSaving }: ScheduleCardProps) {
   function handleSave() {
+    if (!canManage || isSaving) return;
     onSave();
-    setSavedFlash(true);
-    setTimeout(() => setSavedFlash(false), 1500);
   }
 
   return (
@@ -167,12 +176,14 @@ function ScheduleCard({ schedule, onChange, onSave }: ScheduleCardProps) {
             type="button"
             className="button button-primary"
             onClick={handleSave}
+            disabled={!canManage || isSaving}
+            title={canManage ? undefined : 'Нет разрешения briefing.schedule.manage'}
           >
-            Сохранить расписание
+            {isSaving ? 'Сохраняю…' : 'Сохранить расписание'}
           </button>
-          {savedFlash && (
-            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-              Сохранено локально. Подключение к бэкенду — следующий шаг (P1-1b).
+          {!canManage && (
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Только для администратора (нет разрешения briefing.schedule.manage).
             </span>
           )}
         </div>
