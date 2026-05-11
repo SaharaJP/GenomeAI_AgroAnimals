@@ -116,6 +116,19 @@ bash scripts/run_supportability_checks.sh  # если есть в контуре
 - `src/genomeai/refactor_verify.py` — legacy facade для Golden compare
 - `web_cabinet/*.py` — FastAPI/HTML fallback; бизнес-логика **должна** уходить в core
 
+### Где физически лежит код (важно для редактирования!)
+Не у всех пакетов одинаковая раскладка. Перед правкой проверь, какой путь — runtime:
+
+| Пакет | Каноническое место | Примечание |
+|---|---|---|
+| `core` | `src/core/` | дубля нет; pyproject `package-dir = src` |
+| `genomeai` | `src/genomeai/` + shim `genomeai/__init__.py` | **namespace-package** через `pkgutil.extend_path`. Top-level `genomeai/` содержит ТОЛЬКО `__init__.py`-bootstrap; всё остальное — в `src/genomeai/`. Редактируй в `src/genomeai/`. |
+| `web_cabinet` | `web_cabinet/` (top-level) | дубля нет (`src/web_cabinet/` удалён в P0-4). Uvicorn импортирует `web_cabinet.app:app` отсюда. Все правки endpoint'ов — сюда. |
+| `packages.contracts` | `packages/contracts/` | shared contracts (Python + TS) |
+| `web_app` | `web_app/` | Next.js фронт |
+
+Проверка из shell: `python -c "import <pkg>; print(__file__); print(list(__path__))"` — покажет фактический runtime-путь и все директории namespace-package'а.
+
 ### Target product surface (куда идёт продуктовый код)
 - `apps/api/` — production API surface (будущая замена web_cabinet)
 - `web_app/` — Next.js 15 / React 19 / TS 5.8 целевой UI

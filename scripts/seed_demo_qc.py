@@ -17,8 +17,7 @@ if os.getenv("GENOMEAI_PROFILE", "dev") == "prod":
     sys.exit(2)
 
 # Make sure project root + src/ are importable.
-# ROOT must come BEFORE src/ on sys.path so that the root web_cabinet/ package
-# (which contains insights_v1.py) shadows the installed src/web_cabinet/.
+# `web_cabinet` lives at top-level; `core`/`genomeai` live in `src/`.
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT))

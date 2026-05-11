@@ -21,7 +21,7 @@ REQUIRED_APP_SNIPPETS = [
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     missing = [rel for rel in REQUIRED_FILES if not (root / rel).exists()]
-    app_text = (root / 'src/web_cabinet/app.py').read_text(encoding='utf-8')
+    app_text = (root / 'web_cabinet/app.py').read_text(encoding='utf-8')
     missing_snippets = [snippet for snippet in REQUIRED_APP_SNIPPETS if snippet not in app_text]
     if missing or missing_snippets:
         if missing:
