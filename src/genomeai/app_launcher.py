@@ -83,6 +83,7 @@ def main(argv=None) -> int:
 
     env = _env_with_defaults(artifacts_root=artifacts_root, web_db_path=web_db_path, openai_api_key=args.openai_api_key)
 
+    _shutdown_timeout = os.environ.get("GENOMEAI_WEB_SHUTDOWN_TIMEOUT", "10")
     cmd_backend = [
         sys.executable,
         "-m",
@@ -92,6 +93,8 @@ def main(argv=None) -> int:
         args.host,
         "--port",
         str(args.backend_port),
+        "--timeout-graceful-shutdown",
+        _shutdown_timeout,
     ]
 
     if args.dry_run:
