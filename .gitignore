@@ -51,3 +51,9 @@ tmp/smoke_*/
 *.db-journal
 src/core/web_cabinet/storage/web.db
 .playwright-mcp/
+
+# TypeScript incremental build cache
+web_app/tsconfig.tsbuildinfo
+
+# Playwright validation captures at repo root
+/p[0-9]*-*.png
