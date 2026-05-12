@@ -96,6 +96,7 @@ export type WorklistItem = {
   created_at?: string | null;
   updated_at?: string | null;
   is_overdue?: boolean | null;
+  source_insight_id?: string | null;
 };
 
 export type PlannerPlanItem = {
@@ -319,6 +320,40 @@ export type ReadinessResponse = {
   };
   checks: ReadinessCheck[];
   source_paths: Record<string, unknown>;
+};
+
+export type RecommendedTask = {
+  recommended_task_id: string;
+  source_insight_id: string;
+  title: string;
+  description?: string | null;
+  priority: number;
+  due_at?: string | null;
+  assignee_role?: string | null;
+  assignee_user_id?: number | null;
+  domain?: string | null;
+  why_summary: string;
+};
+
+export type RecommendedTasksListResponse = {
+  schema: string;
+  total: number;
+  items: RecommendedTask[];
+};
+
+export type WorklistsFromRecommendedItem = {
+  recommended_task_id: string;
+  source_insight_id: string;
+  task_id: string;
+  created: boolean;
+};
+
+export type WorklistsFromRecommendedResponse = {
+  schema: string;
+  total: number;
+  created: number;
+  reused: number;
+  items: WorklistsFromRecommendedItem[];
 };
 
 export type BriefingScheduleResponse = {

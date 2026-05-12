@@ -74,6 +74,7 @@ class WorklistItem(BaseModel):
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
     is_overdue: Optional[bool] = None
+    source_insight_id: Optional[str] = None
 
 
 class WorklistsListResponse(BaseModel):

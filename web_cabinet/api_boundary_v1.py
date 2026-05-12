@@ -430,6 +430,7 @@ def _map_worklist(row: dict[str, Any], *, request: Optional[Request] = None) -> 
         created_at=_coerce_str(row.get('created_at')),
         updated_at=_coerce_str(row.get('updated_at')),
         is_overdue=bool(row.get('is_overdue')) if row.get('is_overdue') is not None else None,
+        source_insight_id=_coerce_str(row.get('source_insight_id')),
     )
 
 

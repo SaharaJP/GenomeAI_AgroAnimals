@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/insights-client';
 import { TriageTabs } from '@/components/insights/triage-tabs';
 import { InsightSettingsDialog } from '@/components/insights/insight-settings-dialog';
+import { RecommendedTasksPanel } from '@/components/insights/recommended-tasks-panel';
 import { useAuth } from '@/components/auth/auth-provider';
 
 const PAGE_SIZE = 10;
@@ -260,6 +261,10 @@ export default function InsightsPage() {
           <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} disabled={page >= totalPages - 1} onClick={() => setPage(Math.min(totalPages - 1, page + 1))}>Вперёд →</button>
         </div>
       )}
+
+      <RecommendedTasksPanel
+        canManage={(me?.user.permissions || []).includes('tasks.write')}
+      />
 
       <InsightSettingsDialog
         farmId={farmLabel}
