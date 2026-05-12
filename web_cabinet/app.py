@@ -629,6 +629,12 @@ def _shutdown() -> None:
     except Exception:
         pass
 
+    try:
+        from web_cabinet.ai.endpoints.insights_stream import signal_shutdown as _sse_signal_shutdown
+        _sse_signal_shutdown()
+    except Exception:
+        pass
+
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI):
