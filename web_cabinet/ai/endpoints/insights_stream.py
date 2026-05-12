@@ -100,7 +100,9 @@ async def _event_generator(queue: "asyncio.Queue[str]") -> AsyncIterator[str]:
                 get_task = None
                 yield ": keepalive\n\n"
     except asyncio.CancelledError:
-        pass
+        # Re-raise per asyncio 3.8+ convention; the finally block below
+        # handles all cleanup unconditionally.
+        raise
     finally:
         if get_task is not None and not get_task.done():
             get_task.cancel()

@@ -72,7 +72,10 @@ def main() -> int:
     ARTIFACT.parent.mkdir(parents=True, exist_ok=True)
     port = _free_port()
     env = os.environ.copy()
-    env.setdefault("GENOMEAI_WEB_SHUTDOWN_TIMEOUT", "10")
+    # Force a high safety-net so a fast exit is unambiguously the app-level
+    # fast-path, not the uvicorn graceful-shutdown timeout firing under the
+    # ACCEPTANCE_SEC threshold. Must remain >> ACCEPTANCE_SEC.
+    env["GENOMEAI_WEB_SHUTDOWN_TIMEOUT"] = "30"
 
     cmd = [
         sys.executable, "-m", "uvicorn", "web_cabinet.app:app",
