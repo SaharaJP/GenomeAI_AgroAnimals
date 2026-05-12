@@ -277,3 +277,28 @@ bash /opt/genomeai/app/repo/scripts/smoke_t32_09_android_offline_sync_model.sh
 - smoke output
 - operator signoff
 - incident/ref ticket ids if any
+
+## Graceful shutdown timeout (uvicorn)
+
+Backend launched via `python -m genomeai.app_launcher` passes
+`--timeout-graceful-shutdown` to uvicorn. Default: `10` seconds. Override
+via env:
+
+    GENOMEAI_WEB_SHUTDOWN_TIMEOUT=20
+
+App-level path: FastAPI lifespan shutdown handler calls
+`web_cabinet.ai.endpoints.insights_stream.signal_shutdown()`, which wakes
+all live SSE generators on `/api/ai/insights/events/stream`; fast-path
+shutdown completes in <1 s (smoke-proof in `artifacts/_ci/sse_shutdown_smoke.log`
+after running `python scripts/smoke_sse_shutdown.py`). The uvicorn flag is a
+safety-net for any streaming endpoint that does not (yet) observe the
+shutdown event.
+
+If the backend ever appears to hang on SIGTERM:
+
+1. Check `ss -tlnp | grep :8000` — listen socket should be gone.
+2. Check `ss -anp | grep :8000` — count ESTABLISHED connections; non-zero
+   means streaming clients are stuck.
+3. Inspect logs (`/tmp/uvicorn.log` or `logs_dir/backend_uvicorn.log`).
+4. Worst case — `kill -KILL` the process; investigate which streaming
+   endpoint failed to honor the shutdown event.
