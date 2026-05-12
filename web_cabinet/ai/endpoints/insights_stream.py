@@ -72,6 +72,7 @@ async def _event_generator(queue: "asyncio.Queue[str]") -> AsyncIterator[str]:
         return
 
     shutdown_task = asyncio.create_task(_shutdown_event.wait())
+    get_task: asyncio.Task[str] | None = None
     try:
         while True:
             get_task = asyncio.create_task(queue.get())
@@ -84,18 +85,27 @@ async def _event_generator(queue: "asyncio.Queue[str]") -> AsyncIterator[str]:
                 get_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await get_task
+                get_task = None
                 break
             if get_task in done:
-                yield get_task.result()
+                payload = get_task.result()
+                get_task = None
+                yield payload
             else:
-                # Timeout без событий — heartbeat.
+                # Periodic keepalive prevents intermediate proxies (nginx,
+                # browsers) from dropping an idle SSE connection as stale.
                 get_task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):
                     await get_task
+                get_task = None
                 yield ": keepalive\n\n"
     except asyncio.CancelledError:
         pass
     finally:
+        if get_task is not None and not get_task.done():
+            get_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await get_task
         if not shutdown_task.done():
             shutdown_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):

@@ -68,12 +68,15 @@ def test_signal_shutdown_completes_generator_fast():
 
         ism.signal_shutdown()
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         t0 = loop.time()
+        # Tight timeout doubles as the perf budget: signal_shutdown() must
+        # wake the generator and complete the StopAsyncIteration handoff
+        # within 50ms on any reasonable host.
         with pytest.raises(StopAsyncIteration):
-            await asyncio.wait_for(gen.__anext__(), timeout=0.2)
+            await asyncio.wait_for(gen.__anext__(), timeout=0.05)
         elapsed = loop.time() - t0
-        assert elapsed < 0.2, f"generator took {elapsed:.3f}s to exit"
+        assert elapsed < 0.05, f"generator took {elapsed:.3f}s to exit"
         # Subscriber must be removed by the generator's finally block.
         assert q not in list(ism._subscribers)
     _run(_scenario())
