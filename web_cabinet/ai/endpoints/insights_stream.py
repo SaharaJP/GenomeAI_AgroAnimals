@@ -2,10 +2,15 @@
 
 Клиент держит соединение открытым. Когда insight_scanner создаёт инсайты,
 broadcast_insights_event() пушит событие во все открытые соединения.
+
+При shutdown FastAPI lifespan хук вызывает signal_shutdown(), что приводит
+к корректному выходу всех активных _event_generator корутин (см.
+docs/superpowers/specs/2026-05-12-sse-graceful-shutdown-design.md).
 """
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import weakref
@@ -20,6 +25,18 @@ router = APIRouter()
 # In-process pub/sub: слабые ссылки на asyncio.Queue каждого SSE-клиента.
 _subscribers: weakref.WeakSet["asyncio.Queue[str]"] = weakref.WeakSet()
 _KEEPALIVE_INTERVAL = 25  # секунд между heartbeat-комментариями
+
+# Module-level shutdown signal. Set by FastAPI lifespan shutdown handler;
+# observed by every active _event_generator coroutine to exit cleanly.
+_shutdown_event: asyncio.Event = asyncio.Event()
+
+
+def signal_shutdown() -> None:
+    """Сигнализирует всем активным _event_generator корутинам выйти.
+
+    Идемпотентен. Вызывается из FastAPI lifespan shutdown handler.
+    """
+    _shutdown_event.set()
 
 
 def broadcast_insights_event(farm_id: str, count: int) -> None:
@@ -40,18 +57,49 @@ def broadcast_insights_event(farm_id: str, count: int) -> None:
 
 
 async def _event_generator(queue: "asyncio.Queue[str]") -> AsyncIterator[str]:
-    """Генератор для StreamingResponse: heartbeat + события из очереди."""
+    """Генератор для StreamingResponse: heartbeat + события + graceful shutdown.
+
+    Гонит queue.get() против _shutdown_event.wait() с таймаутом
+    _KEEPALIVE_INTERVAL. При срабатывании shutdown_event — выходит из цикла
+    и удаляет subscriber в finally.
+    """
     yield ": connected\n\n"
+    if _shutdown_event.is_set():
+        try:
+            _subscribers.discard(queue)
+        except Exception:
+            pass
+        return
+
+    shutdown_task = asyncio.create_task(_shutdown_event.wait())
     try:
         while True:
-            try:
-                data = await asyncio.wait_for(queue.get(), timeout=_KEEPALIVE_INTERVAL)
-                yield data
-            except asyncio.TimeoutError:
+            get_task = asyncio.create_task(queue.get())
+            done, _pending = await asyncio.wait(
+                {get_task, shutdown_task},
+                timeout=_KEEPALIVE_INTERVAL,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            if shutdown_task in done:
+                get_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await get_task
+                break
+            if get_task in done:
+                yield get_task.result()
+            else:
+                # Timeout без событий — heartbeat.
+                get_task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await get_task
                 yield ": keepalive\n\n"
     except asyncio.CancelledError:
         pass
     finally:
+        if not shutdown_task.done():
+            shutdown_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await shutdown_task
         try:
             _subscribers.discard(queue)
         except Exception:
