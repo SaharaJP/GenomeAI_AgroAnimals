@@ -424,3 +424,9 @@ export function normalizeListResponse<T>(input: Partial<ListResponse<T>>): ListR
 export function hasPermission(me: AuthMeResponse | null, permission: string): boolean {
   return Boolean(me?.user.permissions.includes(permission));
 }
+
+export type DomainLabelsResponse = {
+  schema: string;
+  locale: string;
+  labels: Record<string, string>;
+};
