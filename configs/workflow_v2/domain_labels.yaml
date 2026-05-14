@@ -1,0 +1,24 @@
+version: 1
+
+# Локализованные подписи для канонических workflow-доменов.
+# Канонический список id определён в src/core/workflow/policies.py:WORKFLOW_DOMAINS
+# и связан с SLA в configs/workflow_v2/sla.yaml.
+#
+# Источник истины для UI: GET /api/app/v1/catalogs/domain-labels?locale=ru.
+# Не дублировать эти подписи в frontend-bundle.
+
+default_locale: ru
+
+labels:
+  ru:
+    health: Ветеринария
+    repro: Воспроизводство
+    data: Данные
+    qc: Контроль качества
+    econ: Экономика
+  en:
+    health: Veterinary
+    repro: Reproduction
+    data: Data
+    qc: Quality control
+    econ: Economics
