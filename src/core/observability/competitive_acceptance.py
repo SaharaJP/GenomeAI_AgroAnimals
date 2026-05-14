@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -9,6 +10,24 @@ from time import perf_counter
 from typing import Any
 
 import yaml
+
+
+def _subprocess_env(project_root: Path) -> dict[str, str]:
+    """Build subprocess env with PYTHONPATH covering both src/ and project_root.
+
+    Needed because top-level packages (`web_cabinet`) live at project_root, not
+    under src/, and `cwd=` doesn't put cwd on Python's sys.path. Without this,
+    smoke scripts that import both `core.*` and `web_cabinet.*` fail with
+    ModuleNotFoundError inside subprocess wrappers.
+    """
+    env = dict(os.environ)
+    py_parts = [
+        str((project_root / 'src').resolve()),
+        str(project_root.resolve()),
+        env.get('PYTHONPATH', ''),
+    ]
+    env['PYTHONPATH'] = os.pathsep.join([part for part in py_parts if part])
+    return env
 
 
 _DEFAULT_COMPETITIVE_ACCEPTANCE_POLICY: dict[str, Any] = {
@@ -268,7 +287,7 @@ def _run_pytest_bundle(*, project_root: Path, tests: list[str]) -> dict[str, Any
         return {'ok': True, 'duration_sec': 0.0, 'diagnostics': [], 'checks': []}
     started = perf_counter()
     cmd = [sys.executable, '-m', 'pytest', '-q', *tests]
-    proc = subprocess.run(cmd, cwd=str(project_root), capture_output=True, text=True)
+    proc = subprocess.run(cmd, cwd=str(project_root), env=_subprocess_env(project_root), capture_output=True, text=True)
     duration = perf_counter() - started
     diagnostics: list[str] = []
     if proc.returncode != 0:
@@ -299,7 +318,7 @@ def _run_script_bundle(*, project_root: Path, scripts: list[str]) -> dict[str, A
             overall_ok = False
             continue
         runner = ['bash', str(script_path)] if script_path.suffix.lower() in ('.sh', '.bash') else [sys.executable, str(script_path)]
-        proc = subprocess.run(runner, cwd=str(project_root), capture_output=True, text=True)
+        proc = subprocess.run(runner, cwd=str(project_root), env=_subprocess_env(project_root), capture_output=True, text=True)
         ok = proc.returncode == 0
         checks.append({'kind': 'script', 'target': rel, 'ok': ok})
         if not ok:

@@ -296,7 +296,15 @@ def _measure_compile_daily_pages(*, project_root: Path, pages: Iterable[str]) ->
 
 def _run_python_script(*, project_root: Path, rel_path: str, timeout_sec: int = 180) -> dict[str, Any]:
     env = dict(os.environ)
-    py_parts = [str((project_root / 'src').resolve()), env.get('PYTHONPATH', '')]
+    # Need both src/ (for `core.*`, `genomeai.*`) and project_root (for top-level
+    # packages like `web_cabinet`). cwd alone doesn't make Python see top-level
+    # packages — only the directory of the script being run is on sys.path.
+    project_root_str = str(project_root.resolve())
+    py_parts = [
+        str((project_root / 'src').resolve()),
+        project_root_str,
+        env.get('PYTHONPATH', ''),
+    ]
     env['PYTHONPATH'] = os.pathsep.join([part for part in py_parts if part])
     path = (project_root / rel_path).resolve()
     started = perf_counter()
