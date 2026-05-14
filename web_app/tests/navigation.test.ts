@@ -52,13 +52,13 @@ test('canonical labels are renamed', () => {
   assert.equal(pathLabels['/profiles/animal'], 'Животные');
 });
 
-test('treatments stays addressable but is hidden from sidebar', () => {
+test('treatments is removed from navigation and pathLabels (replaced by /vet?tab=withdrawal redirect)', () => {
   const sections = getNavigationSections(
     meWith(['support.read', 'alerts.read', 'tasks.read', 'planner.read', 'reports.read', 'assistant.ask', 'decisions.read', 'economics.read', 'kpi.view', 'audit.view', 'jobs.view']),
   );
   const hrefs = allHrefs(sections);
   assert.equal(hrefs.includes('/treatments'), false);
-  assert.equal(pathLabels['/treatments'], 'Лечение');
+  assert.equal(pathLabels['/treatments'], undefined);
 });
 
 test('Стадо group contains four children for kpi.view user', () => {

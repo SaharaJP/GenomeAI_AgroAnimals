@@ -45,7 +45,7 @@ export function VetQueuesSurface() {
           <div className="linked-inline-actions">
             <Link href="/copilot?target=vet">Объяснить в ИИ-помощнике</Link>
             <Link href="/decisions?queue=vet">История решений</Link>
-            <Link href="/treatments">Лечение / каренция</Link>
+            <Link href="/vet?tab=withdrawal">Лечение / каренция</Link>
             <Link href="/support?context=vet">Поддержка / диагностика</Link>
           </div>
           <p className="small-muted" style={{ marginTop: 12 }}>{view.parityNote}</p>

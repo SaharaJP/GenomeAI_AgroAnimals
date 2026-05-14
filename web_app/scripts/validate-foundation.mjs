@@ -50,7 +50,7 @@ const admin = readFileSync(join(root, 'components/extended/admin-command-center.
 
 if (!client.includes('backendProxyBasePath')) throw new Error('API client is not wired to backend proxy');
 if (!proxy.includes('/api/app/v1/')) throw new Error('Backend proxy is not wired to canonical API boundary');
-for (const route of ['/reproduction', '/vet', '/treatments', '/economics', '/support', '/pilot', '/readiness', '/observability', '/admin']) {
+for (const route of ['/reproduction', '/vet', '/economics', '/support', '/pilot', '/readiness', '/observability', '/admin']) {
   if (!navigation.includes(route)) throw new Error(`Navigation missing route ${route}`);
 }
 if (!reproduction.includes('No reproduction logic is reimplemented in the browser')) {

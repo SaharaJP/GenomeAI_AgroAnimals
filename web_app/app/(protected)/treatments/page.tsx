@@ -1,2 +1,5 @@
-import { TreatmentsWithdrawalSurface } from '@/components/extended/treatments-withdrawal-surface';
-export default function TreatmentsPage() { return <TreatmentsWithdrawalSurface />; }
+import { permanentRedirect } from 'next/navigation';
+
+export default function TreatmentsRedirectPage() {
+  permanentRedirect('/vet?tab=withdrawal');
+}
