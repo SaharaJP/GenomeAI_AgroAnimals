@@ -580,6 +580,12 @@ class FeedIntakeDropsResponse(BaseModel):
     items: list[FeedIntakeDrop] = Field(default_factory=list)
 
 
+class DomainLabelsResponse(BaseModel):
+    schema: str = 'genomeai.api.catalogs.domain_labels.v1'
+    locale: str
+    labels: dict[str, str] = Field(default_factory=dict)
+
+
 class BriefingScheduleRequest(BaseModel):
     periodicity: str
     time_of_day: str

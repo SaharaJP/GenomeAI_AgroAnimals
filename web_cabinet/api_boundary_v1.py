@@ -34,6 +34,7 @@ from packages.contracts.api_boundary_v1 import (
     FeedingRationsResponse,
     FeedIntakeDrop,
     FeedIntakeDropsResponse,
+    DomainLabelsResponse,
     HealthEvent,
     HealthMetrics,
     InsightItem,
@@ -1541,6 +1542,17 @@ def boundary_feeding_intake_drops(
     insights_resp = _list_insights(farm_id=farm_id, user_id=user_id)
     items = _project_intake_drops(insights_resp.items)
     return FeedIntakeDropsResponse(total=len(items), items=items)
+
+
+@router.get('/catalogs/domain-labels', response_model=DomainLabelsResponse)
+def boundary_catalogs_domain_labels(
+    locale: Optional[str] = None,
+    user=Depends(get_current_user),
+):
+    from core.workflow.domain_labels import default_locale, load_domain_labels
+    resolved_locale = (locale or default_locale()).strip().lower()
+    labels = load_domain_labels(resolved_locale)
+    return DomainLabelsResponse(locale=resolved_locale, labels=labels)
 
 
 @router.get('/qc/incidents', response_model=QcIncidentsListResponse)
