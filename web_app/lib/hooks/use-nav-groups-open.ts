@@ -38,9 +38,11 @@ export function useNavGroupsOpen(autoOpenLabels: readonly string[] = []): UseNav
     setStoredOpen(readStorage());
   }, []);
 
+  const autoOpenKey = autoOpenLabels.slice().sort().join('|');
   const isOpen = useCallback(
     (label: string) => autoOpenLabels.includes(label) || storedOpen.has(label),
-    [storedOpen, autoOpenLabels],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- autoOpenKey is the stable form of autoOpenLabels
+    [storedOpen, autoOpenKey],
   );
 
   const toggle = useCallback((label: string) => {

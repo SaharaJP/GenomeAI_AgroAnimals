@@ -117,6 +117,7 @@ export function Sidebar({ collapsed, onToggle }: Props) {
   function renderGroup(group: NavigationGroup) {
     const open = isOpen(group.label);
     const active = isGroupActive(group);
+    const childrenId = `nav-group-${encodeURIComponent(group.label)}`;
 
     if (collapsed) {
       return (
@@ -139,6 +140,7 @@ export function Sidebar({ collapsed, onToggle }: Props) {
           className={`nav-link nav-group-toggle ${active ? 'nav-link-active' : ''}`}
           onClick={() => toggle(group.label)}
           aria-expanded={open}
+          aria-controls={childrenId}
         >
           <span className="nav-link-icon">{groupIcon(group.defaultHref)}</span>
           <span className="nav-link-label">{group.label}</span>
@@ -147,7 +149,7 @@ export function Sidebar({ collapsed, onToggle }: Props) {
           </span>
         </button>
         {open && (
-          <div className="nav-group-children" role="group" aria-label={group.label}>
+          <div id={childrenId} className="nav-group-children" role="group" aria-label={group.label}>
             {group.items.map((c) => renderLeaf(c, { nested: true }))}
           </div>
         )}
