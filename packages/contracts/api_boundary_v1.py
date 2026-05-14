@@ -549,6 +549,37 @@ class WorklistsFromRecommendedResponse(BaseModel):
     items: list[WorklistsFromRecommendedItem] = Field(default_factory=list)
 
 
+class FeedingRation(BaseModel):
+    group_id: str
+    group_name: str
+    ration_name: str
+    dm_kg: Optional[float] = None
+    last_distribution_at: Optional[str] = None
+    status: str = 'unknown'
+
+
+class FeedingRationsResponse(BaseModel):
+    schema: str = 'genomeai.api.feeding.rations.v1'
+    total: int = 0
+    items: list[FeedingRation] = Field(default_factory=list)
+
+
+class FeedIntakeDrop(BaseModel):
+    insight_id: str
+    group_id: Optional[str] = None
+    group_name: Optional[str] = None
+    drop_pct: Optional[float] = None
+    window_days: Optional[int] = None
+    last_observed_at: Optional[str] = None
+    title: str = ''
+
+
+class FeedIntakeDropsResponse(BaseModel):
+    schema: str = 'genomeai.api.feeding.intake_drops.v1'
+    total: int = 0
+    items: list[FeedIntakeDrop] = Field(default_factory=list)
+
+
 class BriefingScheduleRequest(BaseModel):
     periodicity: str
     time_of_day: str
