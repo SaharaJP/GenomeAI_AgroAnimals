@@ -1340,6 +1340,18 @@
         ]
       },
       {
+        "path": "/feeding/intake-drops",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/feeding/rations",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
         "path": "/healthz",
         "methods": [
           "GET"
