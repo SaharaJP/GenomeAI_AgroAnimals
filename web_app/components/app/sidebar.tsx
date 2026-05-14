@@ -30,13 +30,16 @@ import {
   Activity,
   Shield,
   Eye,
+  Wheat,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { getNavigationSections } from '@/lib/navigation';
+import { getNavigationSections, type NavigationGroup, type NavigationLeaf } from '@/lib/navigation';
+import { useNavGroupsOpen } from '@/lib/hooks/use-nav-groups-open';
 
 type Props = { collapsed: boolean; onToggle: () => void };
 
-// Maps href → Lucide icon for nav items across all sections
 const iconMap: Record<string, React.ReactNode> = {
   '/dashboard':        <Home size={18} strokeWidth={1.5} />,
   '/daily-summary':    <LayoutDashboard size={18} strokeWidth={1.5} />,
@@ -49,6 +52,7 @@ const iconMap: Record<string, React.ReactNode> = {
   '/reproduction':     <HeartPulse size={18} strokeWidth={1.5} />,
   '/vet':              <Stethoscope size={18} strokeWidth={1.5} />,
   '/treatments':       <Pill size={18} strokeWidth={1.5} />,
+  '/feeding':          <Wheat size={18} strokeWidth={1.5} />,
   '/decisions':        <GitBranch size={18} strokeWidth={1.5} />,
   '/economics':        <Wallet size={18} strokeWidth={1.5} />,
   '/support':          <LifeBuoy size={18} strokeWidth={1.5} />,
@@ -59,19 +63,34 @@ const iconMap: Record<string, React.ReactNode> = {
   '/admin/ai':         <Eye size={18} strokeWidth={1.5} />,
 };
 
+function groupIcon(defaultHref: string): React.ReactNode {
+  return iconMap[defaultHref] ?? <LayoutDashboard size={18} strokeWidth={1.5} />;
+}
+
 export function Sidebar({ collapsed, onToggle }: Props) {
   const pathname = usePathname();
   const router = useRouter();
   const { me } = useAuth() as { me: any; loading: boolean; refresh: () => Promise<void> };
 
   const sections = getNavigationSections(me);
-  // Bottom utility section (Connections / Settings / Support) is rendered below
-  // separately from the user-facing sections; filter those hrefs out so they
-  // don't render twice.
   const bottomHrefs = new Set(['/connections', '/settings', '/support']);
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
+
+  const isGroupActive = (group: NavigationGroup) =>
+    group.items.some((c) => isActive(c.href));
+
+  const autoOpenLabels: string[] = [];
+  for (const section of sections) {
+    for (const item of section.items) {
+      if (item.kind === 'group' && isGroupActive(item)) {
+        autoOpenLabels.push(item.label);
+      }
+    }
+  }
+
+  const { isOpen, toggle } = useNavGroupsOpen(autoOpenLabels);
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -79,9 +98,65 @@ export function Sidebar({ collapsed, onToggle }: Props) {
     router.refresh();
   }
 
+  function renderLeaf(item: NavigationLeaf, opts: { nested?: boolean } = {}) {
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`nav-link ${opts.nested ? 'nav-link-nested' : ''} ${isActive(item.href) ? 'nav-link-active' : ''}`}
+        title={collapsed ? item.label : undefined}
+      >
+        <span className="nav-link-icon">
+          {iconMap[item.href] ?? <LayoutDashboard size={18} strokeWidth={1.5} />}
+        </span>
+        <span className="nav-link-label">{item.label}</span>
+      </Link>
+    );
+  }
+
+  function renderGroup(group: NavigationGroup) {
+    const open = isOpen(group.label);
+    const active = isGroupActive(group);
+
+    if (collapsed) {
+      return (
+        <Link
+          key={`group:${group.label}`}
+          href={group.defaultHref}
+          className={`nav-link ${active ? 'nav-link-active' : ''}`}
+          title={group.label}
+        >
+          <span className="nav-link-icon">{groupIcon(group.defaultHref)}</span>
+          <span className="nav-link-label">{group.label}</span>
+        </Link>
+      );
+    }
+
+    return (
+      <div key={`group:${group.label}`} className="nav-group">
+        <button
+          type="button"
+          className={`nav-link nav-group-toggle ${active ? 'nav-link-active' : ''}`}
+          onClick={() => toggle(group.label)}
+          aria-expanded={open}
+        >
+          <span className="nav-link-icon">{groupIcon(group.defaultHref)}</span>
+          <span className="nav-link-label">{group.label}</span>
+          <span className="nav-group-chevron">
+            {open ? <ChevronDown size={16} strokeWidth={1.5} /> : <ChevronRight size={16} strokeWidth={1.5} />}
+          </span>
+        </button>
+        {open && (
+          <div className="nav-group-children" role="group" aria-label={group.label}>
+            {group.items.map((c) => renderLeaf(c, { nested: true }))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <aside className="sidebar">
-      {/* Logo — links to home */}
       <Link href="/dashboard" className="sidebar-logo" style={{ textDecoration: 'none' }}>
         <div className="sidebar-logo-mark">
           <Leaf size={16} strokeWidth={2} color="white" />
@@ -91,41 +166,29 @@ export function Sidebar({ collapsed, onToggle }: Props) {
         )}
       </Link>
 
-      {/* Primary nav: render every section returned by navigation config,
-          minus the items that the bottom utility column owns. */}
       <nav className="sidebar-nav" aria-label="Основная навигация">
         {sections.map((section) => {
-          const items = section.items.filter((it) => !bottomHrefs.has(it.href));
+          const items = section.items.filter((it) =>
+            it.kind === 'group' ? true : !bottomHrefs.has(it.href),
+          );
           if (items.length === 0) return null;
           return (
             <div key={section.title} className="sidebar-section">
               {!collapsed && (
                 <div className="sidebar-section-heading">{section.title}</div>
               )}
-              {items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`nav-link ${isActive(item.href) ? 'nav-link-active' : ''}`}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <span className="nav-link-icon">
-                    {iconMap[item.href] ?? <LayoutDashboard size={18} strokeWidth={1.5} />}
-                  </span>
-                  <span className="nav-link-label">{item.label}</span>
-                </Link>
-              ))}
+              {items.map((item) =>
+                item.kind === 'item' ? renderLeaf(item) : renderGroup(item),
+              )}
             </div>
           );
         })}
       </nav>
 
-      {/* Spacer */}
       <div style={{ flex: 1 }} />
 
       <hr className="sidebar-divider" />
 
-      {/* Bottom utility nav */}
       <div className="sidebar-bottom">
         <button
           className="nav-link"

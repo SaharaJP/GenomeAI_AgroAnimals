@@ -224,6 +224,37 @@ button, input, select, textarea { font: inherit; }
 }
 .nav-link-label { overflow: hidden; }
 
+/* Sidebar accordion (P1-3a) */
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+.nav-group-toggle {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+.nav-group-chevron {
+  margin-left: auto;
+  display: inline-flex;
+  opacity: 0.7;
+}
+.nav-group-children {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.75rem;
+  border-left: 1px solid var(--border);
+  margin-left: 1rem;
+}
+.nav-link-nested {
+  padding-left: 0.5rem;
+  font-size: 0.95em;
+}
+
 /* sidebar divider */
 .sidebar-divider {
   border: none;
