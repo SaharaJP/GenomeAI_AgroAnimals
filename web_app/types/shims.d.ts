@@ -66,8 +66,15 @@ declare module 'next' {
 }
 
 declare module 'next/navigation' {
+  type NavigationOptions = { scroll?: boolean };
   export function redirect(href: string): never;
-  export function useRouter(): { replace: (href: string) => void; refresh: () => void; push: (href: string) => void; back: () => void };
+  export function permanentRedirect(href: string): never;
+  export function useRouter(): {
+    replace: (href: string, options?: NavigationOptions) => void;
+    refresh: () => void;
+    push: (href: string, options?: NavigationOptions) => void;
+    back: () => void;
+  };
   export function usePathname(): string;
   export function useSearchParams(): {
     get(key: string): string | null;
