@@ -1,0 +1,10 @@
+version: 1
+# Per-group ration catalog. Populated by operators or via importer.
+# Schema (each item under `groups`):
+#   group_id: string (stable group identifier on the farm)
+#   group_name: string (display name)
+#   ration_name: string (display name of the ration / TMR profile)
+#   dm_kg: number (dry-matter target, kg/animal/day; nullable allowed)
+#   last_distribution_at: ISO-8601 datetime string (nullable allowed)
+#   status: 'ok' | 'overdue' | 'unknown'
+groups: []
