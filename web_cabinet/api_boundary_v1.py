@@ -30,6 +30,10 @@ from packages.contracts.api_boundary_v1 import (
     FeedbackItem,
     FeedbackListResponse,
     FeedbackMetrics,
+    FeedingRation,
+    FeedingRationsResponse,
+    FeedIntakeDrop,
+    FeedIntakeDropsResponse,
     HealthEvent,
     HealthMetrics,
     InsightItem,
@@ -100,6 +104,7 @@ from genomeai.copilot_tools import load_copilot_tools_config, resolve_section_re
 
 from .auth import get_current_user, get_db
 from .feedback_v1 import compute_feedback_metrics, list_feedback
+from web_cabinet.feeding_v1 import load_rations as _load_rations, project_intake_drops as _project_intake_drops
 from .insights_v1 import (
     delete_insight as _delete_insight,
     get_insight as _get_insight,
@@ -1512,6 +1517,30 @@ def boundary_recommended_tasks_list(
         total=len(proposals),
         items=[RecommendedTask(**p) for p in proposals],
     )
+
+
+@router.get('/feeding/rations', response_model=FeedingRationsResponse)
+def boundary_feeding_rations(
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'kpi.view'):
+        raise HTTPException(status_code=403)
+    cfg_path = Path(__file__).resolve().parents[1] / 'configs' / 'feeding' / 'rations_v1.yaml'
+    items = _load_rations(cfg_path)
+    return FeedingRationsResponse(total=len(items), items=items)
+
+
+@router.get('/feeding/intake-drops', response_model=FeedIntakeDropsResponse)
+def boundary_feeding_intake_drops(
+    farm_id: str = 'INV_FARM_001',
+    user=Depends(get_current_user),
+):
+    if not _user_has_any(user, 'kpi.view'):
+        raise HTTPException(status_code=403)
+    user_id = str(user.get('user_id') or user.get('username') or 'unknown')
+    insights_resp = _list_insights(farm_id=farm_id, user_id=user_id)
+    items = _project_intake_drops(insights_resp.items)
+    return FeedIntakeDropsResponse(total=len(items), items=items)
 
 
 @router.get('/qc/incidents', response_model=QcIncidentsListResponse)
