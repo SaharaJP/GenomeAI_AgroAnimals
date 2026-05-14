@@ -356,6 +356,37 @@ export type WorklistsFromRecommendedResponse = {
   items: WorklistsFromRecommendedItem[];
 };
 
+export type FeedingRation = {
+  group_id: string;
+  group_name: string;
+  ration_name: string;
+  dm_kg?: number | null;
+  last_distribution_at?: string | null;
+  status: string;
+};
+
+export type FeedingRationsResponse = {
+  schema: string;
+  total: number;
+  items: FeedingRation[];
+};
+
+export type FeedIntakeDrop = {
+  insight_id: string;
+  group_id?: string | null;
+  group_name?: string | null;
+  drop_pct?: number | null;
+  window_days?: number | null;
+  last_observed_at?: string | null;
+  title: string;
+};
+
+export type FeedIntakeDropsResponse = {
+  schema: string;
+  total: number;
+  items: FeedIntakeDrop[];
+};
+
 export type BriefingScheduleResponse = {
   schema: string;
   tenant_id: string;
