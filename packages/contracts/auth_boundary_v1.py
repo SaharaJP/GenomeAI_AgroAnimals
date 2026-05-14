@@ -64,7 +64,7 @@ class AuthLoginRequest(BaseModel):
 
 
 class AuthLoginResponse(BaseModel):
-    schema: str = 'genomeai.api.auth.login.v1'
+    schema_version: str = Field(default='genomeai.api.auth.login.v1', serialization_alias='schema')
     user: AuthUserView
     session: AuthSessionView
     scope: AuthScope
@@ -77,14 +77,14 @@ class AuthRefreshRequest(BaseModel):
 
 
 class AuthRefreshResponse(BaseModel):
-    schema: str = 'genomeai.api.auth.refresh.v1'
+    schema_version: str = Field(default='genomeai.api.auth.refresh.v1', serialization_alias='schema')
     session: AuthSessionView
     scope: AuthScope
     tokens: AuthTokenBundle
 
 
 class AuthMeResponse(BaseModel):
-    schema: str = 'genomeai.api.auth.me.v1'
+    schema_version: str = Field(default='genomeai.api.auth.me.v1', serialization_alias='schema')
     user: AuthUserView
     session: AuthSessionView
     scope: AuthScope
@@ -96,15 +96,15 @@ class AuthLogoutRequest(BaseModel):
 
 
 class AuthLogoutResponse(BaseModel):
-    schema: str = 'genomeai.api.auth.logout.v1'
+    schema_version: str = Field(default='genomeai.api.auth.logout.v1', serialization_alias='schema')
     revoked_session_ids: list[str] = Field(default_factory=list)
 
 
 class AuthSessionsListResponse(BaseModel):
-    schema: str = 'genomeai.api.auth.sessions.list.v1'
+    schema_version: str = Field(default='genomeai.api.auth.sessions.list.v1', serialization_alias='schema')
     items: list[AuthSessionView] = Field(default_factory=list)
 
 
 class AuthSessionRevokeResponse(BaseModel):
-    schema: str = 'genomeai.api.auth.sessions.revoke.v1'
+    schema_version: str = Field(default='genomeai.api.auth.sessions.revoke.v1', serialization_alias='schema')
     revoked_session_id: str

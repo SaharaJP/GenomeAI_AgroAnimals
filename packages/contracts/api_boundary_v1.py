@@ -44,7 +44,7 @@ class AlertItem(BaseModel):
 
 
 class AlertsListResponse(BaseModel):
-    schema: str = 'genomeai.api.alerts.list.v1'
+    schema_version: str = Field(default='genomeai.api.alerts.list.v1', serialization_alias='schema')
     total: int
     limit: int
     offset: int
@@ -78,7 +78,7 @@ class WorklistItem(BaseModel):
 
 
 class WorklistsListResponse(BaseModel):
-    schema: str = 'genomeai.api.worklists.list.v1'
+    schema_version: str = Field(default='genomeai.api.worklists.list.v1', serialization_alias='schema')
     total: int
     limit: int
     offset: int
@@ -110,7 +110,7 @@ class PlannerSummary(BaseModel):
 
 
 class PlannerResponse(BaseModel):
-    schema: str = 'genomeai.api.planner.v1'
+    schema_version: str = Field(default='genomeai.api.planner.v1', serialization_alias='schema')
     summary: PlannerSummary
     pending_approvals: int = 0
     weekly_plans: list[PlannerPlanItem] = Field(default_factory=list)
@@ -133,7 +133,7 @@ class DecisionItem(BaseModel):
 
 
 class DecisionsListResponse(BaseModel):
-    schema: str = 'genomeai.api.decisions.list.v1'
+    schema_version: str = Field(default='genomeai.api.decisions.list.v1', serialization_alias='schema')
     total: int
     limit: int
     offset: int
@@ -154,7 +154,7 @@ class DecisionIntelligenceTopAction(BaseModel):
 
 
 class DecisionIntelligenceResponse(BaseModel):
-    schema: str = 'genomeai.api.decision_intelligence.summary.v1'
+    schema_version: str = Field(default='genomeai.api.decision_intelligence.summary.v1', serialization_alias='schema')
     summary: DecisionIntelligenceSummary = Field(default_factory=DecisionIntelligenceSummary)
     top_actions: list[DecisionIntelligenceTopAction] = Field(default_factory=list)
     latest_decisions: list[DecisionItem] = Field(default_factory=list)
@@ -184,7 +184,7 @@ class FeedbackMetrics(BaseModel):
 
 
 class FeedbackListResponse(BaseModel):
-    schema: str = 'genomeai.api.feedback.list.v1'
+    schema_version: str = Field(default='genomeai.api.feedback.list.v1', serialization_alias='schema')
     total: int
     limit: int
     offset: int
@@ -203,7 +203,7 @@ class ReportItem(BaseModel):
 
 
 class ReportsListResponse(BaseModel):
-    schema: str = 'genomeai.api.reports.list.v1'
+    schema_version: str = Field(default='genomeai.api.reports.list.v1', serialization_alias='schema')
     total: int
     items: list[ReportItem] = Field(default_factory=list)
 
@@ -221,7 +221,7 @@ class EconomicsScenarioItem(BaseModel):
 
 
 class EconomicsListResponse(BaseModel):
-    schema: str = 'genomeai.api.economics.list.v1'
+    schema_version: str = Field(default='genomeai.api.economics.list.v1', serialization_alias='schema')
     scenarios_total: int
     reports_total: int
     scenario_items: list[EconomicsScenarioItem] = Field(default_factory=list)
@@ -267,7 +267,7 @@ class HealthEvent(BaseModel):
 
 
 class ProfileResponse(BaseModel):
-    schema: str = 'genomeai.api.profile.v1'
+    schema_version: str = Field(default='genomeai.api.profile.v1', serialization_alias='schema')
     entity: EntityRef
     summary: ProfileSummary
     alerts: list[AlertItem] = Field(default_factory=list)
@@ -292,7 +292,7 @@ class AssistantResolveTargetRequest(BaseModel):
 
 
 class AssistantResolveTargetResponse(BaseModel):
-    schema: str = 'genomeai.api.assistant.resolve_target.v1'
+    schema_version: str = Field(default='genomeai.api.assistant.resolve_target.v1', serialization_alias='schema')
     target: dict[str, Any] = Field(default_factory=dict)
     resolution_summary: str = ''
     required_permission: Optional[str] = None
@@ -314,7 +314,7 @@ class SupportSummary(BaseModel):
 
 
 class SupportResponse(BaseModel):
-    schema: str = 'genomeai.api.support.summary.v1'
+    schema_version: str = Field(default='genomeai.api.support.summary.v1', serialization_alias='schema')
     release: dict[str, Any] = Field(default_factory=dict)
     observability: dict[str, Any] = Field(default_factory=dict)
     summary: SupportSummary = Field(default_factory=SupportSummary)
@@ -338,7 +338,7 @@ class PilotSummary(BaseModel):
 
 
 class PilotResponse(BaseModel):
-    schema: str = 'genomeai.api.pilot.summary.v1'
+    schema_version: str = Field(default='genomeai.api.pilot.summary.v1', serialization_alias='schema')
     summary: PilotSummary = Field(default_factory=PilotSummary)
     items: list[PilotPackItem] = Field(default_factory=list)
 
@@ -375,7 +375,7 @@ class InsightItem(BaseModel):
 
 
 class InsightsListResponse(BaseModel):
-    schema: str = 'genomeai.api.insights.list.v1'
+    schema_version: str = Field(default='genomeai.api.insights.list.v1', serialization_alias='schema')
     total: int = 0
     items: list[InsightItem] = Field(default_factory=list)
 
@@ -392,7 +392,7 @@ class InsightUpdateRequest(BaseModel):
 
 
 class InsightSettings(BaseModel):
-    schema: str = 'genomeai.api.insight_settings.v1'
+    schema_version: str = Field(default='genomeai.api.insight_settings.v1', serialization_alias='schema')
     min_severity: str = 'info'
     enabled_categories: list[str] = Field(
         default_factory=lambda: [
@@ -403,7 +403,7 @@ class InsightSettings(BaseModel):
 
 
 class ScanNowResponse(BaseModel):
-    schema: str = 'genomeai.api.insights.scan_now.v1'
+    schema_version: str = Field(default='genomeai.api.insights.scan_now.v1', serialization_alias='schema')
     count: int = 0
     insight_ids: list[str] = Field(default_factory=list)
     skipped: bool = False
@@ -426,7 +426,7 @@ class ReadinessSummary(BaseModel):
 
 
 class ReadinessResponse(BaseModel):
-    schema: str = 'genomeai.api.readiness.summary.v1'
+    schema_version: str = Field(default='genomeai.api.readiness.summary.v1', serialization_alias='schema')
     profile: Optional[str] = None
     summary: ReadinessSummary = Field(default_factory=ReadinessSummary)
     checks: list[ReadinessCheck] = Field(default_factory=list)
@@ -449,13 +449,13 @@ class QcIncident(BaseModel):
 
 
 class QcIncidentsListResponse(BaseModel):
-    schema: str = 'genomeai.api.qc.incidents.list.v1'
+    schema_version: str = Field(default='genomeai.api.qc.incidents.list.v1', serialization_alias='schema')
     total: int = 0
     items: list[QcIncident] = Field(default_factory=list)
 
 
 class QcDismissResponse(BaseModel):
-    schema: str = 'genomeai.api.qc.incidents.dismiss.v1'
+    schema_version: str = Field(default='genomeai.api.qc.incidents.dismiss.v1', serialization_alias='schema')
     incident_id: str
     status: str
 
@@ -471,7 +471,7 @@ class UploadColumnSpec(BaseModel):
 
 
 class UploadTypeMeta(BaseModel):
-    schema: str = 'genomeai.api.uploads.type.v1'
+    schema_version: str = Field(default='genomeai.api.uploads.type.v1', serialization_alias='schema')
     type: str
     label: str
     target_table: str
@@ -480,7 +480,7 @@ class UploadTypeMeta(BaseModel):
 
 
 class UploadTypesListResponse(BaseModel):
-    schema: str = 'genomeai.api.uploads.types.list.v1'
+    schema_version: str = Field(default='genomeai.api.uploads.types.list.v1', serialization_alias='schema')
     items: list[UploadTypeMeta] = Field(default_factory=list)
 
 
@@ -491,7 +491,7 @@ class UploadRowError(BaseModel):
 
 
 class UploadPreviewResponse(BaseModel):
-    schema: str = 'genomeai.api.uploads.preview.v1'
+    schema_version: str = Field(default='genomeai.api.uploads.preview.v1', serialization_alias='schema')
     type: str
     total_rows: int = 0
     valid: int = 0
@@ -506,7 +506,7 @@ class UploadCommitRequest(BaseModel):
 
 
 class UploadCommitResponse(BaseModel):
-    schema: str = 'genomeai.api.uploads.commit.v1'
+    schema_version: str = Field(default='genomeai.api.uploads.commit.v1', serialization_alias='schema')
     inserted: int = 0
     skipped_duplicates: int = 0
 
@@ -525,7 +525,7 @@ class RecommendedTask(BaseModel):
 
 
 class RecommendedTasksListResponse(BaseModel):
-    schema: str = 'genomeai.api.recommended_tasks.list.v1'
+    schema_version: str = Field(default='genomeai.api.recommended_tasks.list.v1', serialization_alias='schema')
     total: int = 0
     items: list[RecommendedTask] = Field(default_factory=list)
 
@@ -542,7 +542,7 @@ class WorklistsFromRecommendedItem(BaseModel):
 
 
 class WorklistsFromRecommendedResponse(BaseModel):
-    schema: str = 'genomeai.api.worklists.from_recommended.v1'
+    schema_version: str = Field(default='genomeai.api.worklists.from_recommended.v1', serialization_alias='schema')
     total: int = 0
     created: int = 0
     reused: int = 0
@@ -559,7 +559,7 @@ class FeedingRation(BaseModel):
 
 
 class FeedingRationsResponse(BaseModel):
-    schema: str = 'genomeai.api.feeding.rations.v1'
+    schema_version: str = Field(default='genomeai.api.feeding.rations.v1', serialization_alias='schema')
     total: int = 0
     items: list[FeedingRation] = Field(default_factory=list)
 
@@ -575,13 +575,13 @@ class FeedIntakeDrop(BaseModel):
 
 
 class FeedIntakeDropsResponse(BaseModel):
-    schema: str = 'genomeai.api.feeding.intake_drops.v1'
+    schema_version: str = Field(default='genomeai.api.feeding.intake_drops.v1', serialization_alias='schema')
     total: int = 0
     items: list[FeedIntakeDrop] = Field(default_factory=list)
 
 
 class DomainLabelsResponse(BaseModel):
-    schema: str = 'genomeai.api.catalogs.domain_labels.v1'
+    schema_version: str = Field(default='genomeai.api.catalogs.domain_labels.v1', serialization_alias='schema')
     locale: str
     labels: dict[str, str] = Field(default_factory=dict)
 
@@ -593,7 +593,7 @@ class BriefingScheduleRequest(BaseModel):
 
 
 class BriefingScheduleResponse(BaseModel):
-    schema: str = 'genomeai.api.briefing.schedule.v1'
+    schema_version: str = Field(default='genomeai.api.briefing.schedule.v1', serialization_alias='schema')
     tenant_id: str
     periodicity: str = 'weekly'
     time_of_day: str = '07:00'

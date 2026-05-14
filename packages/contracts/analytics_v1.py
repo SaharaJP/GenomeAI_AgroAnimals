@@ -25,7 +25,7 @@ class ProductionSummary(BaseModel):
 
 
 class ProductionResponse(BaseModel):
-    schema: str = 'genomeai.api.analytics.production.v1'
+    schema_version: str = Field(default='genomeai.api.analytics.production.v1', serialization_alias='schema')
     start_date: str
     end_date: str
     time_series: list[ProductionDayPoint] = Field(default_factory=list)
@@ -39,7 +39,7 @@ class ReproLactationDaysOpen(BaseModel):
 
 
 class ReproductionResponse(BaseModel):
-    schema: str = 'genomeai.api.analytics.reproduction.v1'
+    schema_version: str = Field(default='genomeai.api.analytics.reproduction.v1', serialization_alias='schema')
     start_date: str
     end_date: str
     conception_rate: Optional[float] = None
@@ -58,7 +58,7 @@ class HealthIssueBreakdown(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    schema: str = 'genomeai.api.analytics.health.v1'
+    schema_version: str = Field(default='genomeai.api.analytics.health.v1', serialization_alias='schema')
     start_date: str
     end_date: str
     mastitis_count: int = 0
