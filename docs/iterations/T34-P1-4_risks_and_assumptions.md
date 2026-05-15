@@ -64,14 +64,20 @@
 
 ## P1-4c-1 — POST /worklists
 
-- **R10. ⚠ ВАЖНО.** **Импеданс-mismatch:** `Personnel.group_id` — free-form строка (из POST /personnel), а `Tasks.assignee_team` валидируется против каталога `configs/workflow_v2/teams.yaml` (5 ключей: team-health, team-repro, team-data, team-qc, team-econ). Если UI «Поставить задачу» передаст `personnel.group_id` напрямую в `assignee_team`, будет **500** (ValueError из `_validate_team`). Это **блокер для P1-4c-2** — нужно решение:
-  1. Унифицировать: `personnel.group_id` ограничить значениями из teams.yaml (dropdown в POST /personnel).
-  2. Маппер: free-form `group_id` → ближайший team-key, fallback `null`.
-  3. Расширить teams.yaml: добавить «команды команд» (Ветеринары/Зоотехники/…) поверх существующих 5.
-  4. Развязать поля: в карточке сотрудника group_id отображается, но в задаче assignee_team выбирается отдельно из team catalog.
+- **R10. ✅ RESOLVED (P1-4c-2).** **Импеданс-mismatch:** `Personnel.group_id` — free-form строка (из POST /personnel), а `Tasks.assignee_team` валидируется против каталога `configs/workflow_v2/teams.yaml` (5 ключей: team-health, team-repro, team-data, team-qc, team-econ). Решение по выбору координатора — вариант **4 (развязать поля)**: в TaskCreateModal `assignee_team` выбирается отдельным dropdown из catalog (`GET /api/workflow_v2/teams`), `owner_user_id` — отдельным dropdown из personnel-with-user_id. `personnel.group_id` остаётся info-полем в карточке. Никаких миграций данных, нулевой риск 500. Trade-off: двойная сущность (group_id ≠ team), но семантически оправдано — одна про оргструктуру, другая про workflow-routing.
 - **R11.** `priority` валидируется 1..5 в endpoint, но `core.workflow.tasks.create_task` сам тоже валидирует/нормализует. При расхождении границ — endpoint вернёт 400, но если миновать endpoint (например через workflow напрямую), границы могут не совпасть.
 - **A15.** `task_type='manual'` хардкоден в endpoint. Если позже понадобится дифференцировать manual-задачи по подтипу, нужно завести enum в контракте.
 - **A16.** Audit `tasks.create.manual` записывает `has_due_at: bool`, а не само значение. Та же логика, что в personnel.create — не превращать audit в зеркало данных. Trade-off: для отладки приходится смотреть и audit, и tasks_v1 одновременно.
+
+## P1-4c-2 — TaskCreateModal + FAB на /team
+
+- **R12.** `owner_user_id` dropdown без поиска — все personnel грузятся одним списком (`/personnel?limit=200`). На крупном тенанте (>50 сотрудников) выбор будет тесным. Адресовать в P1-5 (адмика) либо в P2 — добавить autocomplete-input.
+- **R13.** После успешного `createWorklist` нет invalidation существующих `/worklists`-подписок (PersonnelDetail и другие потребители). Пользователь увидит новую задачу только после ручного re-open drawer'a. Для P1 приемлемо (модалка закрывается → toast → пользователь сам ререндерит при необходимости); глобальный refetch — отложить на P2.
+- **R14.** Клиент фильтрует personnel по `user_id != null` локально — backend сам не фильтрует. Если у тенанта 500 сотрудников и только 10 с user_id, скачиваем все 500. В P2 завести query-param `?has_user=true` в `/personnel`.
+- **R15.** FAB и toast используют `var(--accent)` — если появится theming, проверить контрастность в тёмной теме (сейчас тестировал только в светлой).
+- **A17.** `<Modal>` wrapper (`web_app/components/ui/modal.tsx`) ставит `document.body.style.overflow = 'hidden'` пока модалка открыта — намеренно, чтобы фон не скроллился; восстанавливается через cleanup.
+- **A18.** `personnel?limit=200` — без поиска/пагинации. Сознательная упрощение для P1 (см. R12). Hard limit 200 поможет не уронить страницу.
+- **A19.** Audit таблица в реальной БД называется `audit_log` (не `audit_events`, как могло следовать из имени action). Колонки: `action`, `username`, `object_id`, `status`, `ts`. Smoke-проверки и будущие репорты должны это учитывать.
 
 ---
 
@@ -79,10 +85,14 @@
 
 | ID | Уровень | Что | Зачем |
 |---|---|---|---|
-| **R10** | 🔥 высокий | `personnel.group_id` ↔ `tasks.assignee_team` mismatch | блокирует P1-4c-2 UX |
+| ~~R10~~ | ✅ resolved | ~~personnel.group_id ↔ tasks.assignee_team mismatch~~ | закрыто декаплингом полей в P1-4c-2 |
 | R6 | средний | MinIO не поднят, photo upload отложен | UX-наличие фото |
 | R4 | средний | Нет PATCH/DELETE на `/personnel` | редактирование карточки |
 | R7 | средний | Нет UI для personnel↔user mapping | админка |
+| R12 | средний | Нет поиска в owner-dropdown | UX на крупном тенанте |
+| R13 | низкий | Нет invalidation после create | мерцание UI |
+| R14 | низкий | Клиентская фильтрация has_user | network-overhead |
+| R15 | низкий | FAB/toast только light-theme проверен | a11y/visual |
 | A5 | низкий | PII без DB encryption | compliance |
 | R8/R9 | низкий | Нет пагинации/кэша в drawer | производительность |
 | A11/A12 | низкий | Нет виртуализации/сортировки на сервере | масштаб |
@@ -92,6 +102,6 @@
 
 ## Что НЕ риск (вынесено в обычные follow-up'ы)
 
-- P1-4d (FAB модалка) — следующая по плану задача, не "риск".
+- P1-4d (PATCH/DELETE personnel) — следующая по плану задача, не "риск".
 - TS-контракт `worklists?owner_user_id` — простое расширение, без долга.
-- Component-unit тесты для Personnel UI — полагаемся на Playwright runtime; добавить в P2 если нужно.
+- Component-unit тесты для Personnel UI / TaskCreateModal — полагаемся на Playwright runtime; добавить в P2 если нужно.

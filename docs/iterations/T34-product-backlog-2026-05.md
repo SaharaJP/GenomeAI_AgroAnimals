@@ -170,7 +170,10 @@
 - **Прогресс на 2026-05-15:**
   - ✅ P1-4a (model + migration + endpoint) — закрыт коммитами `0786756…6338d17` (RBAC, contracts, domain, alembic 20260515_17, PersonnelRepo, GET/POST endpoints с PII-маскингом и audit).
   - ⏸ Photo upload через MinIO — **отложен** (P1-4a-7). MinIO в локальном dev-контуре не поднят; `photo_ref` принимается endpoint'ом как строка, реальная заливка вернётся когда MinIO будет живым (вероятно в составе P1-6 «Контроль интеграций»).
-  - ➡ Следующий шаг: P1-4b (UI `/team`).
+  - ✅ P1-4b (UI `/team`) — закрыт коммитами `8152230…a97b4e8` (skeleton, PersonnelSurface, user_id soft-FK, PersonnelDetail drawer).
+  - ✅ P1-4c-1 (POST `/worklists`) — закрыт коммитом `ee4482c` (backend, audit `tasks.create.manual`).
+  - ✅ P1-4c-2 (TaskCreateModal + FAB на `/team`) — закрыт коммитами `a42e6c4` (контракты/клиент/валидация), `6e5117f` (модалка), `ff92646` (FAB + интеграция + Playwright smoke). R10 решён через декаплинг полей: `assignee_team` отдельно из catalog, `owner_user_id` отдельно из personnel; `personnel.group_id` остаётся free-form info-полем.
+  - ➡ Следующий шаг: P1-4d (PATCH/DELETE на `/personnel` для редактирования карточки) либо переход к P1-5/P1-6.
 
 ---
 
