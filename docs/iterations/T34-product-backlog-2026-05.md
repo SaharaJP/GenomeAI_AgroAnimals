@@ -235,6 +235,12 @@
   - **Минимум** — P1-5 (плитка должна куда-то встать, и общесистемный UI каноном).
   - **Полезно** — после P2-2/P2-3/P2-4, чтобы агрегат был содержательным; **но** сам каркас (endpoint + страница) можно строить заранее — он сразу покажет существующие `connectors_v1.py` коннекторы.
 - **Заметка:** не путать с `/connections` — там пользователь *настраивает* интеграции (per-tenant), а `/admin/integrations` — это *системный надзор* для админа (cross-tenant, диагностика, ручной запуск).
+- **Прогресс на 2026-05-15:**
+  - ✅ P1-6 slice 1 — backend (`39f5ed0`): contract `IntegrationHealth`, Protocol-based registry, 5 bundled providers (LLM / connectors_v1 / IoT stubs / sensor stub / RU stubs), endpoint `GET /api/app/v1/integrations/health` gated by `integrations.view`, 7/7 unit tests pass. Live smoke: 15 rows across 5 kinds.
+  - ✅ P1-6 slice 2 — frontend (`7c3b218`): `/admin/integrations` page with grouped table, status badges, expand-rows, auto-refresh 30s, aggregate status в topbar. 6-я плитка на `/admin`.
+  - ✅ Slice 3 — docs: T34-P1-6_risks_and_assumptions.md + public_interfaces.json (PATCH добавлен → GET integrations/health добавлен) + backlog progress.
+  - ⏸ **P1-6b — action layer (manual sync / enable-disable / deep-link logs) — ОТЛОЖЕН.** Текущее состояние = read-only безопасное. R1 (LLM ping), R3 (tenant_id passthrough), R6 (broader RBAC) — все в risks-доке для будущей итерации.
+  - ➡ Следующий шаг: P1-tails (P1-5 slice 4 IAM editing + R-фолоу-апы P1-4/P1-5), либо переход к P2.
 
 ---
 

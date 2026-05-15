@@ -728,6 +728,12 @@
         ]
       },
       {
+        "path": "/api/app/v1/integrations/health",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
         "path": "/api/alerts_v2",
         "methods": [
           "GET"
