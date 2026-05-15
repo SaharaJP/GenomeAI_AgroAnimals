@@ -189,6 +189,15 @@
   4. Защита: только роль `admin` (RBAC проверка на бэкенде, не только UI).
 - **Acceptance:** изменение permission → видно в `auth_audit` логах; пользователь без admin не видит и не вызывает endpoint; e2e-тест на отказ.
 - **Deps:** P0-3, согласование политики с координатором (см. «От координатора»).
+- **Прогресс на 2026-05-15:**
+  - ✅ P1-5 slice 1 — `/admin` tile canon (`8cc35c6`): 5 плиток (IAM, AI, Observability, Readiness, Support). Decision: только existing routes, без заглушек на P1-6 / training (отдельные эпики).
+  - ✅ hotfix (`4952341`): `list_roles` / `get_permissions_for_role` fallback при отсутствии optional `roles` / `role_permissions` таблиц; включая `conn.rollback()` чтобы не ловить `InFailedSqlTransaction`.
+  - ✅ P1-5 slice 2 — `/admin/iam` read-only matrix (`bc50ae0`): table 8 ролей × 5 actions с disabled-чекбоксами; sticky-headers; explainability block.
+  - ✅ P1-5 slice 3a — миграция `role_permissions_overrides_v1` (`48e3edd`): PK (role, permission), CHECK effect IN ('grant', 'revoke'), audit-friendly columns.
+  - ✅ P1-5 slice 3b — backend (`fe1af0b`): PATCH endpoint с effect=grant|revoke|clear, audit `iam.permission.{grant|revoke|clear}`, RBAC `admin.manage` (новая permission), validation против ALL_PERMISSIONS и list_roles. Effective merge встроен в `get_permissions_for_role`.
+  - ✅ Slice 5 docs: T34-P1-5_risks_and_assumptions.md + public_interfaces.json (PATCH добавлен).
+  - ⏸ **P1-5 slice 4 — UI editing + 2-click confirm — ОТЛОЖЕН** по соглашению с координатором. Текущее состояние UI = read-only безопасно. Рисков-долг по edit-UX и admin.manage lock-out (R4, R6 в risks-доке) требует отдельного согласования прежде чем включать interactive editing.
+  - ➡ Следующий шаг: либо открыть P1-5 slice 4 отдельной итерацией с продуманным confirm-flow, либо перейти к другому эпику (P1-3 «Стадо», P1-6 «Интеграции», R-фолоу-апы из P1-4).
 
 ---
 

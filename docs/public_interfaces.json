@@ -723,7 +723,8 @@
       {
         "path": "/api/admin/permission-matrix",
         "methods": [
-          "GET"
+          "GET",
+          "PATCH"
         ]
       },
       {
