@@ -26,7 +26,7 @@ _NOTE_SENSOR = 'Endpoint описан (docs/integrations/sensor_ingestion_api.md
 
 
 class IoTStubsHealthProvider:
-    def get_health(self, conn: Any) -> list[IntegrationHealth]:
+    def get_health(self, conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
         return [
             IntegrationHealth(
                 id=device_id,
@@ -40,7 +40,7 @@ class IoTStubsHealthProvider:
 
 
 class SensorIngestionStubProvider:
-    def get_health(self, conn: Any) -> list[IntegrationHealth]:
+    def get_health(self, conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
         return [
             IntegrationHealth(
                 id='sensor.ingestion_api',

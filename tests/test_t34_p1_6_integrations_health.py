@@ -103,7 +103,7 @@ def test_collect_health_isolates_provider_failures():
     from core.interoperability.providers.iot_stubs import IoTStubsHealthProvider
 
     class _BoomProvider:
-        def get_health(self, conn):
+        def get_health(self, conn, *, tenant_id: str = 'default'):
             raise RuntimeError('boom!')
 
     reset_registry()

@@ -25,9 +25,14 @@ class IntegrationHealthProvider(Protocol):
     Providers MUST be cheap to call — health endpoint runs them on each
     GET. If a provider needs network I/O (e.g. live LLM ping), it should
     return a cached snapshot and refresh asynchronously.
+
+    `tenant_id` is the caller's tenant; providers that read per-tenant
+    state (e.g. connector_runs) must use it instead of hardcoded
+    'default'. Providers that are tenant-agnostic (LLM env vars, IoT
+    catalogue stubs) may safely ignore it.
     """
 
-    def get_health(self, conn: Any) -> list[IntegrationHealth]:
+    def get_health(self, conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
         ...
 
 
@@ -49,7 +54,7 @@ def reset_registry() -> None:
     _REGISTRY.clear()
 
 
-def collect_health(conn: Any) -> list[IntegrationHealth]:
+def collect_health(conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
     """Run every registered provider and concatenate the rows.
 
     Provider failures are logged and yield a synthetic `down` row so the
@@ -60,7 +65,7 @@ def collect_health(conn: Any) -> list[IntegrationHealth]:
     for provider in iter_providers():
         provider_name = type(provider).__name__
         try:
-            rows = provider.get_health(conn) or []
+            rows = provider.get_health(conn, tenant_id=tenant_id) or []
         except Exception as exc:
             logger.exception('integrations.health.provider_failed name=%s', provider_name)
             out.append(

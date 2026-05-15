@@ -270,6 +270,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         PERM_PERSONNEL_READ,
         PERM_PERSONNEL_READ_PII,
         PERM_PERSONNEL_MANAGE,
+
+        # P1-6 integrations control panel (Director — operational visibility)
+        PERM_INTEGRATIONS_VIEW,
     ],
     ROLE_ZOOTECH: [
         PERM_KPI_VIEW,

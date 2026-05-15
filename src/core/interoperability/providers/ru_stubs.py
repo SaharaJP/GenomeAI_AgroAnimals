@@ -15,7 +15,7 @@ from packages.contracts.integrations_health_v1 import IntegrationHealth
 
 
 class RuExternalSystemsStubProvider:
-    def get_health(self, conn: Any) -> list[IntegrationHealth]:
+    def get_health(self, conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
         return [
             IntegrationHealth(
                 id='external.herriot',

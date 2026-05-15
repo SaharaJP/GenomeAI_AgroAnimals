@@ -32,7 +32,7 @@ def _has_openai_key() -> bool:
 class LLMHealthProvider:
     """One row representing the LLM provider."""
 
-    def get_health(self, conn: Any) -> list[IntegrationHealth]:
+    def get_health(self, conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
         provider = (os.environ.get('GENOMEAI_LLM_PROVIDER') or 'openai').strip().lower()
         configured = _has_openai_key() if provider in ('openai', '') else True
         if not configured:

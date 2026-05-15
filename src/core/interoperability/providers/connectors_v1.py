@@ -76,7 +76,7 @@ def _status_from_run(run: dict) -> str:
 class ConnectorsV1HealthProvider:
     """Aggregates `source_system` rows from connectors_v1 framework."""
 
-    def get_health(self, conn: Any) -> list[IntegrationHealth]:
+    def get_health(self, conn: Any, *, tenant_id: str = 'default') -> list[IntegrationHealth]:
         active = _scan_dir(_PROJECT_ROOT / 'configs' / 'connectors')
         blueprints = _scan_dir(_PROJECT_ROOT / 'configs' / 'connector_catalog')
 
@@ -104,7 +104,7 @@ class ConnectorsV1HealthProvider:
             latest: Optional[dict] = None
             if entry['from_active'] and repo is not None:
                 try:
-                    runs = repo.list_runs(tenant_id='default', connector_id=connector_id, limit=1) or []
+                    runs = repo.list_runs(tenant_id=tenant_id, connector_id=connector_id, limit=1) or []
                     latest = runs[0] if runs else None
                 except Exception:
                     latest = None

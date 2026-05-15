@@ -2046,7 +2046,8 @@ def boundary_integrations_health(
     from core.interoperability import providers as _providers  # noqa: F401
     from core.interoperability.integrations_health import collect_health
 
-    items = collect_health(conn)
+    tenant_id = str(user.get('tenant_id') or 'default')
+    items = collect_health(conn, tenant_id=tenant_id)
     return {
         'schema': 'genomeai.api.integrations.health.v1',
         'items': [item.model_dump() for item in items],
