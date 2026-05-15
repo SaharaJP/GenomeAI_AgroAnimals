@@ -290,6 +290,12 @@ def list_roles(conn: Any) -> list[str]:
         rows = conn.execute("SELECT role FROM roles ORDER BY role").fetchall()
     except Exception:
         # `roles` table is optional — defaults come from policy constants.
+        # Roll back the aborted Postgres transaction so subsequent queries on
+        # the same connection don't fail with InFailedSqlTransaction.
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         return list(_DEFAULT_ROLES)
     if rows:
         return [str(r[0]) for r in rows]
@@ -364,6 +370,10 @@ def count_active_users_by_role(conn: Any, *, tenant_id: str, role: str) -> int:
 
 
 def get_permissions_for_role(conn: Any, role: str) -> list[str]:
+    """Return effective permissions for `role`: baseline (DB role_permissions
+    or DEFAULT_ROLE_PERMISSIONS fallback) merged with any DB overrides from
+    `role_permissions_overrides_v1` (P1-5).
+    """
     try:
         rows = conn.execute(
             "SELECT permission FROM role_permissions WHERE role=? ORDER BY permission",
@@ -371,10 +381,22 @@ def get_permissions_for_role(conn: Any, role: str) -> list[str]:
         ).fetchall()
     except Exception:
         # `role_permissions` table is optional — fallback to policy defaults.
-        return list(DEFAULT_ROLE_PERMISSIONS.get(role, []))
-    if rows:
-        return [r[0] for r in rows]
-    return list(DEFAULT_ROLE_PERMISSIONS.get(role, []))
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        baseline = list(DEFAULT_ROLE_PERMISSIONS.get(role, []))
+    else:
+        baseline = [r[0] for r in rows] if rows else list(DEFAULT_ROLE_PERMISSIONS.get(role, []))
+
+    try:
+        from core.security.overrides import apply_effective_permissions, list_overrides_for_role
+    except Exception:
+        return baseline
+    overrides = list_overrides_for_role(conn, role=role)
+    if not overrides:
+        return baseline
+    return apply_effective_permissions(baseline=baseline, overrides=overrides)
 
 
 def create_job(

@@ -94,6 +94,9 @@ PERM_PERSONNEL_READ = "personnel.read"            # имя, должность, 
 PERM_PERSONNEL_READ_PII = "personnel.read_pii"    # phone, email, hired_at — каждый просмотр audit_event
 PERM_PERSONNEL_MANAGE = "personnel.manage"        # create/update/delete карточек
 
+# --- P1-5 IAM management ---
+PERM_ADMIN_MANAGE = "admin.manage"                # PATCH role_permissions overrides, write audit
+
 ALL_PERMISSIONS: list[str] = [
     PERM_KPI_VIEW,
     PERM_DRILLDOWN_VIEW,
@@ -173,6 +176,9 @@ ALL_PERMISSIONS: list[str] = [
     PERM_PERSONNEL_READ,
     PERM_PERSONNEL_READ_PII,
     PERM_PERSONNEL_MANAGE,
+
+    # P1-5 IAM management
+    PERM_ADMIN_MANAGE,
 ]
 
 # ---- Role catalog ----

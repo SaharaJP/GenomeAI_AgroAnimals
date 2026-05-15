@@ -7353,6 +7353,90 @@ def api_admin_permission_matrix(
     return build_permission_matrix_view(matrix_cfg=cfg, role_permissions=role_permissions)
 
 
+@app.patch("/api/admin/permission-matrix")
+def api_admin_permission_matrix_patch(
+    body: dict,
+    request: Request,
+    user=Depends(require_permissions(rbac.PERM_ADMIN_MANAGE)),
+    conn=Depends(get_db),
+):
+    """P1-5: upsert or clear a single (role, permission) override.
+
+    Body: `{role: str, permission: str, effect: 'grant'|'revoke'|'clear'}`
+    - 'grant' / 'revoke' upsert an override row.
+    - 'clear' removes the override (reverts to YAML/default baseline).
+    """
+    from core.security.overrides import GRANT, REVOKE, clear_override, set_override
+
+    role = str(body.get("role") or "").strip()
+    permission = str(body.get("permission") or "").strip()
+    effect = str(body.get("effect") or "").strip().lower()
+
+    if not role or not permission or effect not in (GRANT, REVOKE, "clear"):
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "iam.invalid", "detail": "role, permission, effect (grant|revoke|clear) required"},
+        )
+    if permission not in rbac.ALL_PERMISSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "iam.unknown_permission", "detail": f"permission {permission!r} is not registered"},
+        )
+    if role not in list_roles(conn):
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "iam.unknown_role", "detail": f"role {role!r} is not registered"},
+        )
+
+    actor_uid = int(user.get("user_id") or 0) or None
+    actor_name = str(user.get("username") or "") or None
+    if effect == "clear":
+        removed = clear_override(conn, role=role, permission=permission)
+        action_tag = "iam.permission.clear"
+        before = removed
+        after = None
+    else:
+        row = set_override(
+            conn,
+            role=role,
+            permission=permission,
+            effect=effect,
+            actor_user_id=actor_uid,
+            actor_username=actor_name,
+        )
+        action_tag = f"iam.permission.{effect}"
+        before = None
+        after = {"role": row["role"], "permission": row["permission"], "effect": row["effect"]}
+
+    try:
+        write_audit(
+            conn,
+            tenant_id=str(user.get("tenant_id") or "default"),
+            user_id=int(user.get("user_id") or 0),
+            username=str(user.get("username") or ""),
+            role=str(user.get("role") or ""),
+            action=action_tag,
+            object_type="role_permission_override",
+            object_id=f"{role}:{permission}",
+            before={"role": before["role"], "permission": before["permission"], "effect": before["effect"]} if before else None,
+            after=after,
+            ip=getattr(request.client, "host", None) if request.client else None,
+            user_agent=request.headers.get("user-agent"),
+            request_id=getattr(request.state, "request_id", None),
+        )
+    except Exception:
+        pass
+
+    effective = get_permissions_for_role(conn, role)
+    return {
+        "schema": "genomeai.api.admin.iam_override.v1",
+        "role": role,
+        "permission": permission,
+        "effect": effect,
+        "effective_permissions_count": len(effective),
+    }
+
+
 @app.get("/admin/users", response_class=HTMLResponse)
 def admin_users_page(request: Request, user=Depends(require_permissions(rbac.PERM_USERS_MANAGE)), conn=Depends(get_db)):
     tenant_id = str(user.get("tenant_id") or "default")
