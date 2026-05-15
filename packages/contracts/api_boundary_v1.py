@@ -549,6 +549,22 @@ class WorklistsFromRecommendedResponse(BaseModel):
     items: list[WorklistsFromRecommendedItem] = Field(default_factory=list)
 
 
+class WorklistCreateRequest(BaseModel):
+    title: str
+    domain: Optional[str] = None
+    priority: int = 3
+    due_at: Optional[str] = None
+    owner_user_id: Optional[int] = None
+    assignee_team: Optional[str] = None
+    description: Optional[str] = None
+
+
+class WorklistCreateResponse(BaseModel):
+    schema_version: str = Field(default='genomeai.api.worklists.create.v1', serialization_alias='schema')
+    task_id: str
+    item: WorklistItem
+
+
 class FeedingRation(BaseModel):
     group_id: str
     group_name: str

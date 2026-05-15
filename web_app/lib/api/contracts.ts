@@ -411,6 +411,22 @@ export type ListResponse<T> = {
   items: T[];
 };
 
+export type WorklistCreateRequest = {
+  title: string;
+  domain?: string | null;
+  priority?: number;
+  due_at?: string | null;
+  owner_user_id?: number | null;
+  assignee_team?: string | null;
+  description?: string | null;
+};
+
+export type WorklistCreateResponse = {
+  schema: string;
+  task_id: string;
+  item: WorklistItem;
+};
+
 export type Personnel = {
   personnel_id: string;
   full_name: string;

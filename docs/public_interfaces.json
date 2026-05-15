@@ -1481,7 +1481,8 @@
       {
         "path": "/worklists",
         "methods": [
-          "GET"
+          "GET",
+          "POST"
         ]
       },
       {

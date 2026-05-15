@@ -16,6 +16,8 @@ from packages.contracts.api_boundary_v1 import (
     BriefingScheduleResponse,
     RecommendedTask,
     RecommendedTasksListResponse,
+    WorklistCreateRequest,
+    WorklistCreateResponse,
     WorklistsFromRecommendedRequest,
     WorklistsFromRecommendedResponse,
     WorklistsFromRecommendedItem,
@@ -1496,6 +1498,66 @@ def boundary_worklists_from_recommended(
         reused=reused_count,
         items=out_items,
     )
+
+
+@router.post('/worklists', response_model=WorklistCreateResponse, status_code=201)
+def boundary_worklists_create(
+    body: WorklistCreateRequest,
+    request: Request,
+    user=Depends(require_permissions('tasks.write')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    title = (body.title or '').strip()
+    if not title:
+        raise HTTPException(status_code=400, detail={'error': 'worklists.invalid', 'detail': 'title is required'})
+    priority = int(body.priority or 3)
+    if priority < 1 or priority > 5:
+        raise HTTPException(status_code=400, detail={'error': 'worklists.invalid', 'detail': 'priority must be in 1..5'})
+    task_payload = _DomainTaskCreate(
+        task_type='manual',
+        title=title,
+        domain=body.domain,
+        priority=priority,
+        due_at=body.due_at,
+        owner_user_id=body.owner_user_id,
+        assignee_team=(body.assignee_team.strip() if body.assignee_team else None),
+        why={'summary': body.description or '', 'source': 'manual.team_fab'},
+    )
+    new_task_id = _create_task(conn, tenant_id=tenant_id, t=task_payload)
+    row = conn.execute(
+        "SELECT * FROM tasks_v1 WHERE tenant_id=? AND task_id=?",
+        (tenant_id, new_task_id),
+    ).fetchone()
+    item = _map_worklist(dict(row), request=request) if row else None
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='tasks.create.manual',
+            object_type='tasks_v1',
+            object_id=new_task_id,
+            after={
+                'task_id': new_task_id,
+                'title': title,
+                'domain': body.domain,
+                'priority': priority,
+                'owner_user_id': body.owner_user_id,
+                'assignee_team': body.assignee_team,
+                'has_due_at': body.due_at is not None,
+            },
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    if item is None:
+        raise HTTPException(status_code=500, detail={'error': 'worklists.create.lost_row', 'detail': 'task created but row missing'})
+    return WorklistCreateResponse(task_id=new_task_id, item=item)
 
 
 @router.get('/recommended-tasks', response_model=RecommendedTasksListResponse)
