@@ -105,10 +105,91 @@ def create_personnel(
     return row_to_personnel(row)
 
 
+_UPDATABLE_FIELDS = (
+    "full_name",
+    "position",
+    "group_id",
+    "phone",
+    "email",
+    "hired_at",
+    "photo_ref",
+    "user_id",
+)
+
+
+def get_personnel(
+    conn,
+    *,
+    tenant_id: str,
+    personnel_id: str,
+) -> Optional[Personnel]:
+    row = PersonnelRepo(conn).get_row(tenant_id=tenant_id, personnel_id=personnel_id)
+    return row_to_personnel(row) if row else None
+
+
+def update_personnel(
+    conn,
+    *,
+    tenant_id: str,
+    personnel_id: str,
+    patch: dict[str, Any],
+) -> tuple[Optional[Personnel], Optional[Personnel]]:
+    """Apply partial update. Returns (before, after) snapshots.
+
+    `before` is None when row not found. `after` is None if nothing changed
+    (empty patch or only sentinel values). Field whitelist is enforced.
+    """
+    repo = PersonnelRepo(conn)
+    before_row = repo.get_row(tenant_id=tenant_id, personnel_id=personnel_id)
+    if before_row is None:
+        return None, None
+    sets: list[str] = []
+    args: list[Any] = []
+    changed = False
+    for key in _UPDATABLE_FIELDS:
+        if key not in patch:
+            continue
+        new_value = patch[key]
+        if isinstance(new_value, str):
+            new_value = new_value.strip() or None
+        if before_row.get(key) == new_value:
+            continue
+        sets.append(f"{key}=?")
+        args.append(new_value)
+        changed = True
+    if not changed:
+        return row_to_personnel(before_row), None
+    sets.append("updated_at=?")
+    args.append(utcnow_iso())
+    repo.update_fields(tenant_id=tenant_id, personnel_id=personnel_id, sets=sets, args=args)
+    after_row = repo.get_row(tenant_id=tenant_id, personnel_id=personnel_id)
+    if after_row is None:
+        raise RuntimeError("personnel.update lost row")
+    return row_to_personnel(before_row), row_to_personnel(after_row)
+
+
+def delete_personnel(
+    conn,
+    *,
+    tenant_id: str,
+    personnel_id: str,
+) -> Optional[Personnel]:
+    """Hard-delete personnel row. Returns the deleted entity or None if not found."""
+    repo = PersonnelRepo(conn)
+    before_row = repo.get_row(tenant_id=tenant_id, personnel_id=personnel_id)
+    if before_row is None:
+        return None
+    repo.delete(tenant_id=tenant_id, personnel_id=personnel_id)
+    return row_to_personnel(before_row)
+
+
 __all__ = [
     "create_personnel",
+    "delete_personnel",
     "generate_personnel_id",
+    "get_personnel",
     "list_personnel",
     "row_to_personnel",
+    "update_personnel",
     "utcnow_iso",
 ]

@@ -41,6 +41,7 @@ from packages.contracts.api_boundary_v1 import (
     PersonnelCreateRequest,
     PersonnelListResponse,
     PersonnelResponse,
+    PersonnelUpdateRequest,
     HealthEvent,
     HealthMetrics,
     InsightItem,
@@ -91,7 +92,12 @@ from core.workflow.briefing_schedule import (
     upsert_briefing_schedule,
     validate_schedule_input,
 )
-from core.workflow.personnel import create_personnel as _create_personnel, list_personnel as _list_personnel
+from core.workflow.personnel import (
+    create_personnel as _create_personnel,
+    delete_personnel as _delete_personnel,
+    list_personnel as _list_personnel,
+    update_personnel as _update_personnel,
+)
 from core.workflow.recommended_tasks import build_recommended_tasks_from_insights
 from core.workflow.tasks import create_task as _create_task
 from core.domain import TaskCreate as _DomainTaskCreate
@@ -1919,3 +1925,103 @@ def boundary_personnel_create(
         pass
     item = _personnel_record_to_pydantic(rec if pii_visible else rec.masked())
     return PersonnelResponse(pii_visible=pii_visible, item=item)
+
+
+def _personnel_audit_snapshot(rec) -> dict[str, Any]:
+    """Audit-safe snapshot: avoid mirroring PII into audit_log payload."""
+    return {
+        'personnel_id': rec.personnel_id,
+        'full_name': rec.full_name,
+        'position': rec.position,
+        'group_id': rec.group_id,
+        'user_id': rec.user_id,
+        'has_phone': rec.phone is not None,
+        'has_email': rec.email is not None,
+        'has_hired_at': rec.hired_at is not None,
+        'has_photo': rec.photo_ref is not None,
+    }
+
+
+@router.patch('/personnel/{personnel_id}', response_model=PersonnelResponse)
+def boundary_personnel_update(
+    personnel_id: str,
+    body: PersonnelUpdateRequest,
+    request: Request,
+    user=Depends(require_permissions('personnel.manage')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    patch = body.model_dump(exclude_unset=True)
+    if not patch:
+        raise HTTPException(
+            status_code=400,
+            detail={'error': 'personnel.invalid', 'detail': 'no fields to update'},
+        )
+    before, after = _update_personnel(
+        conn,
+        tenant_id=tenant_id,
+        personnel_id=personnel_id,
+        patch=patch,
+    )
+    if before is None:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'personnel.not_found', 'detail': 'personnel_id not found'},
+        )
+    final = after or before
+    pii_visible = bool(core_has_any_permission(user.get('permissions') or [], 'personnel.read_pii'))
+    if after is not None:
+        try:
+            write_audit(
+                conn,
+                tenant_id=tenant_id,
+                user_id=int(user.get('user_id') or 0),
+                username=str(user.get('username') or ''),
+                role=str(user.get('role') or ''),
+                action='personnel.update',
+                object_type='personnel',
+                object_id=personnel_id,
+                before=_personnel_audit_snapshot(before),
+                after=_personnel_audit_snapshot(after),
+                ip=getattr(request.client, 'host', None) if request.client else None,
+                user_agent=request.headers.get('user-agent'),
+                request_id=getattr(request.state, 'request_id', None),
+            )
+        except Exception:
+            pass
+    item = _personnel_record_to_pydantic(final if pii_visible else final.masked())
+    return PersonnelResponse(pii_visible=pii_visible, item=item)
+
+
+@router.delete('/personnel/{personnel_id}', status_code=204)
+def boundary_personnel_delete(
+    personnel_id: str,
+    request: Request,
+    user=Depends(require_permissions('personnel.manage')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    deleted = _delete_personnel(conn, tenant_id=tenant_id, personnel_id=personnel_id)
+    if deleted is None:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'personnel.not_found', 'detail': 'personnel_id not found'},
+        )
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='personnel.delete',
+            object_type='personnel',
+            object_id=personnel_id,
+            before=_personnel_audit_snapshot(deleted),
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    return Response(status_code=204)
