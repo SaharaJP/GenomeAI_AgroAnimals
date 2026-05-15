@@ -282,11 +282,18 @@ def list_users_v2(
     return [dict(r) for r in rows]
 
 
+_DEFAULT_ROLES = (ROLE_ADMIN, ROLE_DIRECTOR, ROLE_OPERATOR, ROLE_VET, ROLE_VIEWER, ROLE_ZOOTECH, ROLE_CONSULTANT, ROLE_PARTNER)
+
+
 def list_roles(conn: Any) -> list[str]:
-    rows = conn.execute("SELECT role FROM roles ORDER BY role").fetchall()
+    try:
+        rows = conn.execute("SELECT role FROM roles ORDER BY role").fetchall()
+    except Exception:
+        # `roles` table is optional — defaults come from policy constants.
+        return list(_DEFAULT_ROLES)
     if rows:
         return [str(r[0]) for r in rows]
-    return [ROLE_ADMIN, ROLE_DIRECTOR, ROLE_OPERATOR, ROLE_VET, ROLE_VIEWER, ROLE_ZOOTECH, ROLE_CONSULTANT, ROLE_PARTNER]
+    return list(_DEFAULT_ROLES)
 
 
 def get_user_v2_any_by_username(conn: Any, *, tenant_id: str, username: str) -> Optional[dict[str, Any]]:
@@ -357,14 +364,17 @@ def count_active_users_by_role(conn: Any, *, tenant_id: str, role: str) -> int:
 
 
 def get_permissions_for_role(conn: Any, role: str) -> list[str]:
-    rows = conn.execute(
-        "SELECT permission FROM role_permissions WHERE role=? ORDER BY permission",
-        (role,),
-    ).fetchall()
+    try:
+        rows = conn.execute(
+            "SELECT permission FROM role_permissions WHERE role=? ORDER BY permission",
+            (role,),
+        ).fetchall()
+    except Exception:
+        # `role_permissions` table is optional — fallback to policy defaults.
+        return list(DEFAULT_ROLE_PERMISSIONS.get(role, []))
     if rows:
         return [r[0] for r in rows]
-    # fallback
-    return DEFAULT_ROLE_PERMISSIONS.get(role, [])
+    return list(DEFAULT_ROLE_PERMISSIONS.get(role, []))
 
 
 def create_job(
