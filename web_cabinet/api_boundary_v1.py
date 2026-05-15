@@ -2025,3 +2025,28 @@ def boundary_personnel_delete(
     except Exception:
         pass
     return Response(status_code=204)
+
+
+# ---- P1-6: Integrations health (read-only) ----
+
+
+@router.get('/integrations/health')
+def boundary_integrations_health(
+    user=Depends(require_permissions('integrations.view')),
+    conn=Depends(get_db),
+):
+    """Aggregate health snapshot across LLM, batch connectors, IoT stubs, RU stubs.
+
+    Each row matches `packages.contracts.integrations_health_v1.IntegrationHealth`.
+    P1-6 read-only; action layer comes in P1-6b.
+    """
+    # Lazy import to ensure bundled providers register themselves.
+    from core.interoperability import providers as _providers  # noqa: F401
+    from core.interoperability.integrations_health import collect_health
+
+    items = collect_health(conn)
+    return {
+        'schema': 'genomeai.api.integrations.health.v1',
+        'items': [item.model_dump() for item in items],
+        'total': len(items),
+    }

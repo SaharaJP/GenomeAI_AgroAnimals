@@ -97,6 +97,9 @@ PERM_PERSONNEL_MANAGE = "personnel.manage"        # create/update/delete кар�
 # --- P1-5 IAM management ---
 PERM_ADMIN_MANAGE = "admin.manage"                # PATCH role_permissions overrides, write audit
 
+# --- P1-6 Integrations control panel ---
+PERM_INTEGRATIONS_VIEW = "integrations.view"      # GET /api/app/v1/integrations/health
+
 ALL_PERMISSIONS: list[str] = [
     PERM_KPI_VIEW,
     PERM_DRILLDOWN_VIEW,
@@ -179,6 +182,9 @@ ALL_PERMISSIONS: list[str] = [
 
     # P1-5 IAM management
     PERM_ADMIN_MANAGE,
+
+    # P1-6 Integrations control panel
+    PERM_INTEGRATIONS_VIEW,
 ]
 
 # ---- Role catalog ----
