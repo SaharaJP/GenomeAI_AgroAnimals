@@ -106,3 +106,16 @@ test('Стадо group exposes defaultHref for collapsed sidebar', () => {
   assert.ok(stado, 'Стадо group must be present');
   assert.equal(stado.defaultHref, '/profiles/animal');
 });
+
+test('Команда entry appears in Управление when personnel.read is present', () => {
+  const sections = getNavigationSections(meWith(['personnel.read']));
+  const hrefs = allHrefs(sections);
+  assert.equal(hrefs.includes('/team'), true);
+  assert.equal(pathLabels['/team'], 'Команда');
+});
+
+test('Команда entry is hidden when personnel.read is missing', () => {
+  const sections = getNavigationSections(meWith(['tasks.view']));
+  const hrefs = allHrefs(sections);
+  assert.equal(hrefs.includes('/team'), false);
+});

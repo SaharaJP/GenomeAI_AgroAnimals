@@ -46,6 +46,7 @@ const sections: NavigationSection[] = [
     items: [
       { kind: 'item', label: 'Задачи', href: '/worklists', minPermissions: ['tasks.view', 'tasks.read', 'tasks.manage'] },
       { kind: 'item', label: 'Решения', href: '/decisions', minPermissions: ['decisionlog.view', 'decisions.read'] },
+      { kind: 'item', label: 'Команда', href: '/team', minPermissions: ['personnel.read'] },
       { kind: 'item', label: 'Экономика', href: '/economics', minPermissions: ['economics.read', 'whatif.scenarios.view'] },
     ],
   },
