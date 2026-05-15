@@ -3300,3 +3300,23 @@ button, input, select, textarea { font: inherit; }
 .card-dl { margin: 0; display: flex; flex-direction: column; gap: 0.25rem; }
 .card-dl > div { display: flex; justify-content: space-between; font-size: 0.9rem; }
 .card-dl dt { color: var(--text-secondary); }
+
+/* /team page (P1-4b) — personnel cards */
+.personnel-surface { display: flex; flex-direction: column; gap: 1.25rem; }
+.personnel-surface__hint { margin: 0; padding: 8px 12px; background: var(--surface-muted, #f4f6fa); border-radius: 6px; color: var(--text-muted); font-size: 13px; }
+.personnel-surface__bucket { display: flex; flex-direction: column; gap: 0.5rem; }
+.personnel-surface__bucket-head { display: flex; align-items: baseline; gap: 0.5rem; margin: 0; }
+.personnel-surface__bucket-head h2 { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+.personnel-surface__count { color: var(--text-muted); font-size: 13px; }
+.personnel-surface__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+.personnel-card { display: flex; flex-direction: column; gap: 0.75rem; padding: 14px; }
+.personnel-card__head { display: flex; align-items: center; gap: 12px; }
+.personnel-card__avatar { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-soft, #e6efff); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.personnel-card__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.personnel-card__initials { font-size: 15px; font-weight: 600; color: var(--accent, #1a73e8); }
+.personnel-card__title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.personnel-card__contacts { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 13px; }
+.personnel-card__contacts dt { color: var(--text-muted); }
+.personnel-card__contacts dd { margin: 0; overflow: hidden; text-overflow: ellipsis; }
+.personnel-card__contacts a { color: var(--accent, #1a73e8); text-decoration: none; }
+.personnel-card__contacts a:hover { text-decoration: underline; }

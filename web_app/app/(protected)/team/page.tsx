@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { EmptyState } from '@/components/ui/empty-state';
+import { PersonnelSurface } from '@/components/team/personnel-surface';
 
 type TeamTabId = 'by-group' | 'by-name';
 
@@ -48,10 +48,7 @@ export default function TeamPage() {
         ))}
       </div>
       <div role="tabpanel" id={`team-tabpanel-${active}`} aria-labelledby={`team-tab-${active}`}>
-        <EmptyState
-          title={active === 'by-group' ? 'Группы пока не отображаются' : 'Список сотрудников пока не загружен'}
-          description="Данные подключим в P1-4b-2: список будет браться из GET /api/app/v1/personnel и группироваться по выбранному режиму."
-        />
+        <PersonnelSurface view={active} />
       </div>
     </>
   );
