@@ -2820,6 +2820,110 @@ class ConnectorRunsRepo(BaseSqlRepo):
         return out
 
 
+class PersonnelRepo(BaseSqlRepo):
+    """personnel_v1 — team members (P1-4a).
+
+    PII columns (phone, email, hired_at) are stored as-is; masking happens
+    at the API layer in P1-4a-6 when caller lacks personnel.read_pii.
+    """
+
+    def insert(
+        self,
+        *,
+        tenant_id: str,
+        personnel_id: str,
+        full_name: str,
+        position: str,
+        group_id: Optional[str],
+        phone: Optional[str],
+        email: Optional[str],
+        hired_at: Optional[str],
+        now: str,
+    ) -> str:
+        self.conn.execute(
+            """
+            INSERT INTO personnel_v1(
+              personnel_id, tenant_id, full_name, position,
+              group_id, phone, email, hired_at,
+              created_at, updated_at
+            ) VALUES (?,?,?,?,?,?,?,?,?,?)
+            """,
+            (
+                personnel_id,
+                tenant_id,
+                full_name,
+                position,
+                group_id,
+                phone,
+                email,
+                hired_at,
+                now,
+                now,
+            ),
+        )
+        self.conn.commit()
+        return personnel_id
+
+    def get_row(self, *, tenant_id: str, personnel_id: str) -> Optional[dict[str, Any]]:
+        row = self.conn.execute(
+            "SELECT * FROM personnel_v1 WHERE tenant_id=? AND personnel_id=?",
+            (tenant_id, personnel_id),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def list_rows(
+        self,
+        *,
+        tenant_id: str,
+        group_id: Optional[str] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        where = ["tenant_id=?"]
+        args: list[Any] = [tenant_id]
+        if group_id is not None:
+            where.append("group_id=?")
+            args.append(group_id)
+        where_sql = " AND ".join(where)
+        total = self.conn.execute(
+            f"SELECT COUNT(*) AS n FROM personnel_v1 WHERE {where_sql}",
+            tuple(args),
+        ).fetchone()["n"]
+        rows = self.conn.execute(
+            f"""
+            SELECT * FROM personnel_v1
+            WHERE {where_sql}
+            ORDER BY full_name ASC, personnel_id ASC
+            LIMIT ? OFFSET ?
+            """,
+            tuple(args + [int(limit), int(offset)]),
+        ).fetchall()
+        return {"total": int(total), "items": [dict(r) for r in rows]}
+
+    def update_fields(
+        self,
+        *,
+        tenant_id: str,
+        personnel_id: str,
+        sets: list[str],
+        args: list[Any],
+    ) -> int:
+        cur = self.conn.execute(
+            f"UPDATE personnel_v1 SET {', '.join(sets)} WHERE tenant_id=? AND personnel_id=?",
+            tuple(args + [tenant_id, personnel_id]),
+        )
+        self.conn.commit()
+        return int(getattr(cur, "rowcount", 0) or 0)
+
+    def delete(self, *, tenant_id: str, personnel_id: str) -> int:
+        cur = self.conn.execute(
+            "DELETE FROM personnel_v1 WHERE tenant_id=? AND personnel_id=?",
+            (tenant_id, personnel_id),
+        )
+        self.conn.commit()
+        return int(getattr(cur, "rowcount", 0) or 0)
+
+
 __all__ = [
     "AnimalEventsRepo",
     "AlertsRepo",
@@ -2829,6 +2933,7 @@ __all__ = [
     "CompletionOutcomesRepo",
     "ConnectorRunsRepo",
     "DecisionsRepo",
+    "PersonnelRepo",
     "PlaybooksRepo",
     "RunsRepo",
     "TasksRepo",
