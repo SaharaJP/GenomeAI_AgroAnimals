@@ -411,6 +411,51 @@ export type ListResponse<T> = {
   items: T[];
 };
 
+export type Personnel = {
+  personnel_id: string;
+  full_name: string;
+  position: string;
+  group_id?: string | null;
+  photo_ref?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  hired_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+};
+
+export type PersonnelCreateRequest = {
+  full_name: string;
+  position: string;
+  group_id?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  hired_at?: string | null;
+};
+
+export type PersonnelUpdateRequest = {
+  full_name?: string | null;
+  position?: string | null;
+  group_id?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  hired_at?: string | null;
+  photo_ref?: string | null;
+};
+
+export type PersonnelListResponse = {
+  schema: string;
+  total: number;
+  pii_visible: boolean;
+  items: Personnel[];
+};
+
+export type PersonnelResponse = {
+  schema: string;
+  pii_visible: boolean;
+  item: Personnel;
+};
+
 export function normalizeListResponse<T>(input: Partial<ListResponse<T>>): ListResponse<T> {
   return {
     schema: input.schema || 'genomeai.api.unknown.list.v1',

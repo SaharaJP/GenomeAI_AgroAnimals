@@ -600,3 +600,48 @@ class BriefingScheduleResponse(BaseModel):
     auto_create_tasks: bool = False
     updated_at: Optional[str] = None
     updated_by: Optional[int] = None
+
+
+class Personnel(BaseModel):
+    personnel_id: str
+    full_name: str
+    position: str
+    group_id: Optional[str] = None
+    photo_ref: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    hired_at: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+
+class PersonnelCreateRequest(BaseModel):
+    full_name: str
+    position: str
+    group_id: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    hired_at: Optional[str] = None
+
+
+class PersonnelUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    position: Optional[str] = None
+    group_id: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    hired_at: Optional[str] = None
+    photo_ref: Optional[str] = None
+
+
+class PersonnelListResponse(BaseModel):
+    schema_version: str = Field(default='genomeai.api.personnel.list.v1', serialization_alias='schema')
+    total: int = 0
+    pii_visible: bool = False
+    items: list[Personnel] = Field(default_factory=list)
+
+
+class PersonnelResponse(BaseModel):
+    schema_version: str = Field(default='genomeai.api.personnel.item.v1', serialization_alias='schema')
+    pii_visible: bool = False
+    item: Personnel
