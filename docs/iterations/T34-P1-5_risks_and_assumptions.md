@@ -39,10 +39,8 @@
   - **Mitigation:** в слайсе 4 показать в confirm-dialog: «Изменение вступит в силу после следующего входа пользователей с этой ролью».
   - **P2:** ввести force-logout всех сессий с этой ролью (или session-bus invalidation через Redis).
 - **R5. ⚠ важно.** **Race conditions.** Два admin'a параллельно PATCH'ат одну и ту же (role, permission) пару → последний `INSERT … ON CONFLICT DO UPDATE` выигрывает. Audit запишет оба события. Допустимо для P1; в P2 можно добавить optimistic locking через ETag / If-Match header.
-- **R6.** **Privilege drift.** Если admin случайно (или злонамеренно) revoke'нет `admin.manage` у роли `Admin`, то никто больше не сможет PATCH'ить (включая откат). Сейчас защиты нет.
-  - **Mitigation в слайсе 4:** в confirm-dialog отдельно подсветить «опасные» операции — revoke admin.manage у роли admin'а должен требовать дополнительного подтверждения.
-  - **Hard guard в backend:** добавить explicit check «нельзя revoke admin.manage у роли admin». TODO для слайса 4.
-- **R7.** **Audit completeness.** Audit пишет `before_json=None` для grant/revoke (т.к. до этого override не было). Если был активный grant и его поменяли на revoke, before_json показывает только текущий after, не предыдущий effect. Trade-off: семантически правильно (новый override = новая запись), но для аудитора может быть неочевидно.
+- **R6. ✅ RESOLVED (P1-5/P1-6 R-debt 2026-05-15).** Backend hard-guard в `PATCH /api/admin/permission-matrix`: любой запрос с `{role: 'Admin', permission: 'admin.manage', effect: 'revoke'}` отклоняется 400 `iam.lock_out_protected`. Защищает от случайного и намеренного lock-out. UI confirm-dialog «опасных» операций остаётся как фолоу-ап в slice 4.
+- **R7. ✅ RESOLVED (P1-5/P1-6 R-debt 2026-05-15).** Endpoint теперь читает `get_override(conn, role, permission)` перед mutation; для grant→revoke перехода audit_log пишет `before_json={...effect: 'grant'}`, что позволяет проследить предыдущий state по одной строке audit.
 - **A11.** Endpoint возвращает `effective_permissions_count` для убедительности — UI может показывать «X permissions effective» после change, давая ощущение что изменение применилось.
 
 ### Что не сделано (слайс 4)
@@ -64,8 +62,8 @@
 |---|---|---|---|
 | R4 | 🔥 высокий | Кэш сессий — overrides не применяются в текущей сессии | UX/security clarity |
 | R5 | средний | Race на параллельный PATCH | data consistency |
-| R6 | 🔥 высокий | revoke admin.manage = lock-out | recovery path missing |
-| R7 | низкий | before_json неинформативен на повторных PATCH | audit completeness |
+| ~~R6~~ | ✅ resolved | ~~revoke admin.manage = lock-out~~ | backend hard-guard в P1-5/P1-6 R-debt 2026-05-15 |
+| ~~R7~~ | ✅ resolved | ~~before_json неинформативен на повторных PATCH~~ | get_override-before-upsert в P1-5/P1-6 R-debt 2026-05-15 |
 | R2 | низкий | Disabled чекбоксы без объяснения | UX |
 | A3 | низкий | YAML actions ≠ all permissions | matrix coverage |
 

@@ -197,7 +197,8 @@
   - ✅ P1-5 slice 3a — миграция `role_permissions_overrides_v1` (`48e3edd`): PK (role, permission), CHECK effect IN ('grant', 'revoke'), audit-friendly columns.
   - ✅ P1-5 slice 3b — backend (`fe1af0b`): PATCH endpoint с effect=grant|revoke|clear, audit `iam.permission.{grant|revoke|clear}`, RBAC `admin.manage` (новая permission), validation против ALL_PERMISSIONS и list_roles. Effective merge встроен в `get_permissions_for_role`.
   - ✅ Slice 5 docs: T34-P1-5_risks_and_assumptions.md + public_interfaces.json (PATCH добавлен).
-  - ⏸ **P1-5 slice 4 — UI editing + 2-click confirm — ОТЛОЖЕН** по соглашению с координатором. Текущее состояние UI = read-only безопасно. Рисков-долг по edit-UX и admin.manage lock-out (R4, R6 в risks-доке) требует отдельного согласования прежде чем включать interactive editing.
+  - ⏸ **P1-5 slice 4 — UI editing + 2-click confirm — ОТЛОЖЕН** по соглашению с координатором. Текущее состояние UI = read-only безопасно. Рисков-долг по edit-UX и admin.manage lock-out (R4 в risks-доке) требует отдельного согласования прежде чем включать interactive editing.
+  - ✅ **P1-5 R-debt quick-wins** (2026-05-15) — коммит `6f63491` закрывает R6 (backend hard-guard «нельзя revoke admin.manage у Admin», HTTP 400 `iam.lock_out_protected`) и R7 (audit before_json = предыдущий effect override при повторных PATCH).
   - ➡ Следующий шаг: либо открыть P1-5 slice 4 отдельной итерацией с продуманным confirm-flow, либо перейти к другому эпику (P1-3 «Стадо», P1-6 «Интеграции», R-фолоу-апы из P1-4).
 
 ---
@@ -240,7 +241,8 @@
   - ✅ P1-6 slice 1 — backend (`39f5ed0`): contract `IntegrationHealth`, Protocol-based registry, 5 bundled providers (LLM / connectors_v1 / IoT stubs / sensor stub / RU stubs), endpoint `GET /api/app/v1/integrations/health` gated by `integrations.view`, 7/7 unit tests pass. Live smoke: 15 rows across 5 kinds.
   - ✅ P1-6 slice 2 — frontend (`7c3b218`): `/admin/integrations` page with grouped table, status badges, expand-rows, auto-refresh 30s, aggregate status в topbar. 6-я плитка на `/admin`.
   - ✅ Slice 3 — docs: T34-P1-6_risks_and_assumptions.md + public_interfaces.json (PATCH добавлен → GET integrations/health добавлен) + backlog progress.
-  - ⏸ **P1-6b — action layer (manual sync / enable-disable / deep-link logs) — ОТЛОЖЕН.** Текущее состояние = read-only безопасное. R1 (LLM ping), R3 (tenant_id passthrough), R6 (broader RBAC) — все в risks-доке для будущей итерации.
+  - ⏸ **P1-6b — action layer (manual sync / enable-disable / deep-link logs) — ОТЛОЖЕН.** Текущее состояние = read-only безопасное. R1 (LLM ping) остаётся открытым для будущей итерации.
+  - ✅ **P1-6 R-debt quick-wins** (2026-05-15) — коммит `73a597f` закрывает R3 (`get_health(conn, *, tenant_id)` — endpoint пробрасывает user.tenant_id) и R6 (`PERM_INTEGRATIONS_VIEW` добавлен в `DEFAULT_ROLE_PERMISSIONS[Director]`).
   - ➡ Следующий шаг: P1-tails (P1-5 slice 4 IAM editing + R-фолоу-апы P1-4/P1-5), либо переход к P2.
 
 ---

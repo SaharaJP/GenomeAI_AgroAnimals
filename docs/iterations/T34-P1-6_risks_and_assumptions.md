@@ -23,10 +23,10 @@
 
 - **R1.** **`status=ok` для LLM не отражает реальную доступность OpenAI.** Если ключ валиден, но OpenAI down — UI продолжит показывать ok. Mitigation для P1-6b: lazy ping раз в 5 минут с кешем; либо берём last successful request из `ai_calls` audit-tail если он есть.
 - **R2.** **Connectors_v1 health requires 1 SQL query per source-system.** Сейчас ~7 систем = 7 queries на каждый GET. С учётом auto-refresh раз в 30s = 14 queries/min на пользователя. Допустимо для admin-страницы (≤ 5 одновременных пользователей). В P2 — единый aggregate query (`SELECT DISTINCT ON (connector_id) ... ORDER BY started_at DESC`) или materialized view.
-- **R3.** **`tenant_id='default'` хардкоден в connectors_v1 provider.** На multi-tenant контурах admin одного тенанта увидит только свои батч-прогоны. Это корректное поведение, но требует passthrough `user.tenant_id` через `get_health(conn, *, tenant_id)`. Сейчас всем provider'ам передаётся только `conn` — расширить интерфейс в P1-6b.
+- **R3. ✅ RESOLVED (P1-5/P1-6 R-debt 2026-05-15).** `IntegrationHealthProvider.get_health(conn, *, tenant_id)` теперь принимает `tenant_id`, endpoint пробрасывает `user.tenant_id` из сессии. `ConnectorsV1HealthProvider` использует его вместо хардкода. Tenant-agnostic providers (LLM, IoT, RU stubs) аргумент игнорируют.
 - **R4.** **Auto-refresh = 30s.** На странице открытой 8 часов = 960 запросов. Каждый запрос делает RBAC-check + 5 providers. Не критично, но в P2 можно добавить ETag + If-None-Match для дельты.
 - **R5.** **Сводный статус ("Отключено" в topbar) не учитывает stubs.** Если все real-провайдеры disabled (нет OPENAI_API_KEY, нет batch run'ов), aggregate = `disabled`, что выглядит как "вся платформа disabled". Текстовый label это уточнить не помогает. В P1-6b добавить tooltip "Real-провайдеры: X из Y активны".
-- **R6.** **Permission `integrations.view`** добавлена только в `ALL_PERMISSIONS`. Admin наследует через ALL_PERMISSIONS. Другим ролям (Director/Operator) право явно не назначено — они получат 403 на GET /integrations/health. Чтобы расширить — admin должен через P1-5 PATCH /api/admin/permission-matrix сделать grant.
+- **R6. ✅ RESOLVED (P1-5/P1-6 R-debt 2026-05-15).** `PERM_INTEGRATIONS_VIEW` добавлена в `DEFAULT_ROLE_PERMISSIONS[Director]`. Director теперь видит `/admin/integrations` по умолчанию. Operator/Vet/etc остаются без права — могут получить через P1-5 PATCH /admin/permission-matrix grant override.
 
 ## Допущения
 
@@ -51,8 +51,8 @@
 | ID | Уровень | Что | Зачем |
 |---|---|---|---|
 | R1 | средний | LLM ok не = OpenAI доступен | misleading status |
-| R3 | средний | tenant_id хардкод в batch provider | multi-tenant correctness |
-| R6 | средний | integrations.view только у admin | Director/operator UX |
+| ~~R3~~ | ✅ resolved | ~~tenant_id хардкод в batch provider~~ | passthrough в P1-5/P1-6 R-debt 2026-05-15 |
+| ~~R6~~ | ✅ resolved | ~~integrations.view только у admin~~ | Director в DEFAULT_ROLE_PERMISSIONS в P1-5/P1-6 R-debt 2026-05-15 |
 | R2 | низкий | N queries per GET | scale |
 | R4 | низкий | 30s polling без ETag | network noise |
 | R5 | низкий | aggregate status не считает stubs | UX clarity |
