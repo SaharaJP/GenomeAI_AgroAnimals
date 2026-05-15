@@ -173,7 +173,8 @@
   - ✅ P1-4b (UI `/team`) — закрыт коммитами `8152230…a97b4e8` (skeleton, PersonnelSurface, user_id soft-FK, PersonnelDetail drawer).
   - ✅ P1-4c-1 (POST `/worklists`) — закрыт коммитом `ee4482c` (backend, audit `tasks.create.manual`).
   - ✅ P1-4c-2 (TaskCreateModal + FAB на `/team`) — закрыт коммитами `a42e6c4` (контракты/клиент/валидация), `6e5117f` (модалка), `ff92646` (FAB + интеграция + Playwright smoke). R10 решён через декаплинг полей: `assignee_team` отдельно из catalog, `owner_user_id` отдельно из personnel; `personnel.group_id` остаётся free-form info-полем.
-  - ➡ Следующий шаг: P1-4d (PATCH/DELETE на `/personnel` для редактирования карточки) либо переход к P1-5/P1-6.
+  - ✅ P1-4d (PATCH/DELETE на `/personnel`) — закрыт коммитами `d187e32` (backend workflow + endpoints + audit), `199f0d1` (TS-клиент, edit-модалка, delete-confirm, интеграция в drawer + UI smoke). Hard delete с before/after_json в audit_log. Бонусом починен latent proxy bug — `NextResponse` крашился на 204-ответах.
+  - ➡ Следующий шаг: переход к P1-5 (Администрирование: UI канон + IAM-матрица) либо точечно к R-долгу (R7/R12/R13 фолоу-ап).
 
 ---
 

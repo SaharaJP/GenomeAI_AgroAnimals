@@ -1,6 +1,6 @@
 # T34 P1-4 «Команда» — реестр рисков и допущений
 
-> Снапшот на 2026-05-15 (после P1-4c-1). Закрытые/устаревшие пункты переходят в `(resolved)`.
+> Снапшот на 2026-05-15 (после P1-4d). Закрытые/устаревшие пункты переходят в `(resolved)`.
 
 Все пункты — то, что **сейчас работает по соглашению** или **может сломаться при росте**. По договорённости с координатором эти долги адресуем в отдельной итерации после P1-4c.
 
@@ -34,7 +34,7 @@
 
 - **A7.** Аудит `personnel.list.pii_view` пишется **только если** `pii_visible=True && total>0`. Это компромисс с «каждый просмотр PII = audit_event» — пустые ответы не пишем (нет PII = нет события). Если потребуется логировать каждый GET (для compliance), это надо пересматривать.
 - **A8.** Аудит `personnel.create` записывает booleans `has_phone/has_email/has_hired_at`, а НЕ значения. Это сделано, чтобы audit_log сам не стал PII-хранилищем. Trade-off: восстановить ровно «какие значения были при создании» из audit нельзя.
-- **R4.** PATCH / DELETE endpoints **не реализованы**. Backlog P1-4 явно требовал только GET+POST. Если UI потребует редактирование карточки сотрудника — это отдельный шаг.
+- **R4. ✅ RESOLVED (P1-4d).** PATCH `/personnel/{id}` (partial update с before/after audit) и DELETE `/personnel/{id}` (hard delete с before-snapshot в audit) реализованы. RBAC: та же `personnel.manage`, что и для create.
 - **R5.** Endpoint требует `personnel.read`/`personnel.manage` — но **не проверяет**, что target tenant_id совпадает с caller'ом. Сейчас `tenant_id = user.get('tenant_id', 'default')` — корректно, но если в будущем admin сможет переключать tenant'ы в URL, это место надо охранить.
 
 ## P1-4a-7 — Photo upload via MinIO ⏸ **DEFERRED**
@@ -79,6 +79,18 @@
 - **A18.** `personnel?limit=200` — без поиска/пагинации. Сознательная упрощение для P1 (см. R12). Hard limit 200 поможет не уронить страницу.
 - **A19.** Audit таблица в реальной БД называется `audit_log` (не `audit_events`, как могло следовать из имени action). Колонки: `action`, `username`, `object_id`, `status`, `ts`. Smoke-проверки и будущие репорты должны это учитывать.
 
+## P1-4d — PATCH/DELETE /personnel/{id}
+
+- **A20.** Hard delete без soft-delete колонки. GDPR-style требование «забыть PII» удовлетворяется hard delete + `before_json` в audit (для bookkeeping). Если правовая модель потребует soft-delete — миграция добавит `deleted_at` колонку и WHERE-фильтр на репозиторий; пока YAGNI.
+- **A21.** PATCH применяет whitelist (`full_name`, `position`, `group_id`, `phone`, `email`, `hired_at`, `photo_ref`, `user_id`). Поля вне whitelist игнорируются молча — клиент не получит ошибку. Trade-off: backwards-compatible при добавлении новых полей, но опечатка в имени поля проходит «без последствий».
+- **A22.** Workflow `update_personnel` сравнивает «до/после» и НЕ пишет в БД при отсутствии diff (возвращает `after=None`). Endpoint не пишет audit, если нет реального изменения — это сознательное решение чтобы не засорять audit_log no-op'ами.
+- **R16.** DELETE personnel не каскадит в `tasks_v1` (FK на personnel_id отсутствует; используется `owner_user_id` ↦ auth-users). Личные задачи остаются orphan'ными ссылками на user_id после удаления personnel. Семантически корректно, но визуально в worklist на странице может появиться сотрудник без карточки. Адресовать через ETL/Refresh либо в P2 — UI-фильтр «удалённые сотрудники».
+- **R17.** PATCH `user_id=null` (отвязка от auth) допустим, FK отсутствует — отказа не будет. Но если позже добавится compound-feature «авто-привязка через email match», это место надо охранить.
+- **R18.** Race: пока drawer открыт у одного оператора, другой может удалить запись. После «Сохранить» получим 404 → ошибка отрисуется как `Error: personnel.not_found`. Допустимо для P1; в P2 — UI заполняет «запись удалена» бейджем.
+- **R19.** В edit-модалке поле `user_id` — простой `<input type="number">` без проверки существования auth-аккаунта. PATCH успеет привязать к несуществующему user_id (soft-FK). Адресуется в P1-5 (админка с поиском пользователей).
+- **R20. ✅ FIXED.** Next.js proxy (`web_app/app/api/backend/[...path]/route.ts`) кидал 500 на любой 204 от backend, т.к. `NextResponse` запрещает body при 204. Фикс: special-case 204/304 → null body. Был latent (нет 204-callers до DELETE).
+- **A23.** Edit-modal валидирует email эвристикой (`includes('@')`). Полноценный regex/RFC-валидатор отложен — на P1 достаточно guard'a от очевидных опечаток.
+
 ---
 
 ## Сводка по приоритетам (что точно надо адресовать)
@@ -86,13 +98,18 @@
 | ID | Уровень | Что | Зачем |
 |---|---|---|---|
 | ~~R10~~ | ✅ resolved | ~~personnel.group_id ↔ tasks.assignee_team mismatch~~ | закрыто декаплингом полей в P1-4c-2 |
+| ~~R4~~ | ✅ resolved | ~~Нет PATCH/DELETE на `/personnel`~~ | закрыто в P1-4d |
+| ~~R20~~ | ✅ resolved | ~~Next.js proxy 500 на 204~~ | фикс в route.ts при P1-4d |
 | R6 | средний | MinIO не поднят, photo upload отложен | UX-наличие фото |
-| R4 | средний | Нет PATCH/DELETE на `/personnel` | редактирование карточки |
 | R7 | средний | Нет UI для personnel↔user mapping | админка |
 | R12 | средний | Нет поиска в owner-dropdown | UX на крупном тенанте |
+| R16 | средний | DELETE personnel оставляет orphan tasks по user_id | UX/чистота данных |
+| R19 | средний | Edit user_id без проверки auth-аккаунта | data integrity |
 | R13 | низкий | Нет invalidation после create | мерцание UI |
 | R14 | низкий | Клиентская фильтрация has_user | network-overhead |
 | R15 | низкий | FAB/toast только light-theme проверен | a11y/visual |
+| R17 | низкий | unlink user_id без compound-feature guard | future-proofing |
+| R18 | низкий | Race: edit/delete в parallel session | UX |
 | A5 | низкий | PII без DB encryption | compliance |
 | R8/R9 | низкий | Нет пагинации/кэша в drawer | производительность |
 | A11/A12 | низкий | Нет виртуализации/сортировки на сервере | масштаб |
