@@ -65,6 +65,7 @@ const sections: NavigationSection[] = [
 const extraPathLabels: Record<string, string> = {
   '/admin/ai': 'AI-наблюдаемость',
   '/admin/iam': 'IAM-матрица',
+  '/admin/integrations': 'Контроль интеграций',
   '/settings': 'Настройки',
   '/connections': 'Мои подключения',
   '/feeding': 'Кормление',

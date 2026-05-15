@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Eye, ShieldCheck, Activity, LifeBuoy, KeyRound } from 'lucide-react';
+import { Eye, ShieldCheck, Activity, LifeBuoy, KeyRound, Plug } from 'lucide-react';
 import { Card, MetricCard } from '@/components/ui/card';
 import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { fetchExtendedBundle, buildAdminViewModel, type AdminViewModel } from '@/lib/api/extended-surfaces';
@@ -27,6 +27,12 @@ const TILES: Tile[] = [
     label: pathLabels['/admin/ai'] || 'AI-наблюдаемость',
     subtitle: 'Журнал AI-вызовов, статистика, grounding-rate, отдельные запросы.',
     icon: <Eye size={20} strokeWidth={1.5} aria-hidden="true" />,
+  },
+  {
+    href: '/admin/integrations',
+    label: pathLabels['/admin/integrations'] || 'Контроль интеграций',
+    subtitle: 'Сводный статус всех интеграций: LLM, batch ingest, IoT, внешние системы.',
+    icon: <Plug size={20} strokeWidth={1.5} aria-hidden="true" />,
   },
   {
     href: '/observability',
