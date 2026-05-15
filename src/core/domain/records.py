@@ -1,9 +1,41 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 from core.domain.enums import DEFAULT_ACCEPTED_REASON_CODES, DEFAULT_REJECTED_REASON_CODES
+
+
+@dataclass(frozen=True)
+class Personnel:
+    personnel_id: str
+    full_name: str
+    position: str
+    group_id: Optional[str] = None
+    photo_ref: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    hired_at: Optional[str] = None
+    tenant_id: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+    PII_FIELDS: ClassVar[tuple[str, ...]] = ("phone", "email", "hired_at")
+
+    def masked(self) -> "Personnel":
+        return Personnel(
+            personnel_id=self.personnel_id,
+            full_name=self.full_name,
+            position=self.position,
+            group_id=self.group_id,
+            photo_ref=self.photo_ref,
+            phone=None,
+            email=None,
+            hired_at=None,
+            tenant_id=self.tenant_id,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+        )
 
 
 @dataclass
