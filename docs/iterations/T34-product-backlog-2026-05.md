@@ -167,6 +167,10 @@
   4. Зашить роль/сотрудника в `RecommendedTask.assignee` из P1-2.
 - **Acceptance:** карточка отображает задачи в реальном времени; FAB действительно создаёт задачу на `/worklists`.
 - **Deps:** P1-2 (задачная модель должна знать assignee).
+- **Прогресс на 2026-05-15:**
+  - ✅ P1-4a (model + migration + endpoint) — закрыт коммитами `0786756…6338d17` (RBAC, contracts, domain, alembic 20260515_17, PersonnelRepo, GET/POST endpoints с PII-маскингом и audit).
+  - ⏸ Photo upload через MinIO — **отложен** (P1-4a-7). MinIO в локальном dev-контуре не поднят; `photo_ref` принимается endpoint'ом как строка, реальная заливка вернётся когда MinIO будет живым (вероятно в составе P1-6 «Контроль интеграций»).
+  - ➡ Следующий шаг: P1-4b (UI `/team`).
 
 ---
 
