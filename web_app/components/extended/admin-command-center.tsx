@@ -1,10 +1,52 @@
 'use client';
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Eye, ShieldCheck, Activity, LifeBuoy, KeyRound } from 'lucide-react';
 import { Card, MetricCard } from '@/components/ui/card';
-import { ScopeSummary } from '@/components/operations/scope-summary';
-import { DataTable } from '@/components/ui/data-table';
+import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { fetchExtendedBundle, buildAdminViewModel, type AdminViewModel } from '@/lib/api/extended-surfaces';
+import { pathLabels } from '@/lib/navigation';
+
+type Tile = {
+  href: string;
+  label: string;
+  subtitle: string;
+  icon: React.ReactNode;
+};
+
+const TILES: Tile[] = [
+  {
+    href: '/admin/iam',
+    label: pathLabels['/admin/iam'] || 'IAM-матрица',
+    subtitle: 'Просмотр и редактирование привязки ролей к permissions. Каждое изменение фиксируется в audit.',
+    icon: <KeyRound size={20} strokeWidth={1.5} aria-hidden="true" />,
+  },
+  {
+    href: '/admin/ai',
+    label: pathLabels['/admin/ai'] || 'AI-наблюдаемость',
+    subtitle: 'Журнал AI-вызовов, статистика, grounding-rate, отдельные запросы.',
+    icon: <Eye size={20} strokeWidth={1.5} aria-hidden="true" />,
+  },
+  {
+    href: '/observability',
+    label: pathLabels['/observability'] || 'Мониторинг',
+    subtitle: 'Метрики жизни системы, очереди, длительные операции.',
+    icon: <Activity size={20} strokeWidth={1.5} aria-hidden="true" />,
+  },
+  {
+    href: '/readiness',
+    label: pathLabels['/readiness'] || 'Готовность системы',
+    subtitle: 'Operability/supportability чеки, контур развёртывания.',
+    icon: <ShieldCheck size={20} strokeWidth={1.5} aria-hidden="true" />,
+  },
+  {
+    href: '/support',
+    label: pathLabels['/support'] || 'Поддержка',
+    subtitle: 'Запросы поддержки, диагностика, support-bundle.',
+    icon: <LifeBuoy size={20} strokeWidth={1.5} aria-hidden="true" />,
+  },
+];
 
 export function AdminCommandCenter() {
   const [view, setView] = useState<AdminViewModel | null>(null);
@@ -12,48 +54,67 @@ export function AdminCommandCenter() {
 
   useEffect(() => {
     let active = true;
-    void fetchExtendedBundle().then((bundle) => {
-      if (active) setView(buildAdminViewModel(bundle));
-    }).catch((err) => {
-      if (active) setError(err instanceof Error ? err.message : 'Failed to load admin command center');
-    });
-    return () => { active = false; };
+    void fetchExtendedBundle()
+      .then((bundle) => {
+        if (active) setView(buildAdminViewModel(bundle));
+      })
+      .catch((err) => {
+        if (active) setError(err instanceof Error ? err.message : 'Не удалось загрузить admin-сводку');
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const rows = view && Array.isArray((view.permissionMatrix as { rows?: Array<Record<string, unknown>> }).rows)
-    ? ((view.permissionMatrix as { rows?: Array<Record<string, unknown>> }).rows || []).slice(0, 12)
-    : [];
+  return (
+    <div className="grid">
+      <div className="topbar">
+        <div>
+          <h1 className="page-title">{pathLabels['/admin'] || 'Администрирование'}</h1>
+          <p className="page-subtitle">
+            Управление IAM-матрицей, AI-наблюдаемость, мониторинг готовности контура и поддержка. Все изменения
+            привилегированного характера попадают в audit-журнал.
+          </p>
+        </div>
+      </div>
 
-  return <div className="grid">
-    <div className="topbar"><div><h1 className="page-title">Admin / master system</h1><p className="page-subtitle">Enterprise admin surface for permissions, diagnostics, readiness and pilot evidence.</p></div></div>
-    {error ? <div className="card error-text">{error}</div> : null}
-    {!view ? <div className="card">Loading admin command center…</div> : <>
-      <div className="grid grid-3">
-        <MetricCard title="Role rows" value={view.summary.roleCount} />
-        <MetricCard title="Permission rows" value={view.summary.permissionRows} />
-        <MetricCard title="Readiness checks" value={view.summary.readinessChecks} />
-      </div>
-      <div className="grid grid-2">
-        <ScopeSummary scope={view.scope} />
+      {error ? (
         <Card>
-          <h3 className="card-title">Admin flows</h3>
-          <div className="linked-inline-actions">
-            <Link href="/admin/ai">AI-наблюдаемость</Link>
-            <Link href="/observability">Observability</Link>
-            <Link href="/support">Support</Link>
-            <Link href="/pilot">Pilot</Link>
-            <Link href="/readiness">Readiness</Link>
-          </div>
-          <p className="small-muted" style={{ marginTop: 12 }}>Admin surface stays server-backed: permission matrix, diagnostics and readiness all come from backend evidence, not frontend shortcuts.</p>
+          <p className="error-text">{error}</p>
         </Card>
+      ) : null}
+
+      <div className="grid grid-3">
+        <MetricCard title="Ролей" value={view?.summary.roleCount ?? '—'} />
+        <MetricCard title="Permission-строк" value={view?.summary.permissionRows ?? '—'} />
+        <MetricCard title="Readiness-проверок" value={view?.summary.readinessChecks ?? '—'} />
       </div>
+
       <Card>
-        <h3 className="card-title">Permission matrix preview</h3>
-        {rows.length === 0 ? <p className="small-muted">Permission matrix preview is unavailable in this environment.</p> : <DataTable rows={rows} columns={[
-          { key: 'role', header: 'Role', render: (row) => String((row as Record<string, unknown>).role || '—') },
-          { key: 'permission', header: 'Permission', render: (row) => String((row as Record<string, unknown>).permission || '—') },
-          { key: 'source', header: 'Source', render: (row) => String((row as Record<string, unknown>).source || '—') },
-        ]} />}
+        <h3 className="card-title">Точки входа</h3>
+        <div className="admin-tiles" role="list">
+          {TILES.map((tile) => (
+            <Link key={tile.href} href={tile.href} className="admin-tile" role="listitem">
+              <span className="admin-tile__icon" aria-hidden="true">
+                {tile.icon}
+              </span>
+              <span className="admin-tile__body">
+                <span className="admin-tile__label">{tile.label}</span>
+                <span className="admin-tile__subtitle">{tile.subtitle}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
       </Card>
-    </>}</div>;
+
+      <ExplainabilityBlock
+        title="Принципы admin-канона"
+        reasons={[
+          'RBAC ослаблять нельзя — матрица в src/core/security/, любая правка через UI пишет audit (CLAUDE.md §6).',
+          'Admin-страница показывает backend evidence (permission matrix, readiness, audit), а не клиентскую логику.',
+          'Каждая плитка — отдельный канонический маршрут; вход в IAM/AI/observability/readiness/support единообразен.',
+        ]}
+      />
+    </div>
+  );
 }
