@@ -127,15 +127,28 @@ def _derive_worklist_type(*, worklist_type: Optional[str] = None, task_type: Opt
     return 'manager_review'
 
 
+def _maybe_load_json(value: Any, default: Any) -> Any:
+    """Postgres JSONB columns come back as dict/list already; SQLite returns str.
+    Be lenient about both."""
+    if value is None or value == '':
+        return default
+    if isinstance(value, (dict, list)):
+        return value
+    try:
+        return json.loads(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _decode_task_row(d: dict[str, Any]) -> dict[str, Any]:
     if not d.get('stage'):
         st = str(d.get('status') or '')
         d['stage'] = st if st in TASK_CLOSED_STATUSES else _default_stage_open()
-    d['attachments'] = json.loads(d.get('attachments_json') or '[]')
-    d['why'] = json.loads(d.get('why_json') or '{}')
-    d['what_to_do'] = json.loads(d.get('what_to_do_json') or '[]')
-    d['linked_source_facts'] = json.loads(d.get('linked_source_facts_json') or '[]')
-    d['outcome_metrics'] = json.loads(d.get('outcome_metrics_json') or '{}')
+    d['attachments'] = _maybe_load_json(d.get('attachments_json'), [])
+    d['why'] = _maybe_load_json(d.get('why_json'), {})
+    d['what_to_do'] = _maybe_load_json(d.get('what_to_do_json'), [])
+    d['linked_source_facts'] = _maybe_load_json(d.get('linked_source_facts_json'), [])
+    d['outcome_metrics'] = _maybe_load_json(d.get('outcome_metrics_json'), {})
     d['worklist_type'] = _derive_worklist_type(
         worklist_type=d.get('worklist_type'),
         task_type=d.get('task_type'),
