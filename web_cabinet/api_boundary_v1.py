@@ -35,6 +35,10 @@ from packages.contracts.api_boundary_v1 import (
     FeedIntakeDrop,
     FeedIntakeDropsResponse,
     DomainLabelsResponse,
+    Personnel,
+    PersonnelCreateRequest,
+    PersonnelListResponse,
+    PersonnelResponse,
     HealthEvent,
     HealthMetrics,
     InsightItem,
@@ -85,6 +89,7 @@ from core.workflow.briefing_schedule import (
     upsert_briefing_schedule,
     validate_schedule_input,
 )
+from core.workflow.personnel import create_personnel as _create_personnel, list_personnel as _list_personnel
 from core.workflow.recommended_tasks import build_recommended_tasks_from_insights
 from core.workflow.tasks import create_task as _create_task
 from core.domain import TaskCreate as _DomainTaskCreate
@@ -1735,3 +1740,115 @@ def boundary_briefing_schedule_put(
     except Exception:
         pass
     return _briefing_response(after)
+
+
+def _personnel_record_to_pydantic(rec) -> Personnel:
+    """Convert core.domain.records.Personnel (dataclass) → contracts.Personnel (pydantic)."""
+    return Personnel(
+        personnel_id=rec.personnel_id,
+        full_name=rec.full_name,
+        position=rec.position,
+        group_id=rec.group_id,
+        photo_ref=rec.photo_ref,
+        phone=rec.phone,
+        email=rec.email,
+        hired_at=rec.hired_at,
+        created_at=rec.created_at,
+        updated_at=rec.updated_at,
+    )
+
+
+@router.get('/personnel', response_model=PersonnelListResponse)
+def boundary_personnel_list(
+    request: Request,
+    group_id: Optional[str] = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    user=Depends(require_permissions('personnel.read')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    pii_visible = bool(core_has_any_permission(user.get('permissions') or [], 'personnel.read_pii'))
+    total, items = _list_personnel(
+        conn,
+        tenant_id=tenant_id,
+        group_id=group_id,
+        limit=limit,
+        offset=offset,
+        pii_visible=pii_visible,
+    )
+    if pii_visible and total > 0:
+        try:
+            write_audit(
+                conn,
+                tenant_id=tenant_id,
+                user_id=int(user.get('user_id') or 0),
+                username=str(user.get('username') or ''),
+                role=str(user.get('role') or ''),
+                action='personnel.list.pii_view',
+                object_type='personnel',
+                object_id=None,
+                after={'count': total, 'group_id': group_id},
+                ip=getattr(request.client, 'host', None) if request.client else None,
+                user_agent=request.headers.get('user-agent'),
+                request_id=getattr(request.state, 'request_id', None),
+            )
+        except Exception:
+            pass
+    return PersonnelListResponse(
+        total=total,
+        pii_visible=pii_visible,
+        items=[_personnel_record_to_pydantic(it) for it in items],
+    )
+
+
+@router.post('/personnel', response_model=PersonnelResponse, status_code=201)
+def boundary_personnel_create(
+    body: PersonnelCreateRequest,
+    request: Request,
+    user=Depends(require_permissions('personnel.manage')),
+    conn=Depends(get_db),
+):
+    tenant_id = user.get('tenant_id', 'default')
+    if not (body.full_name or '').strip():
+        raise HTTPException(status_code=400, detail={'error': 'personnel.invalid', 'detail': 'full_name is required'})
+    if not (body.position or '').strip():
+        raise HTTPException(status_code=400, detail={'error': 'personnel.invalid', 'detail': 'position is required'})
+    rec = _create_personnel(
+        conn,
+        tenant_id=tenant_id,
+        full_name=body.full_name.strip(),
+        position=body.position.strip(),
+        group_id=(body.group_id.strip() if body.group_id else None),
+        phone=(body.phone.strip() if body.phone else None),
+        email=(body.email.strip() if body.email else None),
+        hired_at=(body.hired_at.strip() if body.hired_at else None),
+    )
+    pii_visible = bool(core_has_any_permission(user.get('permissions') or [], 'personnel.read_pii'))
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='personnel.create',
+            object_type='personnel',
+            object_id=rec.personnel_id,
+            after={
+                'personnel_id': rec.personnel_id,
+                'full_name': rec.full_name,
+                'position': rec.position,
+                'group_id': rec.group_id,
+                'has_phone': rec.phone is not None,
+                'has_email': rec.email is not None,
+                'has_hired_at': rec.hired_at is not None,
+            },
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    item = _personnel_record_to_pydantic(rec if pii_visible else rec.masked())
+    return PersonnelResponse(pii_visible=pii_visible, item=item)

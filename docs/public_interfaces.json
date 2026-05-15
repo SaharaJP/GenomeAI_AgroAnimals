@@ -1454,6 +1454,13 @@
         ]
       },
       {
+        "path": "/personnel",
+        "methods": [
+          "GET",
+          "POST"
+        ]
+      },
+      {
         "path": "/qc",
         "methods": [
           "GET"
