@@ -100,6 +100,7 @@ export function PersonnelSurface({ view }: { view: ViewMode }) {
   const [data, setData] = useState<PersonnelListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Personnel | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -115,7 +116,9 @@ export function PersonnelSurface({ view }: { view: ViewMode }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadTick]);
+
+  const refresh = () => setReloadTick((n) => n + 1);
 
   const grouped = useMemo(() => {
     if (!data) return [];
@@ -141,7 +144,7 @@ export function PersonnelSurface({ view }: { view: ViewMode }) {
     return (
       <EmptyState
         title="Команда пока пуста"
-        description="Добавьте сотрудника через POST /api/app/v1/personnel или модалку FAB (появится в P1-4d)."
+        description="Добавьте сотрудника через POST /api/app/v1/personnel. UI для создания/массового импорта появится в P1-5."
       />
     );
   }
@@ -172,7 +175,19 @@ export function PersonnelSurface({ view }: { view: ViewMode }) {
         </section>
       ))}
       {selected ? (
-        <PersonnelDetail person={selected} piiVisible={data.pii_visible} onClose={() => setSelected(null)} />
+        <PersonnelDetail
+          person={selected}
+          piiVisible={data.pii_visible}
+          onClose={() => setSelected(null)}
+          onChanged={(updated) => {
+            setSelected(updated);
+            refresh();
+          }}
+          onDeleted={() => {
+            setSelected(null);
+            refresh();
+          }}
+        />
       ) : null}
     </div>
   );

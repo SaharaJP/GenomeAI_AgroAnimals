@@ -3402,3 +3402,19 @@ button, input, select, textarea { font: inherit; }
   .task-create-fab span { display: none; }
   .task-create-toast { right: 12px; left: 12px; bottom: 72px; max-width: none; }
 }
+
+/* Personnel detail actions */
+.personnel-detail__actions { display: inline-flex; align-items: center; gap: 8px; }
+.personnel-detail__action { font-size: 12px; padding: 6px 10px; }
+.personnel-detail__action--danger {
+  color: #8a1c1c;
+  border: 1px solid #8a1c1c;
+  background: var(--panel);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  font-weight: 600;
+}
+.personnel-detail__action--danger:hover { background: #f5e6e6; }
+.personnel-detail__action--danger:focus-visible { outline: 2px solid #8a1c1c; outline-offset: 2px; }
+.personnel-detail__action--danger[disabled] { opacity: 0.6; cursor: not-allowed; }

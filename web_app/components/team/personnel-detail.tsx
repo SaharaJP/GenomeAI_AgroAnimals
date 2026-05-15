@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Modal } from '@/components/ui/modal';
 import { apiFetch } from '@/lib/api/client';
+import { useAuth } from '@/components/auth/auth-provider';
+import { hasPermission } from '@/lib/api/contracts';
+import { deletePersonnel } from '@/lib/api/personnel';
+import { PersonnelEditModal } from '@/components/team/personnel-edit-modal';
 import type { ListResponse, Personnel, WorklistItem } from '@/lib/api/contracts';
 
 type TasksBucket = { items: WorklistItem[]; total: number };
@@ -58,11 +63,22 @@ export function PersonnelDetail({
   person,
   piiVisible,
   onClose,
+  onChanged,
+  onDeleted,
 }: {
   person: Personnel;
   piiVisible: boolean;
   onClose: () => void;
+  onChanged?: (updated: Personnel) => void;
+  onDeleted?: () => void;
 }) {
+  const { me } = useAuth();
+  const canManage = hasPermission(me, 'personnel.manage');
+  const [editOpen, setEditOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   // Personal tasks: only meaningful when the personnel record is linked to an auth user.
   const personalQuery = person.user_id != null ? `/worklists?owner_user_id=${person.user_id}` : null;
   const groupQuery = person.group_id ? `/worklists?assignee_team=${encodeURIComponent(person.group_id)}` : null;
@@ -70,14 +86,29 @@ export function PersonnelDetail({
   const personal = useWorklists(personalQuery);
   const group = useWorklists(groupQuery);
 
-  // ESC to close
+  // ESC to close — skip while a child modal owns the keyboard
   useEffect(() => {
+    if (editOpen || confirmOpen) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [onClose]);
+  }, [onClose, editOpen, confirmOpen]);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deletePersonnel(person.personnel_id);
+      setConfirmOpen(false);
+      onDeleted?.();
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Ошибка удаления');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="drawer-backdrop" onClick={onClose} role="presentation">
@@ -93,9 +124,29 @@ export function PersonnelDetail({
             <h2 className="card-title">{person.full_name}</h2>
             <p className="card-subtitle">{person.position}</p>
           </div>
-          <button type="button" className="an-dialog-close" onClick={onClose} aria-label="Закрыть карточку">
-            ×
-          </button>
+          <div className="personnel-detail__actions">
+            {canManage ? (
+              <>
+                <button
+                  type="button"
+                  className="btn-outline personnel-detail__action"
+                  onClick={() => setEditOpen(true)}
+                >
+                  Изменить
+                </button>
+                <button
+                  type="button"
+                  className="btn-outline personnel-detail__action personnel-detail__action--danger"
+                  onClick={() => setConfirmOpen(true)}
+                >
+                  Удалить
+                </button>
+              </>
+            ) : null}
+            <button type="button" className="an-dialog-close" onClick={onClose} aria-label="Закрыть карточку">
+              ×
+            </button>
+          </div>
         </header>
         <div className="drawer-body personnel-detail__body">
           <section aria-labelledby="personnel-detail-info">
@@ -178,6 +229,45 @@ export function PersonnelDetail({
           </section>
         </div>
       </aside>
+      <PersonnelEditModal
+        open={editOpen}
+        person={person}
+        piiVisible={piiVisible}
+        onClose={() => setEditOpen(false)}
+        onSaved={(updated) => onChanged?.(updated)}
+      />
+      <Modal open={confirmOpen} onClose={() => (deleting ? undefined : setConfirmOpen(false))} title="Удалить сотрудника?">
+        <div className="task-create-form">
+          <p>
+            Удаление сотрудника <strong>{person.full_name}</strong> ({person.position}) необратимо. Запись будет
+            физически удалена из базы. Связанные задачи (если они привязаны через user_id) останутся существовать
+            под прежним owner_user_id.
+          </p>
+          {deleteError ? (
+            <p className="task-create-form__error" role="alert">
+              {deleteError}
+            </p>
+          ) : null}
+          <div className="task-create-form__actions">
+            <button
+              type="button"
+              className="btn-outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={deleting}
+            >
+              Отмена
+            </button>
+            <button
+              type="button"
+              className="personnel-detail__action--danger personnel-detail__action"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? 'Удаляем…' : 'Удалить'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

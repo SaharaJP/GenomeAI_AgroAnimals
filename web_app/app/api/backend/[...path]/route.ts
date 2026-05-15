@@ -28,7 +28,9 @@ async function buildNextResponse(
   const contentDisposition = response.headers.get('content-disposition');
 
   let nr: NextResponse;
-  if (isBinaryContentType(contentType)) {
+  if (response.status === 204 || response.status === 304) {
+    nr = new NextResponse(null, { status: response.status });
+  } else if (isBinaryContentType(contentType)) {
     const buf = await response.arrayBuffer();
     nr = new NextResponse(buf, { status: response.status, headers: { 'content-type': contentType } });
   } else {
