@@ -3334,3 +3334,29 @@ button, input, select, textarea { font: inherit; }
 .personnel-detail__status--cancelled { background: #f5e6e6; color: #8a1c1c; }
 .personnel-detail__task-title { color: var(--text); }
 .personnel-detail__task-due { color: var(--text-muted); font-size: 12px; }
+
+/* Task create modal */
+.task-create-form { display: flex; flex-direction: column; gap: 14px; }
+.task-create-form__mode { display: flex; gap: 4px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+.task-create-form__field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--text); }
+.task-create-form__label { font-weight: 600; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.task-create-form__field input[type="text"],
+.task-create-form__field input[type="date"],
+.task-create-form__field select,
+.task-create-form__field textarea {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+}
+.task-create-form__field textarea { resize: vertical; min-height: 80px; }
+.task-create-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.task-create-form__error { color: #8a1c1c; font-size: 12px; }
+.task-create-form__hint { color: var(--text-muted); font-size: 12px; }
+.task-create-form__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+@media (max-width: 600px) {
+  .task-create-form__row { grid-template-columns: 1fr; }
+}
