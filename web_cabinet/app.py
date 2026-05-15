@@ -7366,7 +7366,7 @@ def api_admin_permission_matrix_patch(
     - 'grant' / 'revoke' upsert an override row.
     - 'clear' removes the override (reverts to YAML/default baseline).
     """
-    from core.security.overrides import GRANT, REVOKE, clear_override, set_override
+    from core.security.overrides import GRANT, REVOKE, clear_override, get_override, set_override
 
     role = str(body.get("role") or "").strip()
     permission = str(body.get("permission") or "").strip()
@@ -7388,6 +7388,30 @@ def api_admin_permission_matrix_patch(
             detail={"error": "iam.unknown_role", "detail": f"role {role!r} is not registered"},
         )
 
+    # P1-5 R6: hard-guard against locking out IAM management. Revoking
+    # admin.manage from the Admin role (either via 'revoke' or by
+    # 'clear'-ing a previous grant that's the *only* path keeping it
+    # in effect) would leave nobody able to PATCH the matrix again.
+    # admin.manage is baseline-granted to Admin via ALL_PERMISSIONS,
+    # so any revoke targeting (Admin, admin.manage) is rejected.
+    if (
+        role == rbac.ROLE_ADMIN
+        and permission == rbac.PERM_ADMIN_MANAGE
+        and effect == REVOKE
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "iam.lock_out_protected",
+                "detail": "Cannot revoke admin.manage from Admin role — would lock out further IAM edits.",
+            },
+        )
+
+    # P1-5 R7: capture existing override row before mutating, so audit
+    # before_json reflects the previous effect on repeat PATCH (e.g.
+    # grant→revoke transition records both states).
+    pre_existing = get_override(conn, role=role, permission=permission)
+
     actor_uid = int(user.get("user_id") or 0) or None
     actor_name = str(user.get("username") or "") or None
     if effect == "clear":
@@ -7405,7 +7429,7 @@ def api_admin_permission_matrix_patch(
             actor_username=actor_name,
         )
         action_tag = f"iam.permission.{effect}"
-        before = None
+        before = pre_existing  # None if no prior override; row if upgrading effect.
         after = {"role": row["role"], "permission": row["permission"], "effect": row["effect"]}
 
     try:
