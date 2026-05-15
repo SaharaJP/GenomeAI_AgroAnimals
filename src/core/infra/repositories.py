@@ -2838,15 +2838,16 @@ class PersonnelRepo(BaseSqlRepo):
         phone: Optional[str],
         email: Optional[str],
         hired_at: Optional[str],
+        user_id: Optional[int] = None,
         now: str,
     ) -> str:
         self.conn.execute(
             """
             INSERT INTO personnel_v1(
               personnel_id, tenant_id, full_name, position,
-              group_id, phone, email, hired_at,
+              group_id, phone, email, hired_at, user_id,
               created_at, updated_at
-            ) VALUES (?,?,?,?,?,?,?,?,?,?)
+            ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
             """,
             (
                 personnel_id,
@@ -2857,6 +2858,7 @@ class PersonnelRepo(BaseSqlRepo):
                 phone,
                 email,
                 hired_at,
+                user_id,
                 now,
                 now,
             ),

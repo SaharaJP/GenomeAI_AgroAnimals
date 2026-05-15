@@ -71,6 +71,7 @@ class _Sandbox:
         kw.setdefault("email", None)
         kw.setdefault("hired_at", None)
         kw.setdefault("group_id", None)
+        kw.setdefault("user_id", None)
         return self.repo.insert(tenant_id=self.tenant_id, **kw)
 
     def get(self, personnel_id: str):
@@ -190,7 +191,7 @@ def test_delete_removes_only_target_and_is_idempotent(repo: _Sandbox) -> None:
 
 
 def test_indexes_present(repo: _Sandbox) -> None:
-    # Sanity: the two performance indexes from the migration must exist
+    # Sanity: the three performance indexes from migrations 17 and 18 must exist
     rows = repo.repo.conn.execute(
         "SELECT indexname FROM pg_indexes WHERE tablename='personnel_v1'",
         (),
@@ -198,3 +199,31 @@ def test_indexes_present(repo: _Sandbox) -> None:
     names = {r["indexname"] for r in rows}
     assert "idx_personnel_v1_tenant_name" in names
     assert "idx_personnel_v1_tenant_group" in names
+    assert "idx_personnel_v1_tenant_user" in names  # added by 20260515_18
+
+
+def test_user_id_round_trip(repo: _Sandbox) -> None:
+    pid = "prsn-uid-1"
+    repo.insert(
+        personnel_id=pid,
+        full_name="Linked User",
+        position="op",
+        user_id=137,
+        now="2026-05-15T12:00:00+00:00",
+    )
+    row = repo.get(pid)
+    assert row is not None
+    assert row["user_id"] == 137
+
+
+def test_user_id_defaults_to_null(repo: _Sandbox) -> None:
+    pid = "prsn-uid-null"
+    repo.insert(
+        personnel_id=pid,
+        full_name="Unlinked",
+        position="op",
+        now="2026-05-15T12:00:00+00:00",
+    )
+    row = repo.get(pid)
+    assert row is not None
+    assert row["user_id"] is None

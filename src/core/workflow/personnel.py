@@ -33,6 +33,9 @@ def row_to_personnel(row: dict[str, Any]) -> Personnel:
     updated_at = row.get("updated_at")
     if updated_at is not None and not isinstance(updated_at, str):
         updated_at = updated_at.isoformat()
+    user_id = row.get("user_id")
+    if user_id is not None:
+        user_id = int(user_id)
     return Personnel(
         personnel_id=row["personnel_id"],
         full_name=row["full_name"],
@@ -42,6 +45,7 @@ def row_to_personnel(row: dict[str, Any]) -> Personnel:
         phone=row.get("phone"),
         email=row.get("email"),
         hired_at=hired_at,
+        user_id=user_id,
         tenant_id=row.get("tenant_id"),
         created_at=created_at,
         updated_at=updated_at,
@@ -79,6 +83,7 @@ def create_personnel(
     phone: Optional[str] = None,
     email: Optional[str] = None,
     hired_at: Optional[str] = None,
+    user_id: Optional[int] = None,
 ) -> Personnel:
     pid = generate_personnel_id()
     now = utcnow_iso()
@@ -91,6 +96,7 @@ def create_personnel(
         phone=phone,
         email=email,
         hired_at=hired_at,
+        user_id=user_id,
         now=now,
     )
     row = PersonnelRepo(conn).get_row(tenant_id=tenant_id, personnel_id=pid)

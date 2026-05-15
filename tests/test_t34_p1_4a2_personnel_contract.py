@@ -104,5 +104,21 @@ def test_personnel_update_request_all_optional() -> None:
     # Patch semantics — empty body is valid
     req = PersonnelUpdateRequest()
     payload = _dump(req)
-    for field in ("full_name", "position", "group_id", "phone", "email", "hired_at", "photo_ref"):
+    for field in ("full_name", "position", "group_id", "phone", "email", "hired_at", "photo_ref", "user_id"):
         assert payload[field] is None
+
+
+def test_personnel_user_id_field_present_and_optional() -> None:
+    # Personnel record default user_id is None
+    p = Personnel(personnel_id="p-1", full_name="A", position="op")
+    payload = _dump(p)
+    assert "user_id" in payload
+    assert payload["user_id"] is None
+
+    # Round-trip with concrete int
+    p2 = Personnel(personnel_id="p-2", full_name="B", position="op", user_id=42)
+    assert _dump(p2)["user_id"] == 42
+
+    # CreateRequest accepts user_id
+    req = PersonnelCreateRequest(full_name="X", position="Y", user_id=7)
+    assert req.user_id == 7

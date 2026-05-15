@@ -16,6 +16,7 @@ class Personnel:
     phone: Optional[str] = None
     email: Optional[str] = None
     hired_at: Optional[str] = None
+    user_id: Optional[int] = None
     tenant_id: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
@@ -32,6 +33,7 @@ class Personnel:
             phone=None,
             email=None,
             hired_at=None,
+            user_id=self.user_id,
             tenant_id=self.tenant_id,
             created_at=self.created_at,
             updated_at=self.updated_at,

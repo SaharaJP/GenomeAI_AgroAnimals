@@ -1753,6 +1753,7 @@ def _personnel_record_to_pydantic(rec) -> Personnel:
         phone=rec.phone,
         email=rec.email,
         hired_at=rec.hired_at,
+        user_id=rec.user_id,
         created_at=rec.created_at,
         updated_at=rec.updated_at,
     )
@@ -1823,6 +1824,7 @@ def boundary_personnel_create(
         phone=(body.phone.strip() if body.phone else None),
         email=(body.email.strip() if body.email else None),
         hired_at=(body.hired_at.strip() if body.hired_at else None),
+        user_id=body.user_id,
     )
     pii_visible = bool(core_has_any_permission(user.get('permissions') or [], 'personnel.read_pii'))
     try:
@@ -1840,6 +1842,7 @@ def boundary_personnel_create(
                 'full_name': rec.full_name,
                 'position': rec.position,
                 'group_id': rec.group_id,
+                'user_id': rec.user_id,
                 'has_phone': rec.phone is not None,
                 'has_email': rec.email is not None,
                 'has_hired_at': rec.hired_at is not None,

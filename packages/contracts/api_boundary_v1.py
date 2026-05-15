@@ -611,6 +611,7 @@ class Personnel(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     hired_at: Optional[str] = None
+    user_id: Optional[int] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -622,6 +623,7 @@ class PersonnelCreateRequest(BaseModel):
     phone: Optional[str] = None
     email: Optional[str] = None
     hired_at: Optional[str] = None
+    user_id: Optional[int] = None
 
 
 class PersonnelUpdateRequest(BaseModel):
@@ -632,6 +634,7 @@ class PersonnelUpdateRequest(BaseModel):
     email: Optional[str] = None
     hired_at: Optional[str] = None
     photo_ref: Optional[str] = None
+    user_id: Optional[int] = None
 
 
 class PersonnelListResponse(BaseModel):

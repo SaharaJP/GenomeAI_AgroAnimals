@@ -420,6 +420,7 @@ export type Personnel = {
   phone?: string | null;
   email?: string | null;
   hired_at?: string | null;
+  user_id?: number | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
@@ -431,6 +432,7 @@ export type PersonnelCreateRequest = {
   phone?: string | null;
   email?: string | null;
   hired_at?: string | null;
+  user_id?: number | null;
 };
 
 export type PersonnelUpdateRequest = {
@@ -441,6 +443,7 @@ export type PersonnelUpdateRequest = {
   email?: string | null;
   hired_at?: string | null;
   photo_ref?: string | null;
+  user_id?: number | null;
 };
 
 export type PersonnelListResponse = {

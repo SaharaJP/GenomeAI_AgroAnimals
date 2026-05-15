@@ -36,6 +36,7 @@ def test_personnel_masked_drops_pii_only() -> None:
         phone="+7",
         email="x@y.z",
         hired_at="2024-01-01",
+        user_id=42,
         tenant_id="t-1",
         created_at="2024-01-01T00:00:00Z",
         updated_at="2024-01-02T00:00:00Z",
@@ -43,11 +44,12 @@ def test_personnel_masked_drops_pii_only() -> None:
     m = p.masked()
     # PII zeroed
     assert m.phone is None and m.email is None and m.hired_at is None
-    # Non-PII preserved
+    # Non-PII preserved (user_id is NOT PII — it's the auth account link)
     assert m.full_name == p.full_name
     assert m.position == p.position
     assert m.group_id == p.group_id
     assert m.photo_ref == p.photo_ref
+    assert m.user_id == p.user_id
     assert m.tenant_id == p.tenant_id
     assert m.created_at == p.created_at
     assert m.updated_at == p.updated_at
