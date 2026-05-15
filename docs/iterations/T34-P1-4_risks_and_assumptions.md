@@ -1,6 +1,6 @@
 # T34 P1-4 «Команда» — реестр рисков и допущений
 
-> Снапшот на 2026-05-15 (после P1-4d). Закрытые/устаревшие пункты переходят в `(resolved)`.
+> Снапшот на 2026-05-15 (после P1-4 R-debt итерации). Закрытые/устаревшие пункты переходят в `(resolved)`.
 
 Все пункты — то, что **сейчас работает по соглашению** или **может сломаться при росте**. По договорённости с координатором эти долги адресуем в отдельной итерации после P1-4c.
 
@@ -71,9 +71,9 @@
 
 ## P1-4c-2 — TaskCreateModal + FAB на /team
 
-- **R12.** `owner_user_id` dropdown без поиска — все personnel грузятся одним списком (`/personnel?limit=200`). На крупном тенанте (>50 сотрудников) выбор будет тесным. Адресовать в P1-5 (адмика) либо в P2 — добавить autocomplete-input.
-- **R13.** После успешного `createWorklist` нет invalidation существующих `/worklists`-подписок (PersonnelDetail и другие потребители). Пользователь увидит новую задачу только после ручного re-open drawer'a. Для P1 приемлемо (модалка закрывается → toast → пользователь сам ререндерит при необходимости); глобальный refetch — отложить на P2.
-- **R14.** Клиент фильтрует personnel по `user_id != null` локально — backend сам не фильтрует. Если у тенанта 500 сотрудников и только 10 с user_id, скачиваем все 500. В P2 завести query-param `?has_user=true` в `/personnel`.
+- **R12. ✅ RESOLVED (P1-4 R-debt 2026-05-15).** `owner_user_id` dropdown теперь имеет filter-input (видим при >8 сотрудниках), фильтрует по `full_name + position` case-insensitively. Конструктивный list берётся через `/personnel?has_user=true` (R14). Дальше autocomplete-async загрузка — задача P2 при появлении пагинации `/personnel`.
+- **R13. ✅ RESOLVED (P1-4 R-debt 2026-05-15).** TaskCreateModal на success бампит `worklistsReloadKey` в TeamPage → PersonnelSurface → PersonnelDetail → `useWorklists(query, reloadKey)`. Открытый drawer показывает новую задачу без re-open. Чистая React-state цепочка, без SWR/глобалов.
+- **R14. ✅ RESOLVED (P1-4 R-debt 2026-05-15).** `GET /personnel?has_user=true|false` теперь фильтрует на backend (`WHERE user_id IS NOT NULL`/`IS NULL`). TaskCreateModal использует `has_user=true`. Клиентская фильтрация удалена.
 - **R15.** FAB и toast используют `var(--accent)` — если появится theming, проверить контрастность в тёмной теме (сейчас тестировал только в светлой).
 - **A17.** `<Modal>` wrapper (`web_app/components/ui/modal.tsx`) ставит `document.body.style.overflow = 'hidden'` пока модалка открыта — намеренно, чтобы фон не скроллился; восстанавливается через cleanup.
 - **A18.** `personnel?limit=200` — без поиска/пагинации. Сознательная упрощение для P1 (см. R12). Hard limit 200 поможет не уронить страницу.
@@ -100,13 +100,13 @@
 | ~~R10~~ | ✅ resolved | ~~personnel.group_id ↔ tasks.assignee_team mismatch~~ | закрыто декаплингом полей в P1-4c-2 |
 | ~~R4~~ | ✅ resolved | ~~Нет PATCH/DELETE на `/personnel`~~ | закрыто в P1-4d |
 | ~~R20~~ | ✅ resolved | ~~Next.js proxy 500 на 204~~ | фикс в route.ts при P1-4d |
+| ~~R12~~ | ✅ resolved | ~~Нет поиска в owner-dropdown~~ | закрыто в P1-4 R-debt 2026-05-15 |
+| ~~R13~~ | ✅ resolved | ~~Нет invalidation после create~~ | закрыто в P1-4 R-debt 2026-05-15 |
+| ~~R14~~ | ✅ resolved | ~~Клиентская фильтрация has_user~~ | закрыто в P1-4 R-debt 2026-05-15 |
 | R6 | средний | MinIO не поднят, photo upload отложен | UX-наличие фото |
 | R7 | средний | Нет UI для personnel↔user mapping | админка |
-| R12 | средний | Нет поиска в owner-dropdown | UX на крупном тенанте |
 | R16 | средний | DELETE personnel оставляет orphan tasks по user_id | UX/чистота данных |
 | R19 | средний | Edit user_id без проверки auth-аккаунта | data integrity |
-| R13 | низкий | Нет invalidation после create | мерцание UI |
-| R14 | низкий | Клиентская фильтрация has_user | network-overhead |
 | R15 | низкий | FAB/toast только light-theme проверен | a11y/visual |
 | R17 | низкий | unlink user_id без compound-feature guard | future-proofing |
 | R18 | низкий | Race: edit/delete в parallel session | UX |

@@ -174,7 +174,8 @@
   - ✅ P1-4c-1 (POST `/worklists`) — закрыт коммитом `ee4482c` (backend, audit `tasks.create.manual`).
   - ✅ P1-4c-2 (TaskCreateModal + FAB на `/team`) — закрыт коммитами `a42e6c4` (контракты/клиент/валидация), `6e5117f` (модалка), `ff92646` (FAB + интеграция + Playwright smoke). R10 решён через декаплинг полей: `assignee_team` отдельно из catalog, `owner_user_id` отдельно из personnel; `personnel.group_id` остаётся free-form info-полем.
   - ✅ P1-4d (PATCH/DELETE на `/personnel`) — закрыт коммитами `d187e32` (backend workflow + endpoints + audit), `199f0d1` (TS-клиент, edit-модалка, delete-confirm, интеграция в drawer + UI smoke). Hard delete с before/after_json в audit_log. Бонусом починен latent proxy bug — `NextResponse` крашился на 204-ответах.
-  - ➡ Следующий шаг: переход к P1-5 (Администрирование: UI канон + IAM-матрица) либо точечно к R-долгу (R7/R12/R13 фолоу-ап).
+  - ✅ **P1-4 R-debt quick-wins** (2026-05-15) — коммиты `40a8a76` (R14 backend `?has_user=true`), `7f64367` (hotfix `_decode_task_row` для JSONB dict), `d0aeaad` (R12 owner-filter + R13 worklists refetch + ?has_user=true в TaskCreateModal). Drawer теперь обновляется в реальном времени после создания задачи.
+  - ➡ Следующий шаг: либо оставшиеся P1-4 R-debt (R6 MinIO photo, R7 user-mapping UI, R16 orphan tasks, R19 auth-aware user_id picker), либо P1-5 slice 4 IAM editing (high-risk), либо переход к P2.
 
 ---
 
