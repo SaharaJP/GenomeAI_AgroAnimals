@@ -1,8 +1,12 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Plus } from 'lucide-react';
 import { PersonnelSurface } from '@/components/team/personnel-surface';
+import { TaskCreateModal } from '@/components/team/task-create-modal';
+import { useAuth } from '@/components/auth/auth-provider';
+import { hasPermission } from '@/lib/api/contracts';
 
 type TeamTabId = 'by-group' | 'by-name';
 
@@ -18,6 +22,11 @@ function isTeamTabId(value: string | null): value is TeamTabId {
 export default function TeamPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { me } = useAuth();
+  const canCreateTasks = hasPermission(me, 'tasks.write');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [createdNotice, setCreatedNotice] = useState<string | null>(null);
+
   const active: TeamTabId = useMemo(() => {
     const raw = searchParams.get('view');
     return isTeamTabId(raw) ? raw : 'by-group';
@@ -50,6 +59,30 @@ export default function TeamPage() {
       <div role="tabpanel" id={`team-tabpanel-${active}`} aria-labelledby={`team-tab-${active}`}>
         <PersonnelSurface view={active} />
       </div>
+      {createdNotice ? (
+        <div className="task-create-toast" role="status" aria-live="polite">
+          {createdNotice}
+        </div>
+      ) : null}
+      {canCreateTasks ? (
+        <button
+          type="button"
+          className="task-create-fab"
+          onClick={() => setModalOpen(true)}
+          aria-label="Поставить задачу"
+        >
+          <Plus size={18} aria-hidden="true" />
+          <span>Поставить задачу</span>
+        </button>
+      ) : null}
+      <TaskCreateModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreated={(resp) => {
+          setCreatedNotice(`Задача создана: ${resp.item.title}`);
+          window.setTimeout(() => setCreatedNotice(null), 4000);
+        }}
+      />
     </>
   );
 }
