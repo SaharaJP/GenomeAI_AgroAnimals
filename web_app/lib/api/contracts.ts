@@ -99,6 +99,15 @@ export type WorklistItem = {
   source_insight_id?: string | null;
 };
 
+export type TeamCatalogEntry = {
+  key: string;
+  title: string;
+};
+
+export type TeamCatalogResponse = {
+  teams: TeamCatalogEntry[];
+};
+
 export type PlannerPlanItem = {
   plan_id: string;
   status: string;
