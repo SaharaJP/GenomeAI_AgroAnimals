@@ -1833,6 +1833,7 @@ def _personnel_record_to_pydantic(rec) -> Personnel:
 def boundary_personnel_list(
     request: Request,
     group_id: Optional[str] = Query(default=None),
+    has_user: Optional[bool] = Query(default=None),
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
     user=Depends(require_permissions('personnel.read')),
@@ -1844,6 +1845,7 @@ def boundary_personnel_list(
         conn,
         tenant_id=tenant_id,
         group_id=group_id,
+        has_user=has_user,
         limit=limit,
         offset=offset,
         pii_visible=pii_visible,

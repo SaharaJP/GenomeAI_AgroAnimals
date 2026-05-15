@@ -57,6 +57,7 @@ def list_personnel(
     *,
     tenant_id: str,
     group_id: Optional[str] = None,
+    has_user: Optional[bool] = None,
     limit: int = 100,
     offset: int = 0,
     pii_visible: bool,
@@ -64,6 +65,7 @@ def list_personnel(
     page = PersonnelRepo(conn).list_rows(
         tenant_id=tenant_id,
         group_id=group_id,
+        has_user=has_user,
         limit=limit,
         offset=offset,
     )

@@ -2878,6 +2878,7 @@ class PersonnelRepo(BaseSqlRepo):
         *,
         tenant_id: str,
         group_id: Optional[str] = None,
+        has_user: Optional[bool] = None,
         limit: int = 100,
         offset: int = 0,
     ) -> dict[str, Any]:
@@ -2886,6 +2887,10 @@ class PersonnelRepo(BaseSqlRepo):
         if group_id is not None:
             where.append("group_id=?")
             args.append(group_id)
+        if has_user is True:
+            where.append("user_id IS NOT NULL")
+        elif has_user is False:
+            where.append("user_id IS NULL")
         where_sql = " AND ".join(where)
         total = self.conn.execute(
             f"SELECT COUNT(*) AS n FROM personnel_v1 WHERE {where_sql}",
