@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/ui/empty-state';
 import { apiFetch } from '@/lib/api/client';
 import type { Personnel, PersonnelListResponse } from '@/lib/api/contracts';
+import { PersonnelDetail } from '@/components/team/personnel-detail';
 
 type ViewMode = 'by-group' | 'by-name';
 
@@ -39,23 +40,38 @@ function groupByGroupId(items: Personnel[]): { key: string; label: string; rows:
     });
 }
 
-function PersonnelCard({ person, piiVisible }: { person: Personnel; piiVisible: boolean }) {
+function PersonnelCard({
+  person,
+  piiVisible,
+  onOpen,
+}: {
+  person: Personnel;
+  piiVisible: boolean;
+  onOpen: (person: Personnel) => void;
+}) {
   return (
     <article className="card personnel-card" aria-label={`Сотрудник: ${person.full_name}`}>
-      <div className="personnel-card__head">
-        <div className="personnel-card__avatar" aria-hidden="true">
-          {person.photo_ref ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={person.photo_ref} alt="" />
-          ) : (
-            <span className="personnel-card__initials">{initials(person.full_name)}</span>
-          )}
+      <button
+        type="button"
+        className="personnel-card__open"
+        onClick={() => onOpen(person)}
+        aria-label={`Открыть карточку: ${person.full_name}`}
+      >
+        <div className="personnel-card__head">
+          <div className="personnel-card__avatar" aria-hidden="true">
+            {person.photo_ref ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={person.photo_ref} alt="" />
+            ) : (
+              <span className="personnel-card__initials">{initials(person.full_name)}</span>
+            )}
+          </div>
+          <div className="personnel-card__title">
+            <h3 className="card-title">{person.full_name}</h3>
+            <p className="card-subtitle">{person.position}</p>
+          </div>
         </div>
-        <div className="personnel-card__title">
-          <h3 className="card-title">{person.full_name}</h3>
-          <p className="card-subtitle">{person.position}</p>
-        </div>
-      </div>
+      </button>
       {piiVisible && (person.phone || person.email) ? (
         <dl className="personnel-card__contacts">
           {person.phone ? (
@@ -83,6 +99,7 @@ function PersonnelCard({ person, piiVisible }: { person: Personnel; piiVisible: 
 export function PersonnelSurface({ view }: { view: ViewMode }) {
   const [data, setData] = useState<PersonnelListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Personnel | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -144,11 +161,19 @@ export function PersonnelSurface({ view }: { view: ViewMode }) {
           </header>
           <div className="personnel-surface__grid">
             {bucket.rows.map((person) => (
-              <PersonnelCard key={person.personnel_id} person={person} piiVisible={data.pii_visible} />
+              <PersonnelCard
+                key={person.personnel_id}
+                person={person}
+                piiVisible={data.pii_visible}
+                onOpen={setSelected}
+              />
             ))}
           </div>
         </section>
       ))}
+      {selected ? (
+        <PersonnelDetail person={selected} piiVisible={data.pii_visible} onClose={() => setSelected(null)} />
+      ) : null}
     </div>
   );
 }

@@ -3320,3 +3320,17 @@ button, input, select, textarea { font: inherit; }
 .personnel-card__contacts dd { margin: 0; overflow: hidden; text-overflow: ellipsis; }
 .personnel-card__contacts a { color: var(--accent, #1a73e8); text-decoration: none; }
 .personnel-card__contacts a:hover { text-decoration: underline; }
+.personnel-card__open { display: block; width: 100%; padding: 0; margin: 0; border: 0; background: transparent; text-align: left; cursor: pointer; color: inherit; }
+.personnel-card__open:hover { color: var(--accent, #1a73e8); }
+.personnel-card__open:focus-visible { outline: 2px solid var(--accent, #1a73e8); outline-offset: 2px; border-radius: 4px; }
+
+.personnel-detail { display: flex; flex-direction: column; }
+.personnel-detail__body { display: flex; flex-direction: column; gap: 1.25rem; }
+.personnel-detail__section-title { margin: 0 0 0.5rem; font-size: 14px; font-weight: 600; color: var(--text); text-transform: uppercase; letter-spacing: 0.04em; }
+.personnel-detail__tasks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.personnel-detail__task { display: grid; grid-template-columns: max-content 1fr max-content; gap: 0.75rem; align-items: baseline; padding: 8px 10px; background: var(--surface-muted, #f4f6fa); border-radius: 6px; font-size: 13px; }
+.personnel-detail__status { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; background: #e6efff; color: var(--accent, #1a73e8); }
+.personnel-detail__status--done { background: #e7f6ed; color: #1e7a3a; }
+.personnel-detail__status--cancelled { background: #f5e6e6; color: #8a1c1c; }
+.personnel-detail__task-title { color: var(--text); }
+.personnel-detail__task-due { color: var(--text-muted); font-size: 12px; }
