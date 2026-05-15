@@ -89,6 +89,11 @@ PERM_COLLAB_APPROVAL_REVIEW = "collaboration.approvals.review"
 PERM_BRIEFING_SCHEDULE_VIEW = "briefing.schedule.view"
 PERM_BRIEFING_SCHEDULE_MANAGE = "briefing.schedule.manage"
 
+# --- P1-4 Personnel (Команда) ---
+PERM_PERSONNEL_READ = "personnel.read"            # имя, должность, group_id, photo_ref
+PERM_PERSONNEL_READ_PII = "personnel.read_pii"    # phone, email, hired_at — каждый просмотр audit_event
+PERM_PERSONNEL_MANAGE = "personnel.manage"        # create/update/delete карточек
+
 ALL_PERMISSIONS: list[str] = [
     PERM_KPI_VIEW,
     PERM_DRILLDOWN_VIEW,
@@ -163,6 +168,11 @@ ALL_PERMISSIONS: list[str] = [
     # P1-1 Briefing schedule
     PERM_BRIEFING_SCHEDULE_VIEW,
     PERM_BRIEFING_SCHEDULE_MANAGE,
+
+    # P1-4 Personnel
+    PERM_PERSONNEL_READ,
+    PERM_PERSONNEL_READ_PII,
+    PERM_PERSONNEL_MANAGE,
 ]
 
 # ---- Role catalog ----
@@ -243,6 +253,11 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         # P1-1 briefing schedule
         PERM_BRIEFING_SCHEDULE_VIEW,
         PERM_BRIEFING_SCHEDULE_MANAGE,
+
+        # P1-4 personnel (Director — HR-уровень)
+        PERM_PERSONNEL_READ,
+        PERM_PERSONNEL_READ_PII,
+        PERM_PERSONNEL_MANAGE,
     ],
     ROLE_ZOOTECH: [
         PERM_KPI_VIEW,
@@ -304,6 +319,10 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
 
         # P1-1 briefing schedule (read-only)
         PERM_BRIEFING_SCHEDULE_VIEW,
+
+        # P1-4 personnel (Zootech ставит задачи → нужен контактный PII)
+        PERM_PERSONNEL_READ,
+        PERM_PERSONNEL_READ_PII,
     ],
     ROLE_VET: [
         PERM_KPI_VIEW,
@@ -355,6 +374,10 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
 
         # T12-04 reports (read)
         PERM_REPORTS_VIEW,
+
+        # P1-4 personnel (Vet ставит задачи команде → нужен контактный PII)
+        PERM_PERSONNEL_READ,
+        PERM_PERSONNEL_READ_PII,
     ],
     ROLE_OPERATOR: [
         PERM_KPI_VIEW,
@@ -401,6 +424,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
 
         # T12-04 reports (read)
         PERM_REPORTS_VIEW,
+
+        # P1-4 personnel (Operator видит коллег без PII)
+        PERM_PERSONNEL_READ,
     ],
     ROLE_VIEWER: [
         PERM_KPI_VIEW,
@@ -435,6 +461,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
 
         # T12-04 reports (read)
         PERM_REPORTS_VIEW,
+
+        # P1-4 personnel (Viewer видит структуру команды без PII)
+        PERM_PERSONNEL_READ,
     ],
     ROLE_CONSULTANT: [
         PERM_KPI_VIEW,
@@ -452,6 +481,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         PERM_COLLAB_COMMENTS_WRITE,
         PERM_COLLAB_RECOMMENDATIONS_WRITE,
         PERM_COLLAB_APPROVAL_REQUEST,
+
+        # P1-4 personnel (Consultant — external, без PII)
+        PERM_PERSONNEL_READ,
     ],
     ROLE_PARTNER: [
         PERM_KPI_VIEW,
@@ -469,6 +501,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
         PERM_COLLAB_COMMENTS_WRITE,
         PERM_COLLAB_RECOMMENDATIONS_WRITE,
         PERM_COLLAB_APPROVAL_REQUEST,
+
+        # P1-4 personnel (Partner — external, без PII)
+        PERM_PERSONNEL_READ,
     ],
 }
 
