@@ -96,7 +96,13 @@ function PersonnelCard({
   );
 }
 
-export function PersonnelSurface({ view }: { view: ViewMode }) {
+export function PersonnelSurface({
+  view,
+  worklistsReloadKey = 0,
+}: {
+  view: ViewMode;
+  worklistsReloadKey?: number;
+}) {
   const [data, setData] = useState<PersonnelListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Personnel | null>(null);
@@ -178,6 +184,7 @@ export function PersonnelSurface({ view }: { view: ViewMode }) {
         <PersonnelDetail
           person={selected}
           piiVisible={data.pii_visible}
+          worklistsReloadKey={worklistsReloadKey}
           onClose={() => setSelected(null)}
           onChanged={(updated) => {
             setSelected(updated);

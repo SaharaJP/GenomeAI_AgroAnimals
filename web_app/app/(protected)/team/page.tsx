@@ -26,6 +26,7 @@ export default function TeamPage() {
   const canCreateTasks = hasPermission(me, 'tasks.write');
   const [modalOpen, setModalOpen] = useState(false);
   const [createdNotice, setCreatedNotice] = useState<string | null>(null);
+  const [worklistsReloadKey, setWorklistsReloadKey] = useState(0);
 
   const active: TeamTabId = useMemo(() => {
     const raw = searchParams.get('view');
@@ -57,7 +58,7 @@ export default function TeamPage() {
         ))}
       </div>
       <div role="tabpanel" id={`team-tabpanel-${active}`} aria-labelledby={`team-tab-${active}`}>
-        <PersonnelSurface view={active} />
+        <PersonnelSurface view={active} worklistsReloadKey={worklistsReloadKey} />
       </div>
       {createdNotice ? (
         <div className="task-create-toast" role="status" aria-live="polite">
@@ -81,6 +82,7 @@ export default function TeamPage() {
         onCreated={(resp) => {
           setCreatedNotice(`Задача создана: ${resp.item.title}`);
           window.setTimeout(() => setCreatedNotice(null), 4000);
+          setWorklistsReloadKey((n) => n + 1);
         }}
       />
     </>

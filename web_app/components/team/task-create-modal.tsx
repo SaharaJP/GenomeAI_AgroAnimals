@@ -39,6 +39,7 @@ export function TaskCreateModal({ open, onClose, onCreated }: Props) {
   const [loadingCatalogs, setLoadingCatalogs] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
 
+  const [personnelFilter, setPersonnelFilter] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
@@ -50,12 +51,12 @@ export function TaskCreateModal({ open, onClose, onCreated }: Props) {
     setCatalogError(null);
     Promise.all([
       fetchTeams(),
-      apiFetch<PersonnelListResponse>('/personnel?limit=200'),
+      apiFetch<PersonnelListResponse>('/personnel?has_user=true&limit=200'),
     ])
       .then(([teamsResp, personnelResp]) => {
         if (cancelled) return;
         setTeams(teamsResp.teams || []);
-        setPersonnel((personnelResp.items || []).filter((p) => p.user_id != null));
+        setPersonnel(personnelResp.items || []);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -78,11 +79,21 @@ export function TaskCreateModal({ open, onClose, onCreated }: Props) {
       setDueAt('');
       setAssigneeTeam('');
       setOwnerUserId('');
+      setPersonnelFilter('');
       setSubmitError(null);
       setShowErrors(false);
       setSubmitting(false);
     }
   }, [open]);
+
+  const visiblePersonnel = (() => {
+    const q = personnelFilter.trim().toLowerCase();
+    if (!q) return personnel;
+    return personnel.filter((p) => {
+      const haystack = `${p.full_name || ''} ${p.position || ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  })();
 
   const buildInput = (): WorklistCreateRequest => ({
     title,
@@ -169,13 +180,24 @@ export function TaskCreateModal({ open, onClose, onCreated }: Props) {
         ) : (
           <label className="task-create-form__field">
             <span className="task-create-form__label">Ответственный *</span>
+            {personnel.length > 8 ? (
+              <input
+                type="text"
+                className="task-create-form__filter"
+                placeholder="Фильтр по ФИО или должности"
+                value={personnelFilter}
+                onChange={(e) => setPersonnelFilter(e.target.value)}
+                disabled={loadingCatalogs}
+                aria-label="Фильтр списка сотрудников"
+              />
+            ) : null}
             <select
               value={ownerUserId === '' ? '' : String(ownerUserId)}
               onChange={(e) => setOwnerUserId(e.target.value ? Number(e.target.value) : '')}
               disabled={loadingCatalogs}
             >
               <option value="">— выберите сотрудника —</option>
-              {personnel.map((p) => (
+              {visiblePersonnel.map((p) => (
                 <option key={p.personnel_id} value={String(p.user_id)}>
                   {p.full_name} ({p.position})
                 </option>
@@ -188,6 +210,9 @@ export function TaskCreateModal({ open, onClose, onCreated }: Props) {
               <span className="task-create-form__hint">
                 Нет сотрудников с привязанным auth-аккаунтом. Привяжите user_id в карточке сотрудника.
               </span>
+            ) : null}
+            {personnel.length > 0 && visiblePersonnel.length === 0 && !loadingCatalogs ? (
+              <span className="task-create-form__hint">Нет совпадений по фильтру.</span>
             ) : null}
           </label>
         )}

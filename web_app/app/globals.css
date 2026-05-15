@@ -3517,3 +3517,14 @@ button, input, select, textarea { font: inherit; }
 .integration-status--degraded { background: #fff4d6; color: #8a5a00; }
 .integration-status--down { background: #f5e6e6; color: #8a1c1c; }
 .integration-status--disabled { background: var(--bg-muted, #f0f2f7); color: var(--text-muted, #6b7280); }
+
+/* P1-4 R12: filter input above owner dropdown */
+.task-create-form__filter {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  margin-bottom: 4px;
+}

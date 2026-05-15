@@ -12,7 +12,10 @@ import type { ListResponse, Personnel, WorklistItem } from '@/lib/api/contracts'
 
 type TasksBucket = { items: WorklistItem[]; total: number };
 
-function useWorklists(query: string | null): { data: TasksBucket | null; error: string | null } {
+function useWorklists(
+  query: string | null,
+  reloadKey: number = 0,
+): { data: TasksBucket | null; error: string | null } {
   const [data, setData] = useState<TasksBucket | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +26,6 @@ function useWorklists(query: string | null): { data: TasksBucket | null; error: 
       return;
     }
     let active = true;
-    setData(null);
     setError(null);
     void apiFetch<ListResponse<WorklistItem>>(query)
       .then((res) => {
@@ -37,7 +39,7 @@ function useWorklists(query: string | null): { data: TasksBucket | null; error: 
     return () => {
       active = false;
     };
-  }, [query]);
+  }, [query, reloadKey]);
 
   return { data, error };
 }
@@ -65,12 +67,14 @@ export function PersonnelDetail({
   onClose,
   onChanged,
   onDeleted,
+  worklistsReloadKey = 0,
 }: {
   person: Personnel;
   piiVisible: boolean;
   onClose: () => void;
   onChanged?: (updated: Personnel) => void;
   onDeleted?: () => void;
+  worklistsReloadKey?: number;
 }) {
   const { me } = useAuth();
   const canManage = hasPermission(me, 'personnel.manage');
@@ -83,8 +87,8 @@ export function PersonnelDetail({
   const personalQuery = person.user_id != null ? `/worklists?owner_user_id=${person.user_id}` : null;
   const groupQuery = person.group_id ? `/worklists?assignee_team=${encodeURIComponent(person.group_id)}` : null;
 
-  const personal = useWorklists(personalQuery);
-  const group = useWorklists(groupQuery);
+  const personal = useWorklists(personalQuery, worklistsReloadKey);
+  const group = useWorklists(groupQuery, worklistsReloadKey);
 
   // ESC to close — skip while a child modal owns the keyboard
   useEffect(() => {
