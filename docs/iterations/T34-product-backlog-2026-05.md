@@ -442,6 +442,66 @@
 
 ---
 
+### P2-6. Полное удаление SQLite compatibility-пути (full postgres+redis migration)
+
+- **Источник запроса:** аудит 2026-05-18 — Redis уже используется (AI cache, AI session memory, queue в adult-профиле), MinIO уже задеплоен, но **legacy SQLite path всё ещё активен в dev/CLI**: куча `genomeai/*.py` CLI-инструментов и AI-assistant RAG читают/пишут `web_cabinet/storage/web.db` напрямую. CLAUDE.md §5 классифицирует это как «Compatibility path» с обязательным планом удаления — план до сих пор не оформлен.
+- **Effort:** XL (3–5 спринтов; затрагивает 15+ модулей).
+- **Risk:** **high** — задеваем CLI-инструменты, AI assistant fact-pack, ROI/reporting, refdata. Регрессии могут не всплыть до прод-инцидента.
+- **Что констатируется (факт-чек, 2026-05-18):**
+  - **Adult/stage/prod**: sqlite уже **запрещён** через `runtime_storage.py:220` и `queue_runtime.py:224` (fail-fast guard на startup). Прод физически не запустится с sqlite.
+  - **Dev/CLI**: sqlite допустим — `runtime_storage.DEFAULT_SQLITE_FILENAME = "web.db"`, queue default backend = `"sqlite"` для non-adult profile.
+  - **Legacy `web.db` callers** (нужны переписывания):
+    - `src/genomeai/cli.py` — флаги `--db-path`/`--web-db` для `backup_restore` / `roi_attribution` / `refdata` / `economics_v2`.
+    - `src/genomeai/assistant_log.py` — append-only logs в `web.db.assistant_log_v1` (SQLite).
+    - `src/genomeai/ai_assistant_rag.py` — best-effort reads из `decision_log_v2`, `tasks_v1`, `feedback_loop` через `web.db`.
+    - `src/genomeai/roi_attribution.py`, `economics_v2.py`, `regular_reports.py`, `report.py`, `refdata.py` — fallbacks на `web.db` для refdata/decisions/tasks.
+    - `src/genomeai/playbooks.py`, `refactor_verify.py`, `app_launcher.py` — упоминания и optional пути.
+    - `src/core/infra/runtime_storage.py`, `web_cabinet/jobs_v2.py`, `web_cabinet/worker.py` — sqlite queue backend для dev.
+  - **AI assistant** в проде сейчас работает только с postgres-копией данных (decisions/tasks писали Alembic-миграции в postgres). Но dev-режим до сих пор может читать legacy sqlite.
+- **Что делаем (фазами):**
+
+  **Фаза 0 — Discovery / план**:
+  1. Прогнать grep'ом полную инвентаризацию sqlite usage (`web.db`, `sqlite3.connect`, `_sqlite_compat`).
+  2. Артефакт `docs/iterations/T34-sqlite-removal-rfc.md`: список модулей, mapping legacy → postgres-эквивалент, план переключения.
+  3. Решить судьбу dev-profile: оставляем postgres-only (тогда dev требует поднятый postgres) или вводим SQLite-in-memory dev режим (быстрее старт, нет внешней зависимости).
+
+  **Фаза 1 — Параллельный путь (write to both)**:
+  1. Все writes которые сейчас идут только в `web.db` (assistant_log, tasks_v1 если есть legacy путь и т.д.) дублируем в postgres-эквивалент.
+  2. Reads пока остаются с web.db приоритетом для backward-compat.
+  3. Метрика: счётчик «sqlite read used / postgres read fallback».
+
+  **Фаза 2 — Switch reads**:
+  1. Все reads переключаем на postgres.
+  2. Web.db переводим в read-only «архив».
+  3. Запускаем оба контура параллельно неделю-две (canary). Метрики из фазы 1 должны показать 0 sqlite-reads в active path.
+
+  **Фаза 3 — Removal**:
+  1. Удаление `web.db` подсистемы: убрать импорты, флаги CLI (`--db-path`), DEFAULT_SQLITE_FILENAME, sqlite_compat helpers.
+  2. Update CLAUDE.md §5 — снять упоминания sqlite path.
+  3. Удалить `compat/sqlite_*` модули.
+
+  **Фаза 4 — Queue:**
+  1. В non-adult dev-profile тоже переключаем queue default на redis (требует поднятый Redis локально).
+  2. Удаление sqlite queue backend из `queue_runtime.py`.
+
+- **Acceptance:**
+  - `grep -rE "sqlite|web\.db" src/ web_cabinet/` возвращает только тесты + миграции + deprecation-notes.
+  - CLI-инструменты `genomeai roi_attribution / backup_restore / ...` работают только с postgres DSN.
+  - В dev-режиме разработчик обязан поднять postgres+redis (или docker compose); SQLite больше не fallback.
+  - `docs/deprecation_policy.md` фиксирует sqlite как «removed in T34-P2-6».
+  - Все 7 гейтов CLAUDE.md §4 зелёные после каждой фазы.
+
+- **Deps:**
+  - Можно начинать **в любой момент** — но лучше после P1 closure (все P1 фичи прошли через тесты).
+  - **Конфликт с P2-2 (Ollama)**: Ollama не зависит от sqlite, делаются параллельно.
+  - **Перед P2-3 (IoT)**: лучше закрыть, иначе IoT-storage придётся писать с поддержкой обоих backend'ов.
+
+- **Заметка:** это **технический долг**, не пользовательская фича. Пользователь ничего не увидит. Ценность — устранение dual-storage риска, упрощение архитектуры, удаление legacy code.
+
+- **Прогресс на 2026-05-18:** ничего не начато; задача только заведена в backlog после аудита P1.
+
+---
+
 ## 3. Предлагаемый порядок выполнения (sprint-разбивка)
 
 | Sprint | Содержимое | Длительность | Готовность |
@@ -455,6 +515,7 @@
 | **S7+** | P2-3 (IoT эпик, фазами 1–6) | 4–6 недель | demo-режим → реальная интеграция |
 | **S7+ (параллельно)** | P2-4 (RU-интеграции: Селекс/1С/Хэрриот) — фаза 0 общая, далее по дорожкам A/B/C | 4–6 недель | хотя бы 2 системы из 3 синхронизированы на пилоте |
 | **S5–S7 (параллельно, маркетинг-трек)** | P2-5 (Продающий сайт) — фаза 0 RFC сразу, фазы 1–2 после P2-1 discovery, фаза 3 — когда появятся кейсы пилотов | 2–4 недели до фазы 2; фаза 3 непрерывно | публичный лендинг + форма заявки на пилот в админке |
+| **S8+ (tech-debt трек)** | P2-6 (SQLite full removal) — фаза 0 RFC, фазы 1–4 параллельно с feature work; лучше до P2-3 IoT | 3–5 спринтов | один storage backend (postgres+redis) везде, sqlite compat-путь удалён |
 
 ---
 
