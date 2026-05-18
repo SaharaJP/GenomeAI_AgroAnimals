@@ -51,8 +51,10 @@
 - ✅ Toast после успешного PATCH показывает `effective_permissions_count`.
 - ✅ Hard guard «нельзя revoke admin.manage у Admin» — backend (закрыто в R6 2026-05-15); UI получает 400 `iam.lock_out_protected` и показывает в toast.
 
+#### Slice 4 R-followup (2026-05-18) — ✅ ЗАКРЫТО
+- ✅ Override-marker per cell: `GET /api/admin/permission-matrix` now returns `overrides[]` rows; UI отображает ↑ (grant) / ↓ (revoke) с тонированным фоном.
+
 #### Отложено
-- Сравнение «текущее значение vs YAML default» — UI пока не показывает override-marker на каждую ячейку. Требует расширения GET endpoint выдавать `override_state` per (role, permission). P2.
 - Force-logout пользователей с роли после PATCH — требует session-bus invalidation через Redis. P2.
 
 ### Public interface footprint

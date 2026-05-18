@@ -105,7 +105,7 @@
 | ~~R14~~ | ✅ resolved | ~~Клиентская фильтрация has_user~~ | закрыто в P1-4 R-debt 2026-05-15 |
 | R6 | средний | MinIO не поднят, photo upload отложен | UX-наличие фото — ждёт P1-6 MinIO live |
 | ~~R7~~ | ✅ resolved | ~~Нет UI для personnel↔user mapping~~ | закрыто в P1-4 R-debt 2026-05-18 — UserPicker в personnel-edit-modal |
-| R16 | средний (P2) | DELETE personnel оставляет orphan tasks по user_id | semantically OK; отложен в P2 (UI-фильтр «удалённые сотрудники») |
+| ~~R16~~ | ✅ resolved | ~~DELETE personnel оставляет orphan tasks по user_id~~ | закрыто 2026-05-18: opt-in checkbox «Скрыть задачи удалённых сотрудников» на `/worklists`, появляется только когда orphanCount > 0 |
 | ~~R19~~ | ✅ resolved | ~~Edit user_id без проверки auth-аккаунта~~ | закрыто в P1-4 R-debt 2026-05-18 — UserPicker берёт только активные auth-users из /api/users_v2 |
 | R15 | низкий | FAB/toast только light-theme проверен | a11y/visual |
 | R17 | низкий | unlink user_id без compound-feature guard | future-proofing |

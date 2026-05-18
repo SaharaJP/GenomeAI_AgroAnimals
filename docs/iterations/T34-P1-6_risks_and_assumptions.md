@@ -45,12 +45,17 @@
 - ✅ `apply_overrides` в `core.workflow.integration_overrides`: rows админом disabled показываются status='disabled' с note «Отключено администратором».
 - ✅ Frontend toggle button per-row на `/admin/integrations`, gated `integrations.manage`.
 
-### Slice 2 / 3 (отложены)
-- Manual sync кнопка на real-rows (LLM ping, connector_runs trigger). Требует async/queue abstraction либо synchronous per-provider trigger interface.
-- Deep-link "Открыть логи" из row → `/admin/logs?source=<connector_id>` (этот раздел сам ещё не существует, нужен отдельный logs viewer).
-- Audit `integration.manual_sync`.
-- Tooltip на сводном статусе про real vs stubs (R5).
-- Live ping LLM с кешем (R1).
+### Slice 2 (2026-05-18) — ✅ ЗАКРЫТО (LLM-only MVP)
+- ✅ Manual sync кнопка на каждой строке `/admin/integrations` (UI gated `integrations.manage`).
+- ✅ Backend endpoint `POST /api/app/v1/integrations/{id}/sync` с dispatcher `core.workflow.integration_sync.trigger_sync`.
+- ✅ Реальный ping LLM провайдера через `openai.models.list()` — закрывает R1 для OpenAI режима (latency_ms измеряется реально).
+- ✅ Audit-event `integration.manual_sync` с outcome (ok/message/duration_ms) в after_json.
+- ✅ Toast в UI показывает результат: ✓/✗ + message + длительность.
+- ⏸ **Connector_runs trigger для batch.* — отложено в slice 2b**. Требует анализ существующей jobs_v2/queue infra; нужно решить — синхронный INSERT в connector_runs или enqueue в очередь worker'а.
+- ⏸ **Tooltip про real vs stubs (R5) и Live LLM cache (R1)** — отдельная косметическая итерация.
+
+### Slice 3 (отложен)
+- Deep-link "Открыть логи" из row → `/admin/logs?source=<connector_id>` (раздел `/admin/logs` сам ещё не существует, нужен отдельный logs viewer).
 
 ## Сводка приоритетов для будущего P1-6b
 
@@ -67,4 +72,5 @@
 
 - `GET /api/app/v1/integrations/health` — read-only; gate `integrations.view`. Зарегистрирован в `docs/public_interfaces.json`.
 - `PATCH /api/app/v1/integrations/{integration_id}` (P1-6b slice 1, 2026-05-18) — body `{enabled: bool}`; gate `integrations.manage`. Audit-event `integration.toggle.{enable|disable}` с `before`/`after`. Зарегистрирован в `docs/public_interfaces.json`.
-- Manual sync / deep-link logs endpoints — будут добавлены в slice 2/3.
+- `POST /api/app/v1/integrations/{integration_id}/sync` (P1-6b slice 2, 2026-05-18) — manual sync trigger; gate `integrations.manage`. Возвращает `{integration_id, ok, duration_ms, message, detail}`. Audit-event `integration.manual_sync`. Currently LLM ping only; batch/IoT возвращают 400 `sync.not_supported`. Зарегистрирован в `docs/public_interfaces.json`.
+- Deep-link logs endpoint — будет добавлен в slice 3.
