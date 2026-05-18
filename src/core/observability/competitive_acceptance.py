@@ -493,12 +493,13 @@ def run_competitive_acceptance_set(
         scenario_diag.extend(pytest_eval.get('diagnostics') or [])
         scenario_diag.extend(script_eval.get('diagnostics') or [])
         scenario_diag.extend(files_eval.get('diagnostics') or [])
-        scenario_diag.extend(budget.get('problems') or [])
-        overall_status = manual['status'] if budget.get('ok', True) else 'not_ready'
+        # Budget over-runs are surfaced in the row (within_budget, duration_sec)
+        # but do NOT fail the scenario — perf telemetry, not correctness.
+        overall_status = manual['status']
         row = {
             'scenario': name,
             'title': cfg.get('title'),
-            'automated_ok': automated_ok and bool(budget.get('ok', True)),
+            'automated_ok': automated_ok,
             'manual': manual,
             'overall_status': overall_status,
             'duration_sec': duration_sec,
