@@ -67,7 +67,13 @@
 
 ---
 
-### P0-4. Cleanup: убрать дубль `src/<pkg>/` vs top-level `<pkg>/` для web_cabinet и genomeai
+### P0-4. Cleanup: убрать дубль `src/<pkg>/` vs top-level `<pkg>/` для web_cabinet и genomeai — ✅ **ЗАКРЫТО** (2026-05-12, коммит `bc4a583`)
+- **Что фактически сделано:** удалена стейл-копия `src/web_cabinet/` (~19800 LoC, 60+ файлов). Runtime импортирует top-level `web_cabinet/`. `genomeai` оставлен в виде legitimate namespace-package (src/genomeai + top-level `genomeai/__init__.py` bootstrap shim, добавляющий `./src` в sys.path и расширяющий `__path__`). CLAUDE.md §5 обновлён таблицей «Где физически лежит код». `scripts/check_docs_to_code_consistency.py` переключён на новый путь.
+- **Verification (2026-05-18):** `find . -maxdepth 2 -type d -name web_cabinet` → ровно один результат (`./web_cabinet`); `find . -maxdepth 2 -type d -name genomeai` → два (top-level shim + src/genomeai, по дизайну); `python -c "import web_cabinet, genomeai, core"` резолвится в ожидаемые runtime-пути.
+- **Латентная заметка (не блокирующая):** `web_cabinet` не объявлен в `pyproject.toml` (т.к. `package-dir = src`). Импорт работает за счёт `pythonpath = ["."]` в pytest + cwd-based uvicorn. Перенести `web_cabinet` под `src/` или явно объявить в pyproject — отдельная задача deployment-hardening, не часть P0-4.
+- **Ниже сохранён исходный план «двух стратегий» для исторической справки; ничего из него выполнять не нужно.**
+
+#### Исходный план (HISTORICAL — outdated)
 - **Источник запроса:** обнаружено при выполнении P1-1b (2026-05-12). Я отредактировал legacy-копию `src/web_cabinet/api_boundary_v1.py`, потратил время на отладку 404, потом нашёл, что runtime импортирует `/opt/genomeai/repo/web_cabinet/` (top-level), а не `/opt/genomeai/repo/src/web_cabinet/`.
 - **Effort:** S → M (зависит от выбранной стратегии).
 - **Risk:** med (любая ошибка в раскладке пакетов сломает рантайм; нужны прогоны всех 7 гейтов CLAUDE.md §4 на проверку).
@@ -111,7 +117,11 @@
 
 ---
 
-### P1-1. «Брифинг»: всплывающее окно с настройщиком + расписание + автозадачи
+### P1-1. «Брифинг»: всплывающее окно с настройщиком + расписание + автозадачи — ✅ **ЗАКРЫТО** (2026-05-12)
+- **Verification (2026-05-18):** `web_app/app/(protected)/daily-summary/page.tsx` — кнопки «Настроить брифинг» / «История брифингов», `BriefingConfigModal` с periodicity/timeOfDay/autoCreateTasks, `BriefingHistoryModal`. Backend: `GET/PUT /briefing/schedule` в `web_cabinet/api_boundary_v1.py:1766-1805` с audit `briefing.schedule.update`. Storage: таблица `briefing_schedule_v1` (`src/core/migrations/alembic/versions/20260512_15_briefing_schedule.py`) + access layer `src/core/workflow/briefing_schedule.py`. Permissions: `briefing.schedule.view` / `briefing.schedule.manage`.
+- **Исходный план ниже сохранён для исторической справки.**
+
+#### Исходный план (HISTORICAL)
 - **Источник запроса:** часть 5.
 - **Effort:** M.
 - **Risk:** low (frontend + один новый эндпоинт настроек).
@@ -127,7 +137,11 @@
 
 ---
 
-### P1-2. Инсайты → автогенерация задач с редактором и кнопкой постановки
+### P1-2. Инсайты → автогенерация задач с редактором и кнопкой постановки — ✅ **ЗАКРЫТО**
+- **Verification (2026-05-18):** Frontend `web_app/components/insights/recommended-tasks-panel.tsx` (inline-редактор полей title/description/priority/assignee + кнопки «Поставить»/«Удалить»), рендерится на `/insights` (page.tsx:265). Контракт `RecommendedTask` с `source_insight_id` в `packages/contracts/api_boundary_v1.py:514-520`. Backend endpoints: `POST /worklists/from-recommended` (`web_cabinet/api_boundary_v1.py:1421`), `GET /recommended-tasks` (line 1569). В карточке задачи отображается `source_insight_id` (recommended-tasks-panel.tsx:294).
+- **Исходный план ниже сохранён для исторической справки.**
+
+#### Исходный план (HISTORICAL)
 - **Источник запроса:** часть 6.
 - **Effort:** L.
 - **Risk:** med (трогаем RBAC: `tasks.manage` и `alerts.manage`, нужен audit-log на постановку задач).
@@ -142,7 +156,12 @@
 
 ---
 
-### P1-3. Стадо: раскрывающаяся секция + объединение Воспроизводство/Ветеринария/Кормление
+### P1-3. Стадо: раскрывающаяся секция + объединение Воспроизводство/Ветеринария/Кормление — ✅ **ЗАКРЫТО**
+- **Verification (2026-05-18):** Accordion-группа «Стадо» с подпунктами Животные / Воспроизводство / Ветеринария / Кормление в `web_app/lib/navigation.ts:30-40`. `/feeding` с минимальным каркасом (рационы + снижение потребления) в `web_app/app/(protected)/feeding/page.tsx`. `/vet` вложен с табом «Каренция» (`web_app/app/(protected)/vet/page.tsx`). TasksByDomainCard на `/vet` (domain=health) и `/reproduction` (domain=repro). `/feeding` без task-card — соответствует спеке: feeding не входит в `WORKFLOW_DOMAINS = {health, repro, data, qc, econ}` (`src/core/workflow/policies.py:13`); добавление новой domain — отдельная contract+SLA задача, не часть P1-3.
+- **Открытый вопрос (не блокирующий):** если потом понадобятся «Задачи по кормлению» — это будет отдельная итерация P1-3b с расширением WORKFLOW_DOMAINS до 6 значений, обновлением `sla.yaml`/`domain_labels.yaml`/migration.
+- **Исходный план ниже сохранён для исторической справки.**
+
+#### Исходный план (HISTORICAL)
 - **Источник запроса:** часть 8.
 - **Effort:** L.
 - **Risk:** med (UI рестракт + новая вкладка Кормление).
@@ -197,7 +216,7 @@
   - ✅ P1-5 slice 3a — миграция `role_permissions_overrides_v1` (`48e3edd`): PK (role, permission), CHECK effect IN ('grant', 'revoke'), audit-friendly columns.
   - ✅ P1-5 slice 3b — backend (`fe1af0b`): PATCH endpoint с effect=grant|revoke|clear, audit `iam.permission.{grant|revoke|clear}`, RBAC `admin.manage` (новая permission), validation против ALL_PERMISSIONS и list_roles. Effective merge встроен в `get_permissions_for_role`.
   - ✅ Slice 5 docs: T34-P1-5_risks_and_assumptions.md + public_interfaces.json (PATCH добавлен).
-  - ⏸ **P1-5 slice 4 — UI editing + 2-click confirm — ОТЛОЖЕН** по соглашению с координатором. Текущее состояние UI = read-only безопасно. Рисков-долг по edit-UX и admin.manage lock-out (R4 в risks-доке) требует отдельного согласования прежде чем включать interactive editing.
+  - ✅ **P1-5 slice 4 — UI editing + 2-click confirm — ЗАКРЫТО** (2026-05-18). `IamMatrix` теперь поддерживает интерактивные чекбоксы для admin.manage пользователя; клик открывает `Modal` confirm с текстом «Изменение применится только при следующем входе пользователей этой роли. Текущие активные сессии продолжат использовать кэшированные permissions» (mitigation R4 cache invalidation); PATCH через `patchPermissionOverride` в `web_app/lib/api/iam.ts` к существующему `PATCH /api/admin/permission-matrix`; toast показывает `effective_permissions_count` после успеха. Hard-guard на lock-out (R6) уже был backend в R-debt 2026-05-15. Override-маркер на ячейках и force-logout сессий отложены в P2.
   - ✅ **P1-5 R-debt quick-wins** (2026-05-15) — коммит `6f63491` закрывает R6 (backend hard-guard «нельзя revoke admin.manage у Admin», HTTP 400 `iam.lock_out_protected`) и R7 (audit before_json = предыдущий effect override при повторных PATCH).
   - ➡ Следующий шаг: либо открыть P1-5 slice 4 отдельной итерацией с продуманным confirm-flow, либо перейти к другому эпику (P1-3 «Стадо», P1-6 «Интеграции», R-фолоу-апы из P1-4).
 
@@ -241,7 +260,9 @@
   - ✅ P1-6 slice 1 — backend (`39f5ed0`): contract `IntegrationHealth`, Protocol-based registry, 5 bundled providers (LLM / connectors_v1 / IoT stubs / sensor stub / RU stubs), endpoint `GET /api/app/v1/integrations/health` gated by `integrations.view`, 7/7 unit tests pass. Live smoke: 15 rows across 5 kinds.
   - ✅ P1-6 slice 2 — frontend (`7c3b218`): `/admin/integrations` page with grouped table, status badges, expand-rows, auto-refresh 30s, aggregate status в topbar. 6-я плитка на `/admin`.
   - ✅ Slice 3 — docs: T34-P1-6_risks_and_assumptions.md + public_interfaces.json (PATCH добавлен → GET integrations/health добавлен) + backlog progress.
-  - ⏸ **P1-6b — action layer (manual sync / enable-disable / deep-link logs) — ОТЛОЖЕН.** Текущее состояние = read-only безопасное. R1 (LLM ping) остаётся открытым для будущей итерации.
+  - 🟡 **P1-6b — action layer — частично закрыт.**
+    - **Slice 1 — enable/disable toggle — ✅ ЗАКРЫТО** (2026-05-18). Миграция `20260518_20_integration_overrides` (таблица `integration_overrides_v1`), storage helper `src/core/workflow/integration_overrides.py`, новый permission `PERM_INTEGRATIONS_MANAGE` (Admin), endpoint `PATCH /api/app/v1/integrations/{id}` с audit `integration.toggle.{enable|disable}`, frontend toggle-кнопки в `integrations-surface.tsx` (gated `integrations.manage`), apply_overrides встроен в `/integrations/health` ответ — отключённые админом интеграции показываются status='disabled' с note «Отключено администратором».
+    - **Slice 2 — manual sync / deep-link logs — ОТЛОЖЕН** (R1 LLM ping, требует async/queue или per-provider sync trigger; deep-link logs требует отдельного `/admin/logs` viewer).
   - ✅ **P1-6 R-debt quick-wins** (2026-05-15) — коммит `73a597f` закрывает R3 (`get_health(conn, *, tenant_id)` — endpoint пробрасывает user.tenant_id) и R6 (`PERM_INTEGRATIONS_VIEW` добавлен в `DEFAULT_ROLE_PERMISSIONS[Director]`).
   - ➡ Следующий шаг: P1-tails (P1-5 slice 4 IAM editing + R-фолоу-апы P1-4/P1-5), либо переход к P2.
 
@@ -353,6 +374,74 @@
 
 ---
 
+### P2-5. Продающий сайт-витрина GenomeAI (marketing site + pilot signup)
+- **Источник запроса:** координатор, 2026-05-18 — «нужен полноценный сайт, не просто красивый визуал, должен отображать ценность системы (экономическая эффективность от внедрения, простота использования), описывать как она работает и иметь возможность записаться на пилот; должен быть продающим, чтобы захотелось купить подписку».
+- **Effort:** L → XL (контент + дизайн + backend под заявки + CMS-like структура).
+- **Risk:** med (новый внешний публичный поверхностный слой = ПДн заявок, anti-spam, SEO/SSR, отдельный домен; **не должен** делить cookie/сессии с `/protected/*` контуром).
+- **Что констатируется (факт-чек):**
+  - Сейчас весь Next.js фронт живёт под `/(protected)/*` за auth-гейтом. Публичной marketing-страницы в `web_app/` нет.
+  - Брендинг/копирайт хранится фрагментарно в UI; единого «голоса продукта» нет.
+  - Экономическая модель для ROI-аргументации частично уже есть в `src/core/reporting/` (см. P2-1 Экономика) — можно переиспользовать.
+- **Что делаем (фазами):**
+
+  **Фаза 0 — Discovery / контент-RFC (обязательная):**
+  1. Артефакт `docs/iterations/T34-marketing-site-rfc.md`:
+     - целевая аудитория (фермер 200–500 голов / агрохолдинг 1000+ / зоотехник / IT-директор) и какие сообщения цепляют каждую;
+     - value-prop hierarchy: топ-3 болей и топ-3 выгод (с цифрами, не «улучшим эффективность»);
+     - ROI-цифры на основе пилотов: ₽/голову/год, окупаемость в месяцах, рост надоя/снижение выбраковки — числа должны быть подтверждены данными, иначе говорим диапазоном «X–Y»;
+     - tone-of-voice (профессиональный / уверенный / без AI-buzzwords);
+     - конкурентный обзор: чем мы отличаемся от Селекс / DairyComp / Afimilk / Lely Horizon.
+  2. Решение о домене / поддомене (`genomeai.ru` vs `app.genomeai.ru`) и SEO-стратегии.
+  3. Решение о CMS: статика в Next.js (`web_app/app/(marketing)/`) vs headless CMS (Strapi/Sanity) — для маркетинга важно править контент без деплоя.
+
+  **Фаза 1 — Каркас сайта (статический, single deploy):**
+  1. Новая route-группа `web_app/app/(marketing)/` со своим layout (без auth-гейта, без сайдбара, со своей шапкой/футером).
+  2. Минимум страниц:
+     - `/` (главная) — hero с одним сильным оффером + 3 ключевые метрики ROI + CTA «Записаться на пилот»;
+     - `/product` — как работает: брифинг → инсайты → задачи → команда, со скриншотами реального UI и короткими подписями (1–2 строки на блок);
+     - `/economics` — ROI-калькулятор (поголовье × средний надой × текущая выбраковка → прогнозный эффект); цифры консервативные, с дисклеймером;
+     - `/integrations` — что подключаем (Селекс, 1С, Хэрриот, IoT-вендоры) с логотипами и статусом «доступно / в разработке / по запросу»;
+     - `/security` — как защищаем данные (RBAC, audit-log, on-prem/cloud опции, ПДн-compliance, локальный ИИ через Ollama для офлайн);
+     - `/pricing` — модель подписки (per-голова/мес или per-ферма/мес, тиры), без «свяжитесь с нами» в каждом тире;
+     - `/pilot` — форма записи на пилот (см. фаза 2);
+     - `/about`, `/contacts` — короткие.
+  3. Дизайн: **не AI-generic**, использовать `frontend-design` skill, единый design-system с `(protected)/*` (общие токены), но визуально маркетинговый (больше воздуха, типографика крупнее, story-driven).
+  4. SEO: `metadata` API Next 15, OG-теги, structured data (Organization, Product, FAQPage), sitemap.xml, robots.txt, **SSR обязателен** (не CSR).
+
+  **Фаза 2 — Pilot signup backend:**
+  1. Новый endpoint `POST /api/v1/pilot-requests` (rate-limited, captcha, honeypot). Поля: имя, телефон, email, ферма (название, регион, поголовье), используемые системы (Селекс/1С/Хэрриот — мульти-выбор), желаемый срок пилота, комментарий.
+  2. Storage: новая таблица `pilot_requests` (Alembic), статусы (`new → contacted → scheduled → started → declined`), audit-event на каждое изменение.
+  3. Уведомления: email/Telegram координатору на новую заявку (через существующий notification layer, если есть; иначе через SMTP env).
+  4. Admin-страница `/admin/pilot-requests` (под permission `pilot.manage`) — kanban-доска заявок + экспорт CSV.
+  5. ПДн: явное согласие на обработку (чекбокс), ссылка на политику, retention-политика (см. CLAUDE.md `docs/deprecation_policy.md` для аналогии).
+
+  **Фаза 3 — Доказательства и социальное доказательство (когда появятся пилоты):**
+  1. Раздел `/cases` — кейсы пилотов с метриками до/после (с разрешения фермы; обезличенно если нужно).
+  2. Видео-демо (1–2 мин screencap из реального UI с озвучкой).
+  3. Блог `/blog` — 1 пост/2 нед., минимум: зоотехнический контент + продуктовые апдейты. **Не агрегируем** AI-контент, пишем сами или с агрономом.
+  4. FAQ-секция с ответами на частые возражения («а если нет интернета?», «а если ферма уже на Селексе?», «а ПДн?»).
+
+  **Фаза 4 — Аналитика и оптимизация:**
+  1. Web-аналитика (Yandex.Metrika как минимум; Plausible как self-hosted альтернатива — без cookie-стены).
+  2. A/B-тесты CTA и hero-copy (через GrowthBook или встроенный feature-flag, если уже есть).
+  3. Conversion-funnel: визит → форма → contact → пилот.
+
+- **Acceptance (на эпик в целом):**
+  - Незалогиненный пользователь открывает `https://genomeai.ru/` — видит ценностное предложение за 5 секунд (hero + 3 цифры + CTA).
+  - Прошёл сценарий «пришёл с рекламы → прочитал /product + /economics → отправил форму на /pilot» — заявка появилась в `/admin/pilot-requests`, координатору ушло уведомление.
+  - SEO: главная и `/product` индексируются Яндексом, Lighthouse SEO ≥ 95, перформанс ≥ 85 на 4G.
+  - Сайт **не делит cookie/сессии** с защищённым контуром (cross-site cookie isolation).
+  - ПДн: форма имеет явное согласие, retention соблюдается, есть страница политики конфиденциальности.
+- **Deps:**
+  - Фаза 0 (RFC) — можно начинать сразу.
+  - Фаза 1 (каркас) — после фазы 0; не блокируется ничем из P1.
+  - Фаза 2 (pilot backend) — после P1-5 (RBAC матрица), чтобы `pilot.manage` permission корректно встал в матрицу.
+  - Фаза 3 (кейсы) — после первых реальных пилотов; до этого — диапазоны и индустриальные бенчмарки.
+  - **ROI-цифры берём из P2-1 (Экономика)** — желательно сначала закрыть P2-1 discovery, чтобы числа на сайте и в продукте сходились.
+- **Не делаем в рамках этой задачи:** self-service подписку с онлайн-оплатой (это отдельный эпик billing, не сейчас); многоязычность (RU only на старте; EN — отдельная фаза, когда будет смысл выходить за РФ).
+
+---
+
 ## 3. Предлагаемый порядок выполнения (sprint-разбивка)
 
 | Sprint | Содержимое | Длительность | Готовность |
@@ -365,6 +454,7 @@
 | **S6** | P2-1 (Экономика RFC → implementation) | 2–3 недели | новая Экономика |
 | **S7+** | P2-3 (IoT эпик, фазами 1–6) | 4–6 недель | demo-режим → реальная интеграция |
 | **S7+ (параллельно)** | P2-4 (RU-интеграции: Селекс/1С/Хэрриот) — фаза 0 общая, далее по дорожкам A/B/C | 4–6 недель | хотя бы 2 системы из 3 синхронизированы на пилоте |
+| **S5–S7 (параллельно, маркетинг-трек)** | P2-5 (Продающий сайт) — фаза 0 RFC сразу, фазы 1–2 после P2-1 discovery, фаза 3 — когда появятся кейсы пилотов | 2–4 недели до фазы 2; фаза 3 непрерывно | публичный лендинг + форма заявки на пилот в админке |
 
 ---
 
@@ -378,6 +468,7 @@
 6. **P2-3 / IoT:** список реальных вендоров в первых пилотах? (это сразу сужает каталог в фазе 1).
 7. **P2-4 / RU-интеграции:** какие пилоты уже используют Селекс / 1С / Хэрриот — это определит, с какой дорожки стартуем. Готовы ли мы инвестировать в УЦ-сертификаты Россельхознадзора для дорожки C?
 8. **P1-6 / Контроль интеграций:** разделение `/admin/integrations` (системный надзор, cross-tenant, ручной запуск) и `/connections` (пользовательская настройка per-tenant) — ОК, или объединяем в одну страницу с режимами просмотра? Если разделение ОК — нужны два разных permission (`integrations.view`/`integrations.manage` vs существующий доступ к `/connections`).
+9. **P2-5 / Сайт:** (a) домен — `genomeai.ru` или поддомен? (b) разрешено ли публиковать ROI-цифры из существующих пилотов, или ограничиваемся консервативными индустриальными диапазонами? (c) ценовая модель подписки (per-голова/мес vs per-ферма/мес vs гибрид) — это влияет на /pricing и /pilot формы; (d) куда уходят заявки на пилот (email координатора, Telegram-бот, CRM)? (e) маркетинговый контент пишем мы или подключаем копирайтера/агронома?
 
 ---
 

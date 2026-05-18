@@ -43,12 +43,17 @@
 - **R7. ✅ RESOLVED (P1-5/P1-6 R-debt 2026-05-15).** Endpoint теперь читает `get_override(conn, role, permission)` перед mutation; для grant→revoke перехода audit_log пишет `before_json={...effect: 'grant'}`, что позволяет проследить предыдущий state по одной строке audit.
 - **A11.** Endpoint возвращает `effective_permissions_count` для убедительности — UI может показывать «X permissions effective» после change, давая ощущение что изменение применилось.
 
-### Что не сделано (слайс 4)
-- Интерактивные чекбоксы на `/admin/iam` — сейчас disabled.
-- 2-click confirm dialog с явным текстом «Изменение применится после следующего входа пользователей с этой ролью».
-- Сравнение «текущее значение vs YAML default» — UI пока не показывает, что cell переопределена.
-- Force-logout пользователей с роли после PATCH (можно отложить в P2).
-- Hard guard «нельзя revoke admin.manage у роли Admin».
+### Что не сделано (слайс 4) — обновлено 2026-05-18
+
+#### Slice 4 (2026-05-18) — ✅ ЗАКРЫТО
+- ✅ Интерактивные чекбоксы на `/admin/iam` — enabled когда у пользователя есть `admin.manage` permission.
+- ✅ 2-click confirm dialog (Modal) с явным текстом «Изменение применится только при следующем входе пользователей этой роли. Текущие активные сессии продолжат использовать кэшированные permissions» (R4 mitigation per текст).
+- ✅ Toast после успешного PATCH показывает `effective_permissions_count`.
+- ✅ Hard guard «нельзя revoke admin.manage у Admin» — backend (закрыто в R6 2026-05-15); UI получает 400 `iam.lock_out_protected` и показывает в toast.
+
+#### Отложено
+- Сравнение «текущее значение vs YAML default» — UI пока не показывает override-marker на каждую ячейку. Требует расширения GET endpoint выдавать `override_state` per (role, permission). P2.
+- Force-logout пользователей с роли после PATCH — требует session-bus invalidation через Redis. P2.
 
 ### Public interface footprint
 - `GET /api/admin/permission-matrix` — был; gate `personnel.manage` (PERM_USERS_MANAGE).

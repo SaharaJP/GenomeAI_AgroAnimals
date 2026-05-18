@@ -35,15 +35,21 @@
 - **A11.** `latency_ms` и `records_in_last_window` сейчас `null` для всех rows (LLM не пингует, batch не считает в провайдере). Поля забронированы в контракте под P1-6b/P2.
 - **A12.** P1-6 не вводит persistent storage для health snapshots. Каждый GET = fresh query. Если когда-то потребуется history (графики availability), нужна отдельная таблица + collector worker.
 
-## Что НЕ сделано (P1-6b)
+## Что НЕ сделано (P1-6b) — обновлено 2026-05-18
 
-- Manual sync кнопка на real-rows (LLM ping, connector_runs trigger).
-- Enable / disable toggle для каждого connector (write в `configs/connectors/*.yaml.enabled` или DB-override layer аналогично P1-5).
-- Deep-link "Открыть логи" из row → `/admin/logs?source=<connector_id>` (этот раздел сам ещё не существует).
-- Audit `integration.manual_sync` / `integration.enabled` / `integration.disabled`.
-- New permission `integrations.manage`.
+### Slice 1 (2026-05-18, текущая итерация) — ✅ ЗАКРЫТО
+- ✅ Enable / disable toggle для каждой интеграции — DB-override layer (`integration_overrides_v1`, миграция `20260518_20`), аналогично P1-5 role overrides.
+- ✅ Audit `integration.toggle.enable` / `integration.toggle.disable`.
+- ✅ New permission `integrations.manage` (`PERM_INTEGRATIONS_MANAGE` в policy.py, в `ALL_PERMISSIONS` → доступно Admin).
+- ✅ PATCH `/api/app/v1/integrations/{integration_id}` с `{enabled: bool}` body.
+- ✅ `apply_overrides` в `core.workflow.integration_overrides`: rows админом disabled показываются status='disabled' с note «Отключено администратором».
+- ✅ Frontend toggle button per-row на `/admin/integrations`, gated `integrations.manage`.
+
+### Slice 2 / 3 (отложены)
+- Manual sync кнопка на real-rows (LLM ping, connector_runs trigger). Требует async/queue abstraction либо synchronous per-provider trigger interface.
+- Deep-link "Открыть логи" из row → `/admin/logs?source=<connector_id>` (этот раздел сам ещё не существует, нужен отдельный logs viewer).
+- Audit `integration.manual_sync`.
 - Tooltip на сводном статусе про real vs stubs (R5).
-- Per-tenant scoping в connectors_v1 provider (R3).
 - Live ping LLM с кешем (R1).
 
 ## Сводка приоритетов для будущего P1-6b
@@ -60,4 +66,5 @@
 ## Public interface footprint
 
 - `GET /api/app/v1/integrations/health` — read-only; gate `integrations.view`. Зарегистрирован в `docs/public_interfaces.json`.
-- Никаких других endpoint'ов P1-6 не добавляет. PATCH/POST appear in P1-6b.
+- `PATCH /api/app/v1/integrations/{integration_id}` (P1-6b slice 1, 2026-05-18) — body `{enabled: bool}`; gate `integrations.manage`. Audit-event `integration.toggle.{enable|disable}` с `before`/`after`. Зарегистрирован в `docs/public_interfaces.json`.
+- Manual sync / deep-link logs endpoints — будут добавлены в slice 2/3.
