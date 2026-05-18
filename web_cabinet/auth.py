@@ -393,6 +393,30 @@ def resolve_request_auth_context(request: Request, conn, *, allow_missing: bool 
 
     u = dict(u)
     u['role'] = map_legacy_role(u.get('role'))
+
+    # P1-5 force-logout (legacy session): the starlette cookie session has no
+    # created_at column we can compare against. If ANY IAM mutation has
+    # happened for this role (Redis key exists), we conservatively clear the
+    # legacy session and force re-login. This is more aggressive than the
+    # postgres-session path but legacy_cookie is dev-only anyway.
+    try:
+        from core.security.iam_invalidation import role_changed_at
+        if role_changed_at(str(u['role'])):
+            try:
+                request.session.clear()
+            except Exception:
+                pass
+            if allow_missing:
+                return None
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail='auth.session.invalidated_by_iam',
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
     u['permissions'] = storage.get_permissions_for_role(role=u['role'])
     u['tenant_id'] = u.get('tenant_id') or tenant_id
     u['allowed_farm_ids'] = _parse_scope_list(u.get('allowed_farm_ids_json'))

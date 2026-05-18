@@ -2280,8 +2280,10 @@ def boundary_integration_sync(
     except Exception:
         pass
 
-    if not result.get('ok') and result.get('message') == 'not_supported':
+    if (not result.get('ok')) and result.get('message') == 'not_supported':
         raise HTTPException(status_code=400, detail={'error': 'sync.not_supported', **result})
+    # stub_noop returns 200 ok=true so admin doesn't see a red toast for
+    # stubs that have no real sync work to do (IoT / sensor / RU placeholders).
     return {'integration_id': integration_id, **result}
 
 
