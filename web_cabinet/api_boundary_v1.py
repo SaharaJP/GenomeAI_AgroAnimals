@@ -2030,6 +2030,175 @@ def boundary_personnel_delete(
     return Response(status_code=204)
 
 
+# ---- P1-4 R6: Personnel photo upload via MinIO/S3 ----
+
+
+_PERSONNEL_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+_PERSONNEL_PHOTO_ALLOWED_TYPES = frozenset({'image/jpeg', 'image/png', 'image/webp'})
+
+
+@router.post('/personnel/{personnel_id}/photo')
+async def boundary_personnel_photo_upload(
+    personnel_id: str,
+    request: Request,
+    file: UploadFile = File(...),
+    user=Depends(require_permissions('personnel.manage')),
+    conn=Depends(get_db),
+):
+    """Upload a personnel photo to blob storage; updates photo_ref in DB."""
+    from core.infra.blob_storage import BlobStorageError, put_object
+
+    tenant_id = user.get('tenant_id', 'default')
+    content_type = (file.content_type or '').strip().lower()
+    if content_type not in _PERSONNEL_PHOTO_ALLOWED_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                'error': 'photo.unsupported_type',
+                'detail': f'Допустимы типы: {sorted(_PERSONNEL_PHOTO_ALLOWED_TYPES)}; получено {content_type!r}',
+            },
+        )
+    body = await file.read()
+    if len(body) > _PERSONNEL_PHOTO_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail={'error': 'photo.too_large', 'detail': f'Максимум {_PERSONNEL_PHOTO_MAX_BYTES} байт'},
+        )
+    if not body:
+        raise HTTPException(status_code=400, detail={'error': 'photo.empty', 'detail': 'Пустой файл'})
+
+    ext = {'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'}[content_type]
+    key = f'tenant/{tenant_id}/personnel/{personnel_id}/photo.{ext}'
+    try:
+        photo_ref = put_object(key=key, body=body, content_type=content_type)
+    except BlobStorageError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={'error': 'photo.storage_unavailable', 'detail': str(exc)},
+        ) from exc
+
+    before, after = _update_personnel(
+        conn,
+        tenant_id=tenant_id,
+        personnel_id=personnel_id,
+        patch={'photo_ref': photo_ref},
+    )
+    if before is None:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'personnel.not_found', 'detail': 'personnel_id not found'},
+        )
+    rec = after if after is not None else before
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='personnel.photo.upload',
+            object_type='personnel',
+            object_id=personnel_id,
+            before={'photo_ref': before.photo_ref},
+            after={'photo_ref': rec.photo_ref, 'size_bytes': len(body), 'content_type': content_type},
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    return {'personnel_id': personnel_id, 'photo_ref': rec.photo_ref, 'size_bytes': len(body)}
+
+
+@router.get('/personnel/{personnel_id}/photo')
+def boundary_personnel_photo_url(
+    personnel_id: str,
+    user=Depends(require_permissions('personnel.read')),
+    conn=Depends(get_db),
+):
+    """Returns presigned URL for the personnel photo (1h TTL)."""
+    from core.infra.blob_storage import BlobStorageError, get_presigned_url
+    from core.workflow.personnel import get_personnel as _get_personnel
+
+    tenant_id = user.get('tenant_id', 'default')
+    rec = _get_personnel(conn, tenant_id=tenant_id, personnel_id=personnel_id)
+    if rec is None:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'personnel.not_found', 'detail': 'personnel_id not found'},
+        )
+    if not rec.photo_ref:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'personnel.no_photo', 'detail': 'У сотрудника нет загруженного фото'},
+        )
+    if '/' not in rec.photo_ref:
+        raise HTTPException(
+            status_code=500,
+            detail={'error': 'personnel.photo_ref_malformed', 'detail': 'photo_ref must be bucket/key'},
+        )
+    bucket, _, key = rec.photo_ref.partition('/')
+    try:
+        url = get_presigned_url(key=key, bucket=bucket, expires_in=3600)
+    except BlobStorageError as exc:
+        raise HTTPException(
+            status_code=503,
+            detail={'error': 'photo.storage_unavailable', 'detail': str(exc)},
+        ) from exc
+    return {'personnel_id': personnel_id, 'url': url, 'expires_in': 3600}
+
+
+@router.delete('/personnel/{personnel_id}/photo', status_code=204)
+def boundary_personnel_photo_delete(
+    personnel_id: str,
+    request: Request,
+    user=Depends(require_permissions('personnel.manage')),
+    conn=Depends(get_db),
+):
+    """Removes the photo object and clears photo_ref."""
+    from core.infra.blob_storage import BlobStorageError, delete_object
+    from core.workflow.personnel import get_personnel as _get_personnel
+
+    tenant_id = user.get('tenant_id', 'default')
+    rec = _get_personnel(conn, tenant_id=tenant_id, personnel_id=personnel_id)
+    if rec is None:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'personnel.not_found', 'detail': 'personnel_id not found'},
+        )
+    if rec.photo_ref and '/' in rec.photo_ref:
+        bucket, _, key = rec.photo_ref.partition('/')
+        try:
+            delete_object(key=key, bucket=bucket)
+        except BlobStorageError:
+            pass  # We still clear the DB ref even if blob delete fails.
+    before, after = _update_personnel(
+        conn,
+        tenant_id=tenant_id,
+        personnel_id=personnel_id,
+        patch={'photo_ref': None},
+    )
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='personnel.photo.delete',
+            object_type='personnel',
+            object_id=personnel_id,
+            before={'photo_ref': before.photo_ref if before else None},
+            after={'photo_ref': None},
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    return Response(status_code=204)
+
+
 # ---- P1-6: Integrations health (read-only) + P1-6b slice 1: admin enable/disable ----
 
 

@@ -52,6 +52,66 @@ export async function updatePersonnel(
   });
 }
 
+export type PersonnelPhotoUploadResponse = {
+  personnel_id: string;
+  photo_ref: string;
+  size_bytes: number;
+};
+
+export type PersonnelPhotoUrlResponse = {
+  personnel_id: string;
+  url: string;
+  expires_in: number;
+};
+
+export async function uploadPersonnelPhoto(
+  personnelId: string,
+  file: File,
+): Promise<PersonnelPhotoUploadResponse> {
+  const config = getBrowserAppConfig();
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(
+    `${config.backendProxyBasePath}/personnel/${encodeURIComponent(personnelId)}/photo`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      cache: 'no-store',
+      body: formData,
+    },
+  );
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`;
+    try {
+      const body = await res.json();
+      if (body?.detail?.detail) msg = String(body.detail.detail);
+    } catch {}
+    throw new Error(msg);
+  }
+  return res.json() as Promise<PersonnelPhotoUploadResponse>;
+}
+
+export async function getPersonnelPhotoUrl(personnelId: string): Promise<PersonnelPhotoUrlResponse | null> {
+  try {
+    return await apiFetch<PersonnelPhotoUrlResponse>(
+      `/personnel/${encodeURIComponent(personnelId)}/photo`,
+    );
+  } catch {
+    return null;
+  }
+}
+
+export async function deletePersonnelPhoto(personnelId: string): Promise<void> {
+  const config = getBrowserAppConfig();
+  const res = await fetch(
+    `${config.backendProxyBasePath}/personnel/${encodeURIComponent(personnelId)}/photo`,
+    { method: 'DELETE', credentials: 'include', cache: 'no-store' },
+  );
+  if (!res.ok && res.status !== 204) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+}
+
 export async function deletePersonnel(personnelId: string): Promise<void> {
   const config = getBrowserAppConfig();
   const response = await fetch(

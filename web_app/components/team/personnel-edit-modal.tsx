@@ -1,10 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import {
   buildPersonnelPatch,
+  deletePersonnelPhoto,
+  getPersonnelPhotoUrl,
   updatePersonnel,
+  uploadPersonnelPhoto,
   validatePersonnelUpdate,
   type PersonnelValidationError,
 } from '@/lib/api/personnel';
@@ -70,6 +73,11 @@ export function PersonnelEditModal({ open, person, piiVisible, onClose, onSaved 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [hasPhoto, setHasPhoto] = useState<boolean>(Boolean(person.photo_ref));
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -77,8 +85,47 @@ export function PersonnelEditModal({ open, person, piiVisible, onClose, onSaved 
       setSubmitError(null);
       setShowErrors(false);
       setSubmitting(false);
+      setPhotoError(null);
+      setHasPhoto(Boolean(person.photo_ref));
+      setPhotoUrl(null);
+      if (person.photo_ref) {
+        void getPersonnelPhotoUrl(person.personnel_id).then((res) => {
+          if (res) setPhotoUrl(res.url);
+        });
+      }
     }
   }, [open, person]);
+
+  const onPickPhoto = async (file: File) => {
+    if (!file) return;
+    setPhotoBusy(true);
+    setPhotoError(null);
+    try {
+      await uploadPersonnelPhoto(person.personnel_id, file);
+      setHasPhoto(true);
+      const res = await getPersonnelPhotoUrl(person.personnel_id);
+      if (res) setPhotoUrl(res.url);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Ошибка загрузки фото');
+    } finally {
+      setPhotoBusy(false);
+      if (photoInputRef.current) photoInputRef.current.value = '';
+    }
+  };
+
+  const onDeletePhoto = async () => {
+    setPhotoBusy(true);
+    setPhotoError(null);
+    try {
+      await deletePersonnelPhoto(person.personnel_id);
+      setHasPhoto(false);
+      setPhotoUrl(null);
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Ошибка удаления фото');
+    } finally {
+      setPhotoBusy(false);
+    }
+  };
 
   const initial = formToInitialRequest(person);
   const next = formToNextRequest(form);
@@ -111,6 +158,69 @@ export function PersonnelEditModal({ open, person, piiVisible, onClose, onSaved 
   return (
     <Modal open={open} onClose={onClose} title="Редактировать сотрудника">
       <form onSubmit={onSubmit} className="task-create-form">
+        <div className="personnel-photo" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          <div
+            aria-label="Фото сотрудника"
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              background: 'var(--surface-muted, #f1f5f9)',
+              border: '1px solid var(--border, #d0d5dd)',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photoUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: 22, color: 'var(--text-muted, #94a3b8)' }}>
+                {(person.full_name || '?').slice(0, 1).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                className="btn-outline"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={photoBusy}
+              >
+                {photoBusy ? 'Загружаю…' : hasPhoto ? 'Заменить фото' : 'Загрузить фото'}
+              </button>
+              {hasPhoto ? (
+                <button
+                  type="button"
+                  className="btn-outline"
+                  onClick={() => void onDeletePhoto()}
+                  disabled={photoBusy}
+                >
+                  Удалить
+                </button>
+              ) : null}
+            </div>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void onPickPhoto(f);
+              }}
+            />
+            <span className="task-create-form__hint">JPG/PNG/WebP, до 5 МБ. Хранится в MinIO.</span>
+            {photoError ? (
+              <span className="task-create-form__error" role="alert">{photoError}</span>
+            ) : null}
+          </div>
+        </div>
+
         <label className="task-create-form__field">
           <span className="task-create-form__label">ФИО *</span>
           <input
