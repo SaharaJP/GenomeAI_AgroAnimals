@@ -85,20 +85,93 @@ def _sync_llm(*, integration_id: str) -> SyncResult:
         }
 
 
+def _sync_batch_connector(*, conn: Any, integration_id: str, tenant_id: str) -> SyncResult:
+    """Trigger a connector_v1 run synchronously (P1-6b slice 2b).
+
+    Real Selex / 1С / Хэрриот connectors don't exist yet; current configs
+    in `configs/connectors/*.yaml` are stubs that finish in milliseconds,
+    so synchronous execution is acceptable. When real long-running
+    connectors land, this dispatcher should be switched to enqueue via
+    `core.application.job_runner.enqueue_pipeline_job` and return the
+    job_id immediately.
+    """
+    connector_id = integration_id.removeprefix('batch.')
+    if not connector_id:
+        return {
+            'ok': False,
+            'duration_ms': 0,
+            'message': 'invalid_id',
+            'detail': f"integration_id {integration_id!r} is missing the batch.* connector_id suffix.",
+        }
+    started = time.perf_counter()
+    try:
+        from pathlib import Path
+        from genomeai.connectors_v1 import load_connector_spec, run_connector_spec
+    except Exception as exc:
+        return {
+            'ok': False,
+            'duration_ms': 0,
+            'message': 'sdk_missing',
+            'detail': f'connectors_v1 import failed: {exc}',
+        }
+
+    # Resolve project_root from current working dir; runtime sets cwd to repo root.
+    project_root = Path(os.environ.get('GENOMEAI_PROJECT_ROOT') or os.getcwd()).resolve()
+    artifacts_root = Path(os.environ.get('GENOMEAI_ARTIFACTS_ROOT') or (project_root / 'artifacts')).resolve()
+    config_path = project_root / 'configs' / 'connectors' / f'{connector_id}.yaml'
+    if not config_path.exists():
+        return {
+            'ok': False,
+            'duration_ms': int((time.perf_counter() - started) * 1000),
+            'message': 'config_missing',
+            'detail': f'configs/connectors/{connector_id}.yaml not found',
+        }
+    try:
+        spec = load_connector_spec(config_path, project_root=project_root)
+        result = run_connector_spec(
+            spec,
+            project_root=project_root,
+            artifacts_root=artifacts_root,
+            trigger_type='manual',
+        )
+    except Exception as exc:
+        return {
+            'ok': False,
+            'duration_ms': int((time.perf_counter() - started) * 1000),
+            'message': 'run_failed',
+            'detail': str(exc)[:300],
+        }
+    duration_ms = int((time.perf_counter() - started) * 1000)
+    return {
+        'ok': bool(getattr(result, 'ok', False)),
+        'duration_ms': duration_ms,
+        'message': str(getattr(result, 'status', None) or ('ran' if getattr(result, 'ok', False) else 'failed')),
+        'detail': str(getattr(result, 'message', None) or ''),
+        'connector_run_id': getattr(result, 'connector_run_id', None),
+        'data_version': getattr(result, 'data_version', None),
+    }
+
+
 def trigger_sync(conn: Any, *, integration_id: str, tenant_id: str = 'default') -> SyncResult:
     """Dispatch sync to the right handler. Returns SyncResult dict.
 
-    Future slices will register per-connector sync (batch.* → connector_runs
-    insert, iot.* → device probe, etc.). For now anything outside the LLM
-    namespace returns not_supported.
+    Slice 2 closed LLM ping. Slice 2b adds batch.* connectors via
+    `genomeai.connectors_v1.run_connector_spec` (synchronous; switch to
+    job_runner.enqueue_pipeline_job once real long-running connectors
+    ship). IoT/sensor/external_system stubs remain not_supported.
     """
     if integration_id.startswith('llm.'):
         return _sync_llm(integration_id=integration_id)
+    if integration_id.startswith('batch.'):
+        return _sync_batch_connector(
+            conn=conn, integration_id=integration_id, tenant_id=tenant_id,
+        )
     return {
         'ok': False,
         'duration_ms': 0,
         'message': 'not_supported',
-        'detail': f"Manual sync for {integration_id!r} is not implemented yet (P1-6b slice 2 covers LLM only).",
+        'detail': f"Manual sync for {integration_id!r} is not implemented yet "
+        f"(LLM and batch.* connectors are supported; IoT / sensor / external_system stubs are placeholders).",
     }
 
 
