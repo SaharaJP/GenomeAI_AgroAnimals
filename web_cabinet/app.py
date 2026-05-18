@@ -7461,6 +7461,14 @@ def api_admin_permission_matrix_patch(
     except Exception:
         pass
 
+    # P1-5 force-logout: bump role-version in Redis so sessions created before
+    # this change get bounced to login on their next request.
+    try:
+        from core.security.iam_invalidation import mark_role_changed
+        invalidated_at = mark_role_changed(role)
+    except Exception:
+        invalidated_at = None
+
     effective = get_permissions_for_role(conn, role)
     return {
         "schema": "genomeai.api.admin.iam_override.v1",
@@ -7468,6 +7476,7 @@ def api_admin_permission_matrix_patch(
         "permission": permission,
         "effect": effect,
         "effective_permissions_count": len(effective),
+        "invalidated_at": invalidated_at,
     }
 
 

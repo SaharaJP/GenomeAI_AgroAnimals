@@ -322,6 +322,31 @@ def resolve_request_auth_context(request: Request, conn, *, allow_missing: bool 
         if requested_site_id and not _scope_allowed(requested_site_id, allowed_site_ids):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='auth.scope.site_forbidden')
 
+        # P1-5 force-logout: if the user's role was mutated after this
+        # session was created, force re-login. Permissions are still
+        # re-read fresh, but stale-identity (compromised account, revoked
+        # access) is closed immediately rather than waiting for refresh.
+        try:
+            from core.security.iam_invalidation import session_invalidated_by_role_change
+            if session_invalidated_by_role_change(
+                role=str(user.get('role') or ''),
+                session_created_at=str(auth_session_row.get('created_at') or ''),
+            ):
+                storage.revoke_session(
+                    session_id=str(auth_session_row['session_id']),
+                    reason='iam_role_change',
+                )
+                if allow_missing:
+                    return None
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail='auth.session.invalidated_by_iam',
+                )
+        except HTTPException:
+            raise
+        except Exception:
+            pass
+
         storage.touch_session(
             session_id=str(auth_session_row['session_id']),
             ip=request.client.host if request.client else None,
