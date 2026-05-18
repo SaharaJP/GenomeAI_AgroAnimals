@@ -734,6 +734,12 @@
         ]
       },
       {
+        "path": "/api/app/v1/integrations/{integration_id}",
+        "methods": [
+          "PATCH"
+        ]
+      },
+      {
         "path": "/api/alerts_v2",
         "methods": [
           "GET"

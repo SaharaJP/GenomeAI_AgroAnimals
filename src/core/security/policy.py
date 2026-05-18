@@ -99,6 +99,7 @@ PERM_ADMIN_MANAGE = "admin.manage"                # PATCH role_permissions overr
 
 # --- P1-6 Integrations control panel ---
 PERM_INTEGRATIONS_VIEW = "integrations.view"      # GET /api/app/v1/integrations/health
+PERM_INTEGRATIONS_MANAGE = "integrations.manage"  # PATCH /integrations/{id} enable/disable, manual sync (P1-6b)
 
 ALL_PERMISSIONS: list[str] = [
     PERM_KPI_VIEW,
@@ -185,6 +186,7 @@ ALL_PERMISSIONS: list[str] = [
 
     # P1-6 Integrations control panel
     PERM_INTEGRATIONS_VIEW,
+    PERM_INTEGRATIONS_MANAGE,
 ]
 
 # ---- Role catalog ----

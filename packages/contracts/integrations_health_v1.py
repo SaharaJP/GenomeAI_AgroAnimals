@@ -61,9 +61,18 @@ class IntegrationsHealthResponse(BaseModel):
     total: int = 0
 
 
+class IntegrationPatchRequest(BaseModel):
+    """PATCH /integrations/{id} body (P1-6b slice 1)."""
+
+    model_config = ConfigDict(extra='forbid')
+
+    enabled: bool
+
+
 __all__ = [
     'IntegrationHealth',
     'IntegrationKind',
+    'IntegrationPatchRequest',
     'IntegrationStatus',
     'IntegrationsHealthResponse',
 ]

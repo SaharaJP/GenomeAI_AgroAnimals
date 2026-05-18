@@ -5,6 +5,7 @@ from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, Response, UploadFile
 
+from packages.contracts.integrations_health_v1 import IntegrationPatchRequest
 from packages.contracts.api_boundary_v1 import (
     AlertItem,
     AlertsListResponse,
@@ -2029,7 +2030,7 @@ def boundary_personnel_delete(
     return Response(status_code=204)
 
 
-# ---- P1-6: Integrations health (read-only) ----
+# ---- P1-6: Integrations health (read-only) + P1-6b slice 1: admin enable/disable ----
 
 
 @router.get('/integrations/health')
@@ -2040,16 +2041,77 @@ def boundary_integrations_health(
     """Aggregate health snapshot across LLM, batch connectors, IoT stubs, RU stubs.
 
     Each row matches `packages.contracts.integrations_health_v1.IntegrationHealth`.
-    P1-6 read-only; action layer comes in P1-6b.
+    P1-6b slice 1: rows admins have switched off in `integration_overrides_v1`
+    surface as status='disabled' with an admin note (manual sync, deep-link logs
+    arrive in subsequent P1-6b slices).
     """
     # Lazy import to ensure bundled providers register themselves.
     from core.interoperability import providers as _providers  # noqa: F401
     from core.interoperability.integrations_health import collect_health
+    from core.workflow.integration_overrides import apply_overrides, list_overrides_for_tenant
 
     tenant_id = str(user.get('tenant_id') or 'default')
     items = collect_health(conn, tenant_id=tenant_id)
+    overrides = list_overrides_for_tenant(conn, tenant_id=tenant_id)
+    items = apply_overrides(items, overrides)
     return {
         'schema': 'genomeai.api.integrations.health.v1',
         'items': [item.model_dump() for item in items],
         'total': len(items),
     }
+
+
+@router.patch('/integrations/{integration_id}')
+def boundary_integration_patch(
+    integration_id: str,
+    body: IntegrationPatchRequest,
+    request: Request,
+    user=Depends(require_permissions('integrations.manage')),
+    conn=Depends(get_db),
+):
+    """Admin enable/disable for an integration row (P1-6b slice 1).
+
+    Persists the override in `integration_overrides_v1` and writes an audit
+    event. The change is reflected in the next /integrations/health response.
+    """
+    from core.interoperability import providers as _providers  # noqa: F401
+    from core.interoperability.integrations_health import collect_health
+    from core.workflow.integration_overrides import upsert_override
+
+    tenant_id = str(user.get('tenant_id') or 'default')
+
+    # Validate that integration_id is a known provider row for this tenant.
+    known_ids = {item.id for item in collect_health(conn, tenant_id=tenant_id)}
+    if integration_id not in known_ids:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'integration.unknown', 'integration_id': integration_id},
+        )
+
+    before, after = upsert_override(
+        conn,
+        integration_id=integration_id,
+        tenant_id=tenant_id,
+        enabled=body.enabled,
+        user_id=user.get('user_id') or 0,
+        username=str(user.get('username') or ''),
+    )
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='integration.toggle.enable' if body.enabled else 'integration.toggle.disable',
+            object_type='integration',
+            object_id=integration_id,
+            before=before,
+            after=after,
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+    return after
