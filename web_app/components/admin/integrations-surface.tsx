@@ -265,6 +265,14 @@ export function IntegrationsSurface() {
   }, []);
 
   const grouped = useMemo(() => (data ? groupByKind(data.items) : []), [data]);
+  const aggregateBreakdown = useMemo(() => {
+    if (!data) return null;
+    const counts = { ok: 0, degraded: 0, down: 0, disabled: 0 };
+    for (const item of data.items) {
+      counts[item.status as keyof typeof counts] += 1;
+    }
+    return { ...counts, total: data.items.length };
+  }, [data]);
   const aggregateStatus: IntegrationStatus | null = useMemo(() => {
     if (!data) return null;
     const reals = data.items.filter((r) => r.status !== 'disabled');
@@ -286,9 +294,27 @@ export function IntegrationsSurface() {
           </p>
         </div>
         {aggregateStatus ? (
-          <div className="integrations-aggregate">
+          <div
+            className="integrations-aggregate"
+            title={
+              aggregateBreakdown
+                ? [
+                    `Всего: ${aggregateBreakdown.total}`,
+                    `OK: ${aggregateBreakdown.ok}`,
+                    `Деградация: ${aggregateBreakdown.degraded}`,
+                    `Недоступно: ${aggregateBreakdown.down}`,
+                    `Отключено/stub: ${aggregateBreakdown.disabled}`,
+                  ].join(' · ')
+                : undefined
+            }
+          >
             <span className="integrations-aggregate__label">Сводный статус</span>
             <StatusBadge status={aggregateStatus} />
+            {aggregateBreakdown ? (
+              <span style={{ fontSize: 12, color: 'var(--text-muted, #667085)' }}>
+                ({aggregateBreakdown.ok}/{aggregateBreakdown.total - aggregateBreakdown.disabled} real ok, {aggregateBreakdown.disabled} stubs)
+              </span>
+            ) : null}
             {lastFetchedAt ? (
               <time className="integrations-aggregate__ts" dateTime={lastFetchedAt.toISOString()}>
                 Обновлено: {lastFetchedAt.toLocaleTimeString('ru-RU')}
