@@ -45,7 +45,18 @@ jobs:
       - name: Install project
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
+          pip install -e ".[dev]"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web_app/package-lock.json
+
+      - name: Install web_app dependencies
+        run: |
+          cd web_app
+          npm ci
 
       - name: Install postgres client tools
         run: |
