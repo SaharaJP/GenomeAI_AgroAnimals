@@ -44,7 +44,10 @@ _DEFAULT_OPERATIONAL_GATES_POLICY: dict[str, Any] = {
             "role_scenarios": {"enabled": True, "budget_sec": 12.0},
             "mobile_views": {
                 "enabled": True,
-                "budget_sec": 12.0,
+                # CI npm/pytest cold-cache is ~17s vs dev ~0.5s. Budget covers
+                # GitHub-Actions runner variance; trim back if a profile-specific
+                # local override is needed.
+                "budget_sec": 30.0,
                 "pages": [
                     "mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/ui/screens/TodayWorklistsScreen.kt",
                     "mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/ui/screens/AlertsNowScreen.kt",
@@ -53,7 +56,9 @@ _DEFAULT_OPERATIONAL_GATES_POLICY: dict[str, Any] = {
             },
             "worklists_profiles_reports": {
                 "enabled": True,
-                "budget_sec": 16.0,
+                # CI runs `tsc --noEmit` + node test scripts cold; locally ~6s,
+                # on Actions ~12s. Headroom allows for slower-runner variance.
+                "budget_sec": 30.0,
                 "pages": [
                     "web_app/app/(protected)/daily-summary/page.tsx",
                     "web_app/app/(protected)/profiles/[objectType]/[objectId]/page.tsx",
