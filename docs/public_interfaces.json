@@ -746,6 +746,14 @@
         ]
       },
       {
+        "path": "/api/app/v1/personnel/{personnel_id}/photo",
+        "methods": [
+          "POST",
+          "GET",
+          "DELETE"
+        ]
+      },
+      {
         "path": "/api/alerts_v2",
         "methods": [
           "GET"

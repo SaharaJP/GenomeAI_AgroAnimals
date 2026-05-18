@@ -54,8 +54,9 @@
 #### Slice 4 R-followup (2026-05-18) — ✅ ЗАКРЫТО
 - ✅ Override-marker per cell: `GET /api/admin/permission-matrix` now returns `overrides[]` rows; UI отображает ↑ (grant) / ↓ (revoke) с тонированным фоном.
 
-#### Отложено
-- Force-logout пользователей с роли после PATCH — требует session-bus invalidation через Redis. P2.
+#### Slice 4 R-followup (force-logout, 2026-05-18) — ✅ ЗАКРЫТО
+- ✅ Redis-backed role-version timestamp в `core.security.iam_invalidation`. PATCH /admin/permission-matrix вызывает `mark_role_changed(role)`. Auth middleware сравнивает session.created_at с role_changed_at — при mismatch revoke session + 401 `auth.session.invalidated_by_iam`.
+- ✅ Redis недоступен → graceful no-op (per-request permission re-read остаётся safety net).
 
 ### Public interface footprint
 - `GET /api/admin/permission-matrix` — был; gate `personnel.manage` (PERM_USERS_MANAGE).

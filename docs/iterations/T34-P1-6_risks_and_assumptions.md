@@ -51,7 +51,7 @@
 - ✅ Реальный ping LLM провайдера через `openai.models.list()` — закрывает R1 для OpenAI режима (latency_ms измеряется реально).
 - ✅ Audit-event `integration.manual_sync` с outcome (ok/message/duration_ms) в after_json.
 - ✅ Toast в UI показывает результат: ✓/✗ + message + длительность.
-- ⏸ **Connector_runs trigger для batch.* — отложено в slice 2b**. Требует анализ существующей jobs_v2/queue infra; нужно решить — синхронный INSERT в connector_runs или enqueue в очередь worker'а.
+- ✅ **Slice 2b (2026-05-18):** `batch.*` connectors поддержаны через `genomeai.connectors_v1.run_connector_spec` (синхронный для текущих stub-конфигов — `api_stub_demo`, `file_demo`, `onec_stub_demo`). Когда появятся real-coннекторы Селекс/1С — переключить на `core.application.job_runner.enqueue_pipeline_job` для async-режима.
 - ⏸ **Tooltip про real vs stubs (R5) и Live LLM cache (R1)** — отдельная косметическая итерация.
 
 ### Slice 3 (отложен)
