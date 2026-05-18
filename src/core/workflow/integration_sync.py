@@ -69,7 +69,7 @@ def _sync_llm(*, integration_id: str) -> SyncResult:
         client = OpenAI(api_key=api_key)
         client.models.list()
         duration_ms = int((time.perf_counter() - started) * 1000)
-        return {
+        result: SyncResult = {
             'ok': True,
             'duration_ms': duration_ms,
             'message': 'pong',
@@ -77,12 +77,26 @@ def _sync_llm(*, integration_id: str) -> SyncResult:
         }
     except Exception as exc:
         duration_ms = int((time.perf_counter() - started) * 1000)
-        return {
+        result = {
             'ok': False,
             'duration_ms': duration_ms,
             'message': 'ping_failed',
             'detail': str(exc)[:300],
         }
+    # P1-6b R1: persist ping outcome in Redis so /integrations/health reads
+    # real connectivity, not just "key configured".
+    try:
+        from core.interoperability.llm_ping_cache import record_ping
+        record_ping(
+            provider=provider,
+            ok=bool(result['ok']),
+            latency_ms=int(result['duration_ms']),
+            message=str(result['message']),
+            detail=result.get('detail'),
+        )
+    except Exception:
+        pass
+    return result
 
 
 def _sync_batch_connector(*, conn: Any, integration_id: str, tenant_id: str) -> SyncResult:
@@ -152,13 +166,17 @@ def _sync_batch_connector(*, conn: Any, integration_id: str, tenant_id: str) -> 
     }
 
 
+_STUB_NAMESPACES = ('iot.', 'sensor.', 'external_system.')
+
+
 def trigger_sync(conn: Any, *, integration_id: str, tenant_id: str = 'default') -> SyncResult:
     """Dispatch sync to the right handler. Returns SyncResult dict.
 
-    Slice 2 closed LLM ping. Slice 2b adds batch.* connectors via
-    `genomeai.connectors_v1.run_connector_spec` (synchronous; switch to
-    job_runner.enqueue_pipeline_job once real long-running connectors
-    ship). IoT/sensor/external_system stubs remain not_supported.
+    Routing:
+      - llm.*               → real OpenAI ping with Redis-cached result
+      - batch.*             → run_connector_spec (sync; future: job_runner)
+      - iot./sensor./external_system. → stub noop (ok=true, no-op message)
+      - anything else       → not_supported
     """
     if integration_id.startswith('llm.'):
         return _sync_llm(integration_id=integration_id)
@@ -166,12 +184,18 @@ def trigger_sync(conn: Any, *, integration_id: str, tenant_id: str = 'default') 
         return _sync_batch_connector(
             conn=conn, integration_id=integration_id, tenant_id=tenant_id,
         )
+    if any(integration_id.startswith(ns) for ns in _STUB_NAMESPACES):
+        return {
+            'ok': True,
+            'duration_ms': 0,
+            'message': 'stub_noop',
+            'detail': f"Источник {integration_id!r} — stub-провайдер; реальный sync появится в соответствующем эпике (P2-3 IoT / P2-4 RU-системы).",
+        }
     return {
         'ok': False,
         'duration_ms': 0,
         'message': 'not_supported',
-        'detail': f"Manual sync for {integration_id!r} is not implemented yet "
-        f"(LLM and batch.* connectors are supported; IoT / sensor / external_system stubs are placeholders).",
+        'detail': f"Manual sync for {integration_id!r} is not implemented yet.",
     }
 
 

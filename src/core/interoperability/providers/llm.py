@@ -45,13 +45,44 @@ class LLMHealthProvider:
                     note='Не настроено: установите OPENAI_API_KEY или OPENAI_API_KEY_FILE.',
                 )
             ]
+        # P1-6b R1: read cached ping result for real connectivity signal.
+        try:
+            from core.interoperability.llm_ping_cache import read_ping
+            cached = read_ping(provider=provider)
+        except Exception:
+            cached = None
+        if cached is None:
+            return [
+                IntegrationHealth(
+                    id=f'llm.{provider}',
+                    name=f'LLM provider ({provider})',
+                    kind='llm',
+                    status='ok',
+                    note='Учётные данные сконфигурированы. Реальный ping не выполнялся — нажмите Sync.',
+                )
+            ]
+        if cached.get('ok'):
+            return [
+                IntegrationHealth(
+                    id=f'llm.{provider}',
+                    name=f'LLM provider ({provider})',
+                    kind='llm',
+                    status='ok',
+                    latency_ms=int(cached.get('latency_ms') or 0),
+                    last_sync_at=cached.get('checked_at'),
+                    note=f"Последний ping: {cached.get('message') or 'pong'} ({cached.get('checked_at')}).",
+                )
+            ]
         return [
             IntegrationHealth(
                 id=f'llm.{provider}',
                 name=f'LLM provider ({provider})',
                 kind='llm',
-                status='ok',
-                note='Учётные данные сконфигурированы. Реальный ping появится в P2-2 (Ollama).',
+                status='degraded',
+                latency_ms=int(cached.get('latency_ms') or 0),
+                last_sync_at=cached.get('checked_at'),
+                last_error=str(cached.get('detail') or cached.get('message') or 'ping_failed'),
+                note=f"Последний ping не прошёл: {cached.get('message')}.",
             )
         ]
 
