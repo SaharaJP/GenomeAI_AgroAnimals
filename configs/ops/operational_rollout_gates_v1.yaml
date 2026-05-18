@@ -15,7 +15,9 @@ profiles:
       budget_sec: 12.0
     mobile_views:
       enabled: true
-      budget_sec: 12.0
+      # GitHub-Actions runner is ~30x slower than dev for npm/pytest cold-cache
+      # (observed 14–17s vs 0.5s local). Bumped to 30s for CI headroom.
+      budget_sec: 30.0
       pages:
         - mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/ui/screens/TodayWorklistsScreen.kt
         - mobile_android/app/src/main/java/com/genomeai/agroanimals/mobile/ui/screens/AlertsNowScreen.kt
@@ -23,7 +25,8 @@ profiles:
         - scripts/smoke_t32_08_android_field_app.sh
     worklists_profiles_reports:
       enabled: true
-      budget_sec: 16.0
+      # See mobile_views note — CI cold-cache npm runs vary 6–13s.
+      budget_sec: 30.0
       pages:
         - web_app/app/(protected)/daily-summary/page.tsx
         - web_app/app/(protected)/profiles/[objectType]/[objectId]/page.tsx
