@@ -32,6 +32,25 @@ export async function fetchIntegrationsHealth(): Promise<IntegrationsHealthRespo
   return apiFetch<IntegrationsHealthResponse>('/integrations/health');
 }
 
+export type IntegrationOverride = {
+  integration_id: string;
+  tenant_id: string;
+  enabled: boolean;
+  updated_at: string | null;
+  updated_by_user_id: number | null;
+  updated_by_username: string | null;
+};
+
+export async function patchIntegrationEnabled(
+  integrationId: string,
+  enabled: boolean,
+): Promise<IntegrationOverride> {
+  return apiFetch<IntegrationOverride>(`/integrations/${encodeURIComponent(integrationId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ enabled }),
+  });
+}
+
 export const KIND_LABELS: Record<IntegrationKind, string> = {
   llm: 'LLM',
   batch_connector: 'Batch ingest',

@@ -7,12 +7,14 @@ import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import {
   fetchIntegrationsHealth,
   KIND_LABELS,
+  patchIntegrationEnabled,
   STATUS_LABELS,
   type IntegrationHealth,
   type IntegrationsHealthResponse,
   type IntegrationStatus,
 } from '@/lib/api/integrations';
 import { pathLabels } from '@/lib/navigation';
+import { useAuth } from '@/components/auth/auth-provider';
 
 const REFRESH_INTERVAL_MS = 30_000;
 
@@ -43,27 +45,81 @@ function StatusBadge({ status }: { status: IntegrationStatus }) {
   );
 }
 
-function IntegrationRow({ row }: { row: IntegrationHealth }) {
+type IntegrationRowProps = {
+  row: IntegrationHealth;
+  canManage: boolean;
+  onToggled: (row: IntegrationHealth) => void;
+};
+
+function IntegrationRow({ row, canManage, onToggled }: IntegrationRowProps) {
   const [expanded, setExpanded] = useState(false);
+  const [toggling, setToggling] = useState(false);
+  const [toggleError, setToggleError] = useState<string | null>(null);
   const hasDetails = Boolean(
     row.last_sync_at || row.last_error || row.records_in_last_window != null || row.latency_ms != null,
   );
+  const isAdminDisabled =
+    row.status === 'disabled' && (row.note ?? '').startsWith('Отключено администратором');
+  const targetEnabled = isAdminDisabled; // toggle flips: disabled → enable, anything else → disable
+
+  const handleToggle = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setToggling(true);
+    setToggleError(null);
+    try {
+      await patchIntegrationEnabled(row.id, targetEnabled);
+      onToggled(row);
+    } catch (err) {
+      setToggleError(err instanceof Error ? err.message : 'Не удалось переключить');
+    } finally {
+      setToggling(false);
+    }
+  };
+
   return (
     <li className="integration-row">
-      <button
-        type="button"
-        className="integration-row__head"
-        onClick={() => setExpanded((v) => !v)}
-        aria-expanded={expanded}
-        disabled={!hasDetails}
-      >
-        <span className="integration-row__title">
-          <span className="integration-row__name">{row.name}</span>
-          <span className="integration-row__id">{row.id}</span>
-        </span>
-        <StatusBadge status={row.status} />
-      </button>
+      <div className="integration-row__head-wrap" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          type="button"
+          className="integration-row__head"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          disabled={!hasDetails}
+          style={{ flex: 1 }}
+        >
+          <span className="integration-row__title">
+            <span className="integration-row__name">{row.name}</span>
+            <span className="integration-row__id">{row.id}</span>
+          </span>
+          <StatusBadge status={row.status} />
+        </button>
+        {canManage ? (
+          <button
+            type="button"
+            className={`integration-row__toggle ${targetEnabled ? 'is-enable' : 'is-disable'}`}
+            onClick={handleToggle}
+            disabled={toggling}
+            aria-label={targetEnabled ? 'Включить интеграцию' : 'Отключить интеграцию'}
+            title={targetEnabled ? 'Включить' : 'Отключить'}
+            style={{
+              padding: '4px 10px',
+              border: '1px solid var(--border, #d0d5dd)',
+              borderRadius: 6,
+              background: targetEnabled ? 'var(--surface-accent, #eef4ff)' : 'var(--surface, white)',
+              cursor: toggling ? 'wait' : 'pointer',
+              fontSize: 13,
+            }}
+          >
+            {toggling ? '…' : targetEnabled ? 'Включить' : 'Отключить'}
+          </button>
+        ) : null}
+      </div>
       {row.note ? <p className="integration-row__note">{row.note}</p> : null}
+      {toggleError ? (
+        <p className="integration-row__note" role="alert" style={{ color: 'var(--danger, #c0392b)' }}>
+          {toggleError}
+        </p>
+      ) : null}
       {expanded && hasDetails ? (
         <dl className="integration-row__details">
           {row.last_sync_at ? (
@@ -103,6 +159,20 @@ export function IntegrationsSurface() {
   const [error, setError] = useState<string | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = useState<Date | null>(null);
 
+  const auth = useAuth() as { me: { user?: { permissions?: string[] } } | null };
+  const canManage = (auth.me?.user?.permissions ?? []).includes('integrations.manage');
+
+  const reload = async () => {
+    try {
+      const resp = await fetchIntegrationsHealth();
+      setData(resp);
+      setError(null);
+      setLastFetchedAt(new Date());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить статус интеграций');
+    }
+  };
+
   useEffect(() => {
     let active = true;
     const load = async () => {
@@ -141,9 +211,9 @@ export function IntegrationsSurface() {
         <div>
           <h1 className="page-title">{pathLabels['/admin/integrations'] || 'Контроль интеграций'}</h1>
           <p className="page-subtitle">
-            Read-only обзор всех интеграций платформы: реальные (LLM, batch ingest) и запланированные
-            (IoT, live RU-системы). Обновление автоматическое раз в 30 секунд. Активные действия (manual sync,
-            enable/disable) появятся в P1-6b.
+            Обзор всех интеграций платформы: реальные (LLM, batch ingest) и запланированные
+            (IoT, live RU-системы). Обновление автоматическое раз в 30 секунд. Admin может включать/отключать
+            интеграции; manual sync и deep-link в логи — следующие итерации P1-6b.
           </p>
         </div>
         {aggregateStatus ? (
@@ -183,7 +253,7 @@ export function IntegrationsSurface() {
             </h3>
             <ul className="integration-list">
               {bucket.rows.map((row) => (
-                <IntegrationRow key={row.id} row={row} />
+                <IntegrationRow key={row.id} row={row} canManage={canManage} onToggled={() => void reload()} />
               ))}
             </ul>
           </Card>
