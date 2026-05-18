@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ExplainabilityBlock } from '@/components/ui/explainability-block';
+import Link from 'next/link';
 import {
   fetchIntegrationsHealth,
   KIND_LABELS,
   patchIntegrationEnabled,
   STATUS_LABELS,
+  triggerIntegrationSync,
   type IntegrationHealth,
   type IntegrationsHealthResponse,
   type IntegrationStatus,
@@ -49,12 +51,14 @@ type IntegrationRowProps = {
   row: IntegrationHealth;
   canManage: boolean;
   onToggled: (row: IntegrationHealth) => void;
+  onSynced: (row: IntegrationHealth, result: { ok: boolean; message: string; duration_ms: number; detail: string | null }) => void;
 };
 
-function IntegrationRow({ row, canManage, onToggled }: IntegrationRowProps) {
+function IntegrationRow({ row, canManage, onToggled, onSynced }: IntegrationRowProps) {
   const [expanded, setExpanded] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const hasDetails = Boolean(
     row.last_sync_at || row.last_error || row.records_in_last_window != null || row.latency_ms != null,
   );
@@ -76,6 +80,20 @@ function IntegrationRow({ row, canManage, onToggled }: IntegrationRowProps) {
     }
   };
 
+  const handleSync = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSyncing(true);
+    try {
+      const result = await triggerIntegrationSync(row.id);
+      onSynced(row, result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ошибка sync';
+      onSynced(row, { ok: false, message: 'error', duration_ms: 0, detail: msg });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   return (
     <li className="integration-row">
       <div className="integration-row__head-wrap" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -93,25 +111,60 @@ function IntegrationRow({ row, canManage, onToggled }: IntegrationRowProps) {
           </span>
           <StatusBadge status={row.status} />
         </button>
+        <Link
+          href={`/admin/logs?source=${encodeURIComponent(row.id)}`}
+          onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          style={{
+            padding: '4px 10px',
+            border: '1px solid var(--border, #d0d5dd)',
+            borderRadius: 6,
+            fontSize: 13,
+            textDecoration: 'none',
+            color: 'inherit',
+          }}
+          title="Открыть логи в /admin/logs"
+        >
+          Логи
+        </Link>
         {canManage ? (
-          <button
-            type="button"
-            className={`integration-row__toggle ${targetEnabled ? 'is-enable' : 'is-disable'}`}
-            onClick={handleToggle}
-            disabled={toggling}
-            aria-label={targetEnabled ? 'Включить интеграцию' : 'Отключить интеграцию'}
-            title={targetEnabled ? 'Включить' : 'Отключить'}
-            style={{
-              padding: '4px 10px',
-              border: '1px solid var(--border, #d0d5dd)',
-              borderRadius: 6,
-              background: targetEnabled ? 'var(--surface-accent, #eef4ff)' : 'var(--surface, white)',
-              cursor: toggling ? 'wait' : 'pointer',
-              fontSize: 13,
-            }}
-          >
-            {toggling ? '…' : targetEnabled ? 'Включить' : 'Отключить'}
-          </button>
+          <>
+            <button
+              type="button"
+              className="integration-row__sync"
+              onClick={handleSync}
+              disabled={syncing}
+              aria-label="Запустить синхронизацию"
+              title="Запустить синхронизацию"
+              style={{
+                padding: '4px 10px',
+                border: '1px solid var(--border, #d0d5dd)',
+                borderRadius: 6,
+                background: 'var(--surface, white)',
+                cursor: syncing ? 'wait' : 'pointer',
+                fontSize: 13,
+              }}
+            >
+              {syncing ? 'Sync…' : 'Sync'}
+            </button>
+            <button
+              type="button"
+              className={`integration-row__toggle ${targetEnabled ? 'is-enable' : 'is-disable'}`}
+              onClick={handleToggle}
+              disabled={toggling}
+              aria-label={targetEnabled ? 'Включить интеграцию' : 'Отключить интеграцию'}
+              title={targetEnabled ? 'Включить' : 'Отключить'}
+              style={{
+                padding: '4px 10px',
+                border: '1px solid var(--border, #d0d5dd)',
+                borderRadius: 6,
+                background: targetEnabled ? 'var(--surface-accent, #eef4ff)' : 'var(--surface, white)',
+                cursor: toggling ? 'wait' : 'pointer',
+                fontSize: 13,
+              }}
+            >
+              {toggling ? '…' : targetEnabled ? 'Включить' : 'Отключить'}
+            </button>
+          </>
         ) : null}
       </div>
       {row.note ? <p className="integration-row__note">{row.note}</p> : null}
@@ -161,6 +214,22 @@ export function IntegrationsSurface() {
 
   const auth = useAuth() as { me: { user?: { permissions?: string[] } } | null };
   const canManage = (auth.me?.user?.permissions ?? []).includes('integrations.manage');
+  const [toast, setToast] = useState<string | null>(null);
+
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4500);
+  }
+
+  function handleSynced(row: IntegrationHealth, result: { ok: boolean; message: string; duration_ms: number; detail: string | null }) {
+    if (result.ok) {
+      showToast(`Sync ${row.name}: ✓ ${result.message} (${result.duration_ms}мс)`);
+    } else {
+      const tail = result.detail ? ` — ${result.detail}` : '';
+      showToast(`Sync ${row.name}: ✗ ${result.message}${tail}`);
+    }
+    void reload();
+  }
 
   const reload = async () => {
     try {
@@ -253,7 +322,13 @@ export function IntegrationsSurface() {
             </h3>
             <ul className="integration-list">
               {bucket.rows.map((row) => (
-                <IntegrationRow key={row.id} row={row} canManage={canManage} onToggled={() => void reload()} />
+                <IntegrationRow
+                  key={row.id}
+                  row={row}
+                  canManage={canManage}
+                  onToggled={() => void reload()}
+                  onSynced={handleSynced}
+                />
               ))}
             </ul>
           </Card>
@@ -267,8 +342,13 @@ export function IntegrationsSurface() {
           'Цвет badge: ok=зелёный, degraded=жёлтый, down=красный, disabled=серый. Серый означает что интеграция в каталоге, но не активирована.',
           'Stub-строки (IoT, Хэрриот, sensor ingestion) указывают в note, в каком эпике появится реальная имплементация (P2-3 / P2-4).',
           'Секреты на странице не отображаются — только статус и метаданные (CLAUDE.md §6 «никаких токенов в payload»).',
+          'Кнопка Sync (требует integrations.manage) запускает реальную проверку: для LLM = openai.models.list(), остальные пока not_supported.',
         ]}
       />
+
+      {toast ? (
+        <div className="toast" role="status" aria-live="polite">{toast}</div>
+      ) : null}
     </div>
   );
 }

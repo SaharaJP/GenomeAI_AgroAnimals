@@ -51,6 +51,21 @@ export async function patchIntegrationEnabled(
   });
 }
 
+export type IntegrationSyncResult = {
+  integration_id: string;
+  ok: boolean;
+  duration_ms: number;
+  message: string;
+  detail: string | null;
+};
+
+export async function triggerIntegrationSync(integrationId: string): Promise<IntegrationSyncResult> {
+  return apiFetch<IntegrationSyncResult>(`/integrations/${encodeURIComponent(integrationId)}/sync`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  });
+}
+
 export const KIND_LABELS: Record<IntegrationKind, string> = {
   llm: 'LLM',
   batch_connector: 'Batch ingest',

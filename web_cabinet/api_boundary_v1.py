@@ -2061,6 +2061,61 @@ def boundary_integrations_health(
     }
 
 
+@router.post('/integrations/{integration_id}/sync')
+def boundary_integration_sync(
+    integration_id: str,
+    request: Request,
+    user=Depends(require_permissions('integrations.manage')),
+    conn=Depends(get_db),
+):
+    """Trigger a manual sync for one integration row (P1-6b slice 2).
+
+    Currently supports LLM ping only (`llm.*`); other ids return 400 with
+    `not_supported`. Always writes an audit event `integration.manual_sync`
+    capturing the outcome so admins can see what fired and when.
+    """
+    from core.interoperability import providers as _providers  # noqa: F401
+    from core.interoperability.integrations_health import collect_health
+    from core.workflow.integration_sync import trigger_sync
+
+    tenant_id = str(user.get('tenant_id') or 'default')
+
+    known_ids = {item.id for item in collect_health(conn, tenant_id=tenant_id)}
+    if integration_id not in known_ids:
+        raise HTTPException(
+            status_code=404,
+            detail={'error': 'integration.unknown', 'integration_id': integration_id},
+        )
+
+    result = trigger_sync(conn, integration_id=integration_id, tenant_id=tenant_id)
+    try:
+        write_audit(
+            conn,
+            tenant_id=tenant_id,
+            user_id=int(user.get('user_id') or 0),
+            username=str(user.get('username') or ''),
+            role=str(user.get('role') or ''),
+            action='integration.manual_sync',
+            object_type='integration',
+            object_id=integration_id,
+            before=None,
+            after={
+                'ok': bool(result.get('ok')),
+                'message': result.get('message'),
+                'duration_ms': result.get('duration_ms'),
+            },
+            ip=getattr(request.client, 'host', None) if request.client else None,
+            user_agent=request.headers.get('user-agent'),
+            request_id=getattr(request.state, 'request_id', None),
+        )
+    except Exception:
+        pass
+
+    if not result.get('ok') and result.get('message') == 'not_supported':
+        raise HTTPException(status_code=400, detail={'error': 'sync.not_supported', **result})
+    return {'integration_id': integration_id, **result}
+
+
 @router.patch('/integrations/{integration_id}')
 def boundary_integration_patch(
     integration_id: str,
