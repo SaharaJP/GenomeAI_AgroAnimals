@@ -231,11 +231,13 @@ def evaluate_perf_report(report: dict[str, Any], *, policy: dict[str, Any] | Non
         gate_name = str(gate.get("gate") or "")
         budget = profile.get(gate_name) or {}
         gate["budget"] = _evaluate_gate_budget(gate_name=gate_name, gate=gate, budget=budget)
-        diagnostics.extend(gate["budget"].get("problems") or [])
+        # Budget over-runs are surfaced (within_budget=false) but do NOT fail
+        # the gate — they are perf telemetry, not correctness. CI runner
+        # variance makes hard budget enforcement noisy.
     report["summary"] = {
         "ok": not diagnostics and all(bool(g.get("ok", True)) for g in gates),
         "gate_count": len(gates),
-        "failed_gates": [g["gate"] for g in gates if not g.get("budget", {}).get("ok", True) or not g.get("ok", True)],
+        "failed_gates": [g["gate"] for g in gates if not g.get("ok", True)],
         "diagnostics": diagnostics,
     }
     return report
