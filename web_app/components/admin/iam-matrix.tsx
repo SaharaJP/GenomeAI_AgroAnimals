@@ -4,13 +4,45 @@ import { useEffect, useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ExplainabilityBlock } from '@/components/ui/explainability-block';
-import { fetchPermissionMatrix, rolesFromMatrix, type IamMatrixResponse } from '@/lib/api/iam';
+import { Modal } from '@/components/ui/modal';
+import {
+  fetchPermissionMatrix,
+  patchPermissionOverride,
+  rolesFromMatrix,
+  type IamMatrixResponse,
+  type IamOverrideEffect,
+} from '@/lib/api/iam';
 import { pathLabels } from '@/lib/navigation';
+import { useAuth } from '@/components/auth/auth-provider';
+
+type PendingChange = {
+  role: string;
+  permission: string;
+  actionTitle: string;
+  actionKey: string;
+  currentlyAllowed: boolean;
+};
 
 export function IamMatrix() {
   const [matrix, setMatrix] = useState<IamMatrixResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState<PendingChange | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const auth = useAuth() as { me: { user?: { permissions?: string[] } } | null };
+  const canManage = (auth.me?.user?.permissions ?? []).includes('admin.manage');
+
+  const load = async (): Promise<void> => {
+    try {
+      const data = await fetchPermissionMatrix();
+      setMatrix(data);
+      setError(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Не удалось загрузить IAM-матрицу');
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -33,6 +65,44 @@ export function IamMatrix() {
 
   const roles = useMemo(() => (matrix ? rolesFromMatrix(matrix) : []), [matrix]);
 
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
+  }
+
+  function openConfirm(role: string, action: { title: string; key: string; permissions: string[] }) {
+    if (!canManage) return;
+    if (action.permissions.length === 0) return;
+    const primaryPermission = action.permissions[0]!;
+    const currentlyAllowed = Boolean(matrix?.actions.find((a) => a.key === action.key)?.roles[role]);
+    setPending({
+      role,
+      permission: primaryPermission,
+      actionTitle: action.title,
+      actionKey: action.key,
+      currentlyAllowed,
+    });
+  }
+
+  async function confirmChange() {
+    if (!pending) return;
+    setSubmitting(true);
+    const effect: IamOverrideEffect = pending.currentlyAllowed ? 'revoke' : 'grant';
+    try {
+      const resp = await patchPermissionOverride(pending.role, pending.permission, effect);
+      const verb = effect === 'grant' ? 'выдан' : 'отозван';
+      showToast(
+        `Permission «${pending.permission}» ${verb} для роли «${pending.role}». Effective: ${resp.effective_permissions_count}. Применится после следующего входа.`,
+      );
+      setPending(null);
+      await load();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Ошибка PATCH override');
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
     <div className="grid">
       <div className="topbar">
@@ -40,8 +110,8 @@ export function IamMatrix() {
           <h1 className="page-title">{pathLabels['/admin/iam'] || 'IAM-матрица'}</h1>
           <p className="page-subtitle">
             Привязка ролей к действиям и permissions. Источник истины — `configs/security/permission_matrix_v1.yaml`
-            (CLAUDE.md §6). В этой версии страница работает в режиме просмотра — интерактивное редактирование
-            появится после провижининга DB-overrides слоя.
+            (CLAUDE.md §6) + DB-overrides поверх (table `role_permissions_overrides_v1`). Admin с permission
+            `admin.manage` может редактировать через 2-click confirm.
           </p>
         </div>
       </div>
@@ -97,14 +167,17 @@ export function IamMatrix() {
                     </th>
                     {roles.map((role) => {
                       const allowed = Boolean(action.roles?.[role]);
+                      const interactive = canManage && action.permissions.length > 0;
                       return (
                         <td key={role} className="iam-matrix__cell">
                           <input
                             type="checkbox"
                             checked={allowed}
-                            disabled
+                            disabled={!interactive}
+                            readOnly={!interactive}
+                            onChange={() => interactive && openConfirm(role, action)}
                             aria-label={`Роль ${role} имеет действие ${action.title}: ${allowed ? 'да' : 'нет'}`}
-                            readOnly
+                            style={{ cursor: interactive ? 'pointer' : 'default' }}
                           />
                         </td>
                       );
@@ -116,8 +189,9 @@ export function IamMatrix() {
           </div>
         )}
         <p className="card-subtitle iam-matrix__readonly-hint">
-          Только просмотр. Редактирование через UI станет доступным после слайса 3 (DB-overrides поверх YAML)
-          и слайса 4 (PATCH endpoint + 2-click confirm).
+          {canManage
+            ? 'Клик по чекбоксу открывает confirm-диалог (2-click safety). Изменение применяется к новым логинам.'
+            : 'Только просмотр. Для редактирования нужно permission admin.manage.'}
         </p>
       </Card>
 
@@ -126,10 +200,68 @@ export function IamMatrix() {
         reasons={[
           'Строки = логические действия (action.key, action.title) с одной или несколькими permissions.',
           'Колонки = роли из политики безопасности (src/core/security/policy.py).',
-          'Чек = role даёт permission'+'s этого действия. Effective permissions = YAML + DB-overrides (когда добавим).',
-          'Чтение матрицы не пишет audit; будущее редактирование — пишет (CLAUDE.md §6 «любое привилегированное — audit-logged»).',
+          'Чек = role даёт permissions этого действия. Effective = YAML + DB-overrides (table role_permissions_overrides_v1).',
+          'Чтение матрицы не пишет audit; редактирование пишет (action=iam.permission.{grant|revoke|clear}, before/after).',
+          'Backend hard-guard: revoke admin.manage у Admin отклоняется 400 iam.lock_out_protected (защита от lock-out).',
+          'Изменения вступают в силу только после следующего входа: текущие auth-сессии кешируют permissions (R4).',
         ]}
       />
+
+      <Modal
+        open={pending !== null}
+        onClose={() => !submitting && setPending(null)}
+        title="Подтвердите изменение IAM"
+      >
+        {pending ? (
+          <div className="iam-confirm">
+            <p style={{ marginBottom: 12 }}>
+              {pending.currentlyAllowed ? 'Отозвать' : 'Выдать'} permission{' '}
+              <code>{pending.permission}</code> {pending.currentlyAllowed ? 'у роли' : 'для роли'}{' '}
+              <strong>{pending.role}</strong>?
+            </p>
+            <p style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-muted, #667085)' }}>
+              Действие: «{pending.actionTitle}» <code>({pending.actionKey})</code>
+            </p>
+            <div
+              role="alert"
+              style={{
+                padding: '8px 12px',
+                borderLeft: '3px solid var(--warning, #f59e0b)',
+                background: 'var(--surface-muted, #fff8e6)',
+                fontSize: 13,
+                marginBottom: 16,
+              }}
+            >
+              <strong>⚠ Внимание.</strong> Изменение применится только при следующем входе пользователей этой
+              роли. Текущие активные сессии продолжат использовать кэшированные permissions до logout/refresh
+              (R4 в risks-регистре). Изменение пишется в audit-log.
+            </div>
+            <div className="task-create-form__actions" style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button type="button" className="btn-outline" onClick={() => setPending(null)} disabled={submitting}>
+                Отмена
+              </button>
+              <button
+                type="button"
+                className={pending.currentlyAllowed ? 'btn-danger' : 'btn-primary-teal'}
+                onClick={() => void confirmChange()}
+                disabled={submitting}
+              >
+                {submitting
+                  ? 'Применяю…'
+                  : pending.currentlyAllowed
+                    ? 'Отозвать (revoke)'
+                    : 'Выдать (grant)'}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      {toast ? (
+        <div className="toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      ) : null}
     </div>
   );
 }

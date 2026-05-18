@@ -12,8 +12,29 @@ export type IamMatrixResponse = {
   actions: IamMatrixAction[];
 };
 
+export type IamOverrideEffect = 'grant' | 'revoke' | 'clear';
+
+export type IamOverrideResponse = {
+  schema: string;
+  role: string;
+  permission: string;
+  effect: IamOverrideEffect;
+  effective_permissions_count: number;
+};
+
 export async function fetchPermissionMatrix(): Promise<IamMatrixResponse> {
   return apiFetch<IamMatrixResponse>('/api/admin/permission-matrix');
+}
+
+export async function patchPermissionOverride(
+  role: string,
+  permission: string,
+  effect: IamOverrideEffect,
+): Promise<IamOverrideResponse> {
+  return apiFetch<IamOverrideResponse>('/api/admin/permission-matrix', {
+    method: 'PATCH',
+    body: JSON.stringify({ role, permission, effect }),
+  });
 }
 
 export function rolesFromMatrix(matrix: IamMatrixResponse): string[] {
