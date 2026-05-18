@@ -7344,13 +7344,23 @@ def api_admin_permission_matrix(
     user=Depends(require_permissions(rbac.PERM_USERS_MANAGE)),
     conn=Depends(get_db),
 ):
+    from core.security.overrides import list_overrides
+
     roles = list_roles(conn)
     role_permissions = {role: get_permissions_for_role(conn, role) for role in roles}
     try:
         cfg = load_permission_matrix(settings.project_root)
     except SecurityMatrixConfigError as exc:
         raise HTTPException(status_code=500, detail={"error": "permission_matrix_invalid", "detail": str(exc)})
-    return build_permission_matrix_view(matrix_cfg=cfg, role_permissions=role_permissions)
+    view = build_permission_matrix_view(matrix_cfg=cfg, role_permissions=role_permissions)
+    # P1-5 R-followup: surface DB overrides so the matrix UI can mark cells
+    # that differ from the YAML baseline (grant ↑ or revoke ↓).
+    overrides_raw = list_overrides(conn)
+    view["overrides"] = [
+        {"role": r.get("role"), "permission": r.get("permission"), "effect": r.get("effect")}
+        for r in overrides_raw
+    ]
+    return view
 
 
 @app.patch("/api/admin/permission-matrix")

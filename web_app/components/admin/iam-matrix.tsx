@@ -65,6 +65,22 @@ export function IamMatrix() {
 
   const roles = useMemo(() => (matrix ? rolesFromMatrix(matrix) : []), [matrix]);
 
+  const overrideIndex = useMemo<Map<string, 'grant' | 'revoke'>>(() => {
+    const m = new Map<string, 'grant' | 'revoke'>();
+    for (const o of matrix?.overrides ?? []) {
+      m.set(`${o.role}::${o.permission}`, o.effect);
+    }
+    return m;
+  }, [matrix]);
+
+  function overrideFor(role: string, permissions: string[]): 'grant' | 'revoke' | null {
+    for (const p of permissions) {
+      const eff = overrideIndex.get(`${role}::${p}`);
+      if (eff) return eff;
+    }
+    return null;
+  }
+
   function showToast(msg: string) {
     setToast(msg);
     setTimeout(() => setToast(null), 4000);
@@ -168,8 +184,29 @@ export function IamMatrix() {
                     {roles.map((role) => {
                       const allowed = Boolean(action.roles?.[role]);
                       const interactive = canManage && action.permissions.length > 0;
+                      const override = overrideFor(role, action.permissions);
+                      const marker =
+                        override === 'grant' ? '↑' : override === 'revoke' ? '↓' : null;
+                      const markerTitle =
+                        override === 'grant'
+                          ? 'DB-override: grant (отличается от YAML baseline)'
+                          : override === 'revoke'
+                            ? 'DB-override: revoke (отличается от YAML baseline)'
+                            : undefined;
                       return (
-                        <td key={role} className="iam-matrix__cell">
+                        <td
+                          key={role}
+                          className={`iam-matrix__cell${override ? ` is-override is-override--${override}` : ''}`}
+                          title={markerTitle}
+                          style={
+                            override
+                              ? {
+                                  background: override === 'grant' ? 'rgba(34,197,94,0.10)' : 'rgba(239,68,68,0.10)',
+                                  position: 'relative',
+                                }
+                              : undefined
+                          }
+                        >
                           <input
                             type="checkbox"
                             checked={allowed}
@@ -179,6 +216,19 @@ export function IamMatrix() {
                             aria-label={`Роль ${role} имеет действие ${action.title}: ${allowed ? 'да' : 'нет'}`}
                             style={{ cursor: interactive ? 'pointer' : 'default' }}
                           />
+                          {marker ? (
+                            <span
+                              aria-hidden="true"
+                              style={{
+                                marginLeft: 4,
+                                fontSize: 11,
+                                color: override === 'grant' ? '#16a34a' : '#dc2626',
+                                fontWeight: 700,
+                              }}
+                            >
+                              {marker}
+                            </span>
+                          ) : null}
                         </td>
                       );
                     })}
@@ -204,6 +254,7 @@ export function IamMatrix() {
           'Чтение матрицы не пишет audit; редактирование пишет (action=iam.permission.{grant|revoke|clear}, before/after).',
           'Backend hard-guard: revoke admin.manage у Admin отклоняется 400 iam.lock_out_protected (защита от lock-out).',
           'Изменения вступают в силу только после следующего входа: текущие auth-сессии кешируют permissions (R4).',
+          'Маркеры ↑/↓ на ячейках: ↑ = DB grant override поверх YAML, ↓ = DB revoke override. Без маркера = YAML baseline.',
         ]}
       />
 

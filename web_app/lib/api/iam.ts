@@ -7,9 +7,16 @@ export type IamMatrixAction = {
   roles: Record<string, boolean>;
 };
 
+export type IamOverrideRow = {
+  role: string;
+  permission: string;
+  effect: 'grant' | 'revoke';
+};
+
 export type IamMatrixResponse = {
   version: number;
   actions: IamMatrixAction[];
+  overrides?: IamOverrideRow[];
 };
 
 export type IamOverrideEffect = 'grant' | 'revoke' | 'clear';
