@@ -9,6 +9,7 @@ import {
   type PersonnelValidationError,
 } from '@/lib/api/personnel';
 import type { Personnel, PersonnelUpdateRequest } from '@/lib/api/contracts';
+import { UserPicker } from './user-picker';
 
 type Props = {
   open: boolean;
@@ -18,15 +19,15 @@ type Props = {
   onSaved?: (updated: Personnel) => void;
 };
 
-type FormState = Required<{
+type FormState = {
   full_name: string;
   position: string;
   group_id: string;
   phone: string;
   email: string;
   hired_at: string;
-  user_id: string;
-}>;
+  user_id: number | null;
+};
 
 function toFormState(person: Personnel): FormState {
   return {
@@ -36,7 +37,7 @@ function toFormState(person: Personnel): FormState {
     phone: person.phone ?? '',
     email: person.email ?? '',
     hired_at: person.hired_at ?? '',
-    user_id: person.user_id != null ? String(person.user_id) : '',
+    user_id: person.user_id ?? null,
   };
 }
 
@@ -53,7 +54,6 @@ function formToInitialRequest(person: Personnel): PersonnelUpdateRequest {
 }
 
 function formToNextRequest(form: FormState): PersonnelUpdateRequest {
-  const userIdRaw = form.user_id.trim();
   return {
     full_name: form.full_name,
     position: form.position,
@@ -61,7 +61,7 @@ function formToNextRequest(form: FormState): PersonnelUpdateRequest {
     phone: form.phone.trim() || null,
     email: form.email.trim() || null,
     hired_at: form.hired_at.trim() || null,
-    user_id: userIdRaw ? Number(userIdRaw) : null,
+    user_id: form.user_id,
   };
 }
 
@@ -84,13 +84,12 @@ export function PersonnelEditModal({ open, person, piiVisible, onClose, onSaved 
   const next = formToNextRequest(form);
   const patch = buildPersonnelPatch(initial, next);
   const errors: PersonnelValidationError[] = validatePersonnelUpdate(next);
-  const userIdInvalid = form.user_id.trim() !== '' && !Number.isFinite(Number(form.user_id.trim()));
 
   const errorByField = (field: PersonnelValidationError['field']) =>
     showErrors ? errors.find((e) => e.field === field)?.message : undefined;
 
   const canSubmit =
-    Object.keys(patch).length > 0 && errors.length === 0 && !userIdInvalid && !submitting;
+    Object.keys(patch).length > 0 && errors.length === 0 && !submitting;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,16 +183,12 @@ export function PersonnelEditModal({ open, person, piiVisible, onClose, onSaved 
                 />
               </label>
               <label className="task-create-form__field">
-                <span className="task-create-form__label">user_id (auth)</span>
-                <input
-                  type="number"
+                <span className="task-create-form__label">Auth-пользователь</span>
+                <UserPicker
                   value={form.user_id}
-                  onChange={(e) => setForm({ ...form, user_id: e.target.value })}
-                  placeholder="пусто = отвязать"
+                  onChange={(userId) => setForm({ ...form, user_id: userId })}
+                  placeholder="не привязан"
                 />
-                {userIdInvalid ? (
-                  <span className="task-create-form__error">Должно быть числом</span>
-                ) : null}
               </label>
             </div>
           </>
