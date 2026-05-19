@@ -212,6 +212,78 @@ def test_sensitivity_reflects_csv_aggregates(economics_run: dict) -> None:
         assert sens.vet_cost_ceiling_rub_per_event is None
 
 
+def test_unit_ladder_unavailable_yields_warning(economics_run: dict) -> None:
+    """Without a prior run_unit_economics call, ladder degrades to defaults."""
+
+    resp = build_economics_summary_v1(
+        artifacts_root=economics_run["artifacts_root"],
+        tenant_id="default",
+        level="farm",
+        data_version=economics_run["data_version"],
+        economics_run=economics_run["economics_run"],
+        date_from="2025-01-05",
+        date_to="2025-01-05",
+    )
+    assert resp.unit_economics_ladder.top_quartile_margin_rub is None
+    assert resp.unit_economics_ladder.median_margin_rub is None
+    assert resp.unit_economics_ladder.bottom_decile_margin_rub is None
+    assert any("unit_economics_ladder_unavailable" in w for w in resp.warnings)
+
+
+def test_unit_ladder_populated_when_unit_economics_ran(tmp_path_factory: pytest.TempPathFactory) -> None:
+    """When unit_economics artifacts exist, ladder reports quartile/median/decile."""
+
+    from genomeai.unit_economics import run_unit_economics
+
+    repo_root = Path(__file__).resolve().parents[1]
+    artifacts = tmp_path_factory.mktemp("ladder_artifacts")
+    input_dir = repo_root / "data" / "fixtures" / "target_v2"
+    dv = "dv_test_p2_1_ladder"
+
+    econ = run_economics_v2(
+        artifacts_root=artifacts,
+        data_version=dv,
+        date_from="2025-01-10",
+        date_to="2025-01-10",
+        cfg_path=repo_root / "configs" / "economics" / "economics_v2.yaml",
+        input_dir=input_dir,
+        tenant_id="default",
+    )
+    assert econ.get("ok") is True
+    econ_run = str(econ["economics_run"])
+
+    ue = run_unit_economics(
+        artifacts_root=artifacts,
+        data_version=dv,
+        input_dir=input_dir,
+        economics_run=econ_run,
+        tenant_id="default",
+        date_from="2025-01-10",
+        date_to="2025-01-10",
+    )
+    assert ue.get("ok") is True
+
+    resp = build_economics_summary_v1(
+        artifacts_root=artifacts,
+        tenant_id="default",
+        level="farm",
+        data_version=dv,
+        economics_run=econ_run,
+        date_from="2025-01-10",
+        date_to="2025-01-10",
+    )
+    ladder = resp.unit_economics_ladder
+    assert ladder.top_quartile_margin_rub is not None
+    assert ladder.median_margin_rub is not None
+    assert ladder.bottom_decile_margin_rub is not None
+    assert ladder.top_quartile_margin_rub >= ladder.median_margin_rub
+    assert ladder.median_margin_rub >= ladder.bottom_decile_margin_rub
+    assert ladder.bottom_decile_cohort_n is not None and ladder.bottom_decile_cohort_n >= 1
+    assert ladder.bottom_decile_cohort_ref is not None
+    assert dv in ladder.bottom_decile_cohort_ref
+    assert all("unit_economics_ladder_unavailable" not in w for w in resp.warnings)
+
+
 def test_formula_refs_include_sensitivity(economics_run: dict) -> None:
     resp = build_economics_summary_v1(
         artifacts_root=economics_run["artifacts_root"],

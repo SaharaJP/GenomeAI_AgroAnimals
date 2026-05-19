@@ -30,6 +30,7 @@ from packages.contracts import (
     EconomicsScope,
     EconomicsSensitivity,
     EconomicsSummaryResponse,
+    EconomicsUnitLadder,
 )
 
 _LEVELS = {"farm", "site", "pen"}
@@ -44,6 +45,7 @@ _FORMULA_REFS: dict[str, str] = {
     "margin_rub": "docs/target/economics_v2.md#L82",
     "cost_per_liter_rub": "docs/target/economics_v2.md#L83",
     "sensitivity_method": "docs/iterations/T34-economics-rfc.md#5.1",
+    "unit_economics_allocation": "docs/marts/unit_economics.md#allocation-methodology-rfc-45-gap-closure",
 }
 
 
@@ -80,6 +82,91 @@ def _sum_numeric(df: pd.DataFrame, columns: Iterable[str]) -> dict[str, float]:
             continue
         out[col] = float(pd.to_numeric(df[col], errors="coerce").fillna(0.0).sum())
     return out
+
+
+def _build_unit_economics_ladder(
+    *,
+    artifacts_root: Path,
+    tenant_id: str,
+    data_version: str,
+    farm_id: Optional[str],
+    site_id: Optional[str],
+    pen_id: Optional[str],
+    date_from: Optional[str],
+    date_to: Optional[str],
+    warnings: list[str],
+) -> EconomicsUnitLadder:
+    """Compute per-cow margin distribution from unit_economics artifacts.
+
+    Returns defaults + appends a warning when the unit_economics
+    manifest isn't found — the endpoint stays useful even before that
+    pipeline has been run. Per-animal aggregation: mean(margin_rub)
+    across the filtered date range, then 75 / 50 / 10 percentiles.
+    """
+
+    try:
+        from genomeai.unit_economics import load_unit_economics  # local import
+    except Exception as exc:  # pragma: no cover — defensive
+        warnings.append(f"unit_economics_module_unavailable: {exc!r}")
+        return EconomicsUnitLadder()
+
+    try:
+        _run_id, dfs, _run_dir = load_unit_economics(
+            artifacts_root=Path(artifacts_root),
+            data_version=str(data_version),
+        )
+    except FileNotFoundError:
+        warnings.append(
+            "unit_economics_ladder_unavailable: no unit_economics run found "
+            f"for data_version={data_version} — run genomeai unit-economics first"
+        )
+        return EconomicsUnitLadder()
+
+    df = dfs.get("animal_daily")
+    if df is None or df.empty or "margin_rub" not in df.columns or "animal_id" not in df.columns:
+        warnings.append("unit_economics_ladder_unavailable: animal_daily empty or missing columns")
+        return EconomicsUnitLadder()
+
+    df = df[df["tenant_id"].astype(str) == str(tenant_id)]
+    if farm_id is not None and "farm_id" in df.columns:
+        df = df[df["farm_id"].astype(str) == str(farm_id)]
+    if site_id is not None and "site_id" in df.columns:
+        df = df[df["site_id"].astype(str) == str(site_id)]
+    if pen_id is not None and "pen_id" in df.columns:
+        df = df[df["pen_id"].astype(str) == str(pen_id)]
+    if date_from is not None and "date" in df.columns:
+        df = df[df["date"].astype(str) >= str(date_from)]
+    if date_to is not None and "date" in df.columns:
+        df = df[df["date"].astype(str) <= str(date_to)]
+
+    if df.empty:
+        warnings.append("unit_economics_ladder_unavailable: no animal-day rows after filters")
+        return EconomicsUnitLadder()
+
+    margin_series = pd.to_numeric(df["margin_rub"], errors="coerce")
+    per_animal = (
+        df.assign(_m=margin_series)
+        .groupby(df["animal_id"].astype(str), dropna=False)["_m"]
+        .mean()
+        .dropna()
+    )
+    if per_animal.empty:
+        warnings.append("unit_economics_ladder_unavailable: zero animals after aggregation")
+        return EconomicsUnitLadder()
+
+    quantiles = per_animal.quantile([0.10, 0.50, 0.75])
+    bottom_decile = float(quantiles.loc[0.10])
+    median = float(quantiles.loc[0.50])
+    top_quartile = float(quantiles.loc[0.75])
+    bottom_cohort = per_animal[per_animal <= bottom_decile]
+
+    return EconomicsUnitLadder(
+        top_quartile_margin_rub=top_quartile,
+        median_margin_rub=median,
+        bottom_decile_margin_rub=bottom_decile,
+        bottom_decile_cohort_n=int(bottom_cohort.size),
+        bottom_decile_cohort_ref=f"worklist:culling_review:{data_version}",
+    )
 
 
 def build_economics_summary_v1(
@@ -226,6 +313,18 @@ def build_economics_summary_v1(
         method=sensitivity_result.method,
     )
 
+    unit_ladder = _build_unit_economics_ladder(
+        artifacts_root=Path(artifacts_root),
+        tenant_id=tenant_id,
+        data_version=data_version,
+        farm_id=farm_id,
+        site_id=site_id,
+        pen_id=pen_id,
+        date_from=date_from,
+        date_to=date_to,
+        warnings=warnings,
+    )
+
     if df.empty and date_from is None and date_to is None:
         period_from = ""
         period_to = ""
@@ -256,6 +355,7 @@ def build_economics_summary_v1(
         cost=cost,
         per_cow_day=per_cow_day,
         sensitivity=sensitivity,
+        unit_economics_ladder=unit_ladder,
         scenarios_summary=scenarios_summary or EconomicsScenariosSummary(),
         formula_refs=dict(_FORMULA_REFS),
         warnings=warnings,
