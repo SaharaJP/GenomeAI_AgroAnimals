@@ -5,6 +5,14 @@ Format: `[version or date] — description (file or component)`.
 
 ---
 
+## 2026-05-19
+
+- docs(P2-1): soften unbacked unit-economics claims in investor FAQ q.9 + q.22 — add unvalidated disclaimer, change "реалистичные" to целевые ориентиры (`docs/investor_faq_ru.md`)
+- docs(P2-1): add explicit no-guaranteed-savings qualifier to AI use-case catalogue (`docs/pilot_onboarding/05_what_ai_can_help_with.md`)
+- docs(P2-1): qualify margin-improvement language in economics tab overview — link to formula ref, add pilot-data caveat (`docs/new_tabs_overview.md`)
+
+---
+
 ## 2026-05-04
 
 - docs: add pilot onboarding guide for DairyComp 305 CSV export (`docs/pilot_onboarding/01_csv_export_dairycomp_305.md`)
