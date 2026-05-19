@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus } from 'lucide-react';
+import { Plus, UserPlus } from 'lucide-react';
 import { PersonnelSurface } from '@/components/team/personnel-surface';
+import { PersonnelCreateModal } from '@/components/team/personnel-create-modal';
 import { TaskCreateModal } from '@/components/team/task-create-modal';
 import { useAuth } from '@/components/auth/auth-provider';
 import { hasPermission } from '@/lib/api/contracts';
@@ -24,9 +25,12 @@ export default function TeamPage() {
   const searchParams = useSearchParams();
   const { me } = useAuth();
   const canCreateTasks = hasPermission(me, 'tasks.write');
+  const canManagePersonnel = hasPermission(me, 'personnel.manage');
   const [modalOpen, setModalOpen] = useState(false);
+  const [personnelModalOpen, setPersonnelModalOpen] = useState(false);
   const [createdNotice, setCreatedNotice] = useState<string | null>(null);
   const [worklistsReloadKey, setWorklistsReloadKey] = useState(0);
+  const [personnelReloadKey, setPersonnelReloadKey] = useState(0);
 
   const active: TeamTabId = useMemo(() => {
     const raw = searchParams.get('view');
@@ -58,24 +62,41 @@ export default function TeamPage() {
         ))}
       </div>
       <div role="tabpanel" id={`team-tabpanel-${active}`} aria-labelledby={`team-tab-${active}`}>
-        <PersonnelSurface view={active} worklistsReloadKey={worklistsReloadKey} />
+        <PersonnelSurface
+          view={active}
+          worklistsReloadKey={worklistsReloadKey}
+          personnelReloadKey={personnelReloadKey}
+        />
       </div>
       {createdNotice ? (
         <div className="task-create-toast" role="status" aria-live="polite">
           {createdNotice}
         </div>
       ) : null}
-      {canCreateTasks ? (
-        <button
-          type="button"
-          className="task-create-fab"
-          onClick={() => setModalOpen(true)}
-          aria-label="Поставить задачу"
-        >
-          <Plus size={18} aria-hidden="true" />
-          <span>Поставить задачу</span>
-        </button>
-      ) : null}
+      <div className="team-fab-stack">
+        {canManagePersonnel ? (
+          <button
+            type="button"
+            className="task-create-fab task-create-fab--secondary"
+            onClick={() => setPersonnelModalOpen(true)}
+            aria-label="Добавить сотрудника"
+          >
+            <UserPlus size={18} aria-hidden="true" />
+            <span>Добавить сотрудника</span>
+          </button>
+        ) : null}
+        {canCreateTasks ? (
+          <button
+            type="button"
+            className="task-create-fab"
+            onClick={() => setModalOpen(true)}
+            aria-label="Поставить задачу"
+          >
+            <Plus size={18} aria-hidden="true" />
+            <span>Поставить задачу</span>
+          </button>
+        ) : null}
+      </div>
       <TaskCreateModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -83,6 +104,15 @@ export default function TeamPage() {
           setCreatedNotice(`Задача создана: ${resp.item.title}`);
           window.setTimeout(() => setCreatedNotice(null), 4000);
           setWorklistsReloadKey((n) => n + 1);
+        }}
+      />
+      <PersonnelCreateModal
+        open={personnelModalOpen}
+        onClose={() => setPersonnelModalOpen(false)}
+        onCreated={(person) => {
+          setCreatedNotice(`Сотрудник создан: ${person.full_name}`);
+          window.setTimeout(() => setCreatedNotice(null), 4000);
+          setPersonnelReloadKey((n) => n + 1);
         }}
       />
     </>

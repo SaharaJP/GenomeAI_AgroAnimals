@@ -99,9 +99,11 @@ function PersonnelCard({
 export function PersonnelSurface({
   view,
   worklistsReloadKey = 0,
+  personnelReloadKey = 0,
 }: {
   view: ViewMode;
   worklistsReloadKey?: number;
+  personnelReloadKey?: number;
 }) {
   const [data, setData] = useState<PersonnelListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +124,7 @@ export function PersonnelSurface({
     return () => {
       active = false;
     };
-  }, [reloadTick]);
+  }, [reloadTick, personnelReloadKey]);
 
   const refresh = () => setReloadTick((n) => n + 1);
 
@@ -150,7 +152,7 @@ export function PersonnelSurface({
     return (
       <EmptyState
         title="Команда пока пуста"
-        description="Добавьте сотрудника через POST /api/app/v1/personnel. UI для создания/массового импорта появится в P1-5."
+        description="Добавьте первого сотрудника через кнопку «+ Добавить» внизу страницы — она поставит карточку в этот раздел и привяжет к выбранной группе."
       />
     );
   }

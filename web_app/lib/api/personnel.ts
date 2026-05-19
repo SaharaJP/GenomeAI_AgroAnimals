@@ -1,6 +1,8 @@
 import { apiFetch } from '@/lib/api/client';
 import { getBrowserAppConfig } from '@/lib/config';
 import type {
+  Personnel,
+  PersonnelCreateRequest,
   PersonnelResponse,
   PersonnelUpdateRequest,
 } from '@/lib/api/contracts';
@@ -49,6 +51,27 @@ export async function updatePersonnel(
   return apiFetch<PersonnelResponse>(`/personnel/${encodeURIComponent(personnelId)}`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
+  });
+}
+
+export function validatePersonnelCreate(body: PersonnelCreateRequest): PersonnelValidationError[] {
+  const errs: PersonnelValidationError[] = [];
+  if (!(body.full_name || '').trim()) {
+    errs.push({ field: 'full_name', message: 'ФИО обязательно' });
+  }
+  if (!(body.position || '').trim()) {
+    errs.push({ field: 'position', message: 'Должность обязательна' });
+  }
+  if (body.email && body.email.trim() !== '' && !body.email.includes('@')) {
+    errs.push({ field: 'email', message: 'Некорректный email' });
+  }
+  return errs;
+}
+
+export async function createPersonnel(body: PersonnelCreateRequest): Promise<PersonnelResponse> {
+  return apiFetch<PersonnelResponse>(`/personnel`, {
+    method: 'POST',
+    body: JSON.stringify(body),
   });
 }
 
