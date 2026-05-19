@@ -298,6 +298,140 @@ def test_formula_refs_include_sensitivity(economics_run: dict) -> None:
     assert "T34-economics-rfc.md" in resp.formula_refs["sensitivity_method"]
 
 
+def test_roi_actions_unavailable_yields_warning(economics_run: dict) -> None:
+    """Without a prior run_roi_attribution call, roi_actions degrades to []."""
+
+    resp = build_economics_summary_v1(
+        artifacts_root=economics_run["artifacts_root"],
+        tenant_id="default",
+        level="farm",
+        data_version=economics_run["data_version"],
+        economics_run=economics_run["economics_run"],
+        date_from="2025-01-05",
+        date_to="2025-01-05",
+    )
+    assert resp.roi_actions == []
+    assert any("roi_actions_unavailable" in w for w in resp.warnings)
+
+
+def _seed_synthetic_roi_run(artifacts_root: Path, data_version: str) -> str:
+    """Write a minimal roi_attribution run layout that load_roi() can resolve.
+
+    Avoids the heavyweight run_roi_attribution + sqlite setup — we are
+    testing the reader, not the engine. Reader contract per agent
+    mapping: artifacts/<dv>/roi/<run>/roi_actions.csv +
+    metadata/roi_manifest.json with 'latest'.
+    """
+
+    import json
+
+    run_id = "roi_test_synthetic"
+    run_dir = artifacts_root / data_version / "roi" / run_id
+    run_dir.mkdir(parents=True, exist_ok=True)
+
+    rows = pd.DataFrame(
+        [
+            {
+                "tenant_id": "default",
+                "action_id": "decision_log:A1001:insemination",
+                "object_type": "animal",
+                "object_id": "A1001",
+                "action_type": "insemination",
+                "action_date": "2025-01-08",
+                "window_days": 14,
+                "method": "before_after",
+                "delta_margin_per_day_used": 30.0,
+                "delta_margin_window_used": 420.0,
+                "cost_rub": 800.0,
+                "roi_ratio_used": 0.525,
+                "quality_flag": "OK",
+            },
+            {
+                "tenant_id": "default",
+                "action_id": "tasks_v1:T1:feed_adjustment",
+                "object_type": "pen",
+                "object_id": "PEN_A",
+                "action_type": "feed_adjustment",
+                "action_date": "2025-01-09",
+                "window_days": 14,
+                "method": "diff_in_diff",
+                "delta_margin_per_day_used": 12.0,
+                "delta_margin_window_used": 168.0,
+                "cost_rub": 200.0,
+                "roi_ratio_used": -0.16,
+                "quality_flag": "LOW_COVERAGE",
+            },
+            {
+                "tenant_id": "default",
+                "action_id": "decision_log:A2002:mastitis",
+                "object_type": "animal",
+                "object_id": "A2002",
+                "action_type": "mastitis_treatment",
+                "action_date": "2025-01-10",
+                "window_days": 14,
+                "method": "before_after",
+                "delta_margin_per_day_used": 55.0,
+                "delta_margin_window_used": 770.0,
+                "cost_rub": 1500.0,
+                "roi_ratio_used": -0.486,
+                "quality_flag": "OK",
+            },
+        ]
+    )
+    rows.to_csv(run_dir / "roi_actions.csv", index=False)
+
+    meta_dir = artifacts_root / data_version / "metadata"
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema": "genomeai.roi_runs_manifest.v1",
+        "data_version": data_version,
+        "runs": {run_id: {"created_at_utc": "2025-01-11T00:00:00Z"}},
+        "latest": run_id,
+    }
+    (meta_dir / "roi_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    return run_id
+
+
+def test_roi_actions_populated_when_run_present(tmp_path_factory: pytest.TempPathFactory) -> None:
+    """When roi_actions.csv exists, top-N sorted by delta_margin_window_used desc."""
+
+    repo_root = Path(__file__).resolve().parents[1]
+    artifacts = tmp_path_factory.mktemp("roi_artifacts")
+    dv = "dv_test_p2_1_roi"
+    econ = run_economics_v2(
+        artifacts_root=artifacts,
+        data_version=dv,
+        date_from="2025-01-05",
+        date_to="2025-01-12",
+        cfg_path=repo_root / "configs" / "economics" / "economics_v2.yaml",
+        input_dir=repo_root / "data" / "fixtures" / "target_v2",
+        tenant_id="default",
+    )
+    assert econ.get("ok") is True
+    _seed_synthetic_roi_run(artifacts, dv)
+
+    resp = build_economics_summary_v1(
+        artifacts_root=artifacts,
+        tenant_id="default",
+        level="farm",
+        data_version=dv,
+        economics_run=str(econ["economics_run"]),
+        date_from="2025-01-05",
+        date_to="2025-01-12",
+    )
+    actions = resp.roi_actions
+    assert len(actions) == 3
+    # sorted desc by total_margin_delta_rub
+    deltas = [a.total_margin_delta_rub for a in actions]
+    assert deltas == sorted(deltas, reverse=True)
+    # leader is the mastitis_treatment (770.0)
+    assert actions[0].total_margin_delta_rub == pytest.approx(770.0, abs=1e-6)
+    assert actions[0].label == "mastitis_treatment"
+    assert actions[0].method in {"before_after", "diff_in_diff"}
+    assert actions[0].window_days == 14
+    assert all("roi_actions_unavailable" not in w for w in resp.warnings)
+
+
 def test_unsupported_level_raises(economics_run: dict) -> None:
     with pytest.raises(ValueError, match="unsupported_level"):
         build_economics_summary_v1(

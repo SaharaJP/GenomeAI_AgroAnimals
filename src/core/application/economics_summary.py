@@ -26,6 +26,7 @@ from packages.contracts import (
     EconomicsPerCowDay,
     EconomicsPeriod,
     EconomicsRevenue,
+    EconomicsRoiAction,
     EconomicsScenariosSummary,
     EconomicsScope,
     EconomicsSensitivity,
@@ -46,6 +47,7 @@ _FORMULA_REFS: dict[str, str] = {
     "cost_per_liter_rub": "docs/target/economics_v2.md#L83",
     "sensitivity_method": "docs/iterations/T34-economics-rfc.md#5.1",
     "unit_economics_allocation": "docs/marts/unit_economics.md#allocation-methodology-rfc-45-gap-closure",
+    "roi_actions_method": "docs/marts/roi_attribution.md",
 }
 
 
@@ -82,6 +84,102 @@ def _sum_numeric(df: pd.DataFrame, columns: Iterable[str]) -> dict[str, float]:
             continue
         out[col] = float(pd.to_numeric(df[col], errors="coerce").fillna(0.0).sum())
     return out
+
+
+def _build_roi_actions(
+    *,
+    artifacts_root: Path,
+    tenant_id: str,
+    data_version: str,
+    farm_id: Optional[str],
+    site_id: Optional[str],
+    pen_id: Optional[str],
+    date_from: Optional[str],
+    date_to: Optional[str],
+    top_n: int,
+    warnings: list[str],
+) -> list[EconomicsRoiAction]:
+    """Read top-N actions from roi_attribution artifacts (RFC §3).
+
+    Sorted by ``delta_margin_window_used`` desc. Returns an empty list
+    plus a warning when no roi run exists yet — endpoint stays useful.
+    """
+
+    try:
+        from genomeai.roi_attribution import load_roi  # local import
+    except Exception as exc:  # pragma: no cover — defensive
+        warnings.append(f"roi_module_unavailable: {exc!r}")
+        return []
+
+    try:
+        _run_id, dfs, _run_dir = load_roi(
+            artifacts_root=Path(artifacts_root),
+            data_version=str(data_version),
+        )
+    except FileNotFoundError:
+        warnings.append(
+            "roi_actions_unavailable: no roi_attribution run found for data_version="
+            f"{data_version} — run genomeai roi-attribution first"
+        )
+        return []
+
+    df = dfs.get("actions")
+    if df is None or df.empty:
+        warnings.append("roi_actions_unavailable: actions table empty")
+        return []
+
+    if "tenant_id" in df.columns:
+        df = df[df["tenant_id"].astype(str) == str(tenant_id)]
+    if farm_id is not None:
+        for col in ("farm_id", "object_id"):
+            if col == "farm_id" and "farm_id" in df.columns:
+                df = df[df["farm_id"].astype(str) == str(farm_id)]
+                break
+    if site_id is not None and "site_id" in df.columns:
+        df = df[df["site_id"].astype(str) == str(site_id)]
+    if pen_id is not None and "pen_id" in df.columns:
+        df = df[df["pen_id"].astype(str) == str(pen_id)]
+    if date_from is not None and "action_date" in df.columns:
+        df = df[df["action_date"].astype(str) >= str(date_from)]
+    if date_to is not None and "action_date" in df.columns:
+        df = df[df["action_date"].astype(str) <= str(date_to)]
+
+    if df.empty:
+        warnings.append("roi_actions_unavailable: no actions after filters")
+        return []
+
+    delta_col = "delta_margin_window_used"
+    if delta_col not in df.columns:
+        warnings.append(f"roi_actions_unavailable: column {delta_col} missing")
+        return []
+    df = df.assign(_delta=pd.to_numeric(df[delta_col], errors="coerce"))
+    df = df[df["_delta"].notna()]
+    if df.empty:
+        warnings.append("roi_actions_unavailable: all delta values invalid")
+        return []
+
+    top = df.sort_values("_delta", ascending=False).head(int(top_n))
+
+    items: list[EconomicsRoiAction] = []
+    for _, row in top.iterrows():
+        per_day_raw = row.get("delta_margin_per_day_used")
+        window_total_raw = row.get("delta_margin_window_used")
+        try:
+            window_days = int(pd.to_numeric(row.get("window_days"), errors="coerce"))
+        except Exception:
+            window_days = 14
+        items.append(
+            EconomicsRoiAction(
+                action_id=str(row.get("action_id") or ""),
+                label=str(row.get("action_type") or row.get("action_label") or row.get("object_id") or ""),
+                cohort_n=1,  # roi_actions is per-action; cohort modelled at summary level
+                window_days=window_days,
+                delta_margin_per_cow_day_rub=float(per_day_raw) if pd.notna(per_day_raw) else None,
+                total_margin_delta_rub=float(window_total_raw) if pd.notna(window_total_raw) else None,
+                method=str(row.get("method") or "before_after"),
+            )
+        )
+    return items
 
 
 def _build_unit_economics_ladder(
@@ -325,6 +423,19 @@ def build_economics_summary_v1(
         warnings=warnings,
     )
 
+    roi_actions = _build_roi_actions(
+        artifacts_root=Path(artifacts_root),
+        tenant_id=tenant_id,
+        data_version=data_version,
+        farm_id=farm_id,
+        site_id=site_id,
+        pen_id=pen_id,
+        date_from=date_from,
+        date_to=date_to,
+        top_n=5,
+        warnings=warnings,
+    )
+
     if df.empty and date_from is None and date_to is None:
         period_from = ""
         period_to = ""
@@ -356,6 +467,7 @@ def build_economics_summary_v1(
         per_cow_day=per_cow_day,
         sensitivity=sensitivity,
         unit_economics_ladder=unit_ladder,
+        roi_actions=roi_actions,
         scenarios_summary=scenarios_summary or EconomicsScenariosSummary(),
         formula_refs=dict(_FORMULA_REFS),
         warnings=warnings,
