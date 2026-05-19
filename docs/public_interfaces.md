@@ -37,7 +37,7 @@ Agent loop: `web_cabinet/ai/client.py:AnthropicClient.tool_call_loop` (sync, bou
 
 ## Economics endpoints
 
-| Path | Schema | Description | Source |
-|---|---|---|---|
-| `GET /economics` | `genomeai.api.economics.list.v1` (`EconomicsListResponse`) | what-if scenarios + reports metadata listing; back-compat surface for `/economics?tab=scenarios` UI tab | T11-01 |
-| `GET /api/economics/summary` | `genomeai.api.economics.summary.v1` (`EconomicsSummaryResponse`) | computed economics overview for `/economics?tab=overview` + `?tab=strategy` UI tabs: kpi strip, revenue/cost breakdown, sensitivity (gap §4.3), unit-economics ladder (gap §4.5), ROI of recent actions (from `roi_attribution`); `ai_cost` block under feature flag; backed by `economics_v2.py` artifacts | T34-P2-1 RFC §3 (2026-05-19, contract only — endpoint not yet wired) |
+| Path | Schema | RBAC | Description | Source |
+|---|---|---|---|---|
+| `GET /api/app/v1/economics` | `genomeai.api.economics.list.v1` (`EconomicsListResponse`) | `whatif.scenarios.view` | what-if scenarios + reports metadata listing; back-compat surface for `/economics?tab=scenarios` UI tab | T11-01 |
+| `GET /api/app/v1/economics/summary` | `genomeai.api.economics.summary.v1` (`EconomicsSummaryResponse`) | `economics.view` | computed economics overview for `/economics?tab=overview` + `?tab=strategy` UI tabs. Slice 2 fields: kpi (`total_margin_rub`, `cost_per_liter_rub`, `margin_pct`, optional `margin_per_cow_per_day_rub`), revenue (milk/cull/total), cost breakdown (feed/vet/repro/cull/other + `breakdown_pct`), `per_cow_day`, `scenarios_summary`, `formula_refs`, `warnings`. Pending slices: `sensitivity` (RFC §4.3), `unit_economics_ladder` (§4.5), `roi_actions`, `ai_cost`. Reads from `economics_v2.py` artifacts via `core.application.build_economics_summary_v1`. | T34-P2-1 RFC §3, slice 2 (2026-05-19) |

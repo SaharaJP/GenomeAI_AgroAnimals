@@ -29,6 +29,8 @@ from packages.contracts.api_boundary_v1 import (
     DecisionsListResponse,
     EconomicsListResponse,
     EconomicsScenarioItem,
+    EconomicsScenariosSummary,
+    EconomicsSummaryResponse,
     EntityRef,
     FeedbackItem,
     FeedbackListResponse,
@@ -76,6 +78,7 @@ from packages.contracts.api_boundary_v1 import (
     WorklistItem,
     WorklistsListResponse,
 )
+from core.application import build_economics_summary_v1
 from core.common.time import utc_date_str, utc_timestamp_compact
 from core.infra.web_db import get_settings
 from core.infra.runtime_storage import resolve_runtime_storage_settings, runtime_storage_diagnostics
@@ -1112,6 +1115,61 @@ def boundary_economics(
         scenario_items=scenario_items,
         report_items=[dict(row) for row in list(reports.get('items') or reports.get('reports') or [])],
     )
+
+
+@router.get('/economics/summary', response_model=EconomicsSummaryResponse)
+def boundary_economics_summary(
+    data_version: str = Query(..., description='data_version slug; required in v1, future slice will resolve from active tenant config'),
+    level: str = Query('farm', description="aggregation level: 'farm' | 'site' | 'pen'"),
+    period_from: Optional[str] = Query(None, description='YYYY-MM-DD; inclusive lower bound; defaults to run range start'),
+    period_to: Optional[str] = Query(None, description='YYYY-MM-DD; inclusive upper bound; defaults to run range end'),
+    farm_id: Optional[str] = None,
+    site_id: Optional[str] = None,
+    pen_id: Optional[str] = None,
+    economics_run: Optional[str] = Query(None, description='economics_v2 run id; defaults to latest per metadata manifest'),
+    cows_total: Optional[int] = Query(None, description='herd headcount for per-cow-day KPI; omit to render per-cow as null + warning'),
+    user=Depends(require_permissions('economics.view')),
+    conn=Depends(get_db),
+):
+    """Computed economics overview (P2-1 RFC §3, slice 2: kpi + revenue + cost).
+
+    Returns ``genomeai.api.economics.summary.v1``. Sensitivity, unit-economics
+    ladder and ROI of recent actions are placeholders until the formula gaps
+    in RFC §4 land in subsequent slices.
+    """
+
+    tenant_id = str(user.get('tenant_id', 'default'))
+
+    scenarios_raw = list_scenarios(conn, tenant_id=tenant_id, status=None, limit=10_000, offset=0)
+    scenario_rows = list(scenarios_raw.get('items') or scenarios_raw.get('scenarios') or [])
+    scenarios_summary = EconomicsScenariosSummary(
+        total=int(scenarios_raw.get('total') or len(scenario_rows)),
+        approved=sum(1 for s in scenario_rows if str(s.get('status') or '') == 'approved'),
+        draft=sum(1 for s in scenario_rows if str(s.get('status') or '') == 'draft'),
+        archived=sum(1 for s in scenario_rows if str(s.get('status') or '') == 'archived'),
+    )
+
+    settings = get_settings()
+    try:
+        resp = build_economics_summary_v1(
+            artifacts_root=settings.artifacts_root,
+            tenant_id=tenant_id,
+            level=level,
+            data_version=data_version,
+            economics_run=economics_run,
+            farm_id=farm_id,
+            site_id=site_id,
+            pen_id=pen_id,
+            date_from=period_from,
+            date_to=period_to,
+            cows_total=cows_total,
+            scenarios_summary=scenarios_summary,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return resp
 
 
 @router.get('/decision-intelligence', response_model=DecisionIntelligenceResponse)

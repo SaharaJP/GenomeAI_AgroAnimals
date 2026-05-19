@@ -117,13 +117,19 @@ Tab «Стратегия» зависит от закрытия gaps 4.1 (ROI pe
 **Proposed new endpoint** (canonical, нерасширенный):
 
 ```
-GET /api/economics/summary
-  ?period=2026-03                # YYYY-MM или YYYY-MM-DD..YYYY-MM-DD
-  &level=farm|site|pen           # default = farm
-  &farm_id=<id>                  # required для site/pen
-  &site_id=<id>                  # optional
-  &data_version=<dv>             # default = active dv for tenant
+GET /api/app/v1/economics/summary
+  ?data_version=<dv>            # REQUIRED v1 (future slice: resolve from active tenant config)
+  &level=farm|site|pen          # default = farm
+  &period_from=YYYY-MM-DD       # optional; defaults to economics_run range start
+  &period_to=YYYY-MM-DD         # optional; defaults to economics_run range end
+  &farm_id=<id>                 # optional; required для site/pen drill-down
+  &site_id=<id>                 # optional
+  &pen_id=<id>                  # optional
+  &economics_run=<rid>          # optional; defaults to latest per metadata manifest
+  &cows_total=<int>             # optional; enables margin_per_cow_per_day_rub & per_cow_day block
 ```
+
+Mount: `/api/app/v1/economics/summary` через `APIRouter(prefix='/api/app/v1')` в `web_cabinet/api_boundary_v1.py:333`. RBAC: `economics.view`.
 
 Response schema `genomeai.api.economics.summary.v1`:
 

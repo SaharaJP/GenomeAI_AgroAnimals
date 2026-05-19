@@ -180,3 +180,9 @@ __all__ += [
     "resolve_model_dir",
     "resolve_scoring_dir",
 ]
+
+from core.application.economics_summary import build_economics_summary_v1
+
+__all__ += [
+    "build_economics_summary_v1",
+]
