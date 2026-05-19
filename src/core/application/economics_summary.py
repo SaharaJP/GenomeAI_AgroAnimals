@@ -350,16 +350,23 @@ def build_economics_summary_v1(
 
     from genomeai.economics_v2 import load_economics_v2  # local import — only when endpoint hit
 
-    rid, dfs, _run_dir = load_economics_v2(
-        artifacts_root=Path(artifacts_root),
-        data_version=str(data_version),
-        economics_run=economics_run,
-    )
-    df = dfs.get("economics_daily")
-    if df is None or df.empty:
-        df = pd.DataFrame()
-
     warnings: list[str] = []
+    rid: Optional[str] = None
+    try:
+        rid, dfs, _run_dir = load_economics_v2(
+            artifacts_root=Path(artifacts_root),
+            data_version=str(data_version),
+            economics_run=economics_run,
+        )
+        df = dfs.get("economics_daily")
+        if df is None or df.empty:
+            df = pd.DataFrame()
+    except FileNotFoundError as exc:
+        warnings.append(
+            f"economics_v2_artifacts_missing: {exc!s} — run genomeai economics-v2 "
+            f"--data-version {data_version} first"
+        )
+        df = pd.DataFrame()
 
     if not df.empty:
         df = df[df["level"].astype(str) == level]
