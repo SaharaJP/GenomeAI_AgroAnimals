@@ -16,6 +16,10 @@ from typing import Iterable, Optional
 
 import pandas as pd
 
+from core.economics.sensitivity import (
+    SensitivityInputs,
+    compute_breakeven_sensitivity,
+)
 from packages.contracts import (
     EconomicsCost,
     EconomicsKpi,
@@ -24,6 +28,7 @@ from packages.contracts import (
     EconomicsRevenue,
     EconomicsScenariosSummary,
     EconomicsScope,
+    EconomicsSensitivity,
     EconomicsSummaryResponse,
 )
 
@@ -38,6 +43,7 @@ _FORMULA_REFS: dict[str, str] = {
     "total_cost_rub": "docs/target/economics_v2.md#L81",
     "margin_rub": "docs/target/economics_v2.md#L82",
     "cost_per_liter_rub": "docs/target/economics_v2.md#L83",
+    "sensitivity_method": "docs/iterations/T34-economics-rfc.md#5.1",
 }
 
 
@@ -140,6 +146,8 @@ def build_economics_summary_v1(
         [
             "milk_kg",
             "milk_liters",
+            "feed_dm_kg",
+            "treatments_n",
             "revenue_milk_rub",
             "revenue_cull_rub",
             "revenue_total_rub",
@@ -197,6 +205,27 @@ def build_economics_summary_v1(
         margin_pct=margin_pct,
     )
 
+    sensitivity_inputs = SensitivityInputs(
+        revenue_total_rub=sums["revenue_total_rub"],
+        revenue_cull_rub=sums["revenue_cull_rub"],
+        total_cost_rub=sums["total_cost_rub"],
+        cost_feed_rub=sums["cost_feed_rub"],
+        cost_vet_rub=sums["cost_vet_rub"],
+        cost_repro_rub=sums["cost_repro_rub"],
+        cost_cull_rub=sums["cost_cull_rub"],
+        cost_other_rub=sums["cost_other_rub"],
+        milk_kg=sums["milk_kg"],
+        feed_dm_kg=sums["feed_dm_kg"],
+        treatments_n=sums["treatments_n"],
+    )
+    sensitivity_result = compute_breakeven_sensitivity(sensitivity_inputs)
+    sensitivity = EconomicsSensitivity(
+        milk_price_floor_rub_per_kg=sensitivity_result.milk_price_floor_rub_per_kg,
+        feed_cost_ceiling_rub_per_kg_dm=sensitivity_result.feed_cost_ceiling_rub_per_kg_dm,
+        vet_cost_ceiling_rub_per_event=sensitivity_result.vet_cost_ceiling_rub_per_event,
+        method=sensitivity_result.method,
+    )
+
     if df.empty and date_from is None and date_to is None:
         period_from = ""
         period_to = ""
@@ -226,6 +255,7 @@ def build_economics_summary_v1(
         revenue=revenue,
         cost=cost,
         per_cow_day=per_cow_day,
+        sensitivity=sensitivity,
         scenarios_summary=scenarios_summary or EconomicsScenariosSummary(),
         formula_refs=dict(_FORMULA_REFS),
         warnings=warnings,

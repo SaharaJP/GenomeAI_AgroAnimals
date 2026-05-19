@@ -163,6 +163,69 @@ def test_empty_filter_returns_warning(economics_run: dict) -> None:
     assert any("economics_v2_artifacts_empty_after_filters" in w for w in resp.warnings)
 
 
+def test_sensitivity_reflects_csv_aggregates(economics_run: dict) -> None:
+    """Sensitivity block must satisfy ``margin = 0`` at the returned breakeven values."""
+
+    row = _farm_row(economics_run["run_dir"])
+    resp = build_economics_summary_v1(
+        artifacts_root=economics_run["artifacts_root"],
+        tenant_id="default",
+        level="farm",
+        data_version=economics_run["data_version"],
+        economics_run=economics_run["economics_run"],
+        date_from="2025-01-05",
+        date_to="2025-01-05",
+    )
+    sens = resp.sensitivity
+    assert sens.method == "single_input_holding_others"
+
+    milk_kg = float(row["milk_kg"])
+    feed_dm_kg = float(row["feed_dm_kg"])
+    treatments_n = float(row["treatments_n"])
+    revenue_total = float(row["revenue_total_rub"])
+    revenue_cull = float(row["revenue_cull_rub"])
+    total_cost = float(row["total_cost_rub"])
+    cost_feed = float(row["cost_feed_rub"])
+    cost_vet = float(row["cost_vet_rub"])
+    cost_repro = float(row["cost_repro_rub"])
+    cost_cull = float(row["cost_cull_rub"])
+    cost_other = float(row["cost_other_rub"])
+
+    if milk_kg > 0:
+        expected_milk_floor = max(0.0, (total_cost - revenue_cull) / milk_kg)
+        assert sens.milk_price_floor_rub_per_kg == pytest.approx(expected_milk_floor, rel=1e-6)
+    else:
+        assert sens.milk_price_floor_rub_per_kg is None
+
+    if feed_dm_kg > 0:
+        non_feed = cost_vet + cost_repro + cost_cull + cost_other
+        expected_feed_ceiling = max(0.0, (revenue_total - non_feed) / feed_dm_kg)
+        assert sens.feed_cost_ceiling_rub_per_kg_dm == pytest.approx(expected_feed_ceiling, rel=1e-6)
+    else:
+        assert sens.feed_cost_ceiling_rub_per_kg_dm is None
+
+    if treatments_n > 0:
+        non_vet = cost_feed + cost_repro + cost_cull + cost_other
+        expected_vet_ceiling = max(0.0, (revenue_total - non_vet) / treatments_n)
+        assert sens.vet_cost_ceiling_rub_per_event == pytest.approx(expected_vet_ceiling, rel=1e-6)
+    else:
+        assert sens.vet_cost_ceiling_rub_per_event is None
+
+
+def test_formula_refs_include_sensitivity(economics_run: dict) -> None:
+    resp = build_economics_summary_v1(
+        artifacts_root=economics_run["artifacts_root"],
+        tenant_id="default",
+        level="farm",
+        data_version=economics_run["data_version"],
+        economics_run=economics_run["economics_run"],
+        date_from="2025-01-05",
+        date_to="2025-01-05",
+    )
+    assert "sensitivity_method" in resp.formula_refs
+    assert "T34-economics-rfc.md" in resp.formula_refs["sensitivity_method"]
+
+
 def test_unsupported_level_raises(economics_run: dict) -> None:
     with pytest.raises(ValueError, match="unsupported_level"):
         build_economics_summary_v1(
