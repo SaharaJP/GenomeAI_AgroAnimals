@@ -45,7 +45,6 @@ const sections: NavigationSection[] = [
     title: 'Управление',
     items: [
       { kind: 'item', label: 'Задачи', href: '/worklists', minPermissions: ['tasks.view', 'tasks.read', 'tasks.manage'] },
-      { kind: 'item', label: 'Решения', href: '/decisions', minPermissions: ['decisionlog.view', 'decisions.read'] },
       { kind: 'item', label: 'Команда', href: '/team', minPermissions: ['personnel.read'] },
       { kind: 'item', label: 'Экономика', href: '/economics', minPermissions: ['economics.read', 'whatif.scenarios.view'] },
     ],
@@ -55,8 +54,6 @@ const sections: NavigationSection[] = [
     items: [
       { kind: 'item', label: 'Поддержка', href: '/support', minPermissions: ['support.read', 'jobs.view', 'audit.view'] },
       { kind: 'item', label: 'Пилот', href: '/pilot', minPermissions: ['support.read', 'jobs.view'] },
-      { kind: 'item', label: 'Готовность системы', href: '/readiness', minPermissions: ['support.read', 'audit.view'] },
-      { kind: 'item', label: 'Мониторинг', href: '/observability', minPermissions: ['audit.view', 'jobs.view'] },
       { kind: 'item', label: 'Администрирование', href: '/admin', minPermissions: ['audit.view'] },
     ],
   },
@@ -67,6 +64,9 @@ const extraPathLabels: Record<string, string> = {
   '/admin/iam': 'IAM-матрица',
   '/admin/integrations': 'Контроль интеграций',
   '/admin/logs': 'Логи системы',
+  '/readiness': 'Готовность системы',
+  '/observability': 'Мониторинг',
+  '/decisions': 'Решения',
   '/settings': 'Настройки',
   '/connections': 'Мои подключения',
   '/feeding': 'Кормление',

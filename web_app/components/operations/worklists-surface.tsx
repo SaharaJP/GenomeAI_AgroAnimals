@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MetricCard, Card } from '@/components/ui/card';
 import { FilterBar } from '@/components/ui/filter-bar';
-import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { WorklistList } from '@/components/ui/worklist-list';
 import { apiFetch } from '@/lib/api/client';
 import type { WorklistItem, ListResponse, PersonnelListResponse } from '@/lib/api/contracts';
@@ -123,11 +122,6 @@ export function WorklistsSurface() {
         <MetricCard title="Открытых задач" value={open} />
         <MetricCard title="Просроченных" value={overdue} />
       </div>
-      <ExplainabilityBlock reasons={[
-        'Рабочие списки управляются сервером и аудируются.',
-        'React отображает только канонические DTO и хуки действий.',
-        'Контексты одной и нескольких ферм отражаются через ссылки на сущности.',
-      ]} />
       {error ? <div className="card error-text">{error}</div> : null}
       {!data ? <div className="card">Загружаю задачи…</div> : null}
       {data ? (

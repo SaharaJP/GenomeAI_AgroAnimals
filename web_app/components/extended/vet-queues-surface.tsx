@@ -5,8 +5,6 @@ import { AlertList } from '@/components/operations/alert-list';
 import { ScopeSummary } from '@/components/operations/scope-summary';
 import { Card, MetricCard } from '@/components/ui/card';
 import { WorklistList } from '@/components/ui/worklist-list';
-import { ExplainabilityBlock } from '@/components/ui/explainability-block';
-import { FactPackGuardrailNote } from '@/components/explainability/fact-pack-guardrail-note';
 import { LoaderWithRetry } from '@/components/ui/loader-with-retry';
 import { fetchExtendedBundle, buildVetViewModel, type VetViewModel } from '@/lib/api/extended-surfaces';
 
@@ -31,12 +29,6 @@ export function VetQueuesSurface() {
 
   return <div className="grid">
     <div className="topbar"><div><h1 className="page-title">Ветеринария</h1><p className="page-subtitle">Очереди задач ветеринарной службы: здоровье животных, осмотры и история решений.</p></div></div>
-    <FactPackGuardrailNote />
-    <ExplainabilityBlock title="Источник данных" reasons={[
-      'Группировка очередей — по типу задачи, домену здоровья и серьёзности алерта (данные с сервера).',
-      'Браузер не создаёт факторы здоровья — только отображает привязку к причинам с бэкенда.',
-      'Диагностика, история решений и хуки поддержки управляются сервером.',
-    ]} />
     {!view || error ? (
       <LoaderWithRetry label="Загрузка ветеринарных очередей…" error={error} onRetry={retry} />
     ) : <>

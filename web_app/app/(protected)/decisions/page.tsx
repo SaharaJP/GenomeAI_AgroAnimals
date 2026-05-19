@@ -6,7 +6,6 @@ import { Card, MetricCard } from '@/components/ui/card';
 import { FilterBar } from '@/components/ui/filter-bar';
 import { DataTable, type TableColumn } from '@/components/ui/data-table';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { apiFetch } from '@/lib/api/client';
 import { normalizeListResponse, type ListResponse } from '@/lib/api/contracts';
 import { pathLabels } from '@/lib/navigation';
@@ -109,15 +108,6 @@ export default function DecisionsPage() {
           </pre>
         </Card>
       )}
-
-      <ExplainabilityBlock
-        title="Принципы работы"
-        reasons={[
-          'Семантика журнала решений неизменна и полностью аудируема (CLAUDE.md §5).',
-          'Веб-оболочка читает канонический контрактный слой, общий с Android.',
-          'Каждое решение привязано к recommendation_id (NPV, инсайт, алерт) для feedback-loop калибровки моделей.',
-        ]}
-      />
 
       <Card>
         <h3 className="card-title">Журнал решений</h3>
