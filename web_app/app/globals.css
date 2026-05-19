@@ -435,6 +435,46 @@ button, input, select, textarea { font: inherit; }
 .grid   { display: grid; gap: 16px; }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+/* ── Tabs (P2-1 /economics) ─────────────────────── */
+.economics-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--panel-muted, #f3f4f6);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.economics-tab {
+  background: transparent;
+  border: 0;
+  padding: 6px 14px;
+  font: inherit;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: calc(var(--radius) - 2px);
+  transition: background 120ms ease, color 120ms ease;
+}
+.economics-tab:hover { color: var(--text); }
+.economics-tab.is-active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
+
+/* ── Key/value list ─────────────────────────────── */
+.kv-list { display: flex; flex-direction: column; gap: 6px; }
+.kv-list > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 13px;
+}
+.kv-list > div > span { color: var(--text-muted); }
+.kv-list > div > strong { color: var(--text); font-weight: 600; }
 
 /* ── Typography helpers ─────────────────────────── */
 .page-title    { margin: 0; font-size: 22px; font-weight: 700; color: var(--text); }
@@ -675,7 +715,7 @@ button, input, select, textarea { font: inherit; }
 @media (max-width: 640px) {
   .topbar { padding: 0 12px; }
   .topbar-btn-demo span { display: none; }
-  .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
 }
 
 /* ── MorningBriefCard ───────────────────────────────────────────────────── */
