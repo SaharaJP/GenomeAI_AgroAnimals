@@ -86,6 +86,55 @@
 
 - агрегация — `SUM` по дочерним строкам.
 
+## Стратегические показатели (T34-P2-1 RFC §4.1, §4.2)
+
+Используются на табе «Стратегия» в `/economics`. Считаются **поверх** результатов pen-day агрегации.
+
+### ROI per cow (годовой и lifetime)
+
+```
+margin_rub_per_cow_per_year   = SUM(margin_rub over date_from..date_to) / cows_total / period_days * 365
+roi_per_cow_per_year_pct      = margin_rub_per_cow_per_year / acquisition_cost_rub_per_cow * 100
+roi_per_cow_lifetime_pct      = (margin_rub_per_cow_per_year * lifetime_years) / acquisition_cost_rub_per_cow * 100
+```
+
+Где:
+- `cows_total` — headcount стада в скоупе (passed by caller; см. `cows_total` query-параметр).
+- `period_days = (date_to - date_from + 1)` в днях.
+- `acquisition_cost_rub_per_cow` — конфиг (`configs/economics/economics_v2.yaml::strategic.acquisition_cost_rub_per_cow`, дефолт 200000 ₽ — заменяемая константа).
+- `lifetime_years` — конфиг (дефолт 5).
+
+Edge cases:
+- `cows_total <= 0` или `period_days <= 0` → `roi_per_cow_per_year_pct = null`, warning `roi_per_cow_unavailable`.
+- `acquisition_cost_rub_per_cow <= 0` → null + warning `acquisition_cost_invalid`.
+- Отрицательная маржа за период допускается — ROI < 0 валиден и показывается.
+
+### Payback period (farm-level)
+
+```
+monthly_margin_rub_per_farm = SUM(margin_rub over date_from..date_to) / period_months
+payback_months              = saas_cac_rub / monthly_margin_rub_per_farm
+```
+
+Где:
+- `saas_cac_rub` — конфиг (`strategic.saas_cac_rub`, дефолт 135000 ₽ ≈ $1500 при курсе 90).
+- `period_months = period_days / 30.4375`.
+
+Edge cases:
+- `monthly_margin_rub_per_farm <= 0` → `payback_months = null`, warning `payback_negative_margin` (показывать «нет окупаемости при текущей марже»).
+- `saas_cac_rub <= 0` → null + warning `cac_invalid`.
+
+### LTV / CAC
+
+```
+ltv_rub      = monthly_margin_rub_per_farm * retention_months
+ltv_cac_ratio = ltv_rub / saas_cac_rub
+```
+
+Где `retention_months` — конфиг (дефолт 60 = 5 лет).
+
+Эти формулы — целевые ориентиры, **не валидированные** на реальных пилотах (см. `docs/investor_faq_ru.md` q.22 disclaimer). На табе «Стратегия» показываются с явным маркером «целевой» до закрытия pilot-данных. Изменение дефолтов в конфиге — это контрактное изменение и требует обновления `docs/public_interfaces.md`.
+
 ## Проверка
 
 1) Unit-tests:

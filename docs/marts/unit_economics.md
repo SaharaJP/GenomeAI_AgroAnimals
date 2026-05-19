@@ -43,3 +43,54 @@ Grain: `tenant_id, level, (farm/site/pen ids), date`.
 - `allocation` — метод распределения
 - `cost_models` — тарифы для vet/repro
 - `limitations` — список дисклеймеров
+
+## Allocation methodology (RFC §4.5 gap closure)
+
+Источник правды реализации: `src/genomeai/unit_economics.py::run_unit_economics` (поле `allocation.cost_method` из `configs/economics/unit_economics_v1.yaml`).
+
+В витрине pen-day (выход `economics_v2`) три позиции являются **pooled** на уровне загона и распределяются на животных по share-фактору. Три позиции являются **direct** (per-event) и относятся напрямую на конкретное животное без аллокации.
+
+| Колонка pen-day | Природа | Куда уходит при animal-day |
+|---|---|---|
+| `revenue_milk_rub` | pooled (мерили на pen-day) | `revenue_milk_rub_alloc = revenue_milk_rub * share` |
+| `cost_feed_rub` | pooled | `cost_feed_rub_alloc = cost_feed_rub * share` |
+| `cost_other_rub` | pooled (other_cost_rub_per_farm_day, аллоцирован пенам в economics_v2) | `cost_other_rub_alloc = cost_other_rub * share` |
+| `revenue_cull_rub` | direct (per cull event) | `cull_event.revenue_rub` (или дефолт из config) → конкретное животное |
+| `cost_cull_rub` | direct (per cull event) | `cull_event.cost_rub` (или дефолт) → конкретное животное |
+| `cost_vet_rub` | direct (per treatment event) | `treatments_n_animal × vet_cost_per_treatment_event_rub` |
+| `cost_repro_rub` | direct (per insemination) | `inseminations_n_animal × insemination_cost_rub` |
+
+### share-фактор
+
+Два метода (configurable via `allocation.cost_method`):
+
+**`milk_share`** (default):
+
+```
+pen_milk_kg = SUM(milk_kg) per (tenant_id, pen_id, date)
+share = milk_kg / pen_milk_kg                            # для каждого animal-day
+```
+
+При `pen_milk_kg == 0` (нет надоев в пене за день) `share = 0` — pool не аллоцируется. Это «no-milk-no-revenue» semantics: животное, не давшее молока в этот день, не претендует на долю в надойной выручке/корме/прочих pooled-расходах.
+
+**`headcount`** (v1 approximation):
+
+```
+pen_animals_n = COUNT DISTINCT(animal_id) per (tenant_id, pen_id, date) среди тех, у кого был milking record
+share = 1 / pen_animals_n
+```
+
+Равная доля между всеми животными пена с записанным milking-событием за день. Не пытается учитывать сухостой / технологические группы — это v2-задача.
+
+### Invariants
+
+- `SUM(share) per (tenant, pen, date) ∈ [0, 1]` — может быть < 1, если у части животных не было milking записи (потеряли долю).
+- `SUM(revenue_milk_rub_alloc) per pen-day ≤ revenue_milk_rub pen-day` — round-trip сохраняется только при полном покрытии milking-фактом.
+- Direct-расходы (vet/repro/cull) суммируются на animal-day по событиям; их сумма по пену равна `cost_vet_rub + cost_repro_rub + cost_cull_rub` на pen-day только при равенстве тарифов в `cost_models`.
+
+### Known limitations (v1)
+
+- Не учитывает сухостойных коров без milking-events — они получат `share = 0` и нулевую долю pooled-выручки/расхода. Это смещение для farms с большой долей сухостоя.
+- Не учитывает разную продуктивность тёлок vs опытных коров в headcount-режиме — равная доля по всем животным.
+- Не моделирует индивидуальные feed-conversion-rates — `cost_feed` распределяется по milk-output proportionально, что приближает реальность только при сходных рационах.
+- v2 roadmap: per-cow feed allocation на основе real ration data + body weight, individual cull NPV-based attribution.
