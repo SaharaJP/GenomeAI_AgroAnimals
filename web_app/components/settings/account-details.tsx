@@ -6,7 +6,7 @@ interface Props {
 export function AccountDetails({ displayName = 'Андрей Жиров', email = 'icreem714@gmail.com' }: Props) {
   return (
     <section className="settings-section">
-      <h2 className="settings-section-title">Account details</h2>
+      <h2 className="settings-section-title">Учётная запись</h2>
       <div className="settings-card">
         <div className="settings-field-row">
           <div className="settings-field-label">Имя</div>
@@ -17,7 +17,7 @@ export function AccountDetails({ displayName = 'Андрей Жиров', email 
           <div className="settings-field-value">{email}</div>
         </div>
         <div className="settings-field-row" style={{ borderBottom: 'none' }}>
-          <div className="settings-field-label">Language and units</div>
+          <div className="settings-field-label">Язык и единицы</div>
           <div className="settings-field-dropdown">
             <span>🇷🇺</span>
             <span>Русский — кг/°C</span>

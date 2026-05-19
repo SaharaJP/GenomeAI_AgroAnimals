@@ -7,14 +7,18 @@ import { WorklistList } from '@/components/ui/worklist-list';
 import { ScopeSummary } from '@/components/operations/scope-summary';
 import { FactPackGuardrailNote } from '@/components/explainability/fact-pack-guardrail-note';
 import { ExplainabilityBlock } from '@/components/ui/explainability-block';
+import { LoaderWithRetry } from '@/components/ui/loader-with-retry';
 import { fetchExtendedBundle, buildReproductionViewModel, type ReproductionViewModel } from '@/lib/api/extended-surfaces';
 
 export function ReproductionSurface() {
   const [view, setView] = useState<ReproductionViewModel | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setView(null);
+    setError(null);
     void fetchExtendedBundle()
       .then((bundle) => {
         if (active) setView(buildReproductionViewModel(bundle));
@@ -25,7 +29,9 @@ export function ReproductionSurface() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [reloadTick]);
+
+  const retry = () => setReloadTick((n) => n + 1);
 
   return (
     <div className="grid">
@@ -37,8 +43,9 @@ export function ReproductionSurface() {
         'Логика воспроизводства не переносится в браузер — только отображение.',
         'Связанные действия сохраняют привязку к решениям, помощнику и отчётам.',
       ]} />
-      {error ? <div className="card error-text">{error}</div> : null}
-      {!view ? <div className="card">Загрузка данных воспроизводства…</div> : (
+      {!view || error ? (
+        <LoaderWithRetry label="Загрузка данных воспроизводства…" error={error} onRetry={retry} />
+      ) : (
         <>
           <div className="grid grid-3">
             <MetricCard title="Открытые задачи" value={view.summary.openWorklists} />

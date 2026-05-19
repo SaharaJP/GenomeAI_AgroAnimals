@@ -40,7 +40,7 @@ export function NotificationsTable({ kpiInsightsEmail, weeklyBriefing, onKpiChan
       </section>
 
       <section className="settings-section">
-        <h2 className="settings-section-title">Weekly Farm briefings <span className="settings-briefing-badge">Powered by Copilot</span></h2>
+        <h2 className="settings-section-title">Недельные брифинги по ферме <span className="settings-briefing-badge">от Помощника</span></h2>
         <div className="settings-card settings-briefing-row">
           <div style={{ flex: 1 }}>
             <div className="settings-briefing-title">Еженедельные брифинги фермы от ИИ-помощника</div>

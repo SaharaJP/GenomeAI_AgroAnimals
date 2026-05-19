@@ -7,21 +7,27 @@ import { Card, MetricCard } from '@/components/ui/card';
 import { WorklistList } from '@/components/ui/worklist-list';
 import { ExplainabilityBlock } from '@/components/ui/explainability-block';
 import { FactPackGuardrailNote } from '@/components/explainability/fact-pack-guardrail-note';
+import { LoaderWithRetry } from '@/components/ui/loader-with-retry';
 import { fetchExtendedBundle, buildVetViewModel, type VetViewModel } from '@/lib/api/extended-surfaces';
 
 export function VetQueuesSurface() {
   const [view, setView] = useState<VetViewModel | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setView(null);
+    setError(null);
     void fetchExtendedBundle().then((bundle) => {
       if (active) setView(buildVetViewModel(bundle));
     }).catch((err) => {
       if (active) setError(err instanceof Error ? err.message : 'Failed to load vet queue surface');
     });
     return () => { active = false; };
-  }, []);
+  }, [reloadTick]);
+
+  const retry = () => setReloadTick((n) => n + 1);
 
   return <div className="grid">
     <div className="topbar"><div><h1 className="page-title">Ветеринария</h1><p className="page-subtitle">Очереди задач ветеринарной службы: здоровье животных, осмотры и история решений.</p></div></div>
@@ -31,8 +37,9 @@ export function VetQueuesSurface() {
       'Браузер не создаёт факторы здоровья — только отображает привязку к причинам с бэкенда.',
       'Диагностика, история решений и хуки поддержки управляются сервером.',
     ]} />
-    {error ? <div className="card error-text">{error}</div> : null}
-    {!view ? <div className="card">Загрузка ветеринарных очередей…</div> : <>
+    {!view || error ? (
+      <LoaderWithRetry label="Загрузка ветеринарных очередей…" error={error} onRetry={retry} />
+    ) : <>
       <div className="grid grid-3">
         <MetricCard title="Задач в очереди" value={view.summary.queueItems} />
         <MetricCard title="Просрочено" value={view.summary.overdueItems} />
