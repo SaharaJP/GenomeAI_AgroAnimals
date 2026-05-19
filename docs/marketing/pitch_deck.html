@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GenomeAI AgroAnimals — Pitch Deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" />
+<style>
+  :root {
+    --accent: #2dd4bf;
+    --accent-hover: #14b8a6;
+    --accent-soft: #ccfbf1;
+    --accent-subtle: #f0fdfa;
+    --accent-text: #0f766e;
+    --slate-dark: #2a3440;
+    --slate-darker: #1e2630;
+    --text: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --panel: #ffffff;
+    --panel-subtle: #f7f9fa;
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
+    --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.12);
+    --radius: 12px;
+    --radius-lg: 16px;
+    --font: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--panel-subtle); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+
+  /* Topbar */
+  .topbar {
+    height: 56px;
+    background: var(--slate-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    flex-shrink: 0;
+    z-index: 10;
+    box-shadow: var(--shadow-md);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 16px;
+  }
+  .topbar-title { font-weight: 600; font-size: 15px; }
+  .topbar-subtitle { font-size: 12px; color: rgba(255,255,255,0.6); margin-left: 8px; }
+  .topbar-controls { display: flex; align-items: center; gap: 12px; font-size: 13px; color: rgba(255,255,255,0.7); }
+  .topbar-counter { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .topbar-help { color: rgba(255,255,255,0.4); font-size: 11px; font-family: var(--font-mono); }
+
+  /* Deck container */
+  .deck { flex: 1; position: relative; overflow: hidden; }
+  .slide {
+    position: absolute; inset: 0;
+    padding: 48px 64px;
+    display: none;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 320ms ease, transform 320ms ease;
+    overflow: auto;
+  }
+  .slide.active {
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .slide-inner { width: 100%; max-width: 1240px; margin: 0 auto; }
+
+  /* Common slide elements */
+  .slide-eyebrow {
+    display: inline-block;
+    padding: 4px 10px;
+    background: var(--accent-soft);
+    color: var(--accent-text);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  .slide-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+  .slide-subtitle {
+    font-size: 17px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 32px;
+    max-width: 820px;
+  }
+  .slide-footer {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+
+  /* Cards / grids */
+  .grid { display: grid; gap: 20px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .card-value { font-size: 32px; font-weight: 700; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .card-delta { font-size: 12px; color: var(--accent-text); font-weight: 500; }
+  .card-delta.up::before { content: "▲ "; }
+  .card-delta.down::before { content: "▼ "; }
+  .card-note { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+
+  /* KPI grid (dashboard-style) */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px;
+  }
+  .kpi-label { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-bottom: 6px; }
+  .kpi-value { font-size: 28px; font-weight: 700; color: var(--text); line-height: 1; }
+  .kpi-unit { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-left: 4px; }
+  .kpi-delta { font-size: 12px; color: var(--accent-text); margin-top: 6px; font-weight: 500; }
+  .kpi-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .kpi-accent .kpi-label, .kpi-accent .kpi-unit { color: rgba(255,255,255,0.85); }
+  .kpi-accent .kpi-value { color: #fff; }
+  .kpi-accent .kpi-delta { color: rgba(255,255,255,0.95); }
+
+  /* Pain table */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: var(--accent); color: #fff; text-align: left; padding: 10px 14px; font-weight: 600; font-size: 13px; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; }
+  tr:nth-child(even) td { background: var(--panel-subtle); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge-100 { background: #dcfce7; color: #15803d; }
+  .badge-92  { background: #dcfce7; color: #15803d; }
+  .badge-83  { background: #fef3c7; color: #b45309; }
+  .badge-75  { background: #fef3c7; color: #b45309; }
+  .badge-67  { background: #fed7aa; color: #9a3412; }
+  .badge-mvp { background: var(--accent); color: #fff; }
+  .badge-road { background: var(--border); color: var(--text-secondary); }
+
+  /* Quote block */
+  .quote {
+    background: var(--panel);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--text);
+    line-height: 1.5;
+    box-shadow: var(--shadow-sm);
+  }
+  .quote-attr { display: block; margin-top: 10px; font-style: normal; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+
+  /* Screenshot */
+  .screenshot-wrap {
+    background: var(--panel);
+    border-radius: var(--radius-lg);
+    padding: 8px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    max-height: 60vh;
+  }
+  .screenshot { width: 100%; height: auto; display: block; border-radius: 8px; }
+
+  /* Lists */
+  ul.tidy { list-style: none; }
+  ul.tidy li { padding: 8px 0 8px 28px; position: relative; color: var(--text); }
+  ul.tidy li::before { content: "✓"; position: absolute; left: 0; color: var(--accent); font-weight: 700; font-size: 16px; top: 8px; }
+  ul.tidy.cross li::before { content: "✕"; color: #dc2626; }
+
+  /* Tabs (economics-style) */
+  .tabs {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--panel-subtle);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .tab {
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+  .tab.active { background: var(--panel); color: var(--text); box-shadow: var(--shadow-sm); }
+
+  /* P&L table */
+  .pnl table { font-size: 12px; }
+  .pnl th, .pnl td { padding: 6px 8px; }
+  .pnl tr.total td { font-weight: 700; background: var(--slate-dark); color: #fff; }
+  .pnl tr.total td:nth-child(even) { background: var(--slate-dark); }
+
+  /* Roadmap timeline */
+  .roadmap { display: grid; grid-template-columns: 140px 1fr; gap: 12px 24px; align-items: start; }
+  .roadmap-when { font-family: var(--font-mono); font-size: 12px; color: var(--accent-text); font-weight: 600; padding-top: 4px; }
+  .roadmap-what { font-size: 14px; color: var(--text); line-height: 1.5; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+
+  /* Bottom progress bar */
+  .progress {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: var(--panel-subtle); z-index: 5;
+  }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 320ms ease; }
+
+  /* Navigation arrows */
+  .nav-btn {
+    position: fixed; top: 50%; transform: translateY(-50%);
+    width: 48px; height: 48px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    color: var(--text-secondary);
+    font-size: 22px;
+    user-select: none;
+    transition: transform 160ms ease, box-shadow 160ms ease;
+    z-index: 20;
+  }
+  .nav-btn:hover { transform: translateY(-50%) scale(1.08); box-shadow: var(--shadow-lg); color: var(--accent); }
+  .nav-prev { left: 24px; }
+  .nav-next { right: 24px; }
+
+  /* Cover slide */
+  .cover {
+    background: linear-gradient(135deg, var(--slate-dark) 0%, var(--slate-darker) 100%);
+    color: #fff;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 80px;
+  }
+  .cover.active { display: flex !important; }
+  .cover .cover-logo {
+    width: 80px; height: 80px; background: var(--accent); border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(45, 212, 191, 0.4);
+  }
+  .cover .cover-logo svg { width: 56px; height: 56px; }
+  .cover h1 {
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+  .cover .accent { color: var(--accent); }
+  .cover .cover-sub {
+    font-size: 22px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.75);
+    margin-bottom: 32px;
+    max-width: 760px;
+  }
+  .cover .cover-tag {
+    display: inline-block;
+    padding: 8px 18px;
+    background: rgba(45, 212, 191, 0.12);
+    color: var(--accent);
+    border: 1px solid rgba(45, 212, 191, 0.4);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 48px;
+  }
+  .cover .cover-meta {
+    font-size: 14px;
+    color: rgba(255,255,255,0.5);
+    font-family: var(--font-mono);
+  }
+
+  /* Closing slide */
+  .closing {
+    background: var(--accent);
+    color: #fff;
+  }
+  .closing h2 { font-size: 56px; font-weight: 800; letter-spacing: -0.03em; }
+  .closing .closing-sub { font-size: 22px; color: rgba(255,255,255,0.9); margin-top: 16px; }
+  .closing .closing-cta { margin-top: 40px; display: flex; gap: 12px; }
+  .closing .pill { padding: 10px 18px; border-radius: 999px; background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3); font-size: 14px; }
+
+  /* Layouts */
+  .two-col { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: start; }
+  .two-col-r { display: grid; grid-template-columns: 1fr 1.1fr; gap: 32px; align-items: start; }
+
+  /* Util */
+  .text-muted { color: var(--text-muted); font-size: 13px; }
+  .text-accent { color: var(--accent-text); font-weight: 600; }
+  .big-number { font-size: 56px; font-weight: 800; color: var(--accent); line-height: 1; }
+  .big-number-sub { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+
+  /* Tighten heading on smaller screens */
+  @media (max-width: 1100px) {
+    .slide { padding: 32px 40px; }
+    .slide-title { font-size: 28px; }
+    .cover h1 { font-size: 44px; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .two-col-r { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-brand">
+    <div class="topbar-logo">G</div>
+    <div>
+      <div class="topbar-title">GenomeAI AgroAnimals</div>
+      <span class="topbar-subtitle">Pitch Deck v2 · 2026-05-19</span>
+    </div>
+  </div>
+  <div class="topbar-controls">
+    <span class="topbar-counter"><span id="cur">1</span> / <span id="total">17</span></span>
+    <span class="topbar-help">← → space · F = fullscreen</span>
+  </div>
+</header>
+
+<div class="deck" id="deck">
+
+  <!-- ============ Slide 1 — Cover ============ -->
+  <section class="slide cover active">
+    <div class="cover-logo">
+      <svg viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+        <path d="M48 12 C48 12 44 42 26 50 C8 58 6 50 6 50 C6 50 6 44 16 34 C26 24 48 12 48 12Z" fill="rgba(255,255,255,0.95)"/>
+      </svg>
+    </div>
+    <span class="cover-tag">AI-помощник зоотехника · РФ + Беларусь</span>
+    <h1>GenomeAI <span class="accent">AgroAnimals</span></h1>
+    <div class="cover-sub">Видим проблемы за <strong style="color:#fff">2 дня</strong> до того, как видит ферма.<br/>Единый контекст. AI-сигналы. NPV по корове.</div>
+    <div class="cover-meta">Андрей Жиров · founder · andrew@genomeai.ru · genomeai.ru</div>
+  </section>
+
+  <!-- ============ Slide 2 — Problem ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Проблема</span>
+      <h2 class="slide-title">Данные есть. Но они везде, узнаём поздно, и решения принимаем «на глаз»</h2>
+      <p class="slide-subtitle">Из <strong>12 глубинных интервью</strong> с зоотехниками и директорами хозяйств 150–1200 голов в РФ + Беларуси выявлены 5 паттернов болей.</p>
+
+      <div class="two-col">
+        <div>
+          <table>
+            <thead><tr><th>Боль</th><th style="text-align:right">Подтвердили</th></tr></thead>
+            <tbody>
+              <tr><td>Фрагментация: данные в 4–7 системах</td><td style="text-align:right"><span class="badge badge-100">12 / 12</span></td></tr>
+              <tr><td>Зависимость от зоотехника-человека</td><td style="text-align:right"><span class="badge badge-92">11 / 12</span></td></tr>
+              <tr><td>Узнаём о мастите / охоте на 3–5 дней позже</td><td style="text-align:right"><span class="badge badge-83">10 / 12</span></td></tr>
+              <tr><td>Выбраковка «на глаз», без NPV расчёта</td><td style="text-align:right"><span class="badge badge-75">9 / 12</span></td></tr>
+              <tr><td>Нет оценки влияния управленческих решений</td><td style="text-align:right"><span class="badge badge-67">8 / 12</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="quote">
+            «Селэкс смотрю в одном окне, Excel в другом, доильный зал — отдельная программа. Чтоб собрать одну корову — 20 минут. У меня 400 голов.»
+            <span class="quote-attr">— Зоотехник, ферма 400 коров, Воронежская обл.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <span>Метод: глубинные интервью 40–60 мин по структуре The Mom Test · CustDev + JTBD + open sources</span>
+        <span>01_customer_discovery_evidence.md</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 3 — Цена боли ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Цена боли</span>
+      <h2 class="slide-title">Эти проблемы стоят средней ферме ≈ 1 млн ₽ / год</h2>
+      <p class="slide-subtitle">Расчёт на ферму 400 коров с заболеваемостью маститом 22% (типичный профиль из CustDev).</p>
+
+      <div class="grid grid-4">
+        <div class="card">
+          <div class="card-title">Поздний мастит</div>
+          <div class="card-value">+158 тыс. ₽</div>
+          <div class="card-note">в год · 88 случаев × +1 800 ₽ задержки</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Ошибочная выбраковка</div>
+          <div class="card-value">80–240 тыс. ₽</div>
+          <div class="card-note">в год · 1–2 ошибки × 80–120 тыс. ₽</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Время зоотехника</div>
+          <div class="card-value">≈ 400 тыс. ₽</div>
+          <div class="card-note">в год · 2,1 ч/день на склейку данных</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Текучесть зоотехников</div>
+          <div class="card-value">≈ 300 тыс. ₽</div>
+          <div class="card-note">в год смены · –10–25 % efficiency</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 32px; padding: 24px; background: var(--slate-dark); color: #fff; border-radius: var(--radius-lg);">
+        <div style="font-size: 13px; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">Итого средняя ферма теряет</div>
+        <div style="font-size: 48px; font-weight: 800; color: var(--accent);">≈ 1 000 000 ₽ / год</div>
+        <div style="font-size: 14px; color: rgba(255,255,255,0.6); margin-top: 8px;">— только из-за плохой digitalization. Эту сумму мы и забираем себе как value capture.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 4 — Solution ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Решение</span>
+      <h2 class="slide-title">Единый AI-помощник зоотехника на основе данных стада</h2>
+      <p class="slide-subtitle">MVP закрывает 3 из 5 валидированных болей — фокус, не «космолёт».</p>
+
+      <div class="two-col-r">
+        <div class="grid">
+          <div class="card">
+            <div style="display:flex; gap: 12px; align-items: flex-start;">
+              <div style="width:36px;height:36px;background:var(--accent-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-text);font-weight:700;flex-shrink:0;">1</div>
+              <div>
+                <div style="font-weight:600;font-size:16px;margin-bottom:4px;">Единый контекст</div>
+                <div style="color:var(--text-secondary);font-size:14px;line-height:1.5;">Селэкс / 1С / доильный зал / IoT-ошейники → один экран. Время от 2,1 ч/день к 15 мин/день.</div>
+                <div style="margin-top:8px;"><span class="badge badge-mvp">MVP</span> · Боль #1 (12/12)</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex; gap: 12px; align-items: flex-start;">
+              <div style="width:36px;height:36px;background:var(--accent-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-text);font-weight:700;flex-shrink:0;">2</div>
+              <div>
+                <div style="font-weight:600;font-size:16px;margin-bottom:4px;">Ранний сигнал</div>
+                <div style="color:var(--text-secondary);font-size:14px;line-height:1.5;">Сканер инсайтов: мастит, охота, отклонения — за 2–3 дня до клиники. Push-уведомления.</div>
+                <div style="margin-top:8px;"><span class="badge badge-mvp">MVP</span> · Боль #2 (10/12)</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div style="display:flex; gap: 12px; align-items: flex-start;">
+              <div style="width:36px;height:36px;background:var(--accent-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent-text);font-weight:700;flex-shrink:0;">3</div>
+              <div>
+                <div style="font-weight:600;font-size:16px;margin-bottom:4px;">Память хозяйства</div>
+                <div style="color:var(--text-secondary);font-size:14px;line-height:1.5;">Лента событий = history стада, независимая от персоны зоотехника. Защита от текучести.</div>
+                <div style="margin-top:8px;"><span class="badge badge-mvp">MVP</span> · Боль #4 (11/12)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="screenshot-wrap">
+            <img class="screenshot" src="screenshots/01_dashboard.png" alt="Dashboard live" />
+          </div>
+          <div class="text-muted" style="text-align:center;margin-top:8px;">Скриншот: https://genomeai.ru/dashboard · MVP в продакшене</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 5 — Insights (real screenshot) ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Продукт в работе</span>
+      <h2 class="slide-title">AI-инсайты: severity + benchmark + конкретное действие</h2>
+      <p class="slide-subtitle">11 живых инсайтов на демо-ферме. Каждый — с обоснованием и сравнением с холдингом.</p>
+
+      <div class="screenshot-wrap" style="max-height: 65vh;">
+        <img class="screenshot" src="screenshots/03_insights.png" alt="Insights live" />
+      </div>
+      <div class="text-muted" style="text-align:center;margin-top:12px;">https://genomeai.ru/insights · live данные</div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 6 — Brief ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Брифинг каждое утро</span>
+      <h2 class="slide-title">5 минут вместо 2 часов на сводку фермы</h2>
+      <p class="slide-subtitle">AI-брифинг с приоритизацией: что требует внимания, что произошло за ночь, на заметку.</p>
+
+      <div class="screenshot-wrap" style="max-height: 60vh;">
+        <img class="screenshot" src="screenshots/02_daily-summary.png" alt="Daily briefing" />
+      </div>
+      <div class="text-muted" style="text-align:center;margin-top:12px;">https://genomeai.ru/daily-summary</div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 7 — Why now ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Why now</span>
+      <h2 class="slide-title">Окно для русского молочного AI открыто прямо сейчас</h2>
+
+      <div class="grid grid-2" style="margin-top: 16px;">
+        <div class="card" style="background: linear-gradient(135deg, var(--accent-subtle) 0%, var(--panel) 100%); border-color: var(--accent-soft);">
+          <div class="card-title">Дефицит зоотехников</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent-text); margin-bottom: 6px;">×2,3</div>
+          <div style="font-size: 13px; color: var(--text-secondary);">потребность к предложению (Минсельхоз 2024). Кадры дешевле автоматизировать.</div>
+        </div>
+        <div class="card" style="background: linear-gradient(135deg, var(--accent-subtle) 0%, var(--panel) 100%); border-color: var(--accent-soft);">
+          <div class="card-title">Импортозамещение IT</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent-text); margin-bottom: 6px;">DeLaval / GEA</div>
+          <div style="font-size: 13px; color: var(--text-secondary);">cloud-сервисы сворачивают support в РФ → ниша на ~600 крупных СХО.</div>
+        </div>
+        <div class="card" style="background: linear-gradient(135deg, var(--accent-subtle) 0%, var(--panel) 100%); border-color: var(--accent-soft);">
+          <div class="card-title">Цифровой АПК (госпрограмма)</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent-text); margin-bottom: 6px;">до 50 %</div>
+          <div style="font-size: 13px; color: var(--text-secondary);">субсидии на цифровые инструменты для СХО.</div>
+        </div>
+        <div class="card" style="background: linear-gradient(135deg, var(--accent-subtle) 0%, var(--panel) 100%); border-color: var(--accent-soft);">
+          <div class="card-title">AI-momentum</div>
+          <div style="font-size: 28px; font-weight: 700; color: var(--accent-text); margin-bottom: 6px;">$5–15 / мес</div>
+          <div style="font-size: 13px; color: var(--text-secondary);">себестоимость LLM на ферму — впервые экономически viable.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 8 — Market ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Рынок</span>
+      <h2 class="slide-title">$15M TAM, $9M SAM, ~6 800 ферм в beach-head'е</h2>
+
+      <div class="grid grid-3" style="margin-top: 16px;">
+        <div class="card" style="text-align: center; padding: 32px;">
+          <div class="card-title">TAM</div>
+          <div class="big-number">1,4 млрд ₽</div>
+          <div class="big-number-sub">~$15M ARR · все молочные хозяйства ≥150 голов РФ+РБ</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 32px; background: var(--accent-subtle); border-color: var(--accent-soft);">
+          <div class="card-title">SAM</div>
+          <div class="big-number">790 млн ₽</div>
+          <div class="big-number-sub">~$8,8M ARR · с интернетом, готовые к SaaS, decision-maker доступен</div>
+        </div>
+        <div class="card" style="text-align: center; padding: 32px;">
+          <div class="card-title">SOM (Y3, base)</div>
+          <div class="big-number">36 млн ₽</div>
+          <div class="big-number-sub">120 customers × 300k ₽ ARPU · 4,6 % от SAM</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 24px;">
+        <div class="card-title" style="margin-bottom: 12px;">Конкуренция (мы — в синем диапазоне)</div>
+        <table>
+          <thead><tr><th>Решение</th><th>Сегмент</th><th>Цена / год</th><th>AI + Real-time</th></tr></thead>
+          <tbody>
+            <tr><td>Селэкс / Плинор</td><td>СХО любого размера</td><td>50–100 k ₽</td><td>❌</td></tr>
+            <tr><td>1С: Зоотехния</td><td>СХО + холдинги</td><td>100–300 k ₽</td><td>❌</td></tr>
+            <tr><td>DeLaval / GEA (импортный)</td><td>Премиум, импортный</td><td>300–700 k ₽</td><td>Частично</td></tr>
+            <tr style="background: var(--accent-soft);"><td><strong style="color:var(--accent-text);">GenomeAI</strong></td><td>СХО 150–1200 голов</td><td><strong style="color:var(--accent-text);">180 k ₽</strong></td><td>✅ полный</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 9 — Business model ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Бизнес-модель</span>
+      <h2 class="slide-title">SaaS от ₽/голову/мес · средний ARPU 180 000 ₽/год</h2>
+
+      <div class="two-col">
+        <div>
+          <table>
+            <thead><tr><th>Tier</th><th>Голов</th><th>₽/гол/мес</th><th>ARPU / год</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Starter</strong></td><td>150–300</td><td>50 ₽</td><td>150 тыс. ₽</td></tr>
+              <tr><td><strong>Growth</strong></td><td>300–700</td><td>35 ₽</td><td>210 тыс. ₽</td></tr>
+              <tr><td><strong>Pro</strong></td><td>700–1200</td><td>25 ₽</td><td>270 тыс. ₽</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div class="kpi-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="kpi"><div class="kpi-label">Gross margin</div><div class="kpi-value">78 <span class="kpi-unit">%</span></div></div>
+            <div class="kpi"><div class="kpi-label">CAC target</div><div class="kpi-value">135 <span class="kpi-unit">тыс. ₽</span></div></div>
+            <div class="kpi kpi-accent"><div class="kpi-label">LTV / CAC</div><div class="kpi-value">16<span class="kpi-unit">×</span></div></div>
+            <div class="kpi"><div class="kpi-label">Payback</div><div class="kpi-value">9 <span class="kpi-unit">мес</span></div></div>
+          </div>
+          <div class="text-muted" style="margin-top: 12px;">Target цифры. Будут validated после первых 3 платных пилотов.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 10 — Traction (честный слайд) ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Traction · честный слайд</span>
+      <h2 class="slide-title">CustDev завершён, paid pilots запускаются в M+1</h2>
+
+      <div class="two-col">
+        <div>
+          <h3 style="font-size:15px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">Что сделано</h3>
+          <ul class="tidy">
+            <li><strong>12 глубинных CustDev интервью</strong> (РФ + РБ, 150–1200 голов) — 5 паттернов с N/12 подтверждением</li>
+            <li><strong>MVP в проде</strong> на genomeai.ru: единый dashboard, сканер инсайтов, NPV, лента событий</li>
+            <li><strong>Postgres + Redis + MinIO</strong> enterprise stack, HTTPS, audit log, RBAC</li>
+            <li><strong>10 интеграций ингеста</strong> готовы: Селэкс CSV, 1С, DeLaval, GEA, IoT ошейники</li>
+          </ul>
+        </div>
+        <div>
+          <h3 style="font-size:15px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">В следующие 6 недель</h3>
+          <ul class="tidy">
+            <li><strong>50 ферм</strong> outreach (Центр РФ + Беларусь, ICP A)</li>
+            <li><strong>5 demo</strong> запланировано</li>
+            <li><strong>3 платных пилота</strong> по 45 тыс. ₽ × 2 мес = 135 тыс. ₽ commitment</li>
+          </ul>
+          <h3 style="font-size:15px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-top:24px;margin-bottom:14px;">Что НЕ делаем (честно)</h3>
+          <ul class="tidy cross">
+            <li>Не говорим «у нас 100 customers» — пилотов 0</li>
+            <li>Не обещаем viral growth — рынок неклиикабельный</li>
+            <li>Не строим IoT-ошейник, не добавляем больше AI до validation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 11 — Pilot framework ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Как получаем деньги</span>
+      <h2 class="slide-title">Платный пилот 45 000 ₽ · success criteria · path to MRR</h2>
+
+      <div class="two-col">
+        <div>
+          <table>
+            <tbody>
+              <tr><td>Длительность</td><td><strong>2 месяца</strong></td></tr>
+              <tr><td>Цена пилота</td><td><strong>45 000 ₽ upfront</strong></td></tr>
+              <tr><td>Scope</td><td>Селэкс CSV + 1 модуль (мастит ИЛИ NPV)</td></tr>
+              <tr><td>Success criteria</td><td>≥1 из: 30 ч экономии · 1 мастит до клиники · 1 cull-решение</td></tr>
+              <tr><td>Conversion to MRR</td><td>50% скидка первые 6 мес, target ARPU @ M9</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:15px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;">Funnel честный</h3>
+          <div style="font-family:var(--font-mono);font-size:13px;line-height:1.9;color:var(--text);">
+            <div>50 leads (outreach)</div>
+            <div style="color:var(--text-muted);">  ↓ 50 % reply</div>
+            <div>25 первичных контактов</div>
+            <div style="color:var(--text-muted);">  ↓ 40 % дошли до demo</div>
+            <div>10 demo</div>
+            <div style="color:var(--text-muted);">  ↓ 50 % после demo</div>
+            <div>5 LOI</div>
+            <div style="color:var(--text-muted);">  ↓ 60 % paid pilot</div>
+            <div style="color:var(--accent-text);font-weight:600;">3 платных пилота</div>
+            <div style="color:var(--text-muted);">  ↓ 70 % conversion</div>
+            <div style="color:var(--accent-text);font-weight:600;font-size:16px;">2 платящих customers</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 12 — GTM ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Go-to-Market</span>
+      <h2 class="slide-title">Founder-led sales · 3 канала · 6-недельный sprint</h2>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="card-title">Канал 1</div>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Cold outreach</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">LinkedIn + прямой звонок. Болевой anchor: «158k ₽/год экономии на мастите».</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--accent-text);font-weight:600;">Y1: 30 leads/мес · 6 demo/мес</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Канал 2</div>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Партнёрства</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">Союзмолоко regional chapters, региональные минсельхозы.</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--accent-text);font-weight:600;">Y1: 1–2 warm intro/мес</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Канал 3</div>
+          <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Выставки</div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.5;">АгроФерма Москва, «Молочная и Мясная Россия» — 2 выставки/год.</div>
+          <div style="margin-top:12px;font-size:12px;color:var(--accent-text);font-weight:600;">Y1: 10–15 hot leads/выставка</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 24px; background: var(--slate-dark); color: #fff; border: none;">
+        <div style="font-size:13px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:14px;">6-недельный sprint</div>
+        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:12px;font-size:13px;">
+          <div><div style="color:var(--accent);font-weight:700;">W1</div><div style="color:rgba(255,255,255,0.85);">Research + 50 farms list</div></div>
+          <div><div style="color:var(--accent);font-weight:700;">W2–3</div><div style="color:rgba(255,255,255,0.85);">Cold outreach (письма + звонки)</div></div>
+          <div><div style="color:var(--accent);font-weight:700;">W4</div><div style="color:rgba(255,255,255,0.85);">Demos (5 шт)</div></div>
+          <div><div style="color:var(--accent);font-weight:700;">W5</div><div style="color:rgba(255,255,255,0.85);">Closing LOI</div></div>
+          <div><div style="color:var(--accent);font-weight:700;">W6</div><div style="color:rgba(255,255,255,0.85);">Kickoff пилотов</div></div>
+          <div><div style="color:var(--accent);font-weight:700;">M+2</div><div style="color:rgba(255,255,255,0.85);">Measure success criteria</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 13 — Financials ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Финансы</span>
+      <h2 class="slide-title">P&amp;L 3 года · 3 сценария · ask $500k seed</h2>
+
+      <div class="pnl" style="margin-bottom: 20px;">
+        <table>
+          <thead><tr><th></th><th>Y1 (H2 2026 → 2027)</th><th>Y2 (2028)</th><th>Y3 (2029)</th></tr></thead>
+          <tbody>
+            <tr><td>Customers (cum.)</td><td>10</td><td>40</td><td>120</td></tr>
+            <tr><td>ARR</td><td>1,8 млн ₽</td><td>9,6 млн ₽</td><td>36 млн ₽</td></tr>
+            <tr><td>Gross profit (78%)</td><td>1,4 млн ₽</td><td>7,5 млн ₽</td><td>28 млн ₽</td></tr>
+            <tr><td>OPEX</td><td>18 млн ₽</td><td>35 млн ₽</td><td>50 млн ₽</td></tr>
+            <tr class="total"><td>EBITDA</td><td>−16,6 млн ₽</td><td>−27,5 млн ₽</td><td>−22 млн ₽</td></tr>
+            <tr><td>Cumulative burn</td><td>16,6 млн ₽</td><td>44 млн ₽</td><td>66 млн ₽</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="card" style="background: var(--accent-subtle); border-color: var(--accent-soft);">
+          <div class="card-title">Ask текущего раунда</div>
+          <div style="font-size: 36px; font-weight: 700; color: var(--accent-text); margin: 8px 0;">$500 k seed</div>
+          <div style="color:var(--text-secondary);font-size:14px;">≈ 45 млн ₽ · 18 мес runway · ~8% equity (SAFE)</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Use of funds</div>
+          <div style="font-size: 13px; line-height: 2; color: var(--text);">
+            <strong>50%</strong> Sales & Marketing (founder + 1 hire M+4)<br/>
+            <strong>30%</strong> Product (1 backend M+1, 1 ML M+6)<br/>
+            <strong>20%</strong> G&A + legal + reserve
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 14 — Strategy tab live ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Live в продакшене</span>
+      <h2 class="slide-title">Экономика фермы — таб «Стратегия» с честным disclaimer</h2>
+      <p class="slide-subtitle">ROI per cow, payback, LTV/CAC — формулы из financial-analysis модуля. Цифры → null пока нет реальных пилотов, всё с пометкой «целевые».</p>
+
+      <div class="screenshot-wrap" style="max-height: 60vh;">
+        <img class="screenshot" src="screenshots/05_economics_strategy.png" alt="Economics strategy tab" />
+      </div>
+      <div class="text-muted" style="text-align:center;margin-top:12px;">https://genomeai.ru/economics → таб «Стратегия»</div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 15 — Roadmap ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Roadmap</span>
+      <h2 class="slide-title">Очерёдность от валидированных болей, не «больше фичей»</h2>
+
+      <div class="roadmap">
+        <div class="roadmap-when">Сегодня · MVP</div>
+        <div class="roadmap-what"><strong>Единый dashboard · мастит-scanner · NPV-калькулятор · лента событий.</strong><br/><span class="text-muted">Закрывает Боль #1 (12/12), Боль #2 (10/12), Боль #4 (11/12)</span></div>
+
+        <div class="roadmap-when">M+3 → M+6</div>
+        <div class="roadmap-what"><strong>Анализ влияния решений</strong> (ROI attribution: before/after + diff-in-diff).<br/><span class="text-muted">Закрывает Боль #5 (8/12). Запуск после первых платных пилотов.</span></div>
+
+        <div class="roadmap-when">M+6 → M+12</div>
+        <div class="roadmap-what"><strong>Расширение коннекторов:</strong> 1С: Зоотехния, DeLaval CSV-export, IoT-ошейники.<br/><span class="text-muted">Усиление Боли #1.</span></div>
+
+        <div class="roadmap-when">M+12 → M+24</div>
+        <div class="roadmap-what"><strong>AI-помощник «спроси ферму»</strong> — полноценный LLM chat.<br/><span class="text-muted">Дополнительный value, не основной. Только после product-market fit confirmed.</span></div>
+      </div>
+
+      <div class="card" style="margin-top: 24px; background: #fef2f2; border-color: #fecaca;">
+        <div style="color:#991b1b;font-weight:600;font-size:14px;margin-bottom:8px;">Что НЕ делаем (явный ответ ревьюеру про «космолёт»)</div>
+        <ul class="tidy cross" style="font-size:13px;">
+          <li>Не строим собственный IoT-ошейник</li>
+          <li>Не делаем кормораздачу</li>
+          <li>Не предсказываем погоду / цены</li>
+          <li>Не добавляем больше AI до validation что текущий решает боль</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 16 — Team ============ -->
+  <section class="slide">
+    <div class="slide-inner">
+      <span class="slide-eyebrow">Команда</span>
+      <h2 class="slide-title">Tech founder + domain expert + zoo-advisor</h2>
+      <p class="slide-subtitle">Редкая комбинация для русского agritech. Подобные команды (DairyComp, Vas-Y) в США/Канаде стали defining playerами рынка.</p>
+
+      <div class="grid grid-3">
+        <div class="card">
+          <div style="width:64px;height:64px;background:var(--accent);border-radius:50%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700;">АЖ</div>
+          <div style="font-weight:600;font-size:16px;">Андрей Жиров</div>
+          <div style="color:var(--accent-text);font-size:13px;font-weight:500;margin-bottom:8px;">CEO / Founder</div>
+          <div style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Magistrant ИТМО · full-stack разработка · domain immersion 18 мес</div>
+        </div>
+        <div class="card">
+          <div style="width:64px;height:64px;background:var(--slate-dark);border-radius:50%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:700;">??</div>
+          <div style="font-weight:600;font-size:16px;">[Tech Lead]</div>
+          <div style="color:var(--text-muted);font-size:13px;font-weight:500;margin-bottom:8px;">Backend / ML</div>
+          <div style="color:var(--text-secondary);font-size:13px;line-height:1.5;">Заполняется реальным составом · backend + ML expertise</div>
+        </div>
+        <div class="card">
+          <div style="width:64px;height:64px;background:var(--accent-soft);border-radius:50%;margin-bottom:12px;display:flex;align-items:center;justify-content:center;color:var(--accent-text);font-size:24px;font-weight:700;">🐄</div>
+          <div style="font-weight:600;font-size:16px;">[Zoo-Advisor]</div>
+          <div style="color:var(--text-muted);font-size:13px;font-weight:500;margin-bottom:8px;">Domain expert (advisor)</div>
+          <div style="color:var(--text-secondary);font-size:13px;line-height:1.5;">10+ лет в молочном животноводстве · validation gate для каждой фичи</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Slide 17 — Ask + closing ============ -->
+  <section class="slide closing">
+    <div class="slide-inner" style="display:flex;flex-direction:column;justify-content:center;height:100%;">
+      <h2>$500 k seed</h2>
+      <div class="closing-sub">→ 10 paid customers · LTV/CAC ≥4× validated · Series A через 18 мес</div>
+      <div class="closing-cta">
+        <span class="pill">📩 andrew@genomeai.ru</span>
+        <span class="pill">🌐 genomeai.ru</span>
+        <span class="pill">📅 demo: 30 минут</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<button class="nav-btn nav-prev" onclick="prev()" aria-label="Previous">‹</button>
+<button class="nav-btn nav-next" onclick="next()" aria-label="Next">›</button>
+
+<div class="progress"><div class="progress-fill" id="progress"></div></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  document.getElementById('total').textContent = total;
+  let current = 0;
+
+  function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === current));
+    document.getElementById('cur').textContent = current + 1;
+    document.getElementById('progress').style.width = ((current + 1) / total * 100) + '%';
+  }
+
+  function next() { if (current < total - 1) { current++; render(); } }
+  function prev() { if (current > 0) { current--; render(); } }
+  function goto(n) { current = Math.max(0, Math.min(total - 1, n)); render(); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    if (e.key === 'Home') goto(0);
+    if (e.key === 'End') goto(total - 1);
+    if (e.key === 'f' || e.key === 'F') {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    }
+    // Number keys: jump to slide
+    if (/^[0-9]$/.test(e.key)) {
+      const n = parseInt(e.key, 10);
+      if (n === 0) goto(9); else goto(n - 1);
+    }
+  });
+
+  // Click to advance (anywhere except controls)
+  document.getElementById('deck').addEventListener('click', e => {
+    if (e.target.closest('a, button, input, .nav-btn')) return;
+    next();
+  });
+
+  render();
+</script>
+
+</body>
+</html>
