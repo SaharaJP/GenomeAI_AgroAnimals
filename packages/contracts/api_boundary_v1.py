@@ -228,6 +228,120 @@ class EconomicsListResponse(BaseModel):
     report_items: list[dict[str, Any]] = Field(default_factory=list)
 
 
+class EconomicsPeriod(BaseModel):
+    date_from: str
+    date_to: str
+
+
+class EconomicsScope(BaseModel):
+    tenant_id: str
+    level: str
+    period: EconomicsPeriod
+    farm_id: Optional[str] = None
+    site_id: Optional[str] = None
+    pen_id: Optional[str] = None
+    data_version: Optional[str] = None
+    economics_run: Optional[str] = None
+
+
+class EconomicsTrendDelta(BaseModel):
+    margin_per_cow_per_day_pct: Optional[float] = None
+    total_margin_pct: Optional[float] = None
+    cost_per_liter_pct: Optional[float] = None
+    margin_pct_points: Optional[float] = None
+
+
+class EconomicsKpi(BaseModel):
+    margin_per_cow_per_day_rub: Optional[float] = None
+    total_margin_rub: Optional[float] = None
+    cost_per_liter_rub: Optional[float] = None
+    margin_pct: Optional[float] = None
+    trend_vs_prev_period: EconomicsTrendDelta = Field(default_factory=EconomicsTrendDelta)
+
+
+class EconomicsRevenue(BaseModel):
+    milk_rub: float = 0.0
+    cull_rub: float = 0.0
+    total_rub: float = 0.0
+
+
+class EconomicsCost(BaseModel):
+    feed_rub: float = 0.0
+    vet_rub: float = 0.0
+    repro_rub: float = 0.0
+    cull_rub: float = 0.0
+    other_rub: float = 0.0
+    total_rub: float = 0.0
+    breakdown_pct: dict[str, float] = Field(default_factory=dict)
+
+
+class EconomicsPerCowDay(BaseModel):
+    revenue_rub: Optional[float] = None
+    cost_rub: Optional[float] = None
+    margin_rub: Optional[float] = None
+
+
+class EconomicsSensitivity(BaseModel):
+    milk_price_floor_rub_per_kg: Optional[float] = None
+    feed_cost_ceiling_rub_per_kg_dm: Optional[float] = None
+    vet_cost_ceiling_rub_per_event: Optional[float] = None
+    method: str = 'single_input_holding_others'
+
+
+class EconomicsUnitLadder(BaseModel):
+    top_quartile_margin_rub: Optional[float] = None
+    median_margin_rub: Optional[float] = None
+    bottom_decile_margin_rub: Optional[float] = None
+    bottom_decile_cohort_n: Optional[int] = None
+    bottom_decile_cohort_ref: Optional[str] = None
+
+
+class EconomicsRoiAction(BaseModel):
+    action_id: str
+    label: str
+    cohort_n: int = 0
+    window_days: int = 14
+    delta_margin_per_cow_day_rub: Optional[float] = None
+    total_margin_delta_rub: Optional[float] = None
+    method: str = 'before_after'
+
+
+class EconomicsScenariosSummary(BaseModel):
+    total: int = 0
+    approved: int = 0
+    draft: int = 0
+    archived: int = 0
+    open_at: str = '/economics?tab=scenarios'
+
+
+class EconomicsAiCostCalls(BaseModel):
+    morning_brief_avg_rub: Optional[float] = None
+    weekly_brief_avg_rub: Optional[float] = None
+    ask_farm_avg_rub: Optional[float] = None
+
+
+class EconomicsAiCost(BaseModel):
+    period_rub: Optional[float] = None
+    per_cow_per_year_rub: Optional[float] = None
+    calls: EconomicsAiCostCalls = Field(default_factory=EconomicsAiCostCalls)
+
+
+class EconomicsSummaryResponse(BaseModel):
+    schema_version: str = Field(default='genomeai.api.economics.summary.v1', serialization_alias='schema')
+    scope: EconomicsScope
+    kpi: EconomicsKpi = Field(default_factory=EconomicsKpi)
+    revenue: EconomicsRevenue = Field(default_factory=EconomicsRevenue)
+    cost: EconomicsCost = Field(default_factory=EconomicsCost)
+    per_cow_day: EconomicsPerCowDay = Field(default_factory=EconomicsPerCowDay)
+    sensitivity: EconomicsSensitivity = Field(default_factory=EconomicsSensitivity)
+    unit_economics_ladder: EconomicsUnitLadder = Field(default_factory=EconomicsUnitLadder)
+    roi_actions: list[EconomicsRoiAction] = Field(default_factory=list)
+    scenarios_summary: EconomicsScenariosSummary = Field(default_factory=EconomicsScenariosSummary)
+    ai_cost: Optional[EconomicsAiCost] = None
+    formula_refs: dict[str, str] = Field(default_factory=dict)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class AnimalAttributes(BaseModel):
     name: Optional[str] = None
     breed: Optional[str] = None

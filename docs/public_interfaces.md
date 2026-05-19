@@ -34,3 +34,10 @@ Agent loop: `web_cabinet/ai/client.py:AnthropicClient.tool_call_loop` (sync, bou
 | Path | Description | Source |
 |---|---|---|
 | `GET /api/animals/{animal_id}/cull-recommendation` | production-grade §3.2.4 NPV: per-cow Wood (1967) lactation curve, parity-stratified monthly cull-prob (Compton 2017), 8-component composite health-economic score (mastitis, late-DIM, parity, SCC, lameness, age, days-open, treatment-recurrence) folded into M_t / H_t / survival; sensitivity ≥9 cells, rationale, narrative_md; RBAC `kpi.view` | P1-2c |
+
+## Economics endpoints
+
+| Path | Schema | Description | Source |
+|---|---|---|---|
+| `GET /economics` | `genomeai.api.economics.list.v1` (`EconomicsListResponse`) | what-if scenarios + reports metadata listing; back-compat surface for `/economics?tab=scenarios` UI tab | T11-01 |
+| `GET /api/economics/summary` | `genomeai.api.economics.summary.v1` (`EconomicsSummaryResponse`) | computed economics overview for `/economics?tab=overview` + `?tab=strategy` UI tabs: kpi strip, revenue/cost breakdown, sensitivity (gap §4.3), unit-economics ladder (gap §4.5), ROI of recent actions (from `roi_attribution`); `ai_cost` block under feature flag; backed by `economics_v2.py` artifacts | T34-P2-1 RFC §3 (2026-05-19, contract only — endpoint not yet wired) |
