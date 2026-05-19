@@ -432,6 +432,53 @@ def test_roi_actions_populated_when_run_present(tmp_path_factory: pytest.TempPat
     assert all("roi_actions_unavailable" not in w for w in resp.warnings)
 
 
+def test_strategic_kpi_returns_config_provenance(economics_run: dict) -> None:
+    resp = build_economics_summary_v1(
+        artifacts_root=economics_run["artifacts_root"],
+        tenant_id="default",
+        level="farm",
+        data_version=economics_run["data_version"],
+        economics_run=economics_run["economics_run"],
+        date_from="2025-01-05",
+        date_to="2025-01-05",
+    )
+    sk = resp.strategic_kpi
+    # config provenance always populated even when ROI/payback can't be computed
+    assert sk.acquisition_cost_rub_per_cow is not None
+    assert sk.saas_cac_rub is not None
+    assert sk.lifetime_years is not None
+    assert sk.retention_months is not None
+    # without cows_total → ROI per cow is null
+    assert sk.roi_per_cow_per_year_pct is None
+    assert sk.roi_per_cow_lifetime_pct is None
+    assert any("strategic_kpi_unavailable" in w for w in resp.warnings)
+
+
+def test_strategic_kpi_populated_with_cows_total(economics_run: dict) -> None:
+    resp = build_economics_summary_v1(
+        artifacts_root=economics_run["artifacts_root"],
+        tenant_id="default",
+        level="farm",
+        data_version=economics_run["data_version"],
+        economics_run=economics_run["economics_run"],
+        date_from="2025-01-05",
+        date_to="2025-01-05",
+        cows_total=10,
+    )
+    sk = resp.strategic_kpi
+    # If total_margin_rub is negative for these fixtures, roi_per_cow stays computed (could be negative)
+    # but ltv_cac and payback require positive margin
+    if resp.kpi.total_margin_rub is not None and resp.kpi.total_margin_rub > 0:
+        assert sk.payback_months is not None
+        assert sk.ltv_cac_ratio is not None
+    else:
+        assert sk.payback_months is None
+    # ROI per cow always computes when cows_total and period_days are valid
+    if resp.kpi.total_margin_rub is not None:
+        assert sk.roi_per_cow_per_year_pct is not None
+        assert sk.roi_per_cow_lifetime_pct is not None
+
+
 def test_unsupported_level_raises(economics_run: dict) -> None:
     with pytest.raises(ValueError, match="unsupported_level"):
         build_economics_summary_v1(

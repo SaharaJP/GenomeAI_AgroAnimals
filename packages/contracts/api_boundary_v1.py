@@ -326,6 +326,26 @@ class EconomicsAiCost(BaseModel):
     calls: EconomicsAiCostCalls = Field(default_factory=EconomicsAiCostCalls)
 
 
+class EconomicsStrategicKpi(BaseModel):
+    """Director / investor-facing KPI block (P2-1 RFC §4.1/§4.2).
+
+    Powers the "Стратегия" tab on /economics. All fields are
+    optional — they require ``cows_total`` (for ROI per cow) and a
+    valid SaaS CAC config (for payback). Numbers are *targets* until
+    pilot data closes the gap; see ``docs/investor_faq_ru.md`` q.22
+    disclaimer and ``warnings`` array on the response.
+    """
+
+    roi_per_cow_per_year_pct: Optional[float] = None
+    roi_per_cow_lifetime_pct: Optional[float] = None
+    payback_months: Optional[float] = None
+    ltv_cac_ratio: Optional[float] = None
+    acquisition_cost_rub_per_cow: Optional[float] = None
+    saas_cac_rub: Optional[float] = None
+    lifetime_years: Optional[float] = None
+    retention_months: Optional[float] = None
+
+
 class EconomicsSummaryResponse(BaseModel):
     schema_version: str = Field(default='genomeai.api.economics.summary.v1', serialization_alias='schema')
     scope: EconomicsScope
@@ -336,6 +356,7 @@ class EconomicsSummaryResponse(BaseModel):
     sensitivity: EconomicsSensitivity = Field(default_factory=EconomicsSensitivity)
     unit_economics_ladder: EconomicsUnitLadder = Field(default_factory=EconomicsUnitLadder)
     roi_actions: list[EconomicsRoiAction] = Field(default_factory=list)
+    strategic_kpi: EconomicsStrategicKpi = Field(default_factory=EconomicsStrategicKpi)
     scenarios_summary: EconomicsScenariosSummary = Field(default_factory=EconomicsScenariosSummary)
     ai_cost: Optional[EconomicsAiCost] = None
     formula_refs: dict[str, str] = Field(default_factory=dict)

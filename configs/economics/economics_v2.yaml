@@ -27,5 +27,15 @@ cost_models:
     cost_per_head_rub: 5000.0
 allocation:
   other_cost_allocation: revenue_share
+strategic:
+  # P2-1 RFC §4.1/§4.2 — target ROI/payback assumptions.
+  # All values are *targets* per docs/investor_faq_ru.md q.22
+  # disclaimer; the API returns them alongside the KPI so the UI
+  # can show "целевой, не валидирован" badge with provenance.
+  # Change requires updating docs/public_interfaces.md per CLAUDE.md §3.
+  acquisition_cost_rub_per_cow: 200000.0
+  saas_cac_rub: 135000.0
+  lifetime_years: 5.0
+  retention_months: 60.0
 ui:
   max_rows_daily: 5000

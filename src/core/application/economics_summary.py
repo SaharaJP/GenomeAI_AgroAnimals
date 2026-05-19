@@ -20,6 +20,10 @@ from core.economics.sensitivity import (
     SensitivityInputs,
     compute_breakeven_sensitivity,
 )
+from core.economics.strategic_kpi import (
+    StrategicKpiInputs,
+    compute_strategic_kpi,
+)
 from packages.contracts import (
     EconomicsCost,
     EconomicsKpi,
@@ -30,6 +34,7 @@ from packages.contracts import (
     EconomicsScenariosSummary,
     EconomicsScope,
     EconomicsSensitivity,
+    EconomicsStrategicKpi,
     EconomicsSummaryResponse,
     EconomicsUnitLadder,
 )
@@ -48,7 +53,58 @@ _FORMULA_REFS: dict[str, str] = {
     "sensitivity_method": "docs/iterations/T34-economics-rfc.md#5.1",
     "unit_economics_allocation": "docs/marts/unit_economics.md#allocation-methodology-rfc-45-gap-closure",
     "roi_actions_method": "docs/marts/roi_attribution.md",
+    "strategic_kpi": "docs/target/economics_v2.md#стратегические-показатели-t34-p2-1-rfc-41-42",
 }
+
+
+_DEFAULT_STRATEGIC_CONFIG = {
+    "acquisition_cost_rub_per_cow": 200_000.0,
+    "saas_cac_rub": 135_000.0,
+    "lifetime_years": 5.0,
+    "retention_months": 60.0,
+}
+
+
+def _load_strategic_config(artifacts_root: Path) -> dict[str, float]:
+    """Load strategic config block from configs/economics/economics_v2.yaml.
+
+    Walks up from artifacts_root looking for a repo root that contains
+    the config; falls back to compiled defaults if not found. Defaults
+    track docs/target/economics_v2.md «Стратегические показатели».
+    """
+
+    import yaml
+
+    candidate = Path(artifacts_root).resolve()
+    cfg_path: Optional[Path] = None
+    for _ in range(8):
+        test = candidate / "configs" / "economics" / "economics_v2.yaml"
+        if test.exists():
+            cfg_path = test
+            break
+        if candidate.parent == candidate:
+            break
+        candidate = candidate.parent
+
+    if cfg_path is None:
+        cfg_path = Path(__file__).resolve().parents[3] / "configs" / "economics" / "economics_v2.yaml"
+
+    if not cfg_path.exists():
+        return dict(_DEFAULT_STRATEGIC_CONFIG)
+
+    try:
+        raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return dict(_DEFAULT_STRATEGIC_CONFIG)
+    strategic = (raw.get("strategic") or {}) if isinstance(raw, dict) else {}
+    merged = dict(_DEFAULT_STRATEGIC_CONFIG)
+    for key in _DEFAULT_STRATEGIC_CONFIG:
+        if key in strategic:
+            try:
+                merged[key] = float(strategic[key])
+            except (TypeError, ValueError):
+                pass
+    return merged
 
 
 def _safe_pct(numerator: float, denominator: float) -> Optional[float]:
@@ -436,6 +492,40 @@ def build_economics_summary_v1(
         warnings=warnings,
     )
 
+    strategic_cfg = _load_strategic_config(Path(artifacts_root))
+    period_days: Optional[int] = None
+    if not df.empty and "date" in df.columns:
+        try:
+            period_days = int(df["date"].astype(str).nunique())
+        except Exception:
+            period_days = None
+    strategic_inputs = StrategicKpiInputs(
+        total_margin_rub=kpi.total_margin_rub,
+        cows_total=cows_total if cows_total and cows_total > 0 else None,
+        period_days=period_days,
+        acquisition_cost_rub_per_cow=strategic_cfg["acquisition_cost_rub_per_cow"],
+        saas_cac_rub=strategic_cfg["saas_cac_rub"],
+        lifetime_years=strategic_cfg["lifetime_years"],
+        retention_months=strategic_cfg["retention_months"],
+    )
+    strategic_result = compute_strategic_kpi(strategic_inputs)
+    if strategic_result.roi_per_cow_per_year_pct is None and (cows_total is None or cows_total <= 0):
+        warnings.append(
+            "strategic_kpi_unavailable: cows_total not provided — ROI per cow renders as null"
+        )
+    if strategic_result.payback_months is None and kpi.total_margin_rub is not None and kpi.total_margin_rub <= 0:
+        warnings.append("payback_negative_margin: monthly margin <= 0, payback is undefined")
+    strategic_kpi_block = EconomicsStrategicKpi(
+        roi_per_cow_per_year_pct=strategic_result.roi_per_cow_per_year_pct,
+        roi_per_cow_lifetime_pct=strategic_result.roi_per_cow_lifetime_pct,
+        payback_months=strategic_result.payback_months,
+        ltv_cac_ratio=strategic_result.ltv_cac_ratio,
+        acquisition_cost_rub_per_cow=strategic_cfg["acquisition_cost_rub_per_cow"],
+        saas_cac_rub=strategic_cfg["saas_cac_rub"],
+        lifetime_years=strategic_cfg["lifetime_years"],
+        retention_months=strategic_cfg["retention_months"],
+    )
+
     if df.empty and date_from is None and date_to is None:
         period_from = ""
         period_to = ""
@@ -468,6 +558,7 @@ def build_economics_summary_v1(
         sensitivity=sensitivity,
         unit_economics_ladder=unit_ladder,
         roi_actions=roi_actions,
+        strategic_kpi=strategic_kpi_block,
         scenarios_summary=scenarios_summary or EconomicsScenariosSummary(),
         formula_refs=dict(_FORMULA_REFS),
         warnings=warnings,
