@@ -328,14 +328,10 @@ export function EconomicsMasterSurface() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h1 className="page-title">Экономика</h1>
-          <p className="page-subtitle">
-            Маржа фермы, чувствительность и ROI. Цифры на табе «Стратегия» — целевые до подтверждения пилотами.
-          </p>
-        </div>
-      </div>
+      <h1 className="page-title">Экономика</h1>
+      <p className="page-subtitle">
+        Маржа фермы, чувствительность и ROI. Цифры на табе «Стратегия» — целевые до подтверждения пилотами.
+      </p>
       <Tabs
         tabs={[
           { key: 'operations', label: 'Оперативно' },

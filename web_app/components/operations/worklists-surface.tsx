@@ -84,12 +84,8 @@ export function WorklistsSurface() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h1 className="page-title">{pathLabels['/worklists']}</h1>
-          <p className="page-subtitle">Ежедневные очереди задач с привязкой к действиям и объяснениям.</p>
-        </div>
-      </div>
+      <h1 className="page-title">{pathLabels['/worklists']}</h1>
+      <p className="page-subtitle">Ежедневные очереди задач с привязкой к действиям и объяснениям.</p>
       {domain ? (
         <div className="card" role="status" aria-live="polite" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <span>Фильтр: домейн = <strong>{domainLabel(domain)}</strong> ({domain})</span>

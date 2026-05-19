@@ -3430,17 +3430,32 @@ button, input, select, textarea { font: inherit; }
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 .task-create-fab--secondary:hover { box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
-.team-fab-stack {
+/* /team-specific FAB: positioned to the left of the global circular FAB */
+.team-add-fab {
   position: fixed;
-  right: 24px;
+  right: 96px;
   bottom: 24px;
-  z-index: 90;
+  z-index: 60;
   display: inline-flex;
-  flex-direction: column;
-  gap: 12px;
-  align-items: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 1px solid var(--border, #d6d8de);
+  border-radius: 999px;
+  background: var(--panel, #fff);
+  color: var(--text, #111);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform var(--duration-fast), box-shadow var(--duration-fast);
 }
-.team-fab-stack .task-create-fab { position: static; }
+.team-add-fab:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+.team-add-fab:focus-visible { outline: 2px solid var(--accent, #1a73e8); outline-offset: 2px; }
+@media (max-width: 600px) {
+  .team-add-fab { right: 72px; bottom: 12px; padding: 10px 14px; font-size: 13px; }
+  .team-add-fab span { display: none; }
+}
 
 /* Personnel create form */
 .personnel-create-form { display: flex; flex-direction: column; gap: 12px; }

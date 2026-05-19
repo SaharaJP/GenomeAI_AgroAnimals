@@ -28,7 +28,8 @@ export function VetQueuesSurface() {
   const retry = () => setReloadTick((n) => n + 1);
 
   return <div className="grid">
-    <div className="topbar"><div><h1 className="page-title">Ветеринария</h1><p className="page-subtitle">Очереди задач ветеринарной службы: здоровье животных, осмотры и история решений.</p></div></div>
+    <h1 className="page-title">Ветеринария</h1>
+    <p className="page-subtitle">Очереди задач ветеринарной службы: здоровье животных, осмотры и история решений.</p>
     {!view || error ? (
       <LoaderWithRetry label="Загрузка ветеринарных очередей…" error={error} onRetry={retry} />
     ) : <>

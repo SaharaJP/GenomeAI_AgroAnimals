@@ -33,7 +33,8 @@ export function ReproductionSurface() {
 
   return (
     <div className="grid">
-      <div className="topbar"><div><h1 className="page-title">Воспроизводство</h1><p className="page-subtitle">Оперативное управление воспроизводством стада: рабочие списки, алерты и планы.</p></div></div>
+      <h1 className="page-title">Воспроизводство</h1>
+      <p className="page-subtitle">Оперативное управление воспроизводством стада: рабочие списки, алерты и планы.</p>
       {!view || error ? (
         <LoaderWithRetry label="Загрузка данных воспроизводства…" error={error} onRetry={retry} />
       ) : (

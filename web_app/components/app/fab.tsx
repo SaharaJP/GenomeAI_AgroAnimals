@@ -1,10 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Plus, X, CalendarPlus, Sparkles, Upload } from 'lucide-react';
+import { Plus, X, CalendarPlus, Sparkles, Upload, ClipboardCheck } from 'lucide-react';
 import { useAddEvent } from './add-event-context';
 import { AskFarmWidget } from '@/components/ai/ask-farm-widget';
 import { DataUploadDialog } from '@/components/data-upload/data-upload-dialog';
+import { TaskCreateModal } from '@/components/team/task-create-modal';
+import { useAuth } from '@/components/auth/auth-provider';
+import { hasPermission } from '@/lib/api/contracts';
 
 const menuItemStyle: React.CSSProperties = {
   display: 'flex',
@@ -24,18 +27,27 @@ const menuItemStyle: React.CSSProperties = {
 
 export function FAB() {
   const { openDialog } = useAddEvent();
+  const { me } = useAuth();
+  const canCreateTasks = hasPermission(me, 'tasks.write');
   const [menuOpen, setMenuOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [taskOpen, setTaskOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!menuOpen && !aiOpen && !uploadOpen) return;
+    if (!menuOpen && !aiOpen && !uploadOpen && !taskOpen) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') { setMenuOpen(false); setAiOpen(false); setUploadOpen(false); }
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+        setAiOpen(false);
+        setUploadOpen(false);
+        setTaskOpen(false);
+      }
     }
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [menuOpen, aiOpen, uploadOpen]);
+  }, [menuOpen, aiOpen, uploadOpen, taskOpen]);
 
   function handleAddEvent() {
     setMenuOpen(false);
@@ -50,6 +62,11 @@ export function FAB() {
   function handleUpload() {
     setMenuOpen(false);
     setUploadOpen(true);
+  }
+
+  function handleCreateTask() {
+    setMenuOpen(false);
+    setTaskOpen(true);
   }
 
   return (
@@ -91,6 +108,21 @@ export function FAB() {
             Добавить событие
           </button>
           <div style={{ height: 1, background: 'var(--border)', margin: '0 12px' }} />
+          {canCreateTasks ? (
+            <>
+              <button
+                role="menuitem"
+                onClick={handleCreateTask}
+                style={menuItemStyle}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'var(--bg-muted)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+              >
+                <ClipboardCheck size={16} color="var(--accent)" />
+                Поставить задачу
+              </button>
+              <div style={{ height: 1, background: 'var(--border)', margin: '0 12px' }} />
+            </>
+          ) : null}
           <button
             role="menuitem"
             onClick={handleAskAI}
@@ -181,6 +213,20 @@ export function FAB() {
       </button>
 
       <DataUploadDialog open={uploadOpen} onClose={() => setUploadOpen(false)} />
+      <TaskCreateModal
+        open={taskOpen}
+        onClose={() => setTaskOpen(false)}
+        onCreated={(resp) => {
+          setToast(`Задача создана: ${resp.item.title}`);
+          window.setTimeout(() => setToast(null), 4000);
+          setTaskOpen(false);
+        }}
+      />
+      {toast ? (
+        <div className="task-create-toast" role="status" aria-live="polite">
+          {toast}
+        </div>
+      ) : null}
     </>
   );
 }

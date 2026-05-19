@@ -80,15 +80,11 @@ export function AdminCommandCenter() {
 
   return (
     <div className="grid">
-      <div className="topbar">
-        <div>
-          <h1 className="page-title">{pathLabels['/admin'] || 'Администрирование'}</h1>
-          <p className="page-subtitle">
-            Управление IAM-матрицей, AI-наблюдаемость, мониторинг готовности контура и поддержка. Все изменения
-            привилегированного характера попадают в audit-журнал.
-          </p>
-        </div>
-      </div>
+      <h1 className="page-title">{pathLabels['/admin'] || 'Администрирование'}</h1>
+      <p className="page-subtitle">
+        Управление IAM-матрицей, AI-наблюдаемость, мониторинг готовности контура и поддержка. Все изменения
+        привилегированного характера попадают в audit-журнал.
+      </p>
 
       {error ? (
         <Card>
