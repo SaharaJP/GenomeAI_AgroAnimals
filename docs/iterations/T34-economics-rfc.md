@@ -1,7 +1,11 @@
 # T34 — Economics RFC (Экономика 2.0, P2-1)
 
 **Дата драфта:** 2026-05-19
-**Статус:** DRAFT — ожидает approve координатора. До утверждения RFC к implementation не переходим.
+**Статус:** DRAFT (partial approve 2026-05-19 от координатора на Q1/Q5/Q8 §7; остальное — open).
+**Решения 2026-05-19:**
+- Q1 (audience) → **обе аудитории через табы** внутри `/economics`: `[Оперативно] [Стратегия] [Сценарии]`.
+- Q5 (сценарии) → **secondary tab внутри /economics**, не переезд на `/scenarios`.
+- Q8 (endpoint) → **`web_cabinet/app.py`** (следуем существующему паттерну `Depends(get_db)`); bootstrap `apps/api/` откладываем.
 **Источник:** `docs/iterations/T34-product-backlog-2026-05.md` §P2-1.
 **Discovery:** `docs/iterations/T34-P2-1_economics_discovery.md` (читать перед этим RFC).
 **Связанные доки:** `docs/target/economics_v2.md`, `docs/marts/{economics_v2,unit_economics,roi_attribution}.md`, `docs/investor_faq_ru.md` (q.9, q.22).
@@ -34,13 +38,14 @@ Implementation — **отдельные инкременты после approve*
 
 ## 2. Target view (mockup, ASCII)
 
-Audience: оператор фермы / зоотехник (primary), директор (secondary через табы). «Продающий» bias — отдельный режим Marketing snapshot (см. §5).
+Audience: трёх-табовая страница `[Оперативно] [Стратегия] [Сценарии]` внутри `/economics` (per решение Q1/Q5 от 2026-05-19).
 
+### Tab 1 — «Оперативно» (default, operator/zoo-tech)
 ```
-┌─ /economics ──────────────────────────────────────────────────────────────┐
+┌─ /economics  [Оперативно ●] [Стратегия] [Сценарии] ───────────────────────┐
 │ Period: [▼ За март 2026]   Farm: [▼ Демо-ферма]   Level: [Farm|Site|Pen]  │
 ├───────────────────────────────────────────────────────────────────────────┤
-│  HEADLINE KPI STRIP                                                       │
+│  HEADLINE KPI STRIP (operator)                                            │
 │ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
 │ │ Margin/cow  │ │ Total marg. │ │ Cost / liter│ │ Margin %    │           │
 │ │ 312 ₽/day   │ │ 4.7 M ₽/мес │ │ 18.4 ₽/л    │ │ 22.6 %      │           │
@@ -67,25 +72,41 @@ Audience: оператор фермы / зоотехник (primary), дирек
 │  | Action                       | Cohort | Δ margin/cow/day | Total ROI   │
 │  | Mastitis treatment, group B  | 12     | +28 ₽           | +4 700 ₽    │
 │  | Switch ration feeder 3       | 84     | +14 ₽           | +16 500 ₽   │
-│  | Cull aged repro problems     | 6      | +112 ₽          | +9 400 ₽    │
-│  | …                                                                     │
 │  ▸ Open Decision trail                                                    │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+
+### Tab 2 — «Стратегия» (director/investor)
+```
+┌─ /economics  [Оперативно] [Стратегия ●] [Сценарии] ───────────────────────┐
+│  HEADLINE KPI STRIP (director)                                            │
+│ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐           │
+│ │ ROI per cow │ │ Payback     │ │ Margin/farm │ │ LTV/CAC     │           │
+│ │ +42% / yr   │ │ 14 мес      │ │ 4.7 M ₽/мес │ │ 16× (note*) │           │
+│ └─────────────┘ └─────────────┘ └─────────────┘ └─────────────┘           │
+│  *note = backed by formula §4.1/4.2; LTV/CAC — investor_faq context       │
 ├───────────────────────────────────────────────────────────────────────────┤
 │  UNIT ECONOMICS LADDER (Margin per cow, distribution)                     │
 │   Top quartile:    438 ₽/day                                              │
 │   Median:          312 ₽/day                                              │
 │   Bottom decile:    87 ₽/day  ← 24 cows; ▸ Open culling review            │
 ├───────────────────────────────────────────────────────────────────────────┤
-│  WHAT-IF SCENARIOS (secondary, was the only thing on this page)           │
-│   2 active scenarios │ 1 approved │ ▸ Open /scenarios for management      │
-├───────────────────────────────────────────────────────────────────────────┤
 │  AI COST TRANSPARENCY  (под флагом, см. §5.2)                             │
 │   Last 30 days: 412 ₽ Claude API (12.5 ₽/cow/year при 1000 голов)         │
 │   Per call avg: brief 0.6 ₽, weekly 4 ₽, ask-farm 0.18 ₽                  │
 └───────────────────────────────────────────────────────────────────────────┘
 ```
+Tab «Стратегия» зависит от закрытия gaps 4.1 (ROI per cow) и 4.2 (payback) — без них рендерится с «n/a» + ссылкой на gap.
 
-Сценарии-CRUD переезжают на `/scenarios` (или становятся secondary tab под «Сценарии» внутри `/economics` — см. open question 5).
+### Tab 3 — «Сценарии» (was the only content of /economics before)
+```
+┌─ /economics  [Оперативно] [Стратегия] [Сценарии ●] ───────────────────────┐
+│  Существующий EconomicsMasterSurface CRUD-табл                           │
+│  scenarios_total / reports_total / decision_acceptance KPIs               │
+│  scenarios list + create/update/approve/reject/archive/clone/PDF          │
+└───────────────────────────────────────────────────────────────────────────┘
+```
+Никаких изменений в существующем рендере — просто переносим в третий таб. Сохраняем wiring к `GET /economics` контракту (`genomeai.api.economics.list.v1`).
 
 ---
 
@@ -248,14 +269,14 @@ feed_cost_ceiling_rub_per_kg_dm = (revenue_total_rub - cost_vet_rub - cost_repro
 
 ## 7. Open questions (для координатора)
 
-1. **Audience bias:** primary — оператор/зоотехник, secondary — директор через таб? Или две отдельные страницы?
+1. ~~**Audience bias.**~~ **RESOLVED 2026-05-19:** обе аудитории через табы `[Оперативно] [Стратегия]` внутри `/economics`.
 2. **Drill-down depth в MVP:** farm + site + pen достаточно, cow-level откладываем? Или сразу нужен per-cow?
 3. **Sensitivity scope:** только single-input (как в §5.1) или сразу multivariate? Multi-var → отдельный RFC.
-4. **AI-cost блок:** показывать на `/economics` (под флагом) или это marketing-метрика и место ей на `/admin/ai`? Сейлс-сюрфейс vs operator-concern.
-5. **Сценарии:** secondary tab внутри `/economics` ИЛИ переезд на `/scenarios`? (При переезде нужно добавить route + navigation entry.)
+4. **AI-cost блок:** показывать на табе «Стратегия» (под флагом) или это marketing-метрика и место ей на `/admin/ai`? Сейлс-сюрфейс vs operator-concern.
+5. ~~**Сценарии.**~~ **RESOLVED 2026-05-19:** secondary tab внутри `/economics` (не переезд на `/scenarios`).
 6. **«Продающий» bias:** добавляем «Marketing snapshot»-режим (одна шапка с топ-цифрами для скриншотов в presale)? Или это только в P2-5 (продающий сайт)?
 7. **Investor claims:** ослабляем формулировки в `investor_faq_ru.md` сейчас (быстро) ИЛИ ждём pilot-данных и подкрепляем (медленно)?
-8. **Backend surface:** новый endpoint регистрируем в `web_cabinet/app.py` (legacy, быстрее) или сразу в `apps/api/` (canonical target, дольше)? Per CLAUDE.md §5 предпочтительно canonical, но `apps/api/` сейчас пустой — нужен bootstrap.
+8. ~~**Backend surface.**~~ **RESOLVED 2026-05-19:** `web_cabinet/app.py` через `Depends(get_db)`; bootstrap `apps/api/` откладываем.
 
 ---
 
@@ -263,7 +284,7 @@ feed_cost_ceiling_rub_per_kg_dm = (revenue_total_rub - cost_vet_rub - cost_repro
 
 | Риск | Митигация |
 |---|---|
-| `whatif_scenarios_v1/whatif_reports_v1` могут до сих пор жить в SQLite (упомянуто в backend audit). P2-6 (full SQLite removal) ломает страницу. | Перед phase 5 (frontend) — отдельная задача-проверка: миграция whatif-таблиц в Postgres, либо признать как требование P2-6. |
+| ~~`whatif_scenarios_v1/whatif_reports_v1` могут жить в SQLite — P2-6 ломает страницу.~~ **CLOSED 2026-05-19.** Все 3 таблицы (`whatif_scenarios_v1`, `whatif_reports_v1`, `report_approvals_v1`) есть в alembic-миграции `src/core/migrations/alembic/versions/20260414_03_runtime_state_postgres_baseline.py:252,293,313`. Wiring через `web_cabinet/auth.py:107 get_db()` → `core.infra.postgres_compat.connect_postgres_compat()` → `CompatConnection` (psycopg + auto-translation `?`→`%s`). SQLite-зависимости в рантайме нет. | — |
 | `economics_v2.py` оперирует CSV-артефактами в FS; `apps/api/` под `read_only: true` (CLAUDE.md §6). Нужен путь для чтения artifacts из read-only контейнера. | Артефакты монтировать read-only volume; путь читать через `GENOMEAI_ARTIFACTS_DIR`. |
 | Гэпы 4.1–4.5 — это **5 формул**, каждая может породить дискуссию. | RFC-фаза для каждой не делается; формулы фиксируем в `docs/target/economics_v2.md` + одна acceptance-проверка на каждую (см. §4). |
 | Single-input sensitivity слишком упрощённая — реальные шоки часто скоррелированы (feed+milk). | Документируем как known limitation; multi-var sensitivity → отдельный RFC после P2-1 v1. |
