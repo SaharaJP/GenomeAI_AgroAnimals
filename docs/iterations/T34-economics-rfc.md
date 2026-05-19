@@ -1,7 +1,7 @@
 # T34 — Economics RFC (Экономика 2.0, P2-1)
 
 **Дата драфта:** 2026-05-19
-**Статус:** DRAFT (partial approve 2026-05-19 от координатора на Q1/Q5/Q8 §7; остальное — open).
+**Статус:** **PROVEN** 2026-05-19. См. `docs/iterations/T34-P2-1_economics_execution_proof.md`. Acceptance §6 закрыт, 7 gates зелёные, UI заскриншочен.
 **Решения 2026-05-19:**
 - Q1 (audience) → **обе аудитории через табы** внутри `/economics`: `[Оперативно] [Стратегия] [Сценарии]`.
 - Q5 (сценарии) → **secondary tab внутри /economics**, не переезд на `/scenarios`.
@@ -311,4 +311,4 @@ feed_cost_ceiling_rub_per_kg_dm = (revenue_total_rub - cost_vet_rub - cost_repro
 
 ## 10. Honest status
 
-`not_proven` — это RFC-драфт, никакого runtime-доказательства не приложено. Discovery-фаза (`T34-P2-1_economics_discovery.md`) проведена на живом коде. Implementation начинается только после approve координатора по open questions §7.
+**`proven`** 2026-05-19. Все 7 gates зелёные (см. proof-файл `docs/iterations/T34-P2-1_economics_execution_proof.md`), 40/40 фокусных тестов проходят, UI трёх табов снят в `artifacts/_ci/p2_1_economics_tab_{operations,strategy,scenarios}.png`. Цифры на табе «Стратегия» — целевые до закрытия pilot-данных (explicit disclaimer в UI и `investor_faq_ru.md` q.22).
